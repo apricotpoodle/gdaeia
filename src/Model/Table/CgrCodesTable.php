@@ -12,7 +12,7 @@ use Cake\Validation\Validator;
  * CgrCodes Model
  *
  * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\BelongsTo $Departments
- * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\HasMany $CgrCodes
+ * @property \App\Model\Table\CgrCodesTable&\Cake\ORM\Association\HasMany $CgrCodes
  *
  * @method \App\Model\Entity\CgrCode newEmptyEntity()
  * @method \App\Model\Entity\CgrCode newEntity(array $data, array $options = [])

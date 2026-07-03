@@ -22,9 +22,9 @@ class ValidationstatusesFixture extends TestFixture
                 'id' => 1,
                 'code' => 'Lorem ipsum dolor sit amet',
                 'name' => 'Lorem ipsum dolor sit amet',
-                'deleted' => '2026-07-03 08:26:52',
-                'modified' => 1783067212,
-                'created' => 1783067212,
+                'deleted' => '2026-07-03 09:01:35',
+                'modified' => 1783069295,
+                'created' => 1783069295,
             ],
         ];
         parent::init();

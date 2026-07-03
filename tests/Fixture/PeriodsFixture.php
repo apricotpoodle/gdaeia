@@ -24,9 +24,9 @@ class PeriodsFixture extends TestFixture
                 'code' => 'Lorem ipsum do',
                 'name' => 'Lorem ipsum dolor sit amet',
                 'sort' => 'Lorem ipsum dolor sit amet',
-                'deleted' => '2026-07-03 08:26:49',
-                'created' => 1783067209,
-                'modified' => 1783067209,
+                'deleted' => '2026-07-03 09:01:30',
+                'created' => 1783069290,
+                'modified' => 1783069290,
             ],
         ];
         parent::init();

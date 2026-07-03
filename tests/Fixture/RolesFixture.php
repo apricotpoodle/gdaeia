@@ -24,9 +24,9 @@ class RolesFixture extends TestFixture
                 'code' => 'Lorem ipsum do',
                 'name' => 'Lorem ipsum dolor sit amet',
                 'sort' => 'Lorem ipsum dolor sit amet',
-                'deleted' => '2026-07-03 08:26:50',
-                'created' => 1783067210,
-                'modified' => 1783067210,
+                'deleted' => '2026-07-03 09:01:32',
+                'created' => 1783069292,
+                'modified' => 1783069292,
             ],
         ];
         parent::init();

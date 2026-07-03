@@ -24,9 +24,9 @@ class BudgetfeaturesFixture extends TestFixture
                 'code' => 'Lorem ipsum do',
                 'name' => 'Lorem ipsum dolor sit amet',
                 'sort' => 'Lorem ipsum dolor sit amet',
-                'deleted' => '2026-07-03 08:16:51',
-                'created' => 1783066611,
-                'modified' => 1783066611,
+                'deleted' => '2026-07-03 09:01:25',
+                'created' => 1783069285,
+                'modified' => 1783069285,
             ],
         ];
         parent::init();

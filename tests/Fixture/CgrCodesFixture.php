@@ -26,8 +26,8 @@ class CgrCodesFixture extends TestFixture
                 'label' => 'Lorem ipsum dolor sit amet',
                 'active' => 1,
                 'is_system' => 1,
-                'created' => 1783066612,
-                'modified' => 1783066612,
+                'created' => 1783069286,
+                'modified' => 1783069286,
             ],
         ];
         parent::init();

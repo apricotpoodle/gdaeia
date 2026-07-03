@@ -24,9 +24,9 @@ class ContracttypesFixture extends TestFixture
                 'code' => 'Lorem ipsum do',
                 'name' => 'Lorem ipsum dolor sit amet',
                 'sort' => 'Lorem ipsum dolor sit amet',
-                'deleted' => '2026-07-03 08:16:52',
-                'created' => 1783066612,
-                'modified' => 1783066612,
+                'deleted' => '2026-07-03 09:01:27',
+                'created' => 1783069287,
+                'modified' => 1783069287,
             ],
         ];
         parent::init();

@@ -24,9 +24,9 @@ class YesnosFixture extends TestFixture
                 'code' => 'Lorem ipsum do',
                 'name' => 'Lorem ipsum dolor sit amet',
                 'sort' => 'Lorem ipsum dolor sit amet',
-                'created' => 1783067213,
-                'modified' => 1783067213,
-                'deleted' => '2026-07-03 08:26:53',
+                'created' => 1783069296,
+                'modified' => 1783069296,
+                'deleted' => '2026-07-03 09:01:36',
             ],
         ];
         parent::init();

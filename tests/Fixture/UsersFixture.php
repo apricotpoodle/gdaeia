@@ -28,10 +28,10 @@ class UsersFixture extends TestFixture
                 'token' => 'Lorem ipsum dolor sit amet',
                 'issuperuser' => 1,
                 'role_id' => 1,
-                'token_expires' => 1783067211,
-                'deleted' => '2026-07-03 08:26:51',
-                'created' => 1783067211,
-                'modified' => 1783067211,
+                'token_expires' => 1783069293,
+                'deleted' => '2026-07-03 09:01:33',
+                'created' => 1783069293,
+                'modified' => 1783069293,
             ],
         ];
         parent::init();

@@ -25,7 +25,7 @@ class ValidationVisasFixture extends TestFixture
                 'op_name' => 'Lorem ipsum dolor sit amet',
                 'role_name' => 'Lorem ipsum dolor sit amet',
                 'status_name' => 'Lorem ipsum dolor sit amet',
-                'validated_at' => 1783067214,
+                'validated_at' => 1783069297,
             ],
         ];
         parent::init();

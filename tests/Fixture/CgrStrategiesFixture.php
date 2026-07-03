@@ -23,8 +23,8 @@ class CgrStrategiesFixture extends TestFixture
                 'code' => 'Lorem ipsum dolor sit amet',
                 'name' => 'Lorem ipsum dolor sit amet',
                 'definition_json' => '',
-                'created' => 1783066612,
-                'modified' => 1783066612,
+                'created' => 1783069286,
+                'modified' => 1783069286,
             ],
         ];
         parent::init();

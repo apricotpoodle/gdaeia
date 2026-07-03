@@ -19,8 +19,8 @@ use Cake\ORM\Entity;
  * @property bool|null $disabled
  * @property bool|null $dividor_before
  *
- * @property \App\Model\Entity\ParentMenu $parent_menu
- * @property \App\Model\Entity\ChildMenu[] $child_menus
+ * @property \App\Model\Entity\Menu $parent_menu
+ * @property \App\Model\Entity\Menu[] $child_menus
  * @property \App\Model\Entity\RoleMenu[] $role_menus
  */
 class Menu extends Entity
