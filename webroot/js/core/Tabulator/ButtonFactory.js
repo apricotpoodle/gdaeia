@@ -1,65 +1,81 @@
 /**
+ * @typedef {Object} ButtonConfig
+ * @property {string} icon - Les classes FontAwesome de l'icône (ex: 'fas fa-eye')
+ * @property {string} color - Le variant de couleur Bootstrap (ex: 'info', 'primary')
+ * @property {string} title - Le libellé d'accessibilité et tooltip du bouton
+ * @property {string} [target='_self'] - La cible de navigation ('_self' ou '_blank')
+ * @property {boolean} [isEvent=false] - Si true, bypass la redirection et émet un événement JS via l'Observer
+ */
+
+/**
  * @class ButtonFactory
- * Implémentation du patron "Factory" pour les éléments d'interface.
- * Utilise le ButtonBuilder pour construire des composants Bootstrap 5.3 standardisés.
+ * @description Fabrique centralisée pour la génération des boutons et menus d'actions des tables Tabulator.
+ * Aligné sur les conventions de routage CakePHP.
  */
 class ButtonFactory {
 
     /**
-     * Retourne le bouton d'action de ligne demandé.
-     * @param {string} action Le nom de l'action
-     * @returns {string} Le code HTML sécurisé du bouton
+     * Registre centralisé des configurations de boutons de l'application.
+     * Évolutif jusqu'à plus de 30 boutons différents sans altérer la logique métier.
+     * @private
+     * @type {Object<string, ButtonConfig>}
      */
-    static getCellButton(action) {
-        const builder = new ButtonBuilder()
-            .setSize('sm')
-            .addClass('btn-action')
-            .addClass('me-1')
-            .setAction(action);
+    static #configs = {
+        view: { icon: 'fas fa-eye', color: 'info', title: 'Visualiser la fiche', target: '_self' },
+        edit: { icon: 'fas fa-edit', color: 'primary', title: 'Modifier l\'enregistrement', target: '_self' },
+        delete: { icon: 'fas fa-trash', color: 'danger', title: 'Supprimer l\'enregistrement', isEvent: true },
+        viewpdf: { icon: 'fas fa-file-pdf', color: 'warning', title: 'Ouvrir le document PDF', target: '_blank' },
+        impersonate: { icon: 'fas fa-user-secret', color: 'secondary', title: 'Infiltrer la session utilisateur', target: '_self' }
+    };
 
-        switch (action) {
-            case 'view':
-                return builder.setColor('info').addClass('text-white').setTitle('Voir').setIcon('fas fa-eye').build();
-            case 'edit':
-                return builder.setColor('primary').setTitle('Modifier').setIcon('fas fa-edit').build();
-            case 'delete':
-                return builder.setColor('danger').setTitle('Supprimer').setIcon('fas fa-trash').build();
-            case 'impersonate':
-                return builder.setColor('secondary').setTitle("Incarner l'utilisateur").setIcon('fas fa-user-secret').build();
-            case 'viewpdf':
-                return builder.setColor('dark').setTitle('Voir le PDF').setIcon('fas fa-file-pdf').build();
-            default:
-                return '';
+    /**
+     * Génère le balisage HTML d'un bouton d'action de cellule enrichi en métadonnées.
+     * @param {string} key - Clé unique de l'action définie dans le registre (`view`, `edit`, etc.)
+     * @returns {string} Code HTML brut du bouton prêt à être rendu par le formateur de cellule
+     */
+    static getCellButton(key) {
+        const config = this.#configs[key];
+        if (!config) {
+            console.error(`ButtonFactory: L'action "${key}" n'est pas définie dans le registre.`);
+            return '';
         }
+
+        const target = config.target || '_self';
+        const isEvent = config.isEvent ? 'true' : 'false';
+
+        return `
+            <button type="button"
+                    class="btn btn-sm btn-${config.color} shadow-sm me-1 btn-action"
+                    data-action="${key}"
+                    data-target="${target}"
+                    data-is-event="${isEvent}"
+                    title="${config.title}">
+                <i class="${config.icon} fa-fw"></i>
+            </button>
+        `;
     }
 
     /**
-     * Génère l'en-tête de la colonne d'actions avec le menu déroulant.
-     * @returns {string} Le code HTML de l'en-tête
+     * Génère le menu d'administration globale déporté pour l'en-tête de la colonne Actions.
+     * Exclut Popper.js pour éliminer les conflits de débordement DOM avec Tabulator.
+     * @returns {string} Code HTML du menu déroulant manuel d'en-tête
      */
     static getHeaderDropdown() {
-        // Création du bouton SANS les attributs natifs de Bootstrap (data-bs-toggle)
-        const mainBtn = new ButtonBuilder()
-            .setSize('sm')
-            .setColor('danger')
-            .addClass('action-menu-btn') // Nouvelle classe cible
-            .setTitle('Menu des actions')
-            .setIcon('fas fa-cog')
-            .build();
-
         return `
             <div class="d-flex align-items-center justify-content-center" style="position: relative;">
-                ${mainBtn}
+                <button class="btn shadow-sm btn-sm btn-danger action-menu-btn" type="button" title="Menu des actions globales">
+                    <i class="fas fa-cog"></i>
+                </button>
                 <ul class="dropdown-menu shadow" style="position: absolute; top: 100%; right: 0; z-index: 9999; margin-top: 5px;">
                     <li>
                         <button class="dropdown-item text-success action-create fw-bold" type="button">
-                            <i class="fas fa-plus-circle me-2"></i> Créer
+                            <i class="fas fa-plus-circle me-2"></i> Créer un enregistrement
                         </button>
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
                         <button class="dropdown-item text-warning action-reset fw-bold" type="button">
-                            <i class="fas fa-undo me-2"></i> Réinitialiser l'affichage
+                            <i class="fas fa-undo me-2"></i> Réinitialiser les filtres
                         </button>
                     </li>
                 </ul>

@@ -260,14 +260,22 @@ class TabulatorBuilder {
     }
 
     /**
-     * Compile la configuration et injecte la colonne Actions finale.
-     * (Auparavant, cette logique était directement dans setWithActions, elle est désormais
-     * exécutée au moment du build() si des boutons ont été configurés).
-     * * @private
-     * @returns {void}
+     * Associe le contrôleur CakePHP principal de la table pour le routage dynamique des URLs.
+     * @param {string} controllerName - Nom du contrôleur en minuscules (ex: 'users', 'articles')
+     * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
      */
+    setController(controllerName) {
+        this.controller = controllerName.trim().toLowerCase();
+        return this;
+    }
+
+    /**
+         * Compile et injecte la colonne "Actions" avec routage dynamique polymorphique.
+         * Exécuté automatiquement au moment du build().
+         * @private
+         * @returns {void}
+         */
     _compileActionColumn() {
-        // Si aucun bouton n'est configuré et que l'en-tête n'est pas requis, on n'ajoute pas la colonne
         if (!this.actionButtons || (this.actionButtons.length === 0 && typeof ButtonFactory === 'undefined')) {
             return;
         }
@@ -278,7 +286,7 @@ class TabulatorBuilder {
             headerSort: false,
             headerFilter: false,
             hozAlign: "center",
-            width: 240, // Légèrement élargi pour accueillir les boutons cumulés
+            width: 240,
 
             formatter: () => {
                 let html = '<div class="d-flex justify-content-center align-items-center">';
@@ -293,12 +301,36 @@ class TabulatorBuilder {
 
             cellClick: (e, cell) => {
                 const btn = e.target.closest('.btn-action');
-                if (btn) {
-                    const action = btn.dataset.action;
-                    const rowData = cell.getRow().getData();
+                if (!btn) return;
+
+                const action = btn.dataset.action;
+                const target = btn.dataset.target || '_self';
+                const isEvent = btn.dataset.isEvent === 'true';
+                const rowData = cell.getRow().getData();
+
+                // CAS 1 : L'action émet un événement JS (ex: delete, modale personnalisée)
+                if (isEvent) {
                     if (typeof globalTabulatorObserver !== 'undefined') {
                         globalTabulatorObserver.publish(`${this.selector}:action:${action}`, rowData);
                     }
+                    return;
+                }
+
+                // CAS 2 : Routage URL CakePHP intelligent.
+                // Priorité au contrôleur spécifié sur la ligne (Polymorphisme), sinon contrôleur global de la table.
+                const targetController = rowData.table_controller || this.controller;
+                const id = rowData.id;
+
+                if (targetController && action && id) {
+                    const url = `/${targetController}/${action}/${id}`;
+
+                    if (target === '_blank') {
+                        window.open(url, '_blank');
+                    } else {
+                        window.location.href = url;
+                    }
+                } else {
+                    console.error(`TabulatorBuilder: Routage impossible. ID (${id}), Action (${action}) ou Contrôleur (${targetController}) manquant.`);
                 }
             },
 

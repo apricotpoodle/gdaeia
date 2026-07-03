@@ -28,3 +28,4 @@ Ce dossier contient les *Architecture Decision Records* (ADR).
 * [0022 - Standardisation colonne actions ui](0022-standardisation-colonne-actions-ui.md)
 * [0023 - Factory boutons actions ui](0023-factory-boutons-actions-ui.md)
 * [0024 - Résolution du conflit de positionnement des dropdowns](0024-contournement-conflit-positionnement-dropdown.md)
+* [0025-routage-dynamique-metadonnees-dropdown](0025-routage-dynamique-metadonnees-dropdown.md)

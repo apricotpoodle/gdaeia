@@ -76,3 +76,33 @@ builder.addActions(['impersonate']); // Résultat : view, edit, delete, imperson
 ```javascript
 builder.setWithActions([]).addActions(['viewpdf']); // Résultat : uniquement le bouton PDF
 ```
+
+## Routage Automatisé CakePHP (`/{controller}/{action}/{id}`)
+Grâce au couplage entre la `ButtonFactory` et le `.setController()` du `TabulatorBuilder`, la navigation est totalement automatisée lors du clic sur un bouton d'action.
+
+### Exemple d'implémentation standard :
+```javascript
+static createArticlesTable(selector) {
+    return new TabulatorBuilder(selector)
+        .setAjaxSource("/api/articles.json")
+        .setController("articles") // <--- Définit la racine de routage
+        .addActions(['viewpdf'])   // <--- Ajoute le bouton PDF (cible '_blank' automatique)
+        .build();
+}
+```
+
+- Clic sur view -> Redirige vers /articles/view/{id} (Même onglet)
+- Clic sur edit -> Redirige vers /articles/edit/{id} (Même onglet)
+- Clic sur viewpdf -> Ouvre /articles/viewpdf/{id} (Nouvel onglet)
+
+#### Exemple d'implémentation polymorphe (Tableaux mixtes) :
+Si vos lignes de données appartiennent à des entités différentes, n'utilisez pas .setController(). Injectez directement le nom du contrôleur cible dans votre JSON d'API sous la clé table_controller :
+
+```JSON
+[
+  { "id": 12, "title": "Article Un", "table_controller": "articles" },
+  { "id": 4, "lastname": "Dupont", "table_controller": "users" }
+]
+```
+
+Le moteur détectera automatiquement table_controller par ligne et adaptera dynamiquement l'URL finale.
