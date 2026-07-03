@@ -6,7 +6,7 @@
  * * @package Core\Tabulator
  */
 class TabulatorFactory {
-    
+
     /**
      * Fabrique la grille standard pour le module de gestion des Utilisateurs.
      * Active par défaut le tri multi-colonnes et le filtrage par en-tête sur chaque colonne.
@@ -22,7 +22,7 @@ class TabulatorFactory {
                 headerSort: true,          // Active le tri sur toutes les colonnes par défaut
                 headerFilter: "input",     // Active un champ de recherche textuel sur toutes les colonnes
                 headerFilterPlaceholder: "Filtrer...",
-                headerFilterLiveFilter: false // Attend la touche Entrée pour ne pas surcharger l'API à chaque lettre
+                headerFilterLiveFilter: true // Attend la touche Entrée pour ne pas surcharger l'API à chaque lettre
             })
             .setColumns([
                 { title: "ID", field: "id", width: 70, sorter: "number" },
@@ -33,7 +33,7 @@ class TabulatorFactory {
                 { title: "Rôle", field: "role.name", sorter: "string", headerSort: false, headerFilter: false },
                 { title: "Super Admin", field: "issuperuser", formatter: "tickCross", align: "center", headerSort: false, headerFilter: false }
             ])
-            .addEvent("rowClick", function(e, row) {
+            .addEvent("rowClick", function (e, row) {
                 if (typeof globalTabulatorObserver !== "undefined") {
                     globalTabulatorObserver.publish('usersTable:rowClick', row.getData());
                 }

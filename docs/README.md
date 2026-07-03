@@ -25,3 +25,5 @@ Ce dossier contient les *Architecture Decision Records* (ADR).
 * [0019 - I18n et ergonomie des grilles](0019-i18n-et-ergonomie-des-grilles.md)
 * [0020 - Automatisation du Formatage de Code via l'IDE](0020-automatisation-formatage-ide.md)
 * [0021 - Arborescence documentation applicative](0021-arborescence-documentation-applicative.md)
+* [0022 - Standardisation colonne actions ui](0022-standardisation-colonne-actions-ui.md)
+* [0023 - Factory boutons actions ui](0023-factory-boutons-actions-ui.md)

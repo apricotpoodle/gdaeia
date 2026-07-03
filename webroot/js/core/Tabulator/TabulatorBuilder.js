@@ -3,7 +3,7 @@
  * * Implémentation enrichie du patron de conception "Builder" (Monteur).
  * Standardise la création des configurations Tabulator pour garantir
  * le respect des principes DRY (Don't Repeat Yourself) sur le front-end.
- * Intègre nativement la possibilité d'activer/désactiver globalement ou 
+ * Intègre nativement la possibilité d'activer/désactiver globalement ou
  * par colonne le tri unitaire/multiple et le filtrage dynamique.
  * * @package Core\Tabulator
  */
@@ -12,19 +12,27 @@ class TabulatorBuilder {
      * Initialise une configuration vierge avec les comportements structurels par défaut.
      * * @param {string} selector Le sélecteur CSS de l'élément DOM cible (ex: "#users-table").
      */
-constructor(selector) {
+    constructor(selector) {
         /** @type {string} */
         this.selector = selector;
-        
+
         /** @type {Object} */
         this.config = {
             layout: "fitColumns",
             responsiveLayout: "collapse",
             multiSort: true,
+            headerFilterLiveFilterDelay: 300, // valeur par défaut
+            headerFilter: "input",     // Active un champ de recherche textuel sur toutes les colonnes
+            headerFilterPlaceholder: "Filtrer...",
+            headerFilterLiveFilter: true, // Attend la touche Entrée pour ne pas surcharger l'API à chaque lettre
+            placeholderHeaderFilter: "Aucune donnée trouvée !",
 
             // --- UX & INTERNATIONALISATION (SOCLE COMMUN) ---
-            placeholder: "<div class='tabulator-empty-msg'>Aucune donnée trouvée</div>", 
-            
+            // placeholder: "<div class='tabulator-empty-msg'>Aucune donnée trouvée</div>",
+            placeholder: function () {
+                return this.getHeaderFilters().length ? "Aucune donnée trouvée !" : "Aucune Donnée."; //set placeholder based on if there are currently any header filters
+            },
+            dataLoaderLoading: "Chargement en cours...",
             // Configuration de l'indicateur visuel de chargement natif
             ajaxLoader: true,
             ajaxLoaderLoading: "<div class='tabulator-loading-msg'><span>Chargement des données en cours...</span></div>",
@@ -63,7 +71,7 @@ constructor(selector) {
             }
         };
     }
-    
+
     /**
      * Configure la source de données distante (API REST JSON).
      * * @param {string} url L'URL du point de terminaison JSON de l'API.
@@ -77,7 +85,7 @@ constructor(selector) {
     /**
      * Active et configure de concert la pagination, le tri et le filtrage distants.
      * Délègue l'intégralité des calculs lourds au serveur de base de données (CakePHP).
-     * 
+     *
      * @param {number} [size=20] Le nombre de lignes à afficher par page.
      * @returns {TabulatorBuilder} L'instance courante pour permettre le chaînage.
      */
@@ -87,7 +95,7 @@ constructor(selector) {
         this.config.sortMode = "remote";
         this.config.filterMode = "remote"; // Les filtres tapés par l'utilisateur sont envoyés à l'API
         this.config.paginationSize = size;
-      
+
         // MAPPING CRITIQUE : Empêche la collision avec le Paginator natif de CakePHP
         this.config.dataSendParams = {
             "sort": "sorters",   // Tabulator enverra '?sorters[...]' au lieu de '?sort[...]'

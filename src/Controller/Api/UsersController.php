@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller\Api;
@@ -29,7 +30,8 @@ class UsersController extends AppController
 
         // CakePHP 5 : On force explicitement l'utilisation de la vue JSON
         // pour toutes les actions de ce contrôleur API.
-        $this->viewBuilder()->setClassName('Json');    }
+        $this->viewBuilder()->setClassName('Json');
+    }
 
     /**
      * Méthode Index (GET /api/users.json)
@@ -42,13 +44,13 @@ class UsersController extends AppController
     {
         // Sécurité : On n'accepte que les requêtes en lecture
         $this->request->allowMethod(['get']);
-        
+
         $adapter = new TabulatorAdapter();
         $queryParams = $this->request->getQueryParams();
-        
+
         // 1. Préparation de la requête avec la relation vers la table Roles
         $query = $this->Users->find()->contain(['Roles']);
-        
+
         // 2. Traduction des tris Tabulator vers la requête SQL
         $query = $adapter->adaptRequest($this->request, $query);
 
@@ -56,7 +58,7 @@ class UsersController extends AppController
         $paginatedData = $this->paginate($query, [
             'limit' => (int)($queryParams['size'] ?? 20),
             'page'  => (int)($queryParams['page'] ?? 1),
-            // SÉCURITÉ : On interdit au Paginator CakePHP de trier via l'URL, 
+            // SÉCURITÉ : On interdit au Paginator CakePHP de trier via l'URL,
             // car le TabulatorAdapter a déjà appliqué les tris sur l'objet $query.
             'sortableFields' => []
         ]);
