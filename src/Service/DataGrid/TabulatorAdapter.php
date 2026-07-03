@@ -32,20 +32,38 @@ class TabulatorAdapter
     {
         $queryParams = $request->getQueryParams();
 
-        if (empty($queryParams['sorters']) || !is_array($queryParams['sorters'])) {
-            return $query;
-        }
-
-        foreach ($queryParams['sorters'] as $sorter) {
-            $field = $sorter['field'] ?? null;
-            $direction = strtoupper($sorter['dir'] ?? 'ASC');
-            
-            // Sécurité : On valide la direction pour éviter les injections SQL basiques
-            if (is_string($field) && in_array($direction, ['ASC', 'DESC'], true)) {
-                $query->order([$field => $direction]);
+        // 1. Application des Tris Multiples (Sorting)
+        if (!empty($queryParams['sorters']) && is_array($queryParams['sorters'])) {
+            foreach ($queryParams['sorters'] as $sorter) {
+                $field = $sorter['field'] ?? null;
+                $direction = strtoupper($sorter['dir'] ?? 'ASC');
+                
+                if (is_string($field) && in_array($direction, ['ASC', 'DESC'], true)) {
+                    $query->orderBy([$field => $direction]);
+                }
             }
         }
 
+        // 2. Application des Filtres (Filtering)
+        if (!empty($queryParams['filter']) && is_array($queryParams['filter'])) {
+            foreach ($queryParams['filter'] as $filter) {
+                $field = $filter['field'] ?? null;
+                $type = strtolower($filter['type'] ?? '=');
+                $value = $filter['value'] ?? '';
+
+                if (is_string($field) && $value !== '') {
+                    // Si Tabulator demande un 'like' (filtrage textuel partiel)
+                    if ($type === 'like') {
+                        $query->where([sprintf('%s LIKE', $field) => "%{$value}%"]);
+                    } else {
+                        // Liste blanche d'opérateurs pour la sécurité
+                        $validOperators = ['=', '<', '>', '<=', '>=', '!='];
+                        $op = in_array($type, $validOperators, true) ? $type : '=';
+                        $query->where([sprintf('%s %s', $field, $op) => $value]);
+                    }
+                }
+            }
+        }
         return $query;
     }
 
@@ -66,4 +84,25 @@ class TabulatorAdapter
             'data'      => iterator_to_array($paginated),
         ];
     }
+
+    /**
+     * Normalise le nom du champ reçu du JS pour l'ORM CakePHP.
+     * (Ex: transforme 'role.name' en 'Roles.name')
+     *
+     * @param string|null $field
+     * @return string|null
+     */
+    private function normalizeField(?string $field): ?string
+    {
+        if (!$field) return null;
+        
+        $parts = explode('.', $field);
+        if (count($parts) > 1) {
+            // Capitalise la première lettre de la table et ajoute un 's' (convention simplifiée)
+            $parts[0] = ucfirst($parts[0]) . 's'; 
+            return implode('.', $parts);
+        }
+        return $field;
+    }
+    
 }
