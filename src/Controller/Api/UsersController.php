@@ -26,8 +26,9 @@ class UsersController extends AppController
     public function initialize(): void
     {
         parent::initialize();
-        $this->loadComponent('RequestHandler');
-    }
+// CakePHP 5 : On force explicitement l'utilisation de la vue JSON
+        // pour toutes les actions de ce contrôleur API.
+        $this->viewBuilder()->setClassName('Json');    }
 
     /**
      * Méthode Index (GET /api/users.json)
