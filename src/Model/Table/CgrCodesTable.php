@@ -48,11 +48,12 @@ class CgrCodesTable extends Table
 
         $this->addBehavior('Timestamp');
 
-        $this->belongsTo('Departments', [
+        $this->belongsTo('OwnerDepartments', [
+            'className' => 'Departments',
             'foreignKey' => 'department_id',
             'joinType' => 'INNER',
         ]);
-        $this->hasMany('CgrCodes', [
+        $this->hasMany('UsingDepartments', [
             'foreignKey' => 'cgr_code_id',
             'className' => 'Departments',
         ]);

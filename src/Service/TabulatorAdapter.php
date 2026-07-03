@@ -49,20 +49,21 @@ class TabulatorAdapter
         return $query;
     }
 
-    /**
-     * Formate le résultat paginé de CakePHP dans le formalisme JSON attendu par Tabulator.
+/**
+     * Formate le résultat de la pagination CakePHP au format JSON strict attendu par Tabulator.
      *
-     * Tabulator attend un objet JSON structuré avec la clé `data` (le tableau des résultats)
-     * et `last_page` (le nombre total de pages) pour le mode "remote pagination".
-     *
-     * @param PaginatedInterface $paginated Le résultat paginé fourni par CakePHP.
-     * @return array<string, mixed> Le tableau associatif prêt à être encodé en JSON.
+     * @param \Cake\Datasource\Paging\PaginatedInterface $paginated L'objet paginé issu de CakePHP.
+     * @return array{last_page: int, data: array} Le tableau associatif prêt à être sérialisé en JSON.
      */
     public function adaptResponse(PaginatedInterface $paginated): array
     {
+        // Récupération du tableau des paramètres de pagination (CakePHP 5)
+        $pagingParams = $paginated->pagingParams();
+
         return [
-            'last_page' => $paginated->getPagingParam('pageCount') ?? 1,
-            'data'      => $paginated->toArray(),
+            'last_page' => $pagingParams['pageCount'] ?? 1,
+            // iterator_to_array garantit la compatibilité stricte avec PaginatedInterface
+            'data'      => iterator_to_array($paginated),
         ];
     }
 }
