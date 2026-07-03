@@ -16,6 +16,7 @@ class TabulatorFactory {
     static createUsersTable(selector) {
         return new TabulatorBuilder(selector)
             .setAjaxSource("/api/users.json")
+            .setController('Users')
             .setRemotePagination(20)
             // CARACTÉRISTIQUE DE BASE UNIQUE : On active globalement le tri et le filtre textuel
             .setColumnDefaults({
@@ -31,7 +32,7 @@ class TabulatorFactory {
                 { title: "Email", field: "email", sorter: "string" },
                 // Surcharge locale : on désactive le filtrage/tri sur les relations ou booléens complexes si nécessaire
                 { title: "Rôle", field: "role.name", sorter: "string", headerSort: false, headerFilter: false },
-                { title: "Super Admin", field: "issuperuser", formatter: "tickCross", align: "center", headerSort: false, headerFilter: false }
+                { title: "Super Admin", field: "issuperuser", formatter: "tickCross", hozAlign: "center", headerSort: false, headerFilter: false }
             ])
             .addEvent("rowClick", function (e, row) {
                 if (typeof globalTabulatorObserver !== "undefined") {
@@ -39,7 +40,8 @@ class TabulatorFactory {
                 }
             })
             // En appelant la méthode à vide, elle injecte automatiquement ['view', 'edit', 'delete']
-            .setWithActions(['impersonate'])
+            .setWithActions()
+            .addActions(['impersonate'])
             .build();
     }
 }
