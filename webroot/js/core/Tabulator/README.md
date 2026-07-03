@@ -62,3 +62,17 @@ Le bouton `create` (Create / Bouton Success Vert) est quant à lui inclus de bas
 ```javascript
 // Génère automatiquement l'en-tête avec Créer/Reset et les lignes avec Voir/Modifier/Supprimer
 builder.setWithActions();
+```
+
+### Cumuler ou masquer les actions de ligne (CRUD et Spécifiques)
+Par défaut, le Monteur pré-configure les boutons CRUD classiques (`view`, `edit`, `delete`). Vous pouvez affiner cette liste grâce au chaînage :
+
+* **Ajouter des actions spécifiques sans toucher au CRUD :**
+```javascript
+builder.addActions(['impersonate']); // Résultat : view, edit, delete, impersonate
+```
+
+### Retirer le CRUD et n'afficher que des actions sur-mesure :
+```javascript
+builder.setWithActions([]).addActions(['viewpdf']); // Résultat : uniquement le bouton PDF
+```

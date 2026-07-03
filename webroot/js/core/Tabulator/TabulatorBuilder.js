@@ -70,6 +70,8 @@ class TabulatorBuilder {
                 }
             }
         };
+        /** @type {Array<string>} */
+        this.actionButtons = ['view', 'edit', 'delete']; // CRUD par défaut
     }
 
     /**
@@ -235,6 +237,131 @@ class TabulatorBuilder {
         return this;
     }
 
+    /**
+         * Définit ou écrase l'ensemble des boutons d'actions de ligne.
+         * Passer un tableau vide `[]` permet de retirer les boutons CRUD par défaut.
+         * * @param {Array<string>} buttons Le tableau complet des boutons (ex: ['view', 'edit'])
+         * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
+         */
+    setWithActions(buttons = ['view', 'edit', 'delete']) {
+        this.actionButtons = buttons;
+        return this;
+    }
+
+    /**
+     * Ajoute des boutons d'actions supplémentaires (hors CRUD) sans écraser l'existant.
+     * Idéal pour compléter le triptyque de base (ex: .addActions(['impersonate'])).
+     * * @param {Array<string>} extraButtons Liste des boutons à cumuler
+     * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
+     */
+    addActions(extraButtons = []) {
+        this.actionButtons = [...this.actionButtons, ...extraButtons];
+        return this;
+    }
+
+    /**
+     * Compile la configuration et injecte la colonne Actions finale.
+     * (Auparavant, cette logique était directement dans setWithActions, elle est désormais
+     * exécutée au moment du build() si des boutons ont été configurés).
+     * * @private
+     * @returns {void}
+     */
+    _compileActionColumn() {
+        // Si aucun bouton n'est configuré et que l'en-tête n'est pas requis, on n'ajoute pas la colonne
+        if (!this.actionButtons || (this.actionButtons.length === 0 && typeof ButtonFactory === 'undefined')) {
+            return;
+        }
+
+        const actionColumn = {
+            title: typeof ButtonFactory !== 'undefined' ? ButtonFactory.getHeaderDropdown() : 'Actions',
+            field: "_actions",
+            headerSort: false,
+            headerFilter: false,
+            hozAlign: "center",
+            width: 240, // Légèrement élargi pour accueillir les boutons cumulés
+
+            formatter: () => {
+                let html = '<div class="d-flex justify-content-center align-items-center">';
+                if (typeof ButtonFactory !== 'undefined') {
+                    this.actionButtons.forEach(btnKey => {
+                        html += ButtonFactory.getCellButton(btnKey);
+                    });
+                }
+                html += '</div>';
+                return html;
+            },
+
+            cellClick: (e, cell) => {
+                const btn = e.target.closest('.btn-action');
+                if (btn) {
+                    const action = btn.dataset.action;
+                    const rowData = cell.getRow().getData();
+                    if (typeof globalTabulatorObserver !== 'undefined') {
+                        globalTabulatorObserver.publish(`${this.selector}:action:${action}`, rowData);
+                    }
+                }
+            },
+
+            headerClick: (e, column) => {
+                const toggleBtn = e.target.closest('.action-menu-btn');
+                if (toggleBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const menu = toggleBtn.nextElementSibling;
+                    if (menu && menu.classList.contains('dropdown-menu')) {
+                        menu.classList.toggle('show');
+                        if (menu.classList.contains('show')) {
+                            const closeMenu = (event) => {
+                                if (!menu.contains(event.target) && event.target !== toggleBtn) {
+                                    menu.classList.remove('show');
+                                    document.removeEventListener('click', closeMenu);
+                                }
+                            };
+                            setTimeout(() => document.addEventListener('click', closeMenu), 10);
+                        }
+                    }
+                    return;
+                }
+
+                const target = e.target.closest('.dropdown-item');
+                if (!target) return;
+
+                const parentMenu = target.closest('.dropdown-menu');
+                if (parentMenu) parentMenu.classList.remove('show');
+
+                if (target.classList.contains('action-create')) {
+                    if (typeof globalTabulatorObserver !== 'undefined') {
+                        globalTabulatorObserver.publish(`${this.selector}:action:create`);
+                    }
+                }
+                else if (target.classList.contains('action-reset')) {
+                    const table = column.getTable();
+                    table.clearFilter(true);
+                    table.clearSort();
+                    if (typeof globalTabulatorObserver !== 'undefined') {
+                        globalTabulatorObserver.publish(`${this.selector}:action:reset`);
+                    }
+                }
+            }
+        };
+
+        if (!this.config.columns) this.config.columns = [];
+        this.config.columns.push(actionColumn);
+    }
+
+    /**
+     * Finalise la construction et instancie l'objet Tabulator.
+     * * @returns {Tabulator} L'instance active de Tabulator.
+     */
+    build() {
+        // Compilation automatique de la colonne d'actions juste avant le rendu
+        this._compileActionColumn();
+
+        if (!this.config.ajaxURL) {
+            console.warn("TabulatorBuilder: Aucune source Ajax configurée.");
+        }
+        return new Tabulator(this.selector, this.config);
+    }
 
     /**
      * Compile la configuration accumulée et instancie l'objet de grille Tabulator.
