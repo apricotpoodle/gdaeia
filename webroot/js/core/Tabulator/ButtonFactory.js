@@ -38,36 +38,32 @@ class ButtonFactory {
      * @returns {string} Le code HTML de l'en-tête
      */
     static getHeaderDropdown() {
-        // Le bouton principal du dropdown utilise aussi le Builder !
+        // Création du bouton SANS les attributs natifs de Bootstrap (data-bs-toggle)
         const mainBtn = new ButtonBuilder()
             .setSize('sm')
             .setColor('danger')
-            .addClass('dropdown-toggle')
+            .addClass('action-menu-btn') // Nouvelle classe cible
             .setTitle('Menu des actions')
             .setIcon('fas fa-cog')
-            .build()
-            .replace('type="button"', 'type="button" data-bs-toggle="dropdown" aria-expanded="false"');
-        // Petite exception assumée pour injecter les data-attributes Bootstrap natifs
+            .build();
 
         return `
-            <div class="d-flex align-items-center justify-content-center">
-                <div class="dropdown me-2">
-                    ${mainBtn}
-                    <ul class="dropdown-menu shadow">
-                        <li>
-                            <button class="dropdown-item text-success action-create fw-bold" type="button">
-                                <i class="fas fa-plus-circle me-2"></i> Créer
-                            </button>
-                        </li>
-                        <li><hr class="dropdown-divider"></li>
-                        <li>
-                            <button class="dropdown-item text-warning action-reset fw-bold" type="button">
-                                <i class="fas fa-undo me-2"></i> Réinitialiser l'affichage
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-                <span class="fw-bold">Actions</span>
+            <div class="d-flex align-items-center justify-content-center" style="position: relative;">
+                ${mainBtn}
+                <ul class="dropdown-menu shadow" style="position: absolute; top: 100%; right: 0; z-index: 9999; margin-top: 5px;">
+                    <li>
+                        <button class="dropdown-item text-success action-create fw-bold" type="button">
+                            <i class="fas fa-plus-circle me-2"></i> Créer
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <button class="dropdown-item text-warning action-reset fw-bold" type="button">
+                            <i class="fas fa-undo me-2"></i> Réinitialiser l'affichage
+                        </button>
+                    </li>
+                </ul>
+                <span class="fw-bold ms-2">Actions</span>
             </div>
         `;
     }

@@ -38,6 +38,7 @@ class TabulatorFactory {
                     globalTabulatorObserver.publish('usersTable:rowClick', row.getData());
                 }
             })
+            .setWithActions(['view', 'edit', 'impersonate', 'delete'])
             .build();
     }
 }

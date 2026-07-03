@@ -22,3 +22,20 @@
     font-style: italic;
     font-size: 1.1rem;
 }
+
+/* Empêche Tabulator de cacher les menus déroulants (Dropdowns Bootstrap) dans l'en-tête */
+/* Désactive TOUTES les couches de masquage de l'en-tête Tabulator pour laisser sortir le Dropdown */
+.tabulator .tabulator-header,
+.tabulator .tabulator-header .tabulator-header-contents,
+.tabulator .tabulator-headers,
+.tabulator .tabulator-col,
+.tabulator .tabulator-col-content,
+.tabulator .tabulator-col-titleHolder,
+.tabulator .tabulator-col-title {
+    overflow: visible !important;
+}
+
+/* S'assurer que le menu dropdown passe par-dessus le reste du tableau */
+.tabulator .dropdown-menu {
+    z-index: 9999 !important;
+}

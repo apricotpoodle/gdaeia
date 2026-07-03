@@ -137,6 +137,107 @@ class TabulatorBuilder {
         return this;
     }
 
+    setWithActions(buttons = ['view', 'edit', 'delete']) {
+        const actionColumn = {
+            title: typeof ButtonFactory !== 'undefined' ? ButtonFactory.getHeaderDropdown() : 'Actions',
+            field: "_actions",
+            headerSort: false,
+            headerFilter: false,
+            hozAlign: "center",
+            width: 220,
+
+            formatter: () => {
+                let html = '<div class="d-flex justify-content-center align-items-center">';
+                if (typeof ButtonFactory !== 'undefined') {
+                    buttons.forEach(btnKey => {
+                        html += ButtonFactory.getCellButton(btnKey);
+                    });
+                }
+                html += '</div>';
+                return html;
+            },
+
+            cellClick: (e, cell) => {
+                const btn = e.target.closest('.btn-action');
+                if (btn) {
+                    const action = btn.dataset.action;
+                    const rowData = cell.getRow().getData();
+                    if (typeof globalTabulatorObserver !== 'undefined') {
+                        globalTabulatorObserver.publish(`${this.selector}:action:${action}`, rowData);
+                    }
+                }
+            },
+
+            // 4. ROUTAGE DES ÉVÉNEMENTS D'EN-TÊTE
+            /**
+             * Intercepte et orchestre les clics sur l'en-tête de la colonne d'actions.
+             * Court-circuite Popper.js pour forcer l'ouverture du menu déroulant et
+             * diffuse les intentions d'actions globales via le TabulatorObserver.
+             *
+             * @param {Event} e L'événement de clic natif du navigateur
+             * @param {Tabulator.ColumnComponent} column Le composant colonne Tabulator
+             * @returns {void}
+             */
+            headerClick: (e, column) => {
+
+                // A. Ouverture/Fermeture manuelle du menu (Bypass total de Bootstrap)
+                const toggleBtn = e.target.closest('.action-menu-btn');
+
+                if (toggleBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // On cible le menu suivant le bouton
+                    const menu = toggleBtn.nextElementSibling;
+
+                    if (menu && menu.classList.contains('dropdown-menu')) {
+                        // Bascule la classe "show" (qui en Bootstrap fait un display: block)
+                        menu.classList.toggle('show');
+
+                        // Referme le menu si on clique ailleurs sur la page
+                        if (menu.classList.contains('show')) {
+                            const closeMenu = (event) => {
+                                if (!menu.contains(event.target) && event.target !== toggleBtn) {
+                                    menu.classList.remove('show');
+                                    document.removeEventListener('click', closeMenu);
+                                }
+                            };
+                            setTimeout(() => document.addEventListener('click', closeMenu), 10);
+                        }
+                    }
+                    return;
+                }
+
+                // B. Clics sur les éléments du menu
+                const target = e.target.closest('.dropdown-item');
+                if (!target) return;
+
+                // Referme visuellement le menu après le clic
+                const parentMenu = target.closest('.dropdown-menu');
+                if (parentMenu) parentMenu.classList.remove('show');
+
+                if (target.classList.contains('action-create')) {
+                    if (typeof globalTabulatorObserver !== 'undefined') {
+                        globalTabulatorObserver.publish(`${this.selector}:action:create`);
+                    }
+                }
+                else if (target.classList.contains('action-reset')) {
+                    const table = column.getTable();
+                    table.clearFilter(true);
+                    table.clearSort();
+                    if (typeof globalTabulatorObserver !== 'undefined') {
+                        globalTabulatorObserver.publish(`${this.selector}:action:reset`);
+                    }
+                }
+            }
+        };
+
+        if (!this.config.columns) this.config.columns = [];
+        this.config.columns.push(actionColumn);
+
+        return this;
+    }
+
     /**
      * Compile la configuration accumulée et instancie l'objet de grille Tabulator.
      * * @returns {Tabulator} L'instance active et opérationnelle de Tabulator.
