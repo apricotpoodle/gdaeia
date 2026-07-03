@@ -38,7 +38,8 @@ class TabulatorBuilder {
     /**
      * Active et configure de concert la pagination, le tri et le filtrage distants.
      * Délègue l'intégralité des calculs lourds au serveur de base de données (CakePHP).
-     * * @param {number} [size=20] Le nombre de lignes à afficher par page.
+     * 
+     * @param {number} [size=20] Le nombre de lignes à afficher par page.
      * @returns {TabulatorBuilder} L'instance courante pour permettre le chaînage.
      */
     setRemotePagination(size = 20) {
@@ -47,6 +48,13 @@ class TabulatorBuilder {
         this.config.sortMode = "remote";
         this.config.filterMode = "remote"; // Les filtres tapés par l'utilisateur sont envoyés à l'API
         this.config.paginationSize = size;
+      
+        // MAPPING CRITIQUE : Empêche la collision avec le Paginator natif de CakePHP
+        this.config.dataSendParams = {
+            "sort": "sorters",   // Tabulator enverra '?sorters[...]' au lieu de '?sort[...]'
+            "filter": "filters"  // Anticipation pour les filtres
+        };
+
         return this;
     }
 

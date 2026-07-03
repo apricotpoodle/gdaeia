@@ -26,7 +26,8 @@ class UsersController extends AppController
     public function initialize(): void
     {
         parent::initialize();
-// CakePHP 5 : On force explicitement l'utilisation de la vue JSON
+
+        // CakePHP 5 : On force explicitement l'utilisation de la vue JSON
         // pour toutes les actions de ce contrôleur API.
         $this->viewBuilder()->setClassName('Json');    }
 
@@ -54,7 +55,10 @@ class UsersController extends AppController
         // 3. Exécution de la requête avec la pagination native
         $paginatedData = $this->paginate($query, [
             'limit' => (int)($queryParams['size'] ?? 20),
-            'page'  => (int)($queryParams['page'] ?? 1)
+            'page'  => (int)($queryParams['page'] ?? 1),
+            // SÉCURITÉ : On interdit au Paginator CakePHP de trier via l'URL, 
+            // car le TabulatorAdapter a déjà appliqué les tris sur l'objet $query.
+            'sortableFields' => []
         ]);
 
         // 4. Formatage de la réponse
