@@ -7,6 +7,7 @@
 
 // Injection des librairies externes (Tabulator) et de notre script spécifique dans le bloc <head>
 $this->Html->css('https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css', ['block' => true]);
+$this->Html->css('tabulator/custom-theme.css', ['block' => true]);
 $this->Html->script('https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js', ['block' => true]);
 $this->Html->script('core/Tabulator/TabulatorObserver.js', ['block' => true]);
 $this->Html->script('core/Tabulator/TabulatorBuilder.js', ['block' => true]);

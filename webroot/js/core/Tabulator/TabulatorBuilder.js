@@ -12,7 +12,7 @@ class TabulatorBuilder {
      * Initialise une configuration vierge avec les comportements structurels par défaut.
      * * @param {string} selector Le sélecteur CSS de l'élément DOM cible (ex: "#users-table").
      */
-    constructor(selector) {
+constructor(selector) {
         /** @type {string} */
         this.selector = selector;
         
@@ -20,11 +20,50 @@ class TabulatorBuilder {
         this.config = {
             layout: "fitColumns",
             responsiveLayout: "collapse",
-            // Permet par défaut le tri sur plusieurs colonnes via la touche Shift
-            multiSort: true 
+            multiSort: true,
+
+            // --- UX & INTERNATIONALISATION (SOCLE COMMUN) ---
+            placeholder: "<div class='tabulator-empty-msg'>Aucune donnée trouvée</div>", 
+            
+            // Configuration de l'indicateur visuel de chargement natif
+            ajaxLoader: true,
+            ajaxLoaderLoading: "<div class='tabulator-loading-msg'><span>Chargement des données en cours...</span></div>",
+
+            // Dictionnaire de traduction en Français
+            locale: "fr-fr",
+            langs: {
+                "fr-fr": {
+                    "ajax": {
+                        "loading": "Chargement",
+                        "error": "Erreur de chargement des données",
+                    },
+                    "pagination": {
+                        "page_size": "Afficher :",
+                        "page_title": "Afficher la Page",
+                        "first": "Premier",
+                        "first_title": "Première Page",
+                        "last": "Dernier",
+                        "last_title": "Dernière Page",
+                        "prev": "Précédent",
+                        "prev_title": "Page Précédente",
+                        "next": "Suivant",
+                        "next_title": "Page Suivante",
+                        "all": "Toutes",
+                        "counter": {
+                            "showing": "Lignes",
+                            "of": "sur",
+                            "rows": "au total",
+                            "pages": "sur",
+                        }
+                    },
+                    "headerFilters": {
+                        "default": "Filtrer...",
+                    }
+                }
+            }
         };
     }
-
+    
     /**
      * Configure la source de données distante (API REST JSON).
      * * @param {string} url L'URL du point de terminaison JSON de l'API.
