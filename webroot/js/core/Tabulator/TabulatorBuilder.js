@@ -137,6 +137,13 @@ class TabulatorBuilder {
         return this;
     }
 
+    /**
+         * Ajoute automatiquement une colonne "Actions" standardisée en fin de tableau.
+         * Contient par défaut les boutons CRUD de ligne (Read/View, Update/Edit, Delete).
+         * Le bouton 'Create' est quant à lui géré globalement dans l'en-tête.
+         * * @param {Array<string>} [buttons=['view', 'edit', 'delete']] Liste des boutons à afficher par ligne.
+         * @returns {TabulatorBuilder} L'instance courante pour permettre le chaînage.
+         */
     setWithActions(buttons = ['view', 'edit', 'delete']) {
         const actionColumn = {
             title: typeof ButtonFactory !== 'undefined' ? ButtonFactory.getHeaderDropdown() : 'Actions',
@@ -168,8 +175,8 @@ class TabulatorBuilder {
                 }
             },
 
-            // 4. ROUTAGE DES ÉVÉNEMENTS D'EN-TÊTE
             /**
+             * 4. ROUTAGE DES ÉVÉNEMENTS D'EN-TÊTE
              * Intercepte et orchestre les clics sur l'en-tête de la colonne d'actions.
              * Court-circuite Popper.js pour forcer l'ouverture du menu déroulant et
              * diffuse les intentions d'actions globales via le TabulatorObserver.
@@ -179,22 +186,14 @@ class TabulatorBuilder {
              * @returns {void}
              */
             headerClick: (e, column) => {
-
-                // A. Ouverture/Fermeture manuelle du menu (Bypass total de Bootstrap)
                 const toggleBtn = e.target.closest('.action-menu-btn');
 
                 if (toggleBtn) {
                     e.preventDefault();
                     e.stopPropagation();
-
-                    // On cible le menu suivant le bouton
                     const menu = toggleBtn.nextElementSibling;
-
                     if (menu && menu.classList.contains('dropdown-menu')) {
-                        // Bascule la classe "show" (qui en Bootstrap fait un display: block)
                         menu.classList.toggle('show');
-
-                        // Referme le menu si on clique ailleurs sur la page
                         if (menu.classList.contains('show')) {
                             const closeMenu = (event) => {
                                 if (!menu.contains(event.target) && event.target !== toggleBtn) {
@@ -208,11 +207,9 @@ class TabulatorBuilder {
                     return;
                 }
 
-                // B. Clics sur les éléments du menu
                 const target = e.target.closest('.dropdown-item');
                 if (!target) return;
 
-                // Referme visuellement le menu après le clic
                 const parentMenu = target.closest('.dropdown-menu');
                 if (parentMenu) parentMenu.classList.remove('show');
 
@@ -237,6 +234,7 @@ class TabulatorBuilder {
 
         return this;
     }
+
 
     /**
      * Compile la configuration accumulée et instancie l'objet de grille Tabulator.

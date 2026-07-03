@@ -33,7 +33,7 @@ builder.setColumnDefaults({
 });
 
 ```
-### Comment gérer une exception sur une colonne précise ? 
+### Comment gérer une exception sur une colonne précise ?
 Les propriétés définies individuellement dans le tableau `setColumns()` ont une priorité absolue et écrasent les configurations globales de `setColumnDefaults()` :
 
 ```javascript
@@ -49,3 +49,16 @@ Lorsque `setRemotePagination()` est invoqué, le comportement passe en mode serv
 - Tri multiple : Maintenez la touche `Shift` enfoncée lors du clic sur les en-têtes. Tabulator enverra un tableau `sorters` à l'API.
 
 - Filtrage : Saisissez la valeur et appuyez sur `Entrée`. Tabulator transmettra un tableau `filters` contenant le champ, le type d'opérateur et la valeur à l'API CakePHP.
+
+### Configuration de la Colonne d'Actions
+La méthode `.setWithActions()` du `TabulatorBuilder` applique par défaut les boutons standards du CRUD de ligne :
+* `view` (Read / Bouton Info Bleu)
+* `edit` (Update / Bouton Primary Bleu)
+* `delete` (Delete / Bouton Danger Rouge)
+
+Le bouton `create` (Create / Bouton Success Vert) est quant à lui inclus de base et géré de manière centralisée dans l'en-tête via le menu engrenage.
+
+**Usage standard (KISS) :**
+```javascript
+// Génère automatiquement l'en-tête avec Créer/Reset et les lignes avec Voir/Modifier/Supprimer
+builder.setWithActions();

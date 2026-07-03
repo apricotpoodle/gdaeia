@@ -38,7 +38,8 @@ class TabulatorFactory {
                     globalTabulatorObserver.publish('usersTable:rowClick', row.getData());
                 }
             })
-            .setWithActions(['view', 'edit', 'impersonate', 'delete'])
+            // En appelant la méthode à vide, elle injecte automatiquement ['view', 'edit', 'delete']
+            .setWithActions(['impersonate'])
             .build();
     }
 }
