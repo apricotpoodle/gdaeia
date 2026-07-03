@@ -1,73 +1,66 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Service\DataGrid;
+namespace App\Service;
 
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query\SelectQuery;
 use Cake\Datasource\Paging\PaginatedInterface;
+use Cake\Utility\Inflector; 
 
 /**
  * Class TabulatorAdapter
  *
- * Design Pattern: Adapter (GoF - Bande des Quatre).
- * * Cette classe a pour unique responsabilité (SOLID: SRP) d'agir comme un pont
- * entre le format de données imposé par la librairie front-end Tabulator
- * et l'ORM natif de CakePHP.
+ * Implémentation du Patron de Conception "Adaptateur" (GoF).
+ * Cette classe a pour unique responsabilité de traduire les requêtes de la grille
+ * front-end (Tabulator) vers l'ORM CakePHP, et de formater la réponse paginée.
  *
- * @package App\Service\DataGrid
+ * @package App\Service
  */
 class TabulatorAdapter
 {
     /**
-     * Adapte les paramètres de tri et de filtre de Tabulator pour l'ORM CakePHP.
-     * * Tabulator envoie les paramètres de tri sous ce format JSON :
-     * `sorters[0][field]=name&sorters[0][dir]=asc`
+     * Applique les paramètres de tri (Sorters) envoyés par Tabulator à la requête ORM.
+     * Résout automatiquement les ambiguïtés SQL et traduit les relations.
      *
-     * @param ServerRequest $request L'objet requête HTTP courant de CakePHP.
-     * @param SelectQuery $query La requête ORM initiale non modifiée.
-     * @return SelectQuery La requête ORM enrichie avec les clauses ORDER BY.
+     * @param \Cake\Http\ServerRequest $request L'objet requête HTTP courant.
+     * @param \Cake\ORM\Query\SelectQuery $query La requête ORM initiale.
+     * @return \Cake\ORM\Query\SelectQuery La requête ORM modifiée avec les clauses ORDER BY.
      */
     public function adaptRequest(ServerRequest $request, SelectQuery $query): SelectQuery
     {
         $queryParams = $request->getQueryParams();
+        // Récupère l'alias de la table principale (ex: 'Users')
+        $mainAlias = $query->getRepository()->getAlias(); 
 
-        // 1. Application des Tris Multiples (Sorting)
-        if (!empty($queryParams['sorters']) && is_array($queryParams['sorters'])) {
-            foreach ($queryParams['sorters'] as $sorter) {
-                $field = $sorter['field'] ?? null;
-                $direction = strtoupper($sorter['dir'] ?? 'ASC');
+        if (empty($queryParams['sorters']) || !is_array($queryParams['sorters'])) {
+            return $query;
+        }
+
+        foreach ($queryParams['sorters'] as $sorter) {
+            $field = $sorter['field'] ?? null;
+            $direction = strtoupper($sorter['dir'] ?? 'ASC');
+            
+            if (is_string($field) && in_array($direction, ['ASC', 'DESC'], true)) {
                 
-                if (is_string($field) && in_array($direction, ['ASC', 'DESC'], true)) {
-                    $query->orderBy([$field => $direction]);
+                // Si le champ ne contient pas de point (ex: "id"), on préfixe avec la table principale ("Users.id")
+                if (strpos($field, '.') === false) {
+                    $ormField = $mainAlias . '.' . $field;
+                } else {
+                    // S'il contient un point (ex: "role.name"), on traduit la notation JSON en notation ORM ("Roles.name")
+                    [$relation, $column] = explode('.', $field, 2);
+                    $relationAlias = Inflector::camelize(Inflector::pluralize($relation));
+                    $ormField = $relationAlias . '.' . $column;
                 }
+                
+                $query->order([$ormField => $direction]);
             }
         }
 
-        // 2. Application des Filtres (Filtering)
-        if (!empty($queryParams['filter']) && is_array($queryParams['filter'])) {
-            foreach ($queryParams['filter'] as $filter) {
-                $field = $filter['field'] ?? null;
-                $type = strtolower($filter['type'] ?? '=');
-                $value = $filter['value'] ?? '';
-
-                if (is_string($field) && $value !== '') {
-                    // Si Tabulator demande un 'like' (filtrage textuel partiel)
-                    if ($type === 'like') {
-                        $query->where([sprintf('%s LIKE', $field) => "%{$value}%"]);
-                    } else {
-                        // Liste blanche d'opérateurs pour la sécurité
-                        $validOperators = ['=', '<', '>', '<=', '>=', '!='];
-                        $op = in_array($type, $validOperators, true) ? $type : '=';
-                        $query->where([sprintf('%s %s', $field, $op) => $value]);
-                    }
-                }
-            }
-        }
         return $query;
     }
 
-/**
+    /**
      * Formate le résultat de la pagination CakePHP au format JSON strict attendu par Tabulator.
      *
      * @param \Cake\Datasource\Paging\PaginatedInterface $paginated L'objet paginé issu de CakePHP.
@@ -75,34 +68,11 @@ class TabulatorAdapter
      */
     public function adaptResponse(PaginatedInterface $paginated): array
     {
-        // Récupération du tableau des paramètres de pagination (CakePHP 5)
         $pagingParams = $paginated->pagingParams();
 
         return [
             'last_page' => $pagingParams['pageCount'] ?? 1,
-            // iterator_to_array garantit la compatibilité stricte avec PaginatedInterface
             'data'      => iterator_to_array($paginated),
         ];
     }
-
-    /**
-     * Normalise le nom du champ reçu du JS pour l'ORM CakePHP.
-     * (Ex: transforme 'role.name' en 'Roles.name')
-     *
-     * @param string|null $field
-     * @return string|null
-     */
-    private function normalizeField(?string $field): ?string
-    {
-        if (!$field) return null;
-        
-        $parts = explode('.', $field);
-        if (count($parts) > 1) {
-            // Capitalise la première lettre de la table et ajoute un 's' (convention simplifiée)
-            $parts[0] = ucfirst($parts[0]) . 's'; 
-            return implode('.', $parts);
-        }
-        return $field;
-    }
-    
 }
