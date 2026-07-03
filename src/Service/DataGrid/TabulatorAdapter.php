@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Service;
+namespace App\Service\DataGrid;
 
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query\SelectQuery;

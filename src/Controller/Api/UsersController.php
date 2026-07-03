@@ -4,7 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
-use App\Service\TabulatorAdapter;
+use App\Service\DataGrid\TabulatorAdapter;
 
 /**
  * Class UsersController (API)
