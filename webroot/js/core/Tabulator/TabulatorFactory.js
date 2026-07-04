@@ -25,9 +25,10 @@ class TabulatorFactory {
             ])
             // INJECTION DANS LE SOCLE COMMUN : Sécurité des colonnes globale
             .addEvent("dataLoaded", function (data) {
-                if (data && data.length > 0 && data[0]._ui_permissions) {
-                    const columnPermissions = data[0]._ui_permissions.columns || {};
-                    const tableInstance = Tabulator.findTable(selector)[0];
+                // Lecture de la structure propre grid_rights
+                if (data && data.length > 0 && data[0].grid_rights) {
+                    const columnPermissions = data[0].grid_rights.columns || {};
+                    const tableInstance = this;
 
                     if (tableInstance) {
                         Object.keys(columnPermissions).forEach(fieldKey => {

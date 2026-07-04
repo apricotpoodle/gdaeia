@@ -182,9 +182,9 @@ class TabulatorBuilder {
                 let html = '<div class="d-flex justify-content-center align-items-center">';
                 const rowData = cell.getRow().getData();
 
-                // Extraction sécurisée selon la nouvelle arborescence AppEntity
-                const uiPermissions = rowData._ui_permissions || {};
-                const actionPermissions = uiPermissions.actions || {};
+                // Extraction basée sur la clé grid_rights
+                const gridRights = rowData.grid_rights || {};
+                const actionPermissions = gridRights.actions || {};
 
                 if (typeof ButtonFactory !== 'undefined') {
                     this.actionButtons.forEach(btnKey => {
