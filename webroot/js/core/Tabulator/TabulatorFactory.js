@@ -6,10 +6,9 @@ class TabulatorFactory {
 
     /**
      * GABARIT "BASE" : Initialise un Builder avec la configuration technique socle.
-     * Intègre nativement le filtrage automatique et générique des colonnes par rapport aux droits AppEntity.
      * @private
-     * @param {string} selector - Le sélecteur CSS de l'élément DOM cible.
-     * @returns {TabulatorBuilder} Un monteur pré-configuré avec l'ID, la pagination et la sécurité des colonnes.
+     * @param {string} selector
+     * @returns {TabulatorBuilder}
      */
     static #getBaseTable(selector) {
         return new TabulatorBuilder(selector)
@@ -22,23 +21,8 @@ class TabulatorFactory {
             })
             .setColumns([
                 { title: "ID", field: "id", width: 70, sorter: "number", hozAlign: "center", headerFilterFunc: "=" }
-            ])
-            // INJECTION DANS LE SOCLE COMMUN : Sécurité des colonnes globale
-            .addEvent("dataLoaded", function (data) {
-                // Lecture de la structure propre grid_rights
-                if (data && data.length > 0 && data[0].grid_rights) {
-                    const columnPermissions = data[0].grid_rights.columns || {};
-                    const tableInstance = this;
-
-                    if (tableInstance) {
-                        Object.keys(columnPermissions).forEach(fieldKey => {
-                            if (columnPermissions[fieldKey] === false) {
-                                tableInstance.hideColumn(fieldKey);
-                            }
-                        });
-                    }
-                }
-            });
+            ]);
+        // Plus aucun événement ici, le build() s'occupe de tout en interne !
     }
 
     /**

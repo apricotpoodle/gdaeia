@@ -21,6 +21,7 @@ $this->Html->script('core/Tabulator/ButtonFactory.js', ['block' => true]);
 $this->Html->script('core/Tabulator/TabulatorBuilder.js', ['block' => true]);
 $this->Html->script('core/Tabulator/TabulatorFactory.js', ['block' => true]);
 
+
 $this->Html->script('views/Users/index.js', ['block' => true]);
 ?>
 

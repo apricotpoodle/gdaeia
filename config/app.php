@@ -90,7 +90,7 @@ return [
      * enable timestamping regardless of debug value.
      */
     'Asset' => [
-        //'timestamp' => true,
+        'timestamp' => 'force', // <-- Valeur conseillée : infaillible en dév. comme en prod.
         // 'cacheTime' => '+1 year'
     ],
 

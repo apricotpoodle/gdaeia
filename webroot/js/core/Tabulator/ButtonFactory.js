@@ -29,27 +29,32 @@ class ButtonFactory {
     };
 
     /**
-     * Génère le balisage HTML d'un bouton d'action de cellule enrichi en métadonnées.
-     * @param {string} key - Clé unique de l'action définie dans le registre (`view`, `edit`, etc.)
-     * @returns {string} Code HTML brut du bouton prêt à être rendu par le formateur de cellule
+     * Génère le balisage HTML d'un bouton d'action en prenant en compte ses permissions.
+     * @param {string} key - Clé de l'action (`view`, `edit`, `delete`)
+     * @param {Object} rowPermissions - L'objet de permissions de la ligne (ex: {view: true, edit: false})
+     * @returns {string} Code HTML brut du bouton
      */
-    static getCellButton(key) {
+    static getCellButton(key, rowPermissions = {}) {
         const config = this.#configs[key];
-        if (!config) {
-            console.error(`ButtonFactory: L'action "${key}" n'est pas définie dans le registre.`);
-            return '';
-        }
+        if (!config) return '';
+
+        // Déduction du droit : si la clé vaut explicitement false, on bloque !
+        const isAllowed = rowPermissions[key] !== false;
 
         const target = config.target || '_self';
         const isEvent = config.isEvent ? 'true' : 'false';
 
+        // Si interdit, on injecte les classes Bootstrap d'invalidation
+        const disabledClass = isAllowed ? '' : 'disabled pe-none opacity-25';
+
         return `
             <button type="button"
-                    class="btn btn-sm btn-${config.color} shadow-sm me-1 btn-action"
+                    class="btn btn-sm btn-${config.color} shadow-sm me-1 btn-action ${disabledClass}"
                     data-action="${key}"
                     data-target="${target}"
                     data-is-event="${isEvent}"
-                    title="${config.title}">
+                    ${isAllowed ? '' : 'disabled="disabled"'}
+                    title="${isAllowed ? config.title : 'Action non autorisée'}">
                 <i class="${config.icon} fa-fw"></i>
             </button>
         `;

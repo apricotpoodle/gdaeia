@@ -113,7 +113,11 @@ L'application intègre un contrôle d'accès unifié combinant les droits de lig
 2. **Permissions Colonnes** : Gérées via `_ui_permissions.columns`. L'événement global `dataLoaded` intercepte le premier enregistrement et utilise l'API `tableInstance.hideColumn()` pour faire disparaître physiquement et visuellement les colonnes non autorisées du DOM.
 
 ### Sécurité Native Intégrée (Gabarit Base)
-Le gabarit structurel interne `#getBaseTable` écoute de manière transparente l'événement `dataLoaded`. Tout flux JSON contenant l'arborescence `_ui_permissions.columns` verra ses colonnes privées masquées dynamiquement par l'infrastructure, sans qu'il ne soit nécessaire de le spécifier dans les fabriques métiers publiques.
+Le gabarit structurel interne `#getBaseTable` écoute de manière transparente l'événement `dataLoaded`. Tout flux JSON contenant l'arborescence `grid_rights.columns` verra ses colonnes privées masquées dynamiquement par l'infrastructure, sans qu'il ne soit nécessaire de le spécifier dans les fabriques métiers publiques.
 
 ### Système de Droits Unifié (`grid_rights`)
-L'infrastructure s'appuie sur la propriété virtuelle globale `grid_rights` générée par l'entité parente `AppEntity`. Ce dictionnaire isole les permissions d'exécution graphique sous deux namespaces dédiés : `actions` (booléens d'activation des boutons de lignes) et `columns` (booléens de structure de visibilité).
+
+Le framework de grille intègre un mécanisme automatique d'application des droits d'accès visuels et structurels :
+
+1. **Permissions sur les Boutons (Lignes)** : Le `formatter` de la colonne d'actions (compilé automatiquement lors du `build()`) intercepte l'objet `grid_rights.actions` de la ligne courante. Si une clé vaut `false`, la `ButtonFactory` injecte l'attribut HTML `disabled="disabled"` et applique les classes d'invalidation de pointeur et d'opacité Bootstrap (`disabled pe-none opacity-25`).
+2. **Permissions sur les Colonnes (Structure)** : Gérées au niveau du callback natif `ajaxResponse` dans `TabulatorBuilder.js`. Dès réception du JSON, le premier enregistrement est analysé. L'application des méthodes `hideColumn()` est enveloppée dans un `setTimeout` de 10ms afin de forcer l'exécution du masquage juste après la stabilisation de l'arbre DOM par Tabulator, éliminant tout clignotement ou anomalie graphique.
