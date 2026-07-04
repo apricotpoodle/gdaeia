@@ -1,36 +1,78 @@
 /**
  * @class TabulatorFactory
- * * Implémentation du patron de conception "Factory" (Fabrique).
- * Centralise et normalise la création des grilles de données métiers de l'application.
- * Consomme le TabulatorBuilder pour injecter les requis d'entreprise de manière standardisée.
+ * @description Implémentation du patron de conception "Factory Method" (Fabrique).
+ * Centralise et applique les standards ergonomiques et graphiques de l'entreprise.
+ * Utilise un mécanisme de chaînage de gabarits internes (`#getBaseTable`, `#getActionsTable`)
+ * pour instancier des configurations métiers hautement standardisées (DRY).
  * * @package Core\Tabulator
+ * @author L'Équipe de Développement
  */
 class TabulatorFactory {
 
+    // ==========================================
+    // GABARITS DE CONFIGURATION STRUCTURELS (Privés)
+    // ==========================================
+
     /**
-     * Fabrique la grille standard pour le module de gestion des Utilisateurs.
-     * Active par défaut le tri multi-colonnes et le filtrage par en-tête sur chaque colonne.
-     * * @param {string} selector Le sélecteur DOM cible dans lequel injecter la grille.
-     * @returns {Tabulator} L'instance configurée de la grille Utilisateurs.
+     * GABARIT "BASE" : Initialise un Builder avec la configuration technique socle.
+     * Aligne automatiquement la colonne ID avec l'opérateur d'égalité stricte.
+     *
+     * @private
+     * @param {string} selector - Le sélecteur CSS de l'élément DOM cible.
+     * @returns {TabulatorBuilder} Un monteur pré-configuré avec l'ID et la pagination distante.
      */
-    static createUsersTable(selector) {
+    static #getBaseTable(selector) {
         return new TabulatorBuilder(selector)
-            .setAjaxSource("/api/users.json")
-            .setController('Users')
             .setRemotePagination(20)
-            // CARACTÉRISTIQUE DE BASE UNIQUE : On active globalement le tri et le filtre textuel
             .setColumnDefaults({
-                headerSort: true,          // Active le tri sur toutes les colonnes par défaut
-                headerFilter: "input",     // Active un champ de recherche textuel sur toutes les colonnes
+                headerSort: true,
+                headerFilter: "input",
                 headerFilterPlaceholder: "Filtrer...",
-                headerFilterLiveFilter: true // Attend la touche Entrée pour ne pas surcharger l'API à chaque lettre
+                headerFilterLiveFilter: true
             })
             .setColumns([
-                { title: "ID", field: "id", width: 70, sorter: "number" },
+                {
+                    title: "ID",
+                    field: "id",
+                    width: 70,
+                    sorter: "number",
+                    hozAlign: "center",
+                    headerFilterFunc: "=" // Force l'opérateur d'égalité stricte côté Front-End
+                }
+            ]);
+    }
+
+    /**
+     * GABARIT "ACTIONS" : Enrichit le gabarit BASE en y injectant les boutons CRUD par défaut.
+     *
+     * @private
+     * @param {string} selector - Le sélecteur CSS de l'élément DOM cible.
+     * @returns {TabulatorBuilder} Un monteur pré-configuré prêt pour la gestion des actions.
+     */
+    static #getActionsTable(selector) {
+        return this.#getBaseTable(selector)
+            .setWithActions(); // Injecte par défaut ['view', 'edit', 'delete']
+    }
+
+    // ==========================================
+    // FABRIQUES DES GRILLES APPLICATIVES (Publiques)
+    // ==========================================
+
+    /**
+     * Fabrique la grille finale optimisée pour le module d'administration des Utilisateurs.
+     * Consomme le gabarit ACTIONS pour hériter de l'ID et du triptyque CRUD.
+     *
+     * @param {string} selector - Le sélecteur CSS de l'élément DOM cible (ex: "#users-table").
+     * @returns {Tabulator} L'instance active et opérationnelle de la grille Utilisateurs.
+     */
+    static createUsersTable(selector) {
+        return this.#getActionsTable(selector)
+            .setAjaxSource("/api/users.json")
+            .setController('Users')
+            .addColumns([
                 { title: "Nom", field: "lastname", sorter: "string" },
                 { title: "Prénom", field: "firstname", sorter: "string" },
                 { title: "Email", field: "email", sorter: "string" },
-                // Surcharge locale : on désactive le filtrage/tri sur les relations ou booléens complexes si nécessaire
                 { title: "Rôle", field: "role.name", sorter: "string", headerSort: false, headerFilter: false },
                 { title: "Super Admin", field: "issuperuser", formatter: "tickCross", hozAlign: "center", headerSort: false, headerFilter: false }
             ])
@@ -39,8 +81,6 @@ class TabulatorFactory {
                     globalTabulatorObserver.publish('usersTable:rowClick', row.getData());
                 }
             })
-            // En appelant la méthode à vide, elle injecte automatiquement ['view', 'edit', 'delete']
-            .setWithActions()
             .addActions(['impersonate'])
             .build();
     }

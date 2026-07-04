@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Service\DataGrid;
@@ -6,7 +7,7 @@ namespace App\Service\DataGrid;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query\SelectQuery;
 use Cake\Datasource\Paging\PaginatedInterface;
-use Cake\Utility\Inflector; 
+use Cake\Utility\Inflector;
 
 /**
  * Class TabulatorAdapter
@@ -19,8 +20,8 @@ use Cake\Utility\Inflector;
  */
 class TabulatorAdapter
 {
-/**
-     * Applique les paramètres de tri (Sorters) et de filtrage (Filters) 
+    /**
+     * Applique les paramètres de tri (Sorters) et de filtrage (Filters)
      * envoyés par Tabulator à la requête ORM.
      *
      * @param \Cake\Http\ServerRequest $request L'objet requête HTTP courant.
@@ -30,17 +31,17 @@ class TabulatorAdapter
     public function adaptRequest(ServerRequest $request, SelectQuery $query): SelectQuery
     {
         $queryParams = $request->getQueryParams();
-        $mainAlias = $query->getRepository()->getAlias(); 
+        $mainAlias = $query->getRepository()->getAlias();
 
         // --- 1. GESTION DES TRIS (Sorters) ---
         if (!empty($queryParams['sorters']) && is_array($queryParams['sorters'])) {
             foreach ($queryParams['sorters'] as $sorter) {
                 $field = $sorter['field'] ?? null;
                 $direction = strtoupper($sorter['dir'] ?? 'ASC');
-                
+
                 if (is_string($field) && in_array($direction, ['ASC', 'DESC'], true)) {
                     $ormField = $this->resolveOrmField($field, $mainAlias);
-                    $query->order([$ormField => $direction]);
+                    $query->orderBy([$ormField => $direction]);
                 }
             }
         }
@@ -54,6 +55,17 @@ class TabulatorAdapter
 
                 if (is_string($field) && $value !== '') {
                     $ormField = $this->resolveOrmField($field, $mainAlias);
+
+                    // SÉCURITÉ & NORMALISATION DES TYPES numérique (ID)
+                    // Si on filtre sur l'ID, on force une égalité stricte, peu importe
+                    // ce que demande le front.
+                    //
+                    // Conserver ce test même si c'est censé être traité dans le front end
+                    // Car on peut craindre un petit malin modifiant l'url = en like
+                    if (strtolower($field) === 'id') {
+                        $query->where([$ormField => (int)$value]);
+                        continue; // On passe au filtre suivant
+                    }
 
                     // Traduction de l'opérateur Tabulator vers la clause ORM
                     switch ($type) {
@@ -96,7 +108,7 @@ class TabulatorAdapter
         $relationAlias = Inflector::camelize(Inflector::pluralize($relation));
         return $relationAlias . '.' . $column;
     }
-    
+
     /**
      * Formate le résultat de la pagination CakePHP au format JSON strict attendu par Tabulator.
      *
