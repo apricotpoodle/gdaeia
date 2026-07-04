@@ -114,3 +114,6 @@ L'application intègre un contrôle d'accès unifié combinant les droits de lig
 
 ### Sécurité Native Intégrée (Gabarit Base)
 Le gabarit structurel interne `#getBaseTable` écoute de manière transparente l'événement `dataLoaded`. Tout flux JSON contenant l'arborescence `_ui_permissions.columns` verra ses colonnes privées masquées dynamiquement par l'infrastructure, sans qu'il ne soit nécessaire de le spécifier dans les fabriques métiers publiques.
+
+### Système de Droits Unifié (`grid_rights`)
+L'infrastructure s'appuie sur la propriété virtuelle globale `grid_rights` générée par l'entité parente `AppEntity`. Ce dictionnaire isole les permissions d'exécution graphique sous deux namespaces dédiés : `actions` (booléens d'activation des boutons de lignes) et `columns` (booléens de structure de visibilité).
