@@ -1,25 +1,15 @@
-/**
- * @class TabulatorFactory
- * @description Implémentation du patron de conception "Factory Method" (Fabrique).
- * Centralise et applique les standards ergonomiques et graphiques de l'entreprise.
- * Utilise un mécanisme de chaînage de gabarits internes (`#getBaseTable`, `#getActionsTable`)
- * pour instancier des configurations métiers hautement standardisées (DRY).
- * * @package Core\Tabulator
- * @author L'Équipe de Développement
- */
 class TabulatorFactory {
 
     // ==========================================
-    // GABARITS DE CONFIGURATION STRUCTURELS (Privés)
+    // GABARITS DE CONFIGURATION STRUCTUTELS (Privés)
     // ==========================================
 
     /**
      * GABARIT "BASE" : Initialise un Builder avec la configuration technique socle.
-     * Aligne automatiquement la colonne ID avec l'opérateur d'égalité stricte.
-     *
+     * Intègre nativement le filtrage automatique et générique des colonnes par rapport aux droits AppEntity.
      * @private
      * @param {string} selector - Le sélecteur CSS de l'élément DOM cible.
-     * @returns {TabulatorBuilder} Un monteur pré-configuré avec l'ID et la pagination distante.
+     * @returns {TabulatorBuilder} Un monteur pré-configuré avec l'ID, la pagination et la sécurité des colonnes.
      */
     static #getBaseTable(selector) {
         return new TabulatorBuilder(selector)
@@ -31,27 +21,31 @@ class TabulatorFactory {
                 headerFilterLiveFilter: true
             })
             .setColumns([
-                {
-                    title: "ID",
-                    field: "id",
-                    width: 70,
-                    sorter: "number",
-                    hozAlign: "center",
-                    headerFilterFunc: "=" // Force l'opérateur d'égalité stricte côté Front-End
+                { title: "ID", field: "id", width: 70, sorter: "number", hozAlign: "center", headerFilterFunc: "=" }
+            ])
+            // INJECTION DANS LE SOCLE COMMUN : Sécurité des colonnes globale
+            .addEvent("dataLoaded", function (data) {
+                if (data && data.length > 0 && data[0]._ui_permissions) {
+                    const columnPermissions = data[0]._ui_permissions.columns || {};
+                    const tableInstance = Tabulator.findTable(selector)[0];
+
+                    if (tableInstance) {
+                        Object.keys(columnPermissions).forEach(fieldKey => {
+                            if (columnPermissions[fieldKey] === false) {
+                                tableInstance.hideColumn(fieldKey);
+                            }
+                        });
+                    }
                 }
-            ]);
+            });
     }
 
     /**
-     * GABARIT "ACTIONS" : Enrichit le gabarit BASE en y injectant les boutons CRUD par défaut.
-     *
+     * GABARIT "ACTIONS"
      * @private
-     * @param {string} selector - Le sélecteur CSS de l'élément DOM cible.
-     * @returns {TabulatorBuilder} Un monteur pré-configuré prêt pour la gestion des actions.
      */
     static #getActionsTable(selector) {
-        return this.#getBaseTable(selector)
-            .setWithActions(); // Injecte par défaut ['view', 'edit', 'delete']
+        return this.#getBaseTable(selector).setWithActions();
     }
 
     // ==========================================
@@ -59,11 +53,9 @@ class TabulatorFactory {
     // ==========================================
 
     /**
-     * Fabrique la grille finale optimisée pour le module d'administration des Utilisateurs.
-     * Consomme le gabarit ACTIONS pour hériter de l'ID et du triptyque CRUD.
-     *
-     * @param {string} selector - Le sélecteur CSS de l'élément DOM cible (ex: "#users-table").
-     * @returns {Tabulator} L'instance active et opérationnelle de la grille Utilisateurs.
+     * Fabrique la grille finale des Utilisateurs (Allégée au maximum)
+     * @param {string} selector - Le sélecteur CSS de l'élément DOM.
+     * @returns {Tabulator}
      */
     static createUsersTable(selector) {
         return this.#getActionsTable(selector)
@@ -81,7 +73,6 @@ class TabulatorFactory {
                     globalTabulatorObserver.publish('usersTable:rowClick', row.getData());
                 }
             })
-            .addActions(['impersonate'])
-            .build();
+            .build(); // Plus besoin d'y écrire l'écouteur dataLoaded, il est hérité !
     }
 }

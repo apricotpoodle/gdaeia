@@ -106,3 +106,11 @@ Si vos lignes de données appartiennent à des entités différentes, n'utilisez
 ```
 
 Le moteur détectera automatiquement table_controller par ligne et adaptera dynamiquement l'URL finale.
+
+## Gestion Sécurisée Globale (AppEntity Integration)
+L'application intègre un contrôle d'accès unifié combinant les droits de ligne (boutons) et de structure (colonnes) :
+1. **Boutons d'actions** : Gérés via le dictionnaire `_ui_permissions.actions`. Si une action est évaluée à `false`, le bouton est rendu inerte et transparent via Bootstrap (`disabled`).
+2. **Permissions Colonnes** : Gérées via `_ui_permissions.columns`. L'événement global `dataLoaded` intercepte le premier enregistrement et utilise l'API `tableInstance.hideColumn()` pour faire disparaître physiquement et visuellement les colonnes non autorisées du DOM.
+
+### Sécurité Native Intégrée (Gabarit Base)
+Le gabarit structurel interne `#getBaseTable` écoute de manière transparente l'événement `dataLoaded`. Tout flux JSON contenant l'arborescence `_ui_permissions.columns` verra ses colonnes privées masquées dynamiquement par l'infrastructure, sans qu'il ne soit nécessaire de le spécifier dans les fabriques métiers publiques.

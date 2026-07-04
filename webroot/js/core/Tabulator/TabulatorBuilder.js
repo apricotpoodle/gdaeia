@@ -181,11 +181,14 @@ class TabulatorBuilder {
             formatter: (cell) => {
                 let html = '<div class="d-flex justify-content-center align-items-center">';
                 const rowData = cell.getRow().getData();
-                const rowPermissions = rowData.permissions || {};
+
+                // Extraction sécurisée selon la nouvelle arborescence AppEntity
+                const uiPermissions = rowData._ui_permissions || {};
+                const actionPermissions = uiPermissions.actions || {};
 
                 if (typeof ButtonFactory !== 'undefined') {
                     this.actionButtons.forEach(btnKey => {
-                        html += ButtonFactory.getCellButton(btnKey, rowPermissions);
+                        html += ButtonFactory.getCellButton(btnKey, actionPermissions);
                     });
                 }
                 html += '</div>';
