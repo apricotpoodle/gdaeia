@@ -121,3 +121,27 @@ Le framework de grille intègre un mécanisme automatique d'application des droi
 
 1. **Permissions sur les Boutons (Lignes)** : Le `formatter` de la colonne d'actions (compilé automatiquement lors du `build()`) intercepte l'objet `grid_rights.actions` de la ligne courante. Si une clé vaut `false`, la `ButtonFactory` injecte l'attribut HTML `disabled="disabled"` et applique les classes d'invalidation de pointeur et d'opacité Bootstrap (`disabled pe-none opacity-25`).
 2. **Permissions sur les Colonnes (Structure)** : Gérées au niveau du callback natif `ajaxResponse` dans `TabulatorBuilder.js`. Dès réception du JSON, le premier enregistrement est analysé. L'application des méthodes `hideColumn()` est enveloppée dans un `setTimeout` de 10ms afin de forcer l'exécution du masquage juste après la stabilisation de l'arbre DOM par Tabulator, éliminant tout clignotement ou anomalie graphique.
+
+## Cinématique d'Interception des Événements et Routage Dynamique
+
+L'architecture orchestre les interactions utilisateurs (clics sur les lignes et pressions sur les boutons d'actions) à travers quatre couches hermétiques afin de garantir la performance, l'étanchéité de la sécurité graphique et un découplage total (DRY/SOLID).
+
+### 1. Couche DOM Natif : Isolation du Bouillonnement (Event Bubbling)
+Afin d'éviter qu'un clic sur un bouton CRUD situé dans une cellule ne déclenche accidentellement l'événement de sélection de la ligne entière, la colonne d'actions intercepte l'événement au plus tôt dans son gestionnaire `cellClick`.
+L'instruction systématique `e.stopPropagation()` coupe net la remontée de l'événement dans l'arbre DOM du navigateur. Le clic sur un bouton exécute l'action associée, tandis que le clic n'importe où ailleurs sur la ligne déclenche le comportement de sélection de l'enregistrement.
+
+### 2. Couche Noyau (TabulatorBuilder) : Routage Universel et Calcul d'URL
+Le moteur `TabulatorBuilder.js` centralise l'intelligence d'aiguillage au sein de la méthode privée `_compileActionColumn()` :
+* **Calcul d'URL Industriel** : Avant toute évaluation du mode d'action, le Builder assemble dynamiquement l'URL cible conventionnelle de CakePHP sous la forme `/${contrôleur}/${action}/${id}` en combinant le contexte de la table et les métadonnées de la ligne.
+* **Le Contrat `_actionUrl`** : Si un bouton est configuré comme un événement d'interaction locale (`isEvent: true` dans le registre de la `ButtonFactory`), le Builder annule la redirection matérielle du navigateur et injecte l'URL pré-calculée directement dans l'objet de données de la ligne sous la propriété masquée `_actionUrl`. Il transmet ensuite ce colis complet au bus de communication.
+
+### 3. Couche Distribution (TabulatorObserver) : Sémantique Unifiée
+La transmission des signaux vers l'extérieur de la grille s'appuie sur le patron de conception **Publish-Subscribe (Pub/Sub)** géré par le `globalTabulatorObserver`. Les canaux d'émissions sont normalisés pour utiliser rigoureusement le sélecteur CSS d'en-tête (incluant le caractère `#`), éliminant toute dérive sémantique (CamelCase ou chaînes orphelines) :
+* Clic sur une ligne : `${this.selector}:rowClick` (Ex: `#users-table:rowClick`)
+* Clic sur un bouton événement : `${this.selector}:action:${action}` (Ex: `#users-table:action:edit`)
+
+### 4. Couche Applicative (Orchestrateur de Vue) : Consommation Passive
+Le script d'orchestration de la page (ex: `views/Users/index.js`) est le seul récepteur des événements de l'Observer. Grâce à l'injection de l'infrastructure, la vue ne contient **aucune URL codée en dur (hardcoded)** :
+1. Elle intercepte le signal transmis par le canal unifié.
+2. Elle prend en charge l'expérience utilisateur synchrone (ex: boîtes de dialogue `confirm()` ou ouverture de modales graphiques Bootstrap).
+3. Si l'action est validée par l'utilisateur, elle consomme directement la propriété `user._actionUrl` fournie par le colis technique pour exécuter la redirection ou l'appel distant.

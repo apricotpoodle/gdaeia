@@ -24,7 +24,8 @@ class User extends AppEntity
         return [
             'view' => true,
             'edit' => ($this->id % 2 === 0), // Autorisé uniquement pour les IDs pairs
-            'delete' => false,               // Désactivé pour tout le monde
+            'delete' => ($this->id % 2 !== 0), // Désactivé pour tout le monde
+            'impersonate' => ($this->id % 2 === 0), // Autorisé uniquement pour les IDs pairs
         ];
     }
 
@@ -36,7 +37,7 @@ class User extends AppEntity
     {
         return [
             'email' => true,
-            'issuperuser' => false, // On force le masquage de la colonne Super Admin
+            'issuperuser' => ($this->id % 2 == 0), // On force le masquage de la colonne Super Admin
         ];
     }
 }

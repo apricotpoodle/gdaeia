@@ -1,7 +1,7 @@
 /**
  * Script d'instanciation de la grille des utilisateurs.
  * Dépendance : Tabulator.js
- * Connecté au point de terminaison : GET /api/users.json
+ * * Connecté au point de terminaison : GET /api/users.json
  */
 document.addEventListener('DOMContentLoaded', function () {
 
@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (typeof globalTabulatorObserver !== "undefined") {
 
-        // 1. Écoute du clic sur une ligne (hors actions)
+        // Exemple de réaction à un événement global via l'Observer (pour test)
         globalTabulatorObserver.subscribe('#users-table:rowClick', (userData) => {
             console.log("=== LIGNE CLIQUÉE ===");
             console.log("Utilisateur sélectionné via l'Observer :", userData.email);
@@ -40,19 +40,21 @@ document.addEventListener('DOMContentLoaded', function () {
         // ACTION : MODIFIER (edit)
         // ==========================================
         globalTabulatorObserver.subscribe('#users-table:action:edit', (user) => {
+            // 1. Affichage du message de confirmation personnalisé avec les données de la ligne
             if (confirm(`Voulez-vous ouvrir la page de modification pour l'utilisateur ${user.firstname} ${user.lastname} ?`)) {
-                // Plus d'URL en dur ! On utilise la route dynamique calculée par le Builder
-                window.location.href = user._actionUrl;
+
+                // 2. Si l'utilisateur clique sur "OK", on lance l'URL manuellement
+                window.location.href = `/users/edit/${user.id}`;
             }
         });
+        //         globalTabulatorObserver.subscribe('#users-table:action:edit', (user) => {
+        //     console.log("Éditer l'utilisateur :", user);
+        //     alert(`Action : Éditer l'utilisateur ${user.firstname} ${user.lastname}`);
+        // });
 
-        // ==========================================
-        // ACTION : SUPPRIMER (delete)
-        // ==========================================
         globalTabulatorObserver.subscribe('#users-table:action:delete', (user) => {
             if (confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${user.email} ?`)) {
-                // Plus d'URL en dur ! On utilise la route dynamique calculée par le Builder
-                window.location.href = user._actionUrl;
+                console.log("Suppression confirmée pour l'ID :", user.id);
             }
         });
 

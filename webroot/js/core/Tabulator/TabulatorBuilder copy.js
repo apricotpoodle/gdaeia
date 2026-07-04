@@ -4,7 +4,7 @@
  * Classe technique agnostique dont l'unique responsabilité est d'accumuler
  * les configurations de la grille front-end Tabulator de manière fluide (chaînage).
  * Elle ne contient aucune règle métier ou colonne par défaut.
- * @package Core\Tabulator
+ * * @package Core\Tabulator
  * @author L'Équipe de Développement
  */
 class TabulatorBuilder {
@@ -70,26 +70,45 @@ class TabulatorBuilder {
 
     /**
      * Enregistre un écouteur d'événement directement dans la configuration native.
-     * @param {string} eventName
-     * @param {Function} callback
+     * C'est la méthode la plus stable pour Tabulator 5.
+     * @param {string} eventName - Le nom de l'événement Tabulator (ex: 'rowClick')
+     * @param {Function} callback - La fonction à exécuter
      * @returns {TabulatorBuilder}
      */
     addEvent(eventName, callback) {
+        // Injection directe et immuable dans l'objet de configuration
         this.config[eventName] = callback;
         return this;
     }
 
+    /**
+     * Configure la stratégie de sécurité visuelle applicable aux colonnes de la grille.
+     * @param {'COL_HIDE'|'CELL_MASK'} strategy - Le nom court de la stratégie choisie.
+     * @param {string} [placeholder='Masqué'] - Le texte de substitution requis pour CELL_MASK.
+     * @returns {TabulatorBuilder} L'instance courante pour permettre le chaînage fluide.
+     */
     setSecurityStrategy(strategy, placeholder = 'Masqué') {
         this.securityStrategy = strategy;
         this.maskPlaceholder = placeholder;
         return this;
     }
 
+    /**
+     * Configure l'URL de la source de données distante (API REST JSON).
+     * @param {string} url - L'URL du point de terminaison JSON de l'API.
+     * @returns {TabulatorBuilder} L'instance courante pour permettre le chaînage.
+     */
     setAjaxSource(url) {
         this.config.ajaxURL = url;
         return this;
     }
 
+    /**
+     * Active la pagination, le tri et le filtrage distants (Remote).
+     * Délègue les calculs à l'ORM de CakePHP pour préserver les performances du client.
+     * @param {number} [size=20] - Le nombre de lignes à afficher par page.
+     * @returns {TabulatorBuilder} L'instance courante pour permettre le chaînage.
+     */
     setRemotePagination(size = 20) {
         this.config.pagination = true;
         this.config.paginationMode = "remote";
@@ -100,32 +119,62 @@ class TabulatorBuilder {
         return this;
     }
 
+    /**
+     * Spécifie la configuration globale par défaut applicable à TOUTES les colonnes.
+     * @param {Object} defaults - Objet de configuration Tabulator (ex: {headerSort: true}).
+     * @returns {TabulatorBuilder} L'instance courante pour permettre le chaînage.
+     */
     setColumnDefaults(defaults) {
         this.config.columnDefaults = defaults;
         return this;
     }
 
+    /**
+     * Écrase et définit le tableau initial de colonnes de la grille.
+     * @param {Array<Object>} columns - Tableau d'objets de définitions de colonnes.
+     * @returns {TabulatorBuilder} L'instance courante pour permettre le chaînage.
+     */
     setColumns(columns = []) {
         this.config.columns = columns;
         return this;
     }
 
+    /**
+     * Ajoute un groupe de colonnes à la suite du tableau de colonnes déjà configuré.
+     * @param {Array<Object>} columns - Tableau de colonnes à cumuler.
+     * @returns {TabulatorBuilder} L'instance courante pour permettre le chaînage.
+     */
     addColumns(columns = []) {
         if (!this.config.columns) this.config.columns = [];
         this.config.columns = [...this.config.columns, ...columns];
         return this;
     }
 
+    /**
+     * Définit ou écrase l'ensemble des boutons d'actions de ligne.
+     * @param {Array<string>} [buttons=['view', 'edit', 'delete']] - Le tableau complet des boutons requis.
+     * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
+     */
     setWithActions(buttons = ['view', 'edit', 'delete']) {
         this.actionButtons = buttons;
         return this;
     }
 
+    /**
+     * Ajoute des boutons d'actions supplémentaires sans altérer le CRUD existant.
+     * @param {Array<string>} extraButtons - Liste des boutons à cumuler.
+     * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
+     */
     addActions(extraButtons = []) {
         this.actionButtons = [...this.actionButtons, ...extraButtons];
         return this;
     }
 
+    /**
+     * Associe le contrôleur CakePHP principal de la table pour le routage dynamique des URLs.
+     * @param {string} controllerName - Nom du contrôleur en minuscules (ex: 'users').
+     * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
+     */
     setController(controllerName) {
         this.controller = controllerName.trim().toLowerCase();
         return this;
@@ -134,6 +183,7 @@ class TabulatorBuilder {
     /**
      * Compile et injecte la colonne "Actions" avec routage dynamique et gestion des droits.
      * @private
+     * @returns {void}
      */
     _compileActionColumn() {
         if (!this.actionButtons || this.actionButtons.length === 0) {
@@ -149,12 +199,10 @@ class TabulatorBuilder {
             width: 240,
 
             formatter: (cell) => {
-                // ========================================================
-                // PRÉSERVATION DE VOTRE DESIGN BOOTSTRAP (ButtonFactory)
-                // ========================================================
                 let html = '<div class="d-flex justify-content-center align-items-center">';
                 const rowData = cell.getRow().getData();
 
+                // Extraction chirurgicale
                 const gridRights = rowData.grid_rights || {};
                 const actionPermissions = gridRights.actions || {};
 
@@ -168,52 +216,36 @@ class TabulatorBuilder {
             },
 
             cellClick: (e, cell) => {
-                // ========================================================
-                // ARCHITECTURE UNIFIÉE : ÉVÉNEMENTS ET CALCUL D'URL
-                // ========================================================
-
-                // INTERCEPTION : Coupe net le bouillonnement vers le rowClick de la ligne
-                e.stopPropagation();
-
                 const btn = e.target.closest('.btn-action');
-                if (!btn || btn.classList.contains('disabled')) return; // Sécurité anti-clic
+                if (!btn || btn.classList.contains('disabled')) return; // Sécurité anti-clic additionnelle
 
                 const action = btn.dataset.action;
                 const target = btn.dataset.target || '_self';
                 const isEvent = btn.dataset.isEvent === 'true';
                 const rowData = cell.getRow().getData();
 
-                // 1. CALCUL UNIVERSEL DE L'URL (Générique et Polymorphe)
-                const targetController = rowData.table_controller || this.controller;
-                const id = rowData.id;
-
-                let generatedUrl = '#';
-                if (targetController && action && id) {
-                    generatedUrl = `/${targetController}/${action}/${id}`;
-                }
-
-                // 2. ROUTAGE PUB/SUB (Événement Observer)
                 if (isEvent) {
                     if (typeof globalTabulatorObserver !== 'undefined') {
-                        // Injection de l'URL pré-calculée dans l'objet de données
-                        rowData._actionUrl = generatedUrl;
                         globalTabulatorObserver.publish(`${this.selector}:action:${action}`, rowData);
                     }
                     return;
                 }
 
-                // 3. NAVIGATION MATÉRIELLE DIRECTE
-                if (generatedUrl !== '#') {
+                const targetController = rowData.table_controller || this.controller;
+                const id = rowData.id;
+
+                if (targetController && action && id) {
+                    const url = `/${targetController}/${action}/${id}`;
                     if (target === '_blank') {
-                        window.open(generatedUrl, '_blank');
+                        window.open(url, '_blank');
                     } else {
-                        window.location.href = generatedUrl;
+                        window.location.href = url;
                     }
                 }
             },
 
             headerClick: (e, column) => {
-                // ... (votre code de gestion de menu déroulant existant)
+                // ... (votre code de gestion de menu déroulant existant reste identique)
             }
         };
 
@@ -226,17 +258,19 @@ class TabulatorBuilder {
      * @returns {Tabulator} L'instance active et initialisée de Tabulator.
      */
     build() {
-        // 1. Compilation automatique de la colonne d'actions
+        // 1. Compilation automatique de la colonne d'actions (Ligne)
         this._compileActionColumn();
 
-        // 2. STRATÉGIE A : 'COL_HIDE'
+        // 2. STRATÉGIE A : 'COL_HIDE' (Masquage structurel pessimiste de la colonne entière)
         if (this.securityStrategy === 'COL_HIDE') {
             this.config.ajaxResponse = function (url, params, response) {
                 if (response && response.data && response.data.length > 0) {
                     const finalColumnVisibility = {};
 
+                    // Initialisation de la grille de droits avec le premier enregistrement
                     Object.assign(finalColumnVisibility, response.data[0].grid_rights?.columns || {});
 
+                    // Règle pessimiste cumulative : si une seule ligne exige le masquage, on applique
                     response.data.forEach(row => {
                         if (row.grid_rights && row.grid_rights.columns) {
                             Object.keys(row.grid_rights.columns).forEach(fieldKey => {
@@ -263,11 +297,12 @@ class TabulatorBuilder {
             };
         }
 
-        // 3. STRATÉGIE B : 'CELL_MASK'
+        // 3. STRATÉGIE B : 'CELL_MASK' (Anonymisation cellulaire fine à géométrie constante)
         if (this.securityStrategy === 'CELL_MASK') {
             const originalRowFormatter = this.config.rowFormatter;
             const placeholderText = this.maskPlaceholder;
 
+            // Décoration du rowFormatter pour écraser l'affichage des cellules sans casser leur formatage natif
             this.config.rowFormatter = function (row) {
                 if (typeof originalRowFormatter === "function") {
                     originalRowFormatter(row);
@@ -277,9 +312,11 @@ class TabulatorBuilder {
                 if (rowData.grid_rights && rowData.grid_rights.columns) {
                     const columnPermissions = rowData.grid_rights.columns;
 
+                    // On parcourt les cellules physiques de la ligne
                     row.getCells().forEach(cell => {
                         const fieldName = cell.getColumn().getField();
 
+                        // Si l'entité PHP a marqué ce champ précis comme interdit pour cette ligne
                         if (columnPermissions[fieldName] === false) {
                             cell.getElement().innerHTML = `
                                 <span class="text-muted text-decoration-line-through opacity-50"
@@ -293,22 +330,26 @@ class TabulatorBuilder {
             };
         }
 
-        // 4. Instanciation physique du tableau
+        // 4. Instanciation physique du tableau Tabulator
         const table = new Tabulator(this.selector, this.config);
 
         if (!this.config.ajaxURL) {
             console.warn("TabulatorBuilder: Aucune source Ajax configurée avant l'appel à build().");
         }
 
+        // ========================================================
         // 5. ATTACHEMENT DIRECT (API Tabulator 5)
+        // ========================================================
         table.on("rowClick", (e, row) => {
             console.log("=> [TEST ULTIME DOM] Tabulator a détecté un clic sur la ligne ID :", row.getData().id);
 
             if (typeof globalTabulatorObserver !== "undefined") {
+                // const channelPrefix = this.selector.replace('#', '');
+                // HARMONISATION : On garde le '#' pour être identique aux boutons d'actions
                 globalTabulatorObserver.publish(`${this.selector}:rowClick`, row.getData());
             }
         });
 
-        return table;
+        return table
     }
 }

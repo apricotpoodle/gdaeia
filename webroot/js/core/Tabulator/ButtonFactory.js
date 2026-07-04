@@ -22,7 +22,7 @@ class ButtonFactory {
      */
     static #configs = {
         view: { icon: 'fas fa-eye', color: 'info', title: 'Visualiser la fiche', target: '_self' },
-        edit: { icon: 'fas fa-edit', color: 'primary', title: 'Modifier l\'enregistrement', target: '_self' },
+        edit: { icon: 'fas fa-edit', color: 'primary', title: 'Modifier l\'enregistrement', target: '_self', isEvent: true },
         delete: { icon: 'fas fa-trash', color: 'danger', title: 'Supprimer l\'enregistrement', isEvent: true },
         viewpdf: { icon: 'fas fa-file-pdf', color: 'warning', title: 'Ouvrir le document PDF', target: '_blank' },
         impersonate: { icon: 'fas fa-user-secret', color: 'secondary', title: 'Infiltrer la session utilisateur', target: '_self' }

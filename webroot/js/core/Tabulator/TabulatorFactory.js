@@ -19,9 +19,32 @@ class TabulatorFactory {
                 headerFilterPlaceholder: "Filtrer...",
                 headerFilterLiveFilter: true
             })
+
+            // CONFIGURATION ULTRA-SIMPLE DU COMPORTEMENT SOUHAITÉ :
+            // Pour tester le Scénario A (Anonymisation cellule par cellule) avec placeholder personnalisé :
+            .setSecurityStrategy('CELL_MASK', '[Confidentiel]')
+
+            // Ou pour revenir au masquage complet classique de la colonne :
+            // .setSecurityStrategy('COL_HIDE')
+
             .setColumns([
                 { title: "ID", field: "id", width: 70, sorter: "number", hozAlign: "center", headerFilterFunc: "=" }
-            ]);
+            ])
+
+            // AUTOMATISATION INDUSTRIELLE : Capture et publication universelle du clic de ligne
+            // .addEvent("rowClick", function (e, row) {
+            //     // Mouchard à la source (Si ce texte s'affiche, c'est que Tabulator va bien !)
+            //     console.log("=> [Tabulator NATIF] Clic intercepté sur la ligne ID :", row.getData().id);
+
+            //     if (typeof globalTabulatorObserver !== "undefined") {
+            //         // Nettoyage du sélecteur pour générer un nom de canal propre (ex: "#users-table" -> "users-table")
+            //         const channelPrefix = selector.replace('#', '');
+
+            //         // Publication dynamique du payload de l'enregistrement concerné
+            //         globalTabulatorObserver.publish(`${channelPrefix}:rowClick`, row.getData());
+            //     }
+            // })
+            ;
         // Plus aucun événement ici, le build() s'occupe de tout en interne !
     }
 
@@ -53,11 +76,7 @@ class TabulatorFactory {
                 { title: "Rôle", field: "role.name", sorter: "string", headerSort: false, headerFilter: false },
                 { title: "Super Admin", field: "issuperuser", formatter: "tickCross", hozAlign: "center", headerSort: false, headerFilter: false }
             ])
-            .addEvent("rowClick", function (e, row) {
-                if (typeof globalTabulatorObserver !== "undefined") {
-                    globalTabulatorObserver.publish('usersTable:rowClick', row.getData());
-                }
-            })
+            .addActions(['impersonate'])
             .build(); // Plus besoin d'y écrire l'écouteur dataLoaded, il est hérité !
     }
 }
