@@ -30,3 +30,4 @@ Ce dossier contient les *Architecture Decision Records* (ADR).
 * [0024 - Résolution du conflit de positionnement des dropdowns](0024-contournement-conflit-positionnement-dropdown.md)
 * [0025-routage-dynamique-metadonnees-dropdown](0025-routage-dynamique-metadonnees-dropdown.md)
 * [0026-controle-acces-visuel-grid-rights](0026-controle-acces-visuel-grid-rights.md)
+* [0027-gestion-messages-flash-dynamiques](0027-gestion-messages-flash-dynamiques.md)

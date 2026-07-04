@@ -69,6 +69,32 @@ class TabulatorBuilder {
     }
 
     /**
+     * Active la mémorisation de l'état de la grille (Tris et Filtres) dans le navigateur.
+     * Génère automatiquement un identifiant de persistance absolument unique en combinant
+     * l'URL de la page courante et le sélecteur de la table, libérant le développeur de cette contrainte.
+     * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
+     */
+    enableStatePersistence() {
+        // 1. Nettoyage du chemin de l'URL (ex: "/users/index" devient "users-index")
+        const safePath = window.location.pathname.replace(/[\/\\]/g, '-').replace(/^-+|-+$/g, '');
+
+        // 2. Nettoyage du sélecteur (ex: "#main-table" devient "main-table")
+        const safeSelector = this.selector.replace(/[^a-zA-Z0-9_-]/g, '');
+
+        // 3. Combinaison infaillible assignée à la configuration
+        this.config.persistenceID = `${safePath}-${safeSelector}`;
+        this.config.persistenceMode = "local";
+        this.config.persistence = {
+            sort: true,
+            filter: true,
+            headerFilter: true // <--- LA CLÉ MANQUANTE : Active la mémoire des champs de saisie !
+        };
+
+        return this;
+    }
+
+
+    /**
      * Enregistre un écouteur d'événement directement dans la configuration native.
      * @param {string} eventName
      * @param {Function} callback

@@ -145,3 +145,6 @@ Le script d'orchestration de la page (ex: `views/Users/index.js`) est le seul r�
 1. Elle intercepte le signal transmis par le canal unifié.
 2. Elle prend en charge l'expérience utilisateur synchrone (ex: boîtes de dialogue `confirm()` ou ouverture de modales graphiques Bootstrap).
 3. Si l'action est validée par l'utilisateur, elle consomme directement la propriété `user._actionUrl` fournie par le colis technique pour exécuter la redirection ou l'appel distant.
+### 5. Intégration Asynchrone (Appels API & UX)
+L'orchestrateur de vue est configuré pour consommer l'URL d'action générée de manière asynchrone (`fetch`) sur les événements critiques (ex: `delete`).
+En cas de succès, la vue exécute instantanément `tableInstance.deleteRow(id)` sans recharger la page, et notifie l'utilisateur via le `FlashManager` de l'infrastructure `Core`, garantissant une fluidité de type Single Page Application (SPA). En cas d'échec serveur, l'exception métier JSON de CakePHP est interceptée et restituée visuellement.

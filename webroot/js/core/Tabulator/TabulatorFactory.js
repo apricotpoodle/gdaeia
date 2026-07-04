@@ -20,6 +20,8 @@ class TabulatorFactory {
                 headerFilterLiveFilter: true
             })
 
+            .enableStatePersistence()
+
             // CONFIGURATION ULTRA-SIMPLE DU COMPORTEMENT SOUHAITÉ :
             // Pour tester le Scénario A (Anonymisation cellule par cellule) avec placeholder personnalisé :
             .setSecurityStrategy('CELL_MASK', '[Confidentiel]')
