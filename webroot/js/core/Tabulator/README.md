@@ -164,3 +164,7 @@ Pour éviter le "Risque de la Table Vide" (où une table contenant 0 enregistrem
 * **Avantage** : Le `TabulatorBuilder` évalue cette propriété de manière synchrone lors de la méthode `_compileActionColumn()`. Le menu d'actions est configuré à sa juste valeur dès le premier rendu, garantissant une étanchéité parfaite et éliminant tout clignotement d'interface ou dépendance à la présence de lignes de données.
 * **Action 'Reset'** : Arbitrairement définie comme **toujours accessible**. Cette action étant purement locale (Front-End) et dédiée au nettoyage du `localStorage`, sa restriction impacterait négativement l'expérience utilisateur sans apporter de gain de sécurité sur le serveur.
 
+### 8. Comportement Multi-Grilles sur une même Page
+L'architecture supporte nativement la coexistence de plusieurs grilles au sein d'une même vue.
+Chaque grille est instanciée via le Helper `<?= $this->Tabulator->renderGrid('#id', 'Controleur') ?>`.
+Le noyau calcule une empreinte de stockage local distincte pour chaque sélecteur (`${URL}-${Sélecteur}`) et lit l'attribut `data-can-create` localisé sur son propre conteneur. Le bus de communication `TabulatorObserver` distribue les signaux de manière étanche en préfixant les canaux par le sélecteur CSS unique de la grille émettrice.
