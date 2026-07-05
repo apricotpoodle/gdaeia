@@ -52,24 +52,17 @@ class ButtonFactory {
     }
 
     /**
-         * Génère le menu d'actions globales pour l'en-tête de la colonne Actions.
-         * @param {Object} globalPermissions - Les permissions globales (ex: {create: true})
-         * @returns {string} Code HTML du menu déroulant manuel d'en-tête
-         */
+     * Génère le menu d'actions globales pour l'en-tête de la colonne Actions.
+     * @param {Object} globalPermissions - Les permissions globales (ex: {create: true})
+     * @returns {string} Code HTML du menu déroulant manuel d'en-tête
+     */
     static getHeaderDropdown(globalPermissions = {}) {
-        // Le bouton "create" est soumis à condition. Par défaut, s'il n'est pas mentionné, on est prudent (false)
         const canCreate = globalPermissions.create === true;
-
-        // Le bouton "reset" est TOUJOURS autorisé (True) pour des raisons d'UX
-        const canReset = true;
-
         const createDisabledClass = canCreate ? '' : 'disabled pe-none opacity-50';
 
         return `
             <div class="dropdown d-flex align-items-center justify-content-center" style="position: relative;">
-                <button class="btn shadow-sm btn-sm btn-danger action-menu-btn"
-                        type="button"
-                        title="Menu des actions globales">
+                <button class="btn shadow-sm btn-sm btn-danger action-menu-btn" type="button" title="Menu des actions globales">
                     <i class="fas fa-cog"></i>
                 </button>
                 <ul class="dropdown-menu shadow position-absolute" style="top: 100%; right: 0; z-index: 9999; margin-top: 5px; display: none;">
@@ -83,9 +76,7 @@ class ButtonFactory {
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     <li>
-                        <button class="dropdown-item text-warning action-reset fw-bold"
-                                data-action="reset"
-                                type="button">
+                        <button class="dropdown-item text-warning action-reset fw-bold" data-action="reset" type="button">
                             <i class="fas fa-undo me-2"></i> Réinitialiser les filtres
                         </button>
                     </li>

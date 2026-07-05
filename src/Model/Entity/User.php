@@ -22,7 +22,6 @@ class User extends AppEntity
     protected function getActionPermissions(): array
     {
         return [
-            'create' => false,
             'view' => true,
             'edit' => ($this->id % 2 === 0), // Autorisé uniquement pour les IDs pairs
             'delete' => ($this->id % 2 !== 0), // Désactivé pour tout le monde

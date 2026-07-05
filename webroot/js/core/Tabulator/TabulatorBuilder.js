@@ -294,21 +294,16 @@ class TabulatorBuilder {
             }
         };
 
-        // Écoute de l'arrivée des données pour recalculer les droits du menu d'en-tête
-        this.config.dataLoaded = function (data) {
-            if (data && data.length > 0) {
-                // On extrait les droits d'actions depuis le premier enregistrement
-                const globalPermissions = data[0].grid_rights?.actions || {};
+        // Récupération de l'élément DOM physique pour inspecter ses attributs data-*
+        const tableElement = document.querySelector(this.selector);
 
-                // On récupère la colonne "Actions" pour mettre à jour son titre dynamiquement
-                const actionColumnInstance = this.getColumn("_actions");
-                if (actionColumnInstance && typeof ButtonFactory !== 'undefined') {
-                    // Régénération du HTML du menu avec les vrais droits
-                    const updatedHeaderHTML = ButtonFactory.getHeaderDropdown(globalPermissions);
-                    actionColumnInstance.updateDefinition({ title: updatedHeaderHTML });
-                }
-            }
-        };
+        // Lecture sécurisée du droit de création injecté par le serveur PHP (défaut à false si absent)
+        const canCreateRecord = tableElement ? tableElement.getAttribute('data-can-create') === 'true' : false;
+
+        // Génération du titre de l'en-tête AVANT l'instanciation (Zéro re-rendu, performance maximale)
+        actionColumn.title = typeof ButtonFactory !== 'undefined'
+            ? ButtonFactory.getHeaderDropdown({ create: canCreateRecord })
+            : 'Actions';
 
         if (!this.config.columns) this.config.columns = [];
         this.config.columns.push(actionColumn);

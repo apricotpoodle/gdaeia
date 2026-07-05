@@ -157,7 +157,10 @@ Pour contourner cette régression sans créer de régression visuelle :
 * **Dépendances épurées** : Le balisage généré par la `ButtonFactory.getHeaderDropdown()` est maintenu en HTML/CSS standard, sans attribut de ciblage tiers.
 * **Contrôle Programmatique** : La méthode `headerClick` du `TabulatorBuilder` prend le contrôle absolu de la visibilité en manipulant directement les propriétés CSS de rendu (`display: block/none`) et la classe `show`. Un écouteur temporaire est greffé sur le `document` lors de l'ouverture pour intercepter les clics extérieurs (Outside Click) et garantir la fermeture propre du menu, préservant une expérience utilisateur fluide sans conflit de cycle de vie.
 
-### 7. Gestion des Droits sur les Actions d'En-tête (Gouvernance)
-Les actions globales portées par l'en-tête de la colonne d'actions suivent des règles de sécurité asymétriques :
-* **Action 'Create'** : Soumise à une vérification stricte des permissions de l'utilisateur. Le menu d'en-tête est réévalué dynamiquement lors du callback `dataLoaded` en lisant l'empreinte `grid_rights.actions` de la première ligne. Si le droit est invalide, le bouton est rendu inerte (`disabled`).
+### 7. Habilitations de l'En-tête (Gouvernance & Découplage)
+Pour éviter le "Risque de la Table Vide" (où une table contenant 0 enregistrement empêcherait la lecture des droits applicatifs), le droit de création global (`Create`) est strictement dissocié du payload de données JSON.
+
+* **Cinématique** : Le serveur (Back-End) injecte la permission au niveau du conteneur DOM via l'attribut `data-can-create="true|false"`.
+* **Avantage** : Le `TabulatorBuilder` évalue cette propriété de manière synchrone lors de la méthode `_compileActionColumn()`. Le menu d'actions est configuré à sa juste valeur dès le premier rendu, garantissant une étanchéité parfaite et éliminant tout clignotement d'interface ou dépendance à la présence de lignes de données.
 * **Action 'Reset'** : Arbitrairement définie comme **toujours accessible**. Cette action étant purement locale (Front-End) et dédiée au nettoyage du `localStorage`, sa restriction impacterait négativement l'expérience utilisateur sans apporter de gain de sécurité sur le serveur.
+
