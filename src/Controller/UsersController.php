@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use Cake\Http\Response;
+
 use function Cake\Error\dd;
 
 /**
@@ -18,6 +20,53 @@ use function Cake\Error\dd;
 class UsersController extends AppController
 {
     /**
+     * Called before the controller action. You can use this method to configure and customize components
+     * or perform logic that needs to happen before each controller action.
+     *
+     * @param \Cake\Event\EventInterface<\Cake\Controller\Controller> $event An Event instance
+     * @return void
+     * @link https://book.cakephp.org/5/en/controllers.html#request-life-cycle-callbacks
+     * @phpcsSuppress SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint
+     */
+    public function beforeFilter(\Cake\Event\EventInterface $event): void
+    {
+        parent::beforeFilter($event);
+
+        $this->Authentication->allowUnauthenticated(['login']);
+    }
+
+    /**
+     * Méthode Login
+     *
+     * @return void|Response
+     */
+    public function login(): ?Response
+    {
+        $result = $this->Authentication->getResult();
+        // If the user is logged in send them away.
+        if ($result && $result->isValid()) {
+            return $this->Authentication->redirectAfterLogin('/home');
+        }
+        if ($this->request->is('post')) {
+            $this->Flash->error('Invalid username or password');
+        }
+
+        return null;
+    }
+
+    /**
+     * Méthode Logout
+     *
+     * @return Response
+     */
+    public function logout(): Response
+    {
+        $this->Authentication->logout();
+
+        return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+    }
+
+    /**
      * Méthode Index (GET /users)
      * * Rend le gabarit HTML contenant le conteneur vide pour la grille Tabulator.
      *
@@ -27,6 +76,7 @@ class UsersController extends AppController
     {
         // Le rendu de templates/Users/index.php est automatique.
     }
+
     /**
      * Action de suppression d'un utilisateur.
      * Gère de manière hybride les requêtes HTTP classiques et les appels asynchrones AJAX/JSON.

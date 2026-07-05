@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Model\Entity;
 
+use Authentication\PasswordHasher\DefaultPasswordHasher;
+
 /**
  * Class User
  * @package App\Model\Entity
@@ -39,5 +41,17 @@ class User extends AppEntity
             'email' => true,
             'issuperuser' => ($this->id % 2 == 0), // On force le masquage de la colonne Super Admin
         ];
+    }
+
+    /**
+     * automatically hash passwords when users update their password
+     *
+     * @param string $password -
+     * @return string
+     */    protected function _setPassword(string $password): string
+    {
+        $hasher = new DefaultPasswordHasher();
+
+        return $hasher->hash($password);
     }
 }

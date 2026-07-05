@@ -4,6 +4,7 @@ namespace App\View\Helper;
 
 use Cake\View\Helper;
 use Cake\ORM\TableRegistry;
+use PhpParser\Node\Stmt\TryCatch;
 
 /**
  * @class TabulatorHelper
@@ -31,7 +32,12 @@ class TabulatorHelper extends Helper
         $identity = $this->_View->getRequest()->getAttribute('identity');
 
         // 4. Évaluation dynamique du droit de création (action 'add' de la Policy)
-        $canCreate = $identity ? $identity->can('add', $emptyEntity) : false;
+        try {
+            $canCreate = $identity ? $identity->can('add', $emptyEntity) : false;
+        } catch (\Throwable $th) {
+            throw $th;
+            // $canCreate = false;
+        }
 
         // 5. Rendu du composant HTML porteur des métadonnées structurelles
         return sprintf(

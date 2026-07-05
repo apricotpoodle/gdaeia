@@ -12,4 +12,6 @@ return [
         'onlyCli' => true,
     ],
     'Cake/Repl' => [],
+    'Authentication' => [],
+    'Authorization' => [],
 ];
