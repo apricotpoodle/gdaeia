@@ -178,6 +178,13 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             'identifier' => [
                 'className' => 'Authentication.Password',
                 'fields' => $fields,
+                // // =============================================================
+                // // AJOUT INDISPENSABLE : Dire à CakePHP où chercher les données
+                // // =============================================================
+                // 'resolver' => [
+                //     'className' => 'Authentication.Orm',
+                //     'userModel' => 'Users',
+                // ],
             ],
             'fields' => $fields,
             'loginUrl' => Router::url([

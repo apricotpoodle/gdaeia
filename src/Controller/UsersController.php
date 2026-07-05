@@ -32,7 +32,10 @@ class UsersController extends AppController
     {
         parent::beforeFilter($event);
 
-        $this->Authentication->allowUnauthenticated(['login']);
+        // 1. Autoriser le plugin Authentication à ne pas bloquer ces pages
+        $this->Authentication->allowUnauthenticated(['login', 'register', 'verify']);
+        // 2. CORRECTION : Autoriser le plugin Authorization à ignorer ces actions
+        $this->Authorization->skipAuthorization(['login', 'register', 'verify']);
     }
 
     /**
@@ -43,11 +46,16 @@ class UsersController extends AppController
     public function login(): ?Response
     {
         $result = $this->Authentication->getResult();
+
         // If the user is logged in send them away.
         if ($result && $result->isValid()) {
-            return $this->Authentication->redirectAfterLogin('/home');
+            // On consomme l'URL interceptée (ex: si l'utilisateur a cliqué sur un vieux lien)
+            // Sinon, direction par défaut vers la table de gestion des utilisateurs
+            $target = $this->Authentication->getLoginRedirect() ?? '/users/index';
+            return $this->Authentication->redirectAfterLogin($target);
         }
-        if ($this->request->is('post')) {
+
+        if ($this->request->is('post') && !$result->isValid()) {
             $this->Flash->error('Invalid username or password');
         }
 
