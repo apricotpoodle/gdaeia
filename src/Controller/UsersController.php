@@ -82,6 +82,9 @@ class UsersController extends AppController
      */
     public function index(): void
     {
+        // On indique au plugin d'appliquer la règle 'canIndex' définie dans la Policy.
+        // On lui passe une entité vide pour donner le contexte du modèle 'User'.
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'index');
         // Le rendu de templates/Users/index.php est automatique.
     }
 

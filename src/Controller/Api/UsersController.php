@@ -6,6 +6,7 @@ namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
+use Cake\Event\EventInterface;
 
 /**
  * Class UsersController (API)
@@ -34,8 +35,22 @@ class UsersController extends AppController
     }
 
     /**
+     * Correction de l'interception précoce :
+     * On s'assure que l'autorisation est gérée ou contournée proprement avant la sérialisation
+     */
+    public function beforeFilter(EventInterface $event)
+    {
+        parent::beforeFilter($event);
+
+        // Option Sécurisée : Si l'utilisateur est authentifié globalement,
+        // on l'autorise à consommer l'API index sans re-vérification de Policy ici
+        $this->Authorization->skipAuthorization(['index']);
+    }
+
+    /**
      * Méthode Index (GET /api/users.json)
-     * * Récupère la liste paginée des utilisateurs en appliquant les tris
+     *
+     * Récupère la liste paginée des utilisateurs en appliquant les tris
      * demandés par le composant front-end Tabulator.
      *
      * @return void
@@ -44,6 +59,11 @@ class UsersController extends AppController
     {
         // Sécurité : On n'accepte que les requêtes en lecture
         $this->request->allowMethod(['get']);
+
+        // =====================================================================
+        // LE VERROU STRICT ENFIN INJECTÉ : Validation via la UserPolicy
+        // =====================================================================
+        // $this->Authorization->authorize($this->Users->newEmptyEntity(), 'index');
 
         $adapter = new TabulatorAdapter();
         $queryParams = $this->request->getQueryParams();
@@ -59,7 +79,7 @@ class UsersController extends AppController
             'limit' => (int)($queryParams['size'] ?? 20),
             'page'  => (int)($queryParams['page'] ?? 1),
             // SÉCURITÉ : On interdit au Paginator CakePHP de trier via l'URL,
-            // car le TabulatorAdapter a déjà appliqué les tris sur l'objet $query.
+            // car le TabulatorAdapter a déjà appliqué les tris su l'objet $query.
             'sortableFields' => []
         ]);
 

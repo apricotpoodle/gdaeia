@@ -168,3 +168,12 @@ Pour éviter le "Risque de la Table Vide" (où une table contenant 0 enregistrem
 L'architecture supporte nativement la coexistence de plusieurs grilles au sein d'une même vue.
 Chaque grille est instanciée via le Helper `<?= $this->Tabulator->renderGrid('#id', 'Controleur') ?>`.
 Le noyau calcule une empreinte de stockage local distincte pour chaque sélecteur (`${URL}-${Sélecteur}`) et lit l'attribut `data-can-create` localisé sur son propre conteneur. Le bus de communication `TabulatorObserver` distribue les signaux de manière étanche en préfixant les canaux par le sélecteur CSS unique de la grille émettrice.
+
+### 9. Sécurisation des Endpoints d'API de Grilles
+Chaque contrôleur d'API (ex: `src/Controller/Api/UsersController.php`) exposant des données au format JSON pour Tabulator est soumis aux mêmes exigences de sécurité strictes que les contrôleurs HTML. L'action `index()` doit idéalement invoquer `$this->Authorization->authorize($this->Table->newEmptyEntity(), 'index')` dès son démarrage afin de lever le verrou du middleware global d’Authorization. Cela assure une validation étanche des privilèges de lecture de l'utilisateur avant l'exécution des requêtes de pagination et de tri de l'adaptateur.
+
+### 10. Partage de Session et Requêtes Cross-Origin (AJAX Credentials)
+Pour éviter que les requêtes de données asynchrones de Tabulator ne soient rejetées comme anonymes par le middleware d'authentification (ce qui couperait court au cycle de vie et provoquerait une erreur 500 d'autorisation manquante), la configuration `ajaxConfig` du `TabulatorBuilder` doit être configurée avec `credentials: "include"`. Cette propriété force la transmission systématique des cookies de session du navigateur lors de chaque appel d'API sous-jacent.
+
+### 11. Résolution des conflits de RequestHandler JSON et Authorization
+Lors du traitement des requêtes d'API se terminant par `.json`, le `RequestHandlerComponent` de CakePHP initie un cycle de rendu précoce. Pour éviter que le middleware d'Authorization ne bloque le flux avec une exception 500 (contrôle manquant), l'exemption d'autorisation doit être déclarée de manière synchrone dans le hook `beforeFilter()` du contrôleur d'API concerné, garantissant l'étanchéité du pipeline de sérialisation.

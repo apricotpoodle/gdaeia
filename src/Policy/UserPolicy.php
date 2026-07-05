@@ -6,12 +6,27 @@ namespace App\Policy;
 
 use App\Model\Entity\User;
 use Authorization\IdentityInterface;
+use Authorization\Policy\Result;
 
 /**
  * Users policy
  */
-class UsersPolicy
+class UserPolicy
 {
+    /**
+     * Check if $user can list Users
+     *
+     * @param \Authorization\IdentityInterface $user The user.
+     * @param \App\Model\Entity\User $users
+     * @return bool
+     */
+    public function canIndex(IdentityInterface $user, User $users)
+    {
+        $msg = 'youpi!';
+        $result = true;
+        return  $result; // new Result($result, $msg);
+    }
+
     /**
      * Check if $user can add Users
      *

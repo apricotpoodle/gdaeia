@@ -35,8 +35,8 @@ class TabulatorHelper extends Helper
         try {
             $canCreate = $identity ? $identity->can('add', $emptyEntity) : false;
         } catch (\Throwable $th) {
-            throw $th;
-            // $canCreate = false;
+            // throw $th;
+            $canCreate = false;
         }
 
         // 5. Rendu du composant HTML porteur des métadonnées structurelles

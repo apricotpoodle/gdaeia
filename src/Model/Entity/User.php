@@ -4,18 +4,55 @@ declare(strict_types=1);
 
 namespace App\Model\Entity;
 
+use Authorization\AuthorizationServiceInterface;
+use Authorization\Policy\ResultInterface;
 use Authentication\PasswordHasher\DefaultPasswordHasher;
+use Authentication\IdentityInterface as AuthenticationIdentity;
+use Authorization\IdentityInterface as AuthorizationIdentity;
 
 /**
  * Class User
  * @package App\Model\Entity
  */
-class User extends AppEntity
+class User extends AppEntity implements AuthenticationIdentity, AuthorizationIdentity
 {
     protected array $_accessible = [
         '*' => true,
         'id' => false,
     ];
+
+    public function getIdentifier(): int|string|null
+    {
+        return $this->id;
+    }
+
+    public function can(string $action, mixed $resource): bool
+    {
+        return $this->authorization->can($this, $action, $resource);
+    }
+
+    public function canResult(string $action, mixed $resource): ResultInterface
+    {
+        return $this->authorization->canResult($this, $action, $resource);
+    }
+
+    public function applyScope(string $action, mixed $resource, mixed ...$optionalArgs): mixed
+    {
+        return $this->authorization->applyScope($this, $action, $resource, ...$optionalArgs);
+    }
+
+    public function getOriginalData(): \ArrayAccess|array
+    {
+        return $this;
+    }
+
+    public function setAuthorization(AuthorizationServiceInterface $service): static
+    {
+        $this->authorization = $service;
+
+        return $this;
+    }
+
 
     /**
      * Application du scénario de test sur les boutons.

@@ -106,7 +106,11 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             // after routing and body parser.
             ->add(new AuthenticationMiddleware($this))
             // Add Authorization after routing, body parsing, and authentication.
-            ->add(new AuthorizationMiddleware($this))
+            ->add(new AuthorizationMiddleware($this, [
+                'identityDecorator' => function ($auth, $user) {
+                    return $user->setAuthorization($auth);
+                },
+            ]))
 
             // https://book.cakephp.org/5/en/security/csrf.html#cross-site-request-forgery-csrf-middleware
             ->add(new CsrfProtectionMiddleware([
