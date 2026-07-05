@@ -175,12 +175,8 @@ class TabulatorBuilder {
             width: 240,
 
             formatter: (cell) => {
-                // ========================================================
-                // PRÉSERVATION DE VOTRE DESIGN BOOTSTRAP (ButtonFactory)
-                // ========================================================
                 let html = '<div class="d-flex justify-content-center align-items-center">';
                 const rowData = cell.getRow().getData();
-
                 const gridRights = rowData.grid_rights || {};
                 const actionPermissions = gridRights.actions || {};
 
@@ -194,22 +190,16 @@ class TabulatorBuilder {
             },
 
             cellClick: (e, cell) => {
-                // ========================================================
-                // ARCHITECTURE UNIFIÉE : ÉVÉNEMENTS ET CALCUL D'URL
-                // ========================================================
-
-                // INTERCEPTION : Coupe net le bouillonnement vers le rowClick de la ligne
                 e.stopPropagation();
 
                 const btn = e.target.closest('.btn-action');
-                if (!btn || btn.classList.contains('disabled')) return; // Sécurité anti-clic
+                if (!btn || btn.classList.contains('disabled')) return;
 
                 const action = btn.dataset.action;
                 const target = btn.dataset.target || '_self';
                 const isEvent = btn.dataset.isEvent === 'true';
                 const rowData = cell.getRow().getData();
 
-                // 1. CALCUL UNIVERSEL DE L'URL (Générique et Polymorphe)
                 const targetController = rowData.table_controller || this.controller;
                 const id = rowData.id;
 
@@ -218,17 +208,14 @@ class TabulatorBuilder {
                     generatedUrl = `/${targetController}/${action}/${id}`;
                 }
 
-                // 2. ROUTAGE PUB/SUB (Événement Observer)
                 if (isEvent) {
                     if (typeof globalTabulatorObserver !== 'undefined') {
-                        // Injection de l'URL pré-calculée dans l'objet de données
                         rowData._actionUrl = generatedUrl;
                         globalTabulatorObserver.publish(`${this.selector}:action:${action}`, rowData);
                     }
                     return;
                 }
 
-                // 3. NAVIGATION MATÉRIELLE DIRECTE
                 if (generatedUrl !== '#') {
                     if (target === '_blank') {
                         window.open(generatedUrl, '_blank');
@@ -238,8 +225,88 @@ class TabulatorBuilder {
                 }
             },
 
-            headerClick: (e, column) => {
-                // ... (votre code de gestion de menu déroulant existant)
+            // ========================================================
+            // CONTRÔLE MANUEL ET IMPÉRATIF DU DROPDOWN (ZÉRO CONFLIT)
+            // ========================================================
+            headerClick: function (e, column) {
+                const toggleBtn = e.target.closest('.action-menu-btn');
+
+                // 1. Clic sur l'engrenage : Bascule manuelle de la visibilité
+                if (toggleBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const dropdownContainer = toggleBtn.closest('.dropdown');
+                    const menu = dropdownContainer ? dropdownContainer.querySelector('.dropdown-menu') : null;
+
+                    if (menu) {
+                        const isVisible = menu.style.display === 'block';
+
+                        // Fermeture globale préventive de sécurité
+                        document.querySelectorAll('.dropdown-menu').forEach(m => {
+                            m.style.display = 'none';
+                            m.classList.remove('show');
+                        });
+
+                        if (!isVisible) {
+                            menu.style.display = 'block';
+                            menu.classList.add('show');
+
+                            // Filet de sécurité : Fermer si on clique n'importe où ailleurs dans la page
+                            const closeOnOutsideClick = (event) => {
+                                if (!dropdownContainer.contains(event.target)) {
+                                    menu.style.display = 'none';
+                                    menu.classList.remove('show');
+                                    document.removeEventListener('click', closeOnOutsideClick);
+                                }
+                            };
+                            setTimeout(() => document.addEventListener('click', closeOnOutsideClick), 10);
+                        }
+                    }
+                    return;
+                }
+
+                // 2. Clic sur une option du menu ("Créer", "Réinitialiser")
+                const actionBtn = e.target.closest('.action-create') || e.target.closest('.action-reset') || e.target.closest('[data-action]');
+                if (actionBtn) {
+                    e.stopPropagation();
+                    e.preventDefault();
+
+                    let action = actionBtn.dataset.action;
+                    if (!action) {
+                        action = actionBtn.classList.contains('action-create') ? 'create' : 'reset';
+                    }
+
+                    const tableElement = column.getTable().element;
+                    const currentSelector = tableElement && tableElement.id ? `#${tableElement.id}` : '#users-table';
+
+                    if (typeof globalTabulatorObserver !== 'undefined') {
+                        globalTabulatorObserver.publish(`${currentSelector}:action:${action}`);
+                    }
+
+                    // Masquage immédiat du menu après exécution
+                    const menuToHide = e.target.closest('.dropdown-menu');
+                    if (menuToHide) {
+                        menuToHide.style.display = 'none';
+                        menuToHide.classList.remove('show');
+                    }
+                }
+            }
+        };
+
+        // Écoute de l'arrivée des données pour recalculer les droits du menu d'en-tête
+        this.config.dataLoaded = function (data) {
+            if (data && data.length > 0) {
+                // On extrait les droits d'actions depuis le premier enregistrement
+                const globalPermissions = data[0].grid_rights?.actions || {};
+
+                // On récupère la colonne "Actions" pour mettre à jour son titre dynamiquement
+                const actionColumnInstance = this.getColumn("_actions");
+                if (actionColumnInstance && typeof ButtonFactory !== 'undefined') {
+                    // Régénération du HTML du menu avec les vrais droits
+                    const updatedHeaderHTML = ButtonFactory.getHeaderDropdown(globalPermissions);
+                    actionColumnInstance.updateDefinition({ title: updatedHeaderHTML });
+                }
             }
         };
 
