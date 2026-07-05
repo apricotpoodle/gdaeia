@@ -13,53 +13,100 @@ use Authorization\Policy\Result;
  */
 class UserPolicy
 {
+
+    /**
+     * Méthode utilitaire DRY : Extrait et garantit le type de l'identité connectée.
+     * Si l'identité n'est pas un humain (ex: un démon système ou une API), renvoie null.
+     */
+    private function getValidUser(IdentityInterface $identity): ?User
+    {
+        // On récupère la donnée sous-jacente (l'entité CakePHP réelle)
+        $user = $identity->getOriginalData();
+        // On sécurise le typage pour PHPStan et l'IDE
+        return $user instanceof User ? $user : null;
+    }
+
     /**
      * Check if $user can list Users
      *
-     * @param \Authorization\IdentityInterface $user The user.
-     * @param \App\Model\Entity\User $users
+     * @param \Authorization\IdentityInterface $identity The user.
      * @return bool
      */
-    public function canIndex(IdentityInterface $user, User $users)
+    public function canIndex(IdentityInterface $identity): bool
     {
-        $msg = 'youpi!';
-        $result = true;
-        return  $result; // new Result($result, $msg);
+        return true;
     }
 
     /**
      * Check if $user can add Users
      *
-     * @param \Authorization\IdentityInterface $user The user.
-     * @param \App\Model\Entity\User $users
+     * @param \Authorization\IdentityInterface $identity of the operator.
+     * @param \App\Model\Entity\User $target
      * @return bool
      */
-    public function canAdd(IdentityInterface $user, User $users) {}
+    public function canAdd(IdentityInterface $identity, User $target): bool
+    {
+        $user = $this->getValidUser($identity);
+        if (!$user) return false; // Par sécurité, on bloque si ce n'est pas un User valide
+
+        return (bool) $user->get('issuperuser');
+    }
+
+    /**
+     * Check if $user can imperonate Users
+     *
+     * @param \Authorization\IdentityInterface $identity The user.
+     * @param \App\Model\Entity\User $target
+     * @return bool
+     */
+    public function canImpersonate(IdentityInterface $identity, User $target): bool
+    {
+        // Vrai si Super Admin ET que la cible n'est PAS un Super Admin
+        $user = $this->getValidUser($identity);
+        if (!$user) return false; // Par sécurité, on bloque si ce n'est pas un User valide
+
+        return (bool) $user->get('issuperuser') && !(bool)$target->get('issuperuser');
+    }
 
     /**
      * Check if $user can edit Users
      *
-     * @param \Authorization\IdentityInterface $user The user.
-     * @param \App\Model\Entity\User $users
+     * @param \Authorization\IdentityInterface $identity of the operator.
+     * @param \App\Model\Entity\User $target
      * @return bool
      */
-    public function canEdit(IdentityInterface $user, User $users) {}
+    public function canEdit(IdentityInterface $identity, User $target): bool
+    {
+        $user = $this->getValidUser($identity);
+        if (!$user) return false; // Par sécurité, on bloque si ce n'est pas un User valide
+
+        return (bool)$user->get('issuperuser') || $user->get('id') === $target->get('id');
+    }
 
     /**
      * Check if $user can delete Users
      *
-     * @param \Authorization\IdentityInterface $user The user.
-     * @param \App\Model\Entity\User $users
+     * @param \Authorization\IdentityInterface $identity of the operator.
+     * @param \App\Model\Entity\User $target
      * @return bool
      */
-    public function canDelete(IdentityInterface $user, User $users) {}
+    public function canDelete(IdentityInterface $identity, User $target): bool
+    {
+        $user = $this->getValidUser($identity);
+        if (!$user) return false;
+
+        return (bool)$user->get('issuperuser') && $user->get('id') !== $target->get('id');
+    }
 
     /**
      * Check if $user can view Users
      *
-     * @param \Authorization\IdentityInterface $user The user.
-     * @param \App\Model\Entity\User $users
+     * @param \Authorization\IdentityInterface $identity of the operator.
+     * @param \App\Model\Entity\User $target
      * @return bool
      */
-    public function canView(IdentityInterface $user, User $users) {}
+    public function canView(IdentityInterface $identity, User $target): bool
+    {
+        return true;
+    }
 }

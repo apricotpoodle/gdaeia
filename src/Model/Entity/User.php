@@ -21,6 +21,13 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
         'id' => false,
     ];
 
+    // AJOUTEZ CECI POUR SÉCURISER L'API :
+    protected array $_hidden = [
+        'password',
+        'token'
+    ];
+
+
     public function getIdentifier(): int|string|null
     {
         return $this->id;
@@ -54,38 +61,40 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
     }
 
 
-    /**
-     * Application du scénario de test sur les boutons.
-     * @return array<string, bool>
-     */
-    protected function getActionPermissions(): array
-    {
-        return [
-            'view' => true,
-            'edit' => ($this->id % 2 === 0), // Autorisé uniquement pour les IDs pairs
-            'delete' => ($this->id % 2 !== 0), // Désactivé pour tout le monde
-            'impersonate' => ($this->id % 2 === 0), // Autorisé uniquement pour les IDs pairs
-        ];
-    }
+    // /**
+    //  * Application du scénario de test sur les boutons.
+    //  * @return array<string, bool>
+    //  */
+    // protected function getActionPermissions(): array
+    // {
 
-    /**
-     * Application du scénario de test sur les colonnes.
-     * @return array<string, bool>
-     */
-    protected function getColumnVisibility(): array
-    {
-        return [
-            'email' => true,
-            'issuperuser' => ($this->id % 2 == 0), // On force le masquage de la colonne Super Admin
-        ];
-    }
+    //     return [
+    //         'view' => true,
+    //         'edit' => ($this->id % 2 === 0), // Autorisé uniquement pour les IDs pairs
+    //         'delete' => ($this->id % 2 !== 0), // Désactivé pour tout le monde
+    //         'impersonate' => ($this->id % 2 === 0), // Autorisé uniquement pour les IDs pairs
+    //     ];
+    // }
+
+    // /**
+    //  * Application du scénario de test sur les colonnes.
+    //  * @return array<string, bool>
+    //  */
+    // protected function getColumnVisibility(): array
+    // {
+    //     return [
+    //         'email' => true,
+    //         'issuperuser' => ($this->id % 2 == 0), // On force le masquage de la colonne Super Admin
+    //     ];
+    // }
 
     /**
      * automatically hash passwords when users update their password
      *
      * @param string $password -
      * @return string
-     */    protected function _setPassword(string $password): string
+     */
+    protected function _setPassword(string $password): string
     {
         $hasher = new DefaultPasswordHasher();
 

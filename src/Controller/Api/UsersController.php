@@ -50,8 +50,9 @@ class UsersController extends AppController
     /**
      * Méthode Index (GET /api/users.json)
      *
-     * Récupère la liste paginée des utilisateurs en appliquant les tris
-     * demandés par le composant front-end Tabulator.
+     * Récupère la liste paginée des utilisateurs en appliquant les tris et filtres
+     * demandés par le composant front-end Tabulator, tout en injectant dynamiquement
+     * les droits d'accès visuels (grid_rights) de manière centralisée et DRY.
      *
      * @return void
      */
@@ -61,32 +62,50 @@ class UsersController extends AppController
         $this->request->allowMethod(['get']);
 
         // =====================================================================
-        // LE VERROU STRICT ENFIN INJECTÉ : Validation via la UserPolicy
+        // 1. VERROU DE SÉCURITÉ : Validation stricte via la UserPolicy::canIndex()
         // =====================================================================
-        // $this->Authorization->authorize($this->Users->newEmptyEntity(), 'index');
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'index');
 
         $adapter = new TabulatorAdapter();
         $queryParams = $this->request->getQueryParams();
 
-        // 1. Préparation de la requête avec la relation vers la table Roles
+        // 2. Préparation de la requête avec la relation vers la table Roles
         $query = $this->Users->find()->contain(['Roles']);
 
-        // 2. Traduction des tris Tabulator vers la requête SQL
+        // 3. Traduction des tris et filtres Tabulator vers la requête SQL
         $query = $adapter->adaptRequest($this->request, $query);
 
-        // 3. Exécution de la requête avec la pagination native
+        // 4. Exécution de la requête avec la pagination native de CakePHP
         $paginatedData = $this->paginate($query, [
             'limit' => (int)($queryParams['size'] ?? 20),
             'page'  => (int)($queryParams['page'] ?? 1),
             // SÉCURITÉ : On interdit au Paginator CakePHP de trier via l'URL,
-            // car le TabulatorAdapter a déjà appliqué les tris su l'objet $query.
+            // car le TabulatorAdapter a déjà appliqué les tris sur l'objet $query.
             'sortableFields' => []
         ]);
 
-        // 4. Formatage de la réponse
-        $output = $adapter->adaptResponse($paginatedData);
+        // =====================================================================
+        // 5. FABRIQUE DE DROITS DRY (Méthode définie dans AppController)
+        // =====================================================================
+        $rightsFormatter = $this->createGridRightsFormatter(
+            // Actions métiers spécifiques s'ajoutant au CRUD de base (view, edit, delete)
+            ['impersonate'],
 
-        // 5. Rendu sérialisé en JSON
+            // Callback pour piloter la visibilité dynamique des cellules/colonnes
+            function ($entity, $authorization) {
+                return [
+                    'email'       => true,
+                    // Seul un profil ayant le droit d'exécuter la suppression (Admin)
+                    // verra/pilotera l'interrupteur Super Utilisateur dans sa ligne
+                    'issuperuser' => $authorization->can($entity, 'delete'),
+                ];
+            }
+        );
+
+        // 6. Formatage de la structure de réponse par l'adaptateur agnostique
+        $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);
+
+        // 7. Rendu final sérialisé en JSON conforme CakePHP 5
         $this->set($output);
         $this->viewBuilder()->setOption('serialize', array_keys($output));
     }

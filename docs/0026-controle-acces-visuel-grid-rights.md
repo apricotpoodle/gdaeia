@@ -46,3 +46,20 @@ Le payload JSON transmis au composant front-end respecte le format d'imbrication
     - Allègement drastique des Factories métiers : La déclaration des tables spécifiques (ex: createUsersTable) se focalise uniquement sur les données métiers brutes, l'infrastructure prenant en charge l'évaluation structurelle automatique de sécurité.
 
     - Maintenance simplifiée : Toute modification de droits applicatifs sur un profil s'effectue dans le modèle PHP sans nécessiter de refonte ou de mise à jour des scripts front-end.
+
+
+## ⚠️ Piège Architectural : L'écrasement par la Sérialisation JSON (Propriétés Virtuelles)
+
+### Le Problème (Le Fantôme de l'Entité)
+Lors du développement initial, il est tentant de déclarer la propriété `grid_rights` dans le tableau `$_virtual` de l'entité de base (`AppEntity.php`) avec un accesseur statique `_getGridRights()` renvoyant des permissions bouchonnées (Mocks).
+
+Cependant, cette approche détruit la logique dynamique générée par l'adaptateur. En effet :
+1. Le `TabulatorAdapter` calcule les vrais droits via la `UserPolicy` et les attache à l'entité en mémoire (`$entity->grid_rights = [...]`).
+2. Lors du rendu, la méthode `$this->set()` déclenche le moteur de sérialisation JSON de CakePHP.
+3. Le moteur détecte la propriété dans `$_virtual`, invoque automatiquement `_getGridRights()`, et **écrase brutalement** les droits dynamiques calculés par l'adaptateur avec les valeurs figées de l'entité mère.
+
+### La Solution (Responsabilité Unique)
+Les entités du modèle (Data Objects) doivent rester strictement agnostiques des logiques de présentation UI.
+- Ne **jamais** déclarer `grid_rights` dans `$_virtual`.
+- Ne **jamais** coder de méthode `_getGridRights()` dans le modèle.
+- Laisser l'adaptateur (`TabulatorAdapter`) injecter dynamiquement la propriété `$entity->grid_rights`. Le sérialiseur JSON natif de CakePHP inclura parfaitement cette nouvelle propriété publique ajoutée à la volée, garantissant que les droits reflètent la réalité de la `Policy`.

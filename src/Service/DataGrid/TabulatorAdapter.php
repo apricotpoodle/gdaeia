@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service\DataGrid;
 
+use Authorization\AuthorizationServiceInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query\SelectQuery;
 use Cake\Datasource\Paging\PaginatedInterface;
@@ -110,18 +111,36 @@ class TabulatorAdapter
     }
 
     /**
-     * Formate le résultat de la pagination CakePHP au format JSON strict attendu par Tabulator.
+     * Formate la réponse paginée pour Tabulator.
      *
-     * @param \Cake\Datasource\Paging\PaginatedInterface $paginated L'objet paginé issu de CakePHP.
-     * @return array{last_page: int, data: array} Le tableau associatif prêt à être sérialisé en JSON.
+     * @param \Cake\Datasource\Paging\PaginatedInterface $paginatedData Les entités issues de la pagination
+     * @param callable|null $rightsFormatter Fonction anonyme pour injecter les grid_rights
+     * @return array Structure JSON attendue par Tabulator
      */
-    public function adaptResponse(PaginatedInterface $paginated): array
+    public function adaptResponse(PaginatedInterface $paginatedData, ?callable $rightsFormatter = null): array
     {
-        $pagingParams = $paginated->pagingParams();
+        // 1. CRUCIAL : On fige les entités dans un tableau physique (Array).
+        // Cela empêche le moteur JSON de relancer un cycle d'itération
+        // et de perdre nos droits dynamiques (grid_rights) calculés ci-dessous.
+        $entities = [];
+        foreach ($paginatedData->items() as $item) {
+            $entities[] = $item;
+        }
 
+        // 2. Application des droits via la fabrique DRY du contrôleur
+        if ($rightsFormatter !== null) {
+            foreach ($entities as $entity) {
+                $entity->grid_rights = $rightsFormatter($entity);
+            }
+        }
+
+        // 3. Récupération des métadonnées de pagination (CakePHP 5)
+        $pagingParams = $paginatedData->pagingParams();
+
+        // 4. Formatage standard Tabulator
         return [
-            'last_page' => $pagingParams['pageCount'] ?? 1,
-            'data'      => iterator_to_array($paginated),
+            'data' => $entities,
+            'last_page' => $pagingParams['pageCount'] ?? 1, // Restauration de last_page !
         ];
     }
 }
