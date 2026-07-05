@@ -24,8 +24,4 @@ $this->Html->script('core/Tabulator/TabulatorFactory.js', ['block' => true]);
 
 $this->Html->script('views/Users/index.js', ['block' => true]);
 ?>
-
-<div class="users-container">
-    <h2>Gestion des Utilisateurs</h2>
-    <div id="users-table"></div>
-</div>
+<?= $this->Tabulator->renderGrid('#users-table', 'Users') ?>
