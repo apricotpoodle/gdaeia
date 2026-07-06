@@ -1,0 +1,29 @@
+---
+title: "CounterCache Tool"
+description: "Rebuild counter caches in CakePHP: use CLI tool to recalculate cached counts, fix data inconsistencies, and maintain counter cache integrity."
+---
+
+# CounterCache Tool
+
+The CounterCacheCommand provides a CLI tool for rebuilding the counter caches
+in your application and plugin models. It can be used in maintenance and
+recovery operations, or to populate new counter caches added to your
+application.
+
+```bash
+bin/cake counter_cache Comments --assoc Articles
+```
+
+This would rebuild the `Comments` related counters on the `Articles` table.
+For very large tables you may need to rebuild counters in batches. You can use
+the `--limit` and `--page` options to incrementally rebuild counter state.
+
+```bash
+bin/cake counter_cache Comments --assoc Articles --limit 100 --page 2
+```
+
+When `limit` and `page` are used, records will be ordered by the table's
+primary key.
+
+::: info Added in version 5.2.0
+:::
