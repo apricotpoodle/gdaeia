@@ -6,6 +6,7 @@ namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
+use Cake\Event\EventInterface;
 
 /**
  * Class UsersController (API)
@@ -34,9 +35,24 @@ class UsersController extends AppController
     }
 
     /**
+     * Correction de l'interception précoce :
+     * On s'assure que l'autorisation est gérée ou contournée proprement avant la sérialisation
+     */
+    public function beforeFilter(EventInterface $event)
+    {
+        parent::beforeFilter($event);
+
+        // Option Sécurisée : Si l'utilisateur est authentifié globalement,
+        // on l'autorise à consommer l'API index sans re-vérification de Policy ici
+        $this->Authorization->skipAuthorization(['index']);
+    }
+
+    /**
      * Méthode Index (GET /api/users.json)
-     * * Récupère la liste paginée des utilisateurs en appliquant les tris
-     * demandés par le composant front-end Tabulator.
+     *
+     * Récupère la liste paginée des utilisateurs en appliquant les tris et filtres
+     * demandés par le composant front-end Tabulator, tout en injectant dynamiquement
+     * les droits d'accès visuels (grid_rights) de manière centralisée et DRY.
      *
      * @return void
      */
@@ -45,16 +61,21 @@ class UsersController extends AppController
         // Sécurité : On n'accepte que les requêtes en lecture
         $this->request->allowMethod(['get']);
 
+        // =====================================================================
+        // 1. VERROU DE SÉCURITÉ : Validation stricte via la UserPolicy::canIndex()
+        // =====================================================================
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'index');
+
         $adapter = new TabulatorAdapter();
         $queryParams = $this->request->getQueryParams();
 
-        // 1. Préparation de la requête avec la relation vers la table Roles
+        // 2. Préparation de la requête avec la relation vers la table Roles
         $query = $this->Users->find()->contain(['Roles']);
 
-        // 2. Traduction des tris Tabulator vers la requête SQL
+        // 3. Traduction des tris et filtres Tabulator vers la requête SQL
         $query = $adapter->adaptRequest($this->request, $query);
 
-        // 3. Exécution de la requête avec la pagination native
+        // 4. Exécution de la requête avec la pagination native de CakePHP
         $paginatedData = $this->paginate($query, [
             'limit' => (int)($queryParams['size'] ?? 20),
             'page'  => (int)($queryParams['page'] ?? 1),
@@ -63,10 +84,28 @@ class UsersController extends AppController
             'sortableFields' => []
         ]);
 
-        // 4. Formatage de la réponse
-        $output = $adapter->adaptResponse($paginatedData);
+        // =====================================================================
+        // 5. FABRIQUE DE DROITS DRY (Méthode définie dans AppController)
+        // =====================================================================
+        $rightsFormatter = $this->createGridRightsFormatter(
+            // Actions métiers spécifiques s'ajoutant au CRUD de base (view, edit, delete)
+            ['impersonate'],
 
-        // 5. Rendu sérialisé en JSON
+            // Callback pour piloter la visibilité dynamique des cellules/colonnes
+            function ($entity, $authorization) {
+                return [
+                    'email'       => true,
+                    // Seul un profil ayant le droit d'exécuter la suppression (Admin)
+                    // verra/pilotera l'interrupteur Super Utilisateur dans sa ligne
+                    'issuperuser' => $authorization->can($entity, 'delete'),
+                ];
+            }
+        );
+
+        // 6. Formatage de la structure de réponse par l'adaptateur agnostique
+        $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);
+
+        // 7. Rendu final sérialisé en JSON conforme CakePHP 5
         $this->set($output);
         $this->viewBuilder()->setOption('serialize', array_keys($output));
     }

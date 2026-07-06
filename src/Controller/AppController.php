@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -14,9 +15,11 @@ declare(strict_types=1);
  * @since     0.2.9
  * @license   https://opensource.org/licenses/mit-license.php MIT License
  */
+
 namespace App\Controller;
 
 use Cake\Controller\Controller;
+use Cake\Datasource\EntityInterface;
 
 /**
  * Application Controller
@@ -42,11 +45,48 @@ class AppController extends Controller
         parent::initialize();
 
         $this->loadComponent('Flash');
+        $this->loadComponent('Authentication.Authentication');
+        $this->loadComponent('Authorization.Authorization');
 
         /*
          * Enable the following component for recommended CakePHP form protection settings.
          * see https://book.cakephp.org/5/en/controllers/components/form-protection.html
          */
         //$this->loadComponent('FormProtection');
+    }
+
+    /**
+     * Génère un formateur de droits (grid_rights) standardisé pour le TabulatorAdapter.
+     * Automatise le CRUD de base et permet l'injection de règles spécifiques.
+     *
+     * @param array $extraActions Liste d'actions métiers supplémentaires (ex: ['impersonate', 'validate'])
+     * @param callable|null $columnsFormatter Hook pour formater la visibilité spécifique des colonnes
+     * @return callable
+     */
+    protected function createGridRightsFormatter(array $extraActions = [], ?callable $columnsFormatter = null): callable
+    {
+        $authorization = $this->Authorization;
+
+        return function (EntityInterface $entity) use ($authorization, $extraActions, $columnsFormatter) {
+            // 1. Le Socle Industriel Commun (CRUD)
+            $actions = [
+                'view'   => $authorization->can($entity, 'view'),
+                'edit'   => $authorization->can($entity, 'edit'),
+                'delete' => $authorization->can($entity, 'delete'),
+            ];
+
+            // 2. Extension dynamique des actions métiers spécifiques
+            foreach ($extraActions as $action) {
+                $actions[$action] = $authorization->can($entity, $action);
+            }
+
+            // 3. Traitement optionnel de la visibilité des colonnes
+            $columns = $columnsFormatter ? $columnsFormatter($entity, $authorization) : [];
+
+            return [
+                'actions' => $actions,
+                'columns' => $columns,
+            ];
+        };
     }
 }

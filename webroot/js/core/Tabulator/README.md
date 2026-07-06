@@ -168,3 +168,25 @@ Pour éviter le "Risque de la Table Vide" (où une table contenant 0 enregistrem
 L'architecture supporte nativement la coexistence de plusieurs grilles au sein d'une même vue.
 Chaque grille est instanciée via le Helper `<?= $this->Tabulator->renderGrid('#id', 'Controleur') ?>`.
 Le noyau calcule une empreinte de stockage local distincte pour chaque sélecteur (`${URL}-${Sélecteur}`) et lit l'attribut `data-can-create` localisé sur son propre conteneur. Le bus de communication `TabulatorObserver` distribue les signaux de manière étanche en préfixant les canaux par le sélecteur CSS unique de la grille émettrice.
+
+### 9. Sécurisation des Endpoints d'API de Grilles
+Chaque contrôleur d'API (ex: `src/Controller/Api/UsersController.php`) exposant des données au format JSON pour Tabulator est soumis aux mêmes exigences de sécurité strictes que les contrôleurs HTML. L'action `index()` doit idéalement invoquer `$this->Authorization->authorize($this->Table->newEmptyEntity(), 'index')` dès son démarrage afin de lever le verrou du middleware global d’Authorization. Cela assure une validation étanche des privilèges de lecture de l'utilisateur avant l'exécution des requêtes de pagination et de tri de l'adaptateur.
+
+### 10. Partage de Session et Requêtes Cross-Origin (AJAX Credentials)
+Pour éviter que les requêtes de données asynchrones de Tabulator ne soient rejetées comme anonymes par le middleware d'authentification (ce qui couperait court au cycle de vie et provoquerait une erreur 500 d'autorisation manquante), la configuration `ajaxConfig` du `TabulatorBuilder` doit être configurée avec `credentials: "include"`. Cette propriété force la transmission systématique des cookies de session du navigateur lors de chaque appel d'API sous-jacent.
+
+### 11. Résolution des conflits de RequestHandler JSON et Authorization
+Lors du traitement des requêtes d'API se terminant par `.json`, le `RequestHandlerComponent` de CakePHP initie un cycle de rendu précoce. Pour éviter que le middleware d'Authorization ne bloque le flux avec une exception 500 (contrôle manquant), l'exemption d'autorisation doit être déclarée de manière synchrone dans le hook `beforeFilter()` du contrôleur d'API concerné, garantissant l'étanchéité du pipeline de sérialisation.
+
+### 12. Intégrité de la Mémoire et Itérateurs (ResultSet)
+Lors de l'injection des `grid_rights` par le `TabulatorAdapter`, il ne faut jamais itérer directement sur l'objet retourné par `$this->paginate()` si l'on compte le transmettre tel quel au moteur JSON. Cet objet est un `ResultSet` (Itérateur). Si l'on modifie ses entités à la volée puis qu'on le donne au sérialiseur JSON, CakePHP risque de relancer la requête (ré-itération) et de purger les modifications faites en mémoire.
+**Règle :** Toujours extraire et figer les entités dans un tableau physique (Array) via une boucle `foreach` ou `toList()` avant d'y injecter des propriétés dynamiques.
+
+### 13. Pagination CakePHP 5 et perte de la variable `last_page`
+Dans CakePHP 5, l'objet retourné par `paginate()` implémente `PaginatedInterface`. Les métadonnées ne sont plus stockées sous forme de tableau associatif magique, ce qui provoque la disparition de la clé `last_page` attendue par Tabulator.
+L'adaptateur doit manuellement extraire cette donnée via la méthode `$paginatedData->pagingParams()` et restructurer le flux JSON de sortie :
+```php
+return [
+    'data' => $entitiesFigees,
+    'last_page' => $pagingParams['pageCount'] ?? 1
+];
