@@ -76,7 +76,8 @@ class TabulatorFactory {
                 { title: "Prénom", field: "firstname", sorter: "string" },
                 { title: "Email", field: "email", sorter: "string" },
                 { title: "Rôle", field: "role.name", sorter: "string", headerSort: false, headerFilter: false },
-                { title: "Super Admin", field: "issuperuser", formatter: "tickCross", hozAlign: "center", headerSort: false, headerFilter: false }
+                { title: "Super Admin", field: "issuperuser", formatter: "tickCross", hozAlign: "center", headerSort: false, headerFilter: false },
+                { title: "créé le", field: "created", formatter: "date" }
             ])
             .addActions(['impersonate'])
             .build(); // Plus besoin d'y écrire l'écouteur dataLoaded, il est hérité !

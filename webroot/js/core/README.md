@@ -26,3 +26,19 @@ FlashManager.info("Le téléchargement va commencer.");
 
 // Appel manuel avec durée personnalisée (0 = ne disparaît pas automatiquement)
 FlashManager.show("Message personnalisé", "primary", 10000);
+```
+
+##  🛑 NOUVELLE RÈGLE : Gouvernance des Modules (ADR 0030)
+
+Depuis l'adoption de l'ADR 0030, l'intégralité du code de ce dossier fonctionne sous la norme des **Modules ES6**.
+- Aucun fichier de ce dossier ne doit être inclus via une balise `<script>` classique dans le layout général PHP.
+- Toutes les classes (`FlashManager`, `TabulatorBuilder`, etc.) doivent obligatoirement être exportées via le mot-clé `export`.
+- Les scripts de premier niveau (orchestrateurs de pages comme `views/Users/index.js`) doivent charger ces composants uniquement via l'instruction `import`.
+
+### Exemple d'alignement sémantique standard :
+```javascript
+import { FlashManager } from '../FlashManager.js';
+import { TabulatorFactory } from './Tabulator/TabulatorFactory.js';
+```
+
+
