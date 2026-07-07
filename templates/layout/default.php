@@ -37,7 +37,6 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <?= $this->Html->script('core/FlashManager.js') ?>
 
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>

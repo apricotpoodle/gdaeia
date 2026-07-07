@@ -3,6 +3,11 @@
  * Dépendance : Tabulator.js
  * Connecté au point de terminaison : GET /api/users.json
  */
+
+import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js';
+import { globalTabulatorObserver } from '../../core/Tabulator/TabulatorObserver.js';
+import { FlashManager } from '../../core/FlashManager.js';
+
 document.addEventListener('DOMContentLoaded', function () {
 
     /**
@@ -11,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
      * @type {Tabulator}
      */
     // Instanciation ultra-propre via la Factory
-    const usersTable = TabulatorFactory.createUsersTable("#users-table");
+    const usersTable = TabulatorFactory.createUsersGrid("#users-table");
 
     if (typeof globalTabulatorObserver !== "undefined") {
 
