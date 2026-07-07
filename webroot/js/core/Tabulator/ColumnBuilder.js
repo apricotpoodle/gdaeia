@@ -1,54 +1,28 @@
-// webroot/js/core/Tabulator/ColumnBuilder.js
+// ==============================================================================
+// Fichier : webroot/js/core/Tabulator/ColumnBuilder.js
+// Rôle : Patron de conception Builder pour la configuration d'une colonne unique
+// ==============================================================================
 
 export class ColumnBuilder {
     constructor(field = "", title = "") {
-        this.config = {
-            field: field,
-            title: title
-        };
+        this.config = { field, title };
     }
 
-    setField(field) {
-        this.config.field = field;
-        return this;
-    }
-
-    setTitle(title) {
-        this.config.title = title;
-        return this;
-    }
-
-    setSorter(sorter) {
-        this.config.sorter = sorter;
-        return this;
-    }
-
-    setHozAlign(align) {
-        this.config.hozAlign = align;
-        return this;
-    }
+    setField(field) { this.config.field = field; return this; }
+    setTitle(title) { this.config.title = title; return this; }
+    setSorter(sorter) { this.config.sorter = sorter; return this; }
+    setHozAlign(align) { this.config.hozAlign = align; return this; }
 
     setFormatter(formatter, params = {}) {
         this.config.formatter = formatter;
-        if (Object.keys(params).length > 0) {
-            this.config.formatterParams = params;
-        }
+        if (Object.keys(params).length > 0) this.config.formatterParams = params;
         return this;
     }
 
     setHeaderFilter(filter, params = {}, attributes = {}) {
         this.config.headerFilter = filter;
-        if (Object.keys(params).length > 0) {
-            this.config.headerFilterParams = params;
-        }
-        if (Object.keys(attributes).length > 0) {
-            this.config.headerFilterAttributes = attributes;
-        }
-        return this;
-    }
-
-    setHeaderFilterFunc(func) {
-        this.config.headerFilterFunc = func;
+        if (Object.keys(params).length > 0) this.config.headerFilterParams = params;
+        if (Object.keys(attributes).length > 0) this.config.headerFilterAttributes = attributes;
         return this;
     }
 
@@ -62,10 +36,5 @@ export class ColumnBuilder {
         return this;
     }
 
-    /**
-     * Retourne l'objet de configuration final pour Tabulator
-     */
-    build() {
-        return this.config;
-    }
+    build() { return this.config; }
 }
