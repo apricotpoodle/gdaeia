@@ -1,41 +1,49 @@
+// ==============================================================================
+// Fichier : webroot/js/core/Tabulator/TabulatorObserver.js
+// Rôle : Bus d'événements centralisé (Observer Pattern) pour Tabulator
+// Standard : Module ES6 (Etanchéité et Singleton applicatif)
+// ==============================================================================
+
 /**
  * @class TabulatorObserver
- * * Implémentation du patron de conception "Observer" (Pub/Sub).
- * Agit comme un bus d'événements global pour orchestrer les interactions 
- * entre plusieurs instances de grilles Tabulator sur une même page, 
- * sans créer de couplage fort entre elles.
+ * @description Centralise la gestion des abonnements et des publications d'événements
+ * pour découpler les grilles Tabulator de leurs orchestrateurs de vues métiers.
  */
 class TabulatorObserver {
     constructor() {
         /**
-         * Dictionnaire des abonnés.
-         * @type {Object.<string, Array<Function>>}
+         * Registre des événements et de leurs fonctions de rappel (callbacks).
+         * @type {Object.<string, Function[]>}
          */
-        this.subscribers = {};
+        this.events = {};
     }
 
     /**
      * S'abonne à un événement spécifique.
-     * * @param {string} event Le nom de l'événement (ex: 'usersTable:rowClick')
-     * @param {Function} callback La fonction à exécuter lors de l'émission
+     * @param {string} event - Le nom unique de l'événement (ex: '#users-table:action:delete').
+     * @param {Function} callback - La fonction à exécuter lors du déclenchement.
      */
     subscribe(event, callback) {
-        if (!this.subscribers[event]) {
-            this.subscribers[event] = [];
+        if (!this.events[event]) {
+            this.events[event] = [];
         }
-        this.subscribers[event].push(callback);
+        this.events[event].push(callback);
     }
 
     /**
-     * Émet un événement vers tous les abonnés.
-     * * @param {string} event Le nom de l'événement
-     * @param {*} [data] Les données à transmettre aux abonnés
+     * Publie un événement et transmet les données associées à tous les abonnés.
+     * @param {string} event - Le nom unique de l'événement.
+     * @param {*} data - Le payload ou l'entité de données associée (ex: l'objet User).
      */
-    publish(event, data = null) {
-        if (!this.subscribers[event]) return;
-        this.subscribers[event].forEach(callback => callback(data));
+    publish(event, data) {
+        if (!this.events[event]) return;
+        this.events[event].forEach(callback => callback(data));
     }
 }
 
-// Instance globale pour l'application
-const globalTabulatorObserver = new TabulatorObserver();
+/**
+ * SOURCE UNIQUE DE VÉRITÉ : Instance unique (Singleton) partagée par l'ensemble de l'application.
+ * Les modules doivent importer uniquement cette constante pour communiquer.
+ * @type {TabulatorObserver}
+ */
+export const globalTabulatorObserver = new TabulatorObserver();

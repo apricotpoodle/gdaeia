@@ -1,9 +1,14 @@
+// ==============================================================================
+// Fichier : webroot/js/core/FlashManager.js
+// Rôle : Gestionnaire de notifications Flash dynamiques (Etanchéité Module ES6)
+// ==============================================================================
+
 /**
  * @class FlashManager
  * @description Générateur dynamique de messages Flash (Toasts/Alerts) basés sur Bootstrap 5.
  * Ne nécessite aucun conteneur HTML préexistant (généré à la volée).
  */
-class FlashManager {
+export class FlashManager {
 
     /**
      * Crée ou récupère le conteneur flottant pour les alertes.
@@ -52,7 +57,7 @@ class FlashManager {
         }
     }
 
-    // Raccourcis sémantiques (Syntactic sugar)
+    // Raccourcis sémantiques restaurés (Syntactic sugar)
     static success(msg, duration = 5000) { this.show(`<i class="fas fa-check-circle me-2"></i>${msg}`, 'success', duration); }
     static error(msg, duration = 7000) { this.show(`<i class="fas fa-exclamation-triangle me-2"></i>${msg}`, 'danger', duration); }
     static warning(msg, duration = 5000) { this.show(`<i class="fas fa-exclamation-circle me-2"></i>${msg}`, 'warning', duration); }
