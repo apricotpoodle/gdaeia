@@ -108,7 +108,8 @@ export class TabulatorBuilder {
      */
     disablePagination() {
         this.config.pagination = false;
-        this.config.height = "400px"; // Hauteur de sécurité du Virtual DOM
+        // 💡 OPTIMISATION FLUIDE : Remplace "400px" par "100%" pour occuper tout l'espace disponible
+        this.config.height = "100%";
 
         // 💡 LE FIX ABSOLU : Nettoyage physique du DOM
         // On cherche le conteneur que 'setControlsAtTop' a pu injecter juste avant
