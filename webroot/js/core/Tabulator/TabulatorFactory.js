@@ -52,6 +52,7 @@ export class TabulatorFactory {
             .setAjaxSource('/api/users.json')
             .setController('users')
             .addActions(['impersonate'])
+            .disablePagination()
             .setColumns([
                 ColumnsFactory.id({ visible: true }),
                 ColumnsFactory.text("firstname", "Prénom"),

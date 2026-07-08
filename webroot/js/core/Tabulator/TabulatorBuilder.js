@@ -79,8 +79,25 @@ export class TabulatorBuilder {
      * @returns {this} L'instance du builder pour le chaînage.
      */
     setControlsAtTop() {
-        // 💡 FIX : Ciblage de 'this.config' au lieu de 'this.options' absent
-        this.config.paginationPosition = "top";
+        // 1. Détection ou création d'un conteneur dédié à la pagination haute
+        const targetTable = document.querySelector(this.selector);
+        if (targetTable) {
+            let containerId = `pagination-top-${targetTable.id || 'default'}`;
+            let pContainer = document.getElementById(containerId);
+
+            if (!pContainer) {
+                pContainer = document.createElement("div");
+                pContainer.id = containerId;
+                // Classes de style Bootstrap pour rendre le bandeau propre et compact en haut
+                pContainer.className = "tabulator-controls-top-wrapper mb-2 p-2 bg-light border rounded shadow-sm d-flex justify-content-between align-items-center";
+
+                // Insertion physique immédiate juste AVANT l'élément de la table
+                targetTable.parentNode.insertBefore(pContainer, targetTable);
+            }
+
+            // 2. Assignation de l'élément cible dans la configuration de Tabulator
+            this.config.paginationElement = pContainer;
+        }
         return this;
     }
 
@@ -89,11 +106,16 @@ export class TabulatorBuilder {
      * @returns {this} L'instance du builder pour le chaînage.
      */
     disablePagination() {
-        // 💡 FIX : Ciblage de 'this.config' au lieu de 'this.options' absent
         this.config.pagination = false;
+        this.config.height = "400px"; // Hauteur fixe Solution 2
+
+        if (this.config.paginationElement) {
+            delete this.config.paginationElement;
+        }
         delete this.config.paginationMode;
         delete this.config.paginationSize;
         delete this.config.paginationPosition;
+
         return this;
     }
 
@@ -320,15 +342,29 @@ export class TabulatorBuilder {
      * @returns {Tabulator} L'instance active et initialisée de Tabulator.
      */
     build() {
+        // 1. Compilation automatique de la colonne d'actions
         this._compileActionColumn();
 
+        // Stockage du statut de la pagination pour la fermeture de contexte dans la fonction anonyme
+        const isPaginationDisabled = this.config.pagination === false;
+
+        // 2. STRATÉGIE A : 'COL_HIDE' (Entièrement sécurisée pour l'Ajax brut et paginé)
         if (this.securityStrategy === 'COL_HIDE') {
             this.config.ajaxResponse = function (url, params, response) {
-                if (response && response.data && response.data.length > 0) {
-                    const finalColumnVisibility = {};
-                    Object.assign(finalColumnVisibility, response.data[0].grid_rights?.columns || {});
+                // Étape A : Extraction défensive des lignes si la structure est paginée { data: [...] }
+                let rowsData = [];
+                if (response && response.data && Array.isArray(response.data)) {
+                    rowsData = response.data;
+                } else if (Array.isArray(response)) {
+                    rowsData = response;
+                }
 
-                    response.data.forEach(row => {
+                // Étape B : Application de la logique des droits d'affichage des colonnes
+                if (rowsData.length > 0) {
+                    const finalColumnVisibility = {};
+                    Object.assign(finalColumnVisibility, rowsData[0].grid_rights?.columns || {});
+
+                    rowsData.forEach(row => {
                         if (row.grid_rights && row.grid_rights.columns) {
                             Object.keys(row.grid_rights.columns).forEach(fieldKey => {
                                 if (row.grid_rights.columns[fieldKey] === false) {
@@ -350,10 +386,28 @@ export class TabulatorBuilder {
                         tableInstance.redraw(true);
                     }, 10);
                 }
+
+                // Étape C : Retour du format attendu selon l'état de la pagination
+                // Si pas de pagination -> Tabulator exige le tableau brut de lignes
+                // Si pagination distante -> Tabulator exige l'objet enveloppe global
+                if (isPaginationDisabled) {
+                    return rowsData;
+                }
                 return response;
             };
+        } else {
+            // Si pas de stratégie COL_HIDE mais pagination désactivée, on applique l'extracteur minimal
+            if (isPaginationDisabled) {
+                this.config.ajaxResponse = function (url, params, response) {
+                    if (response && response.data && Array.isArray(response.data)) {
+                        return response.data;
+                    }
+                    return response;
+                };
+            }
         }
 
+        // 3. STRATÉGIE B : 'CELL_MASK'
         if (this.securityStrategy === 'CELL_MASK') {
             const originalRowFormatter = this.config.rowFormatter;
             const placeholderText = this.maskPlaceholder;
@@ -381,12 +435,14 @@ export class TabulatorBuilder {
             };
         }
 
+        // 4. Instanciation physique du tableau
         const table = new Tabulator(this.selector, this.config);
 
         if (!this.config.ajaxURL) {
             console.warn("TabulatorBuilder: Aucune source Ajax configurée avant l'appel à build().");
         }
 
+        // 5. Attachement des événements
         table.on("rowClick", (e, row) => {
             if (typeof globalTabulatorObserver !== "undefined") {
                 globalTabulatorObserver.publish(`${this.selector}:rowClick`, row.getData());
