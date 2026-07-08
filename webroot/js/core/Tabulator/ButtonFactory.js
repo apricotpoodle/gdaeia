@@ -11,7 +11,7 @@
  * @class ButtonFactory
  * @description Fabrique centralisée pour la génération des boutons et menus d'actions des tables Tabulator.
  */
-class ButtonFactory {
+export class ButtonFactory {
 
     /**
      * Registre centralisé des configurations de boutons de l'application.

@@ -7,7 +7,10 @@
  * @package Core\Tabulator
  * @author L'Équipe de Développement
  */
-class TabulatorBuilder {
+import { globalTabulatorObserver } from './TabulatorObserver.js';
+import { ButtonFactory } from './ButtonFactory.js';
+
+export class TabulatorBuilder {
 
     /**
      * Initialise une configuration vierge avec le socle UX et l'internationalisation.
@@ -180,11 +183,10 @@ class TabulatorBuilder {
                 const gridRights = rowData.grid_rights || {};
                 const actionPermissions = gridRights.actions || {};
 
-                if (typeof ButtonFactory !== 'undefined') {
-                    this.actionButtons.forEach(btnKey => {
-                        html += ButtonFactory.getCellButton(btnKey, actionPermissions);
-                    });
-                }
+                this.actionButtons.forEach(btnKey => {
+                    html += ButtonFactory.getCellButton(btnKey, actionPermissions);
+                });
+
                 html += '</div>';
                 return html;
             },
@@ -301,9 +303,7 @@ class TabulatorBuilder {
         const canCreateRecord = tableElement ? tableElement.getAttribute('data-can-create') === 'true' : false;
 
         // Génération du titre de l'en-tête AVANT l'instanciation (Zéro re-rendu, performance maximale)
-        actionColumn.title = typeof ButtonFactory !== 'undefined'
-            ? ButtonFactory.getHeaderDropdown({ create: canCreateRecord })
-            : 'Actions';
+        actionColumn.title = ButtonFactory.getHeaderDropdown({ create: canCreateRecord });
 
         if (!this.config.columns) this.config.columns = [];
         this.config.columns.push(actionColumn);

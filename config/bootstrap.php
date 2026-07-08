@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -38,6 +39,8 @@ use Cake\Core\Configure\Engine\PhpConfig;
 use Cake\Datasource\ConnectionManager;
 use Cake\Error\ErrorTrap;
 use Cake\Error\ExceptionTrap;
+use Cake\Event\EventInterface;
+use Cake\Event\EventManager;
 use Cake\Http\ServerRequest;
 use Cake\Log\Log;
 use Cake\Mailer\Mailer;
@@ -50,6 +53,7 @@ use function Cake\Core\env;
 /*
  * Load global functions for collections, translations, debugging etc.
  */
+
 require CAKE . 'functions.php';
 
 /*
@@ -235,3 +239,35 @@ ServerRequest::addDetector('tablet', function ($request) {
 // and https://unicode-org.github.io/icu/userguide/format_parse/datetime/#datetime-format-syntax
 // \Cake\I18n\Date::setToStringFormat('dd.MM.yyyy');
 // \Cake\I18n\Time::setToStringFormat('dd.MM.yyyy HH:mm');
+
+
+// ==============================================================================
+// DÉROGATION DE SÉCURITÉ GLOBALE POUR DEBUGKIT (ADR Sécurité)
+// ==============================================================================
+
+EventManager::instance()->on('Controller.startup', function (EventInterface $event): void {
+    /** * Récupération fortement typée du contrôleur émetteur de l'événement.
+     * @var \Cake\Controller\Controller $controller
+     */
+    $controller = $event->getSubject();
+    $request = $controller->getRequest();
+
+    // Si la requête cible le plugin interne DebugKit
+    if ($request->getParam('plugin') === 'DebugKit') {
+
+        // 1. Injection à la volée du composant d'autorisation s'il est manquant
+        if (!$controller->components()->has('Authorization')) {
+            $controller->loadComponent('Authorization.Authorization');
+        }
+
+        // 2. Désactivation officielle des vérifications de politiques (Policies)
+        /** @phpstan-ignore-next-line (Le composant est dynamiquement chargé) */
+        $controller->Authorization->skipAuthorization();
+
+        // 3. Désactivation de l'authentification (si applicable)
+        if ($controller->components()->has('Authentication')) {
+            /** @phpstan-ignore-next-line */
+            $controller->Authentication->addUnauthenticatedActions(['*']);
+        }
+    }
+});
