@@ -36,5 +36,15 @@ export class ColumnBuilder {
         return this;
     }
 
+    /**
+     * Définit la fonction d'évaluation de la vacuité pour le filtre d'en-tête.
+     * @param {Function} callback
+     * @returns {ColumnBuilder}
+     */
+    setHeaderFilterEmptyCheck(callback) {
+        this.config.headerFilterEmptyCheck = callback;
+        return this;
+    }
+
     build() { return this.config; }
 }
