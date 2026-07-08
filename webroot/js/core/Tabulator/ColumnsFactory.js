@@ -4,7 +4,7 @@
 // ==============================================================================
 
 import { ColumnBuilder } from './ColumnBuilder.js';
-import { dateRangeFilterEditor } from './ColumnFilters.js';
+import { ColumnFilters } from './ColumnFilters.js';
 
 export class ColumnsFactory {
     static id(field = "id", overrides = {}) {
@@ -40,7 +40,11 @@ export class ColumnsFactory {
             .setSorter("date")
             .setHozAlign("center")
             .setLiveFilter(false)
-            .setHeaderFilter(dateRangeFilterEditor)
+            .setHeaderFilter(ColumnFilters.dateRangeEditor)
+            // Indique à Tabulator qu'une chaîne vide "" signifie "filtre inactif"
+            .setHeaderFilterEmptyCheck(function (value) {
+                return value === "" || value === null || value === undefined;
+            })
             .setFormatter((cell) => {
                 const value = cell.getValue();
                 if (!value) return "-";
