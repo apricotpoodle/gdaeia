@@ -24,10 +24,8 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
     <?= $this->Html->charset() ?>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <meta name="csrfToken" content="<?= $this->request->getAttribute('csrfToken') ?>">
-
     <title>
-        <?= $cakeDescription ?>:
+        <?= h($cakeDescription) ?>:
         <?= $this->fetch('title') ?>
     </title>
     <?= $this->Html->meta('icon') ?>
@@ -45,9 +43,10 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold mb-0 h1" href="<?= $this->Url->build('/') ?>">
-                <i class="fas fa-shield-halved me-2 text-danger"></i><?= h($cakeDescription) ?>
+            <a class="navbar-brand fw-bold mb-0 h1" href="<?php echo $this->Url->build('/'); ?>">
+                <i class="fas fa-shield-halved me-2 text-danger"></i>GDAETF2
             </a>
+
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top-navigation-menu" aria-controls="top-navigation-menu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -55,6 +54,9 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
             <div class="collapse navbar-collapse" id="top-navigation-menu">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="main-navbar-links">
                 </ul>
+
+                <div class="d-flex align-items-center text-light" id="main-navbar-user-zone">
+                </div>
             </div>
         </div>
     </nav>
@@ -62,7 +64,6 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
     <main class="main">
         <div class="container-fluid mt-4">
             <?= $this->Flash->render() ?>
-
             <?= $this->fetch('content') ?>
         </div>
     </main>

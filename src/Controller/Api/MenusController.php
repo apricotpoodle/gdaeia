@@ -6,16 +6,21 @@ namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use Cake\Event\EventInterface;
+use Cake\ORM\TableRegistry;
 
 /**
  * @class MenusController
  * @description Contrôleur d'API distribuant l'arborescence filtrée selon les rôles.
- * @property \App\Model\Table\MenusTable $Menus
+ * Compatible PHPStan Niveau 8+.
+ * * @property \App\Model\Table\MenusTable $Menus
  */
 class MenusController extends AppController
 {
     /**
-     * @inheritDoc
+     * Initialisation du contrôleur d'API.
+     * Configure le moteur de rendu pour produire exclusivement du JSON.
+     *
+     * @return void
      */
     public function initialize(): void
     {
@@ -24,8 +29,21 @@ class MenusController extends AppController
     }
 
     /**
+     * Événement de cycle de vie exécuté avant le routage de l'action.
+     * Exempte l'action d'autorisation d'infrastructure globale.
+     *
+     * @param \Cake\Event\EventInterface $event L'événement en cours.
+     * @return \Cake\Http\Response|null|void
+     */
+    public function beforeFilter(EventInterface $event)
+    {
+        parent::beforeFilter($event);
+        $this->Authorization->skipAuthorization(['index']);
+    }
+
+    /**
      * Action Index : GET /api/menus.json
-     * Filtre les options de menus en fonction des habilitations et rôles.
+     * Analyse l'identité de l'opérateur et extrait l'arbre hiérarchique éligible.
      *
      * @return void
      */
@@ -33,30 +51,69 @@ class MenusController extends AppController
     {
         $this->request->allowMethod(['get']);
 
-        // 1. Récupération de l'identité de l'utilisateur connecté
         /** @var \App\Model\Entity\User|null $user */
         $user = $this->getRequest()->getAttribute('identity')?->getOriginalData();
 
-        // Initialisation de la requête de base
+        /** @var \Cake\ORM\Query\SelectQuery $query */
         $query = $this->Menus->find('threaded')
             ->where(['Menus.active' => true])
             ->orderBy(['Menus.lft' => 'ASC']);
 
-        // 2. Application des verrous de rôles (Sauf si l'utilisateur est Super Admin)
         if ($user === null) {
-            // Par sécurité (Fail-Closed), un utilisateur non connecté ne voit rien
             $query->where(['1 = 0']);
-        } elseif (!$user->get('issuperuser')) {
-            // L'utilisateur n'est pas Super Admin : Filtrage par jointure stricte sur ses privilèges de rôle
-            $roleId = $user->get('role_id');
-            $query->innerJoinWith('RoleMenus', function ($q) use ($roleId) {
-                return $q->where(['RoleMenus.role_id' => $roleId]);
-            });
+        } else {
+            /** @var bool $issuperuser */
+            $issuperuser = $user->get('issuperuser') ?? false;
+
+            if (!$issuperuser) {
+                /** @var int|null $roleId */
+                $roleId = $user->get('role_id');
+                if ($roleId !== null) {
+                    $roleMenusTable = TableRegistry::getTableLocator()->get('RoleMenus');
+
+                    /** @var \Cake\ORM\Query\SelectQuery $allowedMenuIdsQuery */
+                    $allowedMenuIdsQuery = $roleMenusTable->find()
+                        ->select(['menu_id'])
+                        ->where(['role_id' => $roleId]);
+
+                    $query->where(['Menus.id IN' => $allowedMenuIdsQuery]);
+                } else {
+                    $query->where(['1 = 0']);
+                }
+            }
         }
 
         $menus = $query->all();
 
-        $this->set(compact('menus'));
-        $this->viewBuilder()->setOption('serialize', ['menus']);
+        /** @var array<string, mixed>|null $userData */
+        $userData = null;
+
+        if ($user !== null) {
+            try {
+                $userTable = TableRegistry::getTableLocator()->get('Users');
+
+                /** @var \App\Model\Entity\User $userWithRole */
+                $userWithRole = $userTable->get($user->get('id'), [
+                    'contain' => ['Roles']
+                ]);
+
+                $userData = [
+                    'email' => $userWithRole->get('email'),
+                    'role_name' => $userWithRole->role ? $userWithRole->role->get('name') : 'Sans Rôle',
+                    'issuperuser' => (bool)$userWithRole->get('issuperuser'),
+                    'is_impersonated' => $this->getRequest()->getSession()->check('Auth.original_user_id'),
+                ];
+            } catch (\Throwable $th) {
+                $userData = [
+                    'email' => $user->get('email'),
+                    'role_name' => 'Utilisateur',
+                    'issuperuser' => (bool)$user->get('issuperuser'),
+                    'is_impersonated' => $this->getRequest()->getSession()->check('Auth.original_user_id'),
+                ];
+            }
+        }
+
+        $this->set(compact('menus', 'userData'));
+        $this->viewBuilder()->setOption('serialize', ['menus', 'userData']);
     }
 }
