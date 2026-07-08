@@ -12,11 +12,15 @@ export class TabulatorFactory {
      */
     static createUsersGrid(selector) {
         return new TabulatorBuilder(selector)
+            .setAjaxSource('/api/users.json')
             .setController('users')
             .setRemotePagination()
             .setWithActions()
+            .addActions(['impersonate'])
             .setColumns([
                 ColumnsFactory.id(),
+                ColumnsFactory.text("firstname", "prenom"),
+                ColumnsFactory.text("lastname", "nom"),
                 ColumnsFactory.text("username", "Identifiant", { frozen: true }),
                 ColumnsFactory.text("email", "Adresse Email"),
                 ColumnsFactory.boolean("issuperuser", "Administrateur"),

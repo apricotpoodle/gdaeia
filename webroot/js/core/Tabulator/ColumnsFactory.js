@@ -28,7 +28,7 @@ export class ColumnsFactory {
             .setSorter("boolean")
             .setHozAlign("center")
             .setFormatter("tickCross")
-            .setHeaderFilter("select", {
+            .setHeaderFilter("list", {
                 values: { "true": "Oui", "false": "Non", "": "Tous" }
             })
             .setOptions(overrides)

@@ -21,7 +21,7 @@ $this->Html->script('https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.
 // $this->Html->script('core/Tabulator/TabulatorBuilder.js', ['block' => true]);
 // $this->Html->script('core/Tabulator/TabulatorFactory.js', ['block' => true]);
 
-
-$this->Html->script('views/Users/index.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>
+
+<?= $this->Html->script('views/Users/index.js', ['type' => 'module']); ?>
 <?= $this->Tabulator->renderGrid('#users-table', 'Users') ?>
