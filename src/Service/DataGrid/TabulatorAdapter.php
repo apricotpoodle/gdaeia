@@ -9,6 +9,7 @@ use Cake\Http\ServerRequest;
 use Cake\ORM\Query\SelectQuery;
 use Cake\Datasource\Paging\PaginatedInterface;
 use Cake\Utility\Inflector;
+use Cake\Database\Expression\QueryExpression;
 
 /**
  * Class TabulatorAdapter
@@ -54,8 +55,15 @@ class TabulatorAdapter
                 $type = strtolower($filter['type'] ?? '=');
                 $value = $filter['value'] ?? '';
 
-                if (is_string($field) && $value !== '') {
+                // On autorise les chaînes non vides OU les tableaux (pour le filtre Date Range)
+                if (is_string($field) && ($value !== '' || is_array($value))) {
                     $ormField = $this->resolveOrmField($field, $mainAlias);
+
+                    // 🛡️ INTERCEPTION : Gestion spécifique du filtre "Date Range" (Plage de dates)
+                    if (is_array($value) && (array_key_exists('start', $value) || array_key_exists('end', $value))) {
+                        $this->applyDateRangeCondition($query, $ormField, $value);
+                        continue; // On passe au filtre suivant
+                    }
 
                     // SÉCURITÉ & NORMALISATION DES TYPES numérique (ID)
                     // Si on filtre sur l'ID, on force une égalité stricte, peu importe
@@ -89,6 +97,34 @@ class TabulatorAdapter
         }
 
         return $query;
+    }
+
+    /**
+     * Applique les conditions de filtre SQL pour une plage de dates (Tabulator Date Range).
+     * Formate intelligemment les limites horaires pour inclure la journée entière sur les champs DATETIME.
+     * (Respect du principe DRY et encapsulation de la logique complexe).
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query La requête ORM à modifier.
+     * @param string $field Le champ ORM sécurisé (ex: 'Users.created').
+     * @param array<string, mixed> $range Le tableau contenant les clés 'start' et/ou 'end'.
+     * @return void
+     */
+    private function applyDateRangeCondition(SelectQuery $query, string $field, array $range): void
+    {
+        // Ajout des bornes horaires pour englober la journée entière (00:00:00 à 23:59:59)
+        $start = !empty($range['start']) ? $range['start'] . ' 00:00:00' : null;
+        $end   = !empty($range['end'])   ? $range['end'] . ' 23:59:59' : null;
+
+        if ($start !== null && $end !== null) {
+            // Condition stricte BETWEEN via QueryExpression (Compatible PHPStan)
+            $query->where(function (QueryExpression $exp) use ($field, $start, $end) {
+                return $exp->between($field, $start, $end);
+            });
+        } elseif ($start !== null) {
+            $query->where(["{$field} >=" => $start]);
+        } elseif ($end !== null) {
+            $query->where(["{$field} <=" => $end]);
+        }
     }
 
     /**
