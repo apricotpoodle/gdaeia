@@ -92,52 +92,52 @@ class AppController extends Controller
         };
     }
 
-    /**
-     * Callback beforeFilter - Exécuté avant chaque action de contrôleur.
-     * * Cette méthode intercepte la requête pour appliquer des règles de gouvernance globale.
-     * Elle intègre un mécanisme d'isolation pour le plugin de débogage DebugKit afin d'éviter
-     * des conflits d'autorisation (AuthorizationRequiredException).
-     *
-     * @param \Cake\Event\EventInterface $event L'instance de l'événement courant.
-     * @return void Renvoie une Response pour interrompre le cycle, ou void.
-     * @throws \RuntimeException Si les composants requis ne sont pas correctement initialisés.
-     */
-    public function beforeFilter(EventInterface $event)
-    {
-        parent::beforeFilter($event);
+    // /**
+    //  * Callback beforeFilter - Exécuté avant chaque action de contrôleur.
+    //  * * Cette méthode intercepte la requête pour appliquer des règles de gouvernance globale.
+    //  * Elle intègre un mécanisme d'isolation pour le plugin de débogage DebugKit afin d'éviter
+    //  * des conflits d'autorisation (AuthorizationRequiredException).
+    //  *
+    //  * @param \Cake\Event\EventInterface $event L'instance de l'événement courant.
+    //  * @return void Renvoie une Response pour interrompre le cycle, ou void.
+    //  * @throws \RuntimeException Si les composants requis ne sont pas correctement initialisés.
+    //  */
+    // public function beforeFilter(EventInterface $event)
+    // {
+    //     parent::beforeFilter($event);
 
-        /** * Récupération sémantique et typée de l'objet Request.
-         * @var \Cake\Http\ServerRequest $request
-         */
-        $request = $this->getRequest();
+    //     /** * Récupération sémantique et typée de l'objet Request.
+    //      * @var \Cake\Http\ServerRequest $request
+    //      */
+    //     $request = $this->getRequest();
 
-        /**
-         * 🛡️ PASSERELLE DE SÉCURITÉ : Isolation et dérogation pour le plugin DebugKit
-         * * DebugKit opère via ses propres contrôleurs internes (ex: ToolbarController).
-         * Sous l'effet du middleware Authorization strict, ces routes déclenchent une exception
-         * car DebugKit ne possède pas de règles d'autorisation métier (Policies).
-         */
-        if ($request->getParam('plugin') === 'DebugKit') {
+    //     /**
+    //      * 🛡️ PASSERELLE DE SÉCURITÉ : Isolation et dérogation pour le plugin DebugKit
+    //      * * DebugKit opère via ses propres contrôleurs internes (ex: ToolbarController).
+    //      * Sous l'effet du middleware Authorization strict, ces routes déclenchent une exception
+    //      * car DebugKit ne possède pas de règles d'autorisation métier (Policies).
+    //      */
+    //     if ($request->getParam('plugin') === 'DebugKit') {
 
-            // On vérifie de manière défensive la présence du composant pour satisfaire PHPStan
-            if (!isset($this->Authorization)) {
-                throw new \RuntimeException('Le composant AuthorizationComponent n\'est pas chargé.');
-            }
+    //         // On vérifie de manière défensive la présence du composant pour satisfaire PHPStan
+    //         if (!isset($this->Authorization)) {
+    //             throw new \RuntimeException('Le composant AuthorizationComponent n\'est pas chargé.');
+    //         }
 
-            /** * Indique impérativement au Middleware de sécurité d'ignorer la vérification
-             * de conformité des politiques (Policies) pour les requêtes internes de DebugKit.
-             */
-            $this->Authorization->skipAuthorization();
+    //         /** * Indique impérativement au Middleware de sécurité d'ignorer la vérification
+    //          * de conformité des politiques (Policies) pour les requêtes internes de DebugKit.
+    //          */
+    //         $this->Authorization->skipAuthorization();
 
-            /**
-             * Sécurité additionnelle (Optionnelle) : Si l'infrastructure exige une session
-             * authentifiée globale, on autorise l'accès anonyme aux ressources de la toolbar.
-             */
-            if (isset($this->Authentication)) {
-                /** @var \Authentication\Controller\Component\AuthenticationComponent $authentication */
-                $authentication = $this->Authentication;
-                $authentication->addUnauthenticatedActions(['*']);
-            }
-        }
-    }
+    //         /**
+    //          * Sécurité additionnelle (Optionnelle) : Si l'infrastructure exige une session
+    //          * authentifiée globale, on autorise l'accès anonyme aux ressources de la toolbar.
+    //          */
+    //         if (isset($this->Authentication)) {
+    //             /** @var \Authentication\Controller\Component\AuthenticationComponent $authentication */
+    //             $authentication = $this->Authentication;
+    //             $authentication->addUnauthenticatedActions(['*']);
+    //         }
+    //     }
+    // }
 }
