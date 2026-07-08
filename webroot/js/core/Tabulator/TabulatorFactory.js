@@ -32,7 +32,10 @@ export class TabulatorFactory {
     }
 
     /**
-     * Fabrique dédiée à la grille des Utilisateurs (USERS)
+     * Fabrique dédiée à la configuration de la grille des Utilisateurs (USERS).
+     * @static
+     * @param {string} selector - Le sélecteur CSS cible.
+     * @returns {Object} L'instance du Builder de grille Tabulator.
      */
     static createUsersGrid(selector) {
         return this._createActionGrid(selector)
@@ -40,7 +43,7 @@ export class TabulatorFactory {
             .setController('users')
             .addActions(['impersonate'])
             .setColumns([
-                ColumnsFactory.id(),
+                ColumnsFactory.id({ visible: true }),
                 ColumnsFactory.text("firstname", "prenom"),
                 ColumnsFactory.text("lastname", "nom"),
                 ColumnsFactory.text("username", "Identifiant", { frozen: true }),

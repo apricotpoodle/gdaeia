@@ -5,7 +5,12 @@
 
 export class ColumnBuilder {
     constructor(field = "", title = "") {
-        this.config = { field, title };
+        this.config = {
+            field: field,
+            title: title,
+            headerSort: true,           // Active le tri sur l'entête
+            headerSortTristate: true,  // Active le comportement Tristate (Asc -> Desc -> Limpide)
+        };
     }
 
     setField(field) { this.config.field = field; return this; }
