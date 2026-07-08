@@ -6,14 +6,47 @@
 import { ColumnBuilder } from './ColumnBuilder.js';
 import { ColumnFilters } from './ColumnFilters.js';
 
+/**
+ * @file ColumnsFactory.js
+ * @description Fabrique d'infrastructure pour standardiser et compiler les colonnes Tabulator.
+ * Compatible JSDoc avancée.
+ */
+
 export class ColumnsFactory {
-    static id(field = "id", overrides = {}) {
+    /**
+     * Génère la colonne ID configurée avec filtres et tris numériques.
+     * Masquée par défaut, activable instantanément via les overrides.
+     *
+     * @static
+     * @param {Object} [overrides={}] - Surcharges de configuration (ex: { visible: true })
+     * @param {string} [field="id"] - Nom de la clé primaire en base de données.
+     * @returns {Object} Configuration brute de colonne pour l'API Tabulator.
+     */
+    static id(overrides = {}, field = "id") {
         return new ColumnBuilder(field, "ID")
             .setHozAlign("center")
-            .setOptions({ visible: false, ...overrides })
+            .setSorter("number")
+            .setHeaderFilter("number")
+            .setOptions(
+                {
+                    visible: false, // Masqué par défaut
+                    width: 70,      // Largeur standard pour les ids
+                    ...overrides    // Application des surcharges utilisateur
+                }
+            )
             .build();
     }
 
+
+    /**
+     * Génère une colonne de texte standard avec tri Tristate inclus.
+     *
+     * @static
+     * @param {string} field - Champ de l'entité JSON.
+     * @param {string} title - Libellé de l'en-tête.
+     * @param {Object} [overrides={}] - Options complémentaires (ex: { frozen: true })
+     * @returns {Object}
+     */
     static text(field, title, overrides = {}) {
         return new ColumnBuilder(field, title)
             .setSorter("string")
@@ -23,6 +56,15 @@ export class ColumnsFactory {
             .build();
     }
 
+    /**
+     * Génère une colonne de texte standard avec tri Tristate inclus.
+     *
+     * @static
+     * @param {string} field - Champ de l'entité JSON.
+     * @param {string} title - Libellé de l'en-tête.
+     * @param {Object} [overrides={}] - Options complémentaires (ex: { frozen: true })
+     * @returns {Object}
+     */
     static boolean(field, title, overrides = {}) {
         return new ColumnBuilder(field, title)
             .setSorter("boolean")
@@ -35,6 +77,15 @@ export class ColumnsFactory {
             .build();
     }
 
+    /**
+     * Génère une colonne de texte standard avec tri Tristate inclus.
+     *
+     * @static
+     * @param {string} field - Champ de l'entité JSON.
+     * @param {string} title - Libellé de l'en-tête.
+     * @param {Object} [overrides={}] - Options complémentaires (ex: { frozen: true })
+     * @returns {Object}
+     */
     static dateRange(field, title, overrides = {}) {
         return new ColumnBuilder(field, title)
             .setSorter("date")

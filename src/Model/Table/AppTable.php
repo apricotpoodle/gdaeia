@@ -12,6 +12,9 @@ use Cake\ORM\Table;
  * Centralise de manière sécurisée et performante les Behaviors et configurations transverses.
  * @package App\Model\Table
  * @author L'Équipe de Développement
+ * @class AppTable
+ * @description Socle d'infrastructure commun pour l'ensemble des classes Table.
+ * @package App\Model\Table
  */
 class AppTable extends Table
 {
