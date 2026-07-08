@@ -28,6 +28,7 @@ if (globalTabulatorObserver) {
         }
     });
 
+
     globalTabulatorObserver.subscribe('#users-table:action:delete', async (user) => {
         if (confirm(`⚠️ ATTENTION : Êtes-vous sûr de vouloir supprimer définitivement l'utilisateur ${user.email} ?`)) {
             try {
@@ -64,4 +65,5 @@ if (globalTabulatorObserver) {
             }
         }
     });
+
 }

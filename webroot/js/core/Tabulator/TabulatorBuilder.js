@@ -8,6 +8,7 @@
  * @author L'Équipe de Développement
  */
 import { globalTabulatorObserver } from './TabulatorObserver.js';
+import { FlashManager } from '../FlashManager.js';
 import { ButtonFactory } from './ButtonFactory.js';
 
 export class TabulatorBuilder {
@@ -277,6 +278,16 @@ export class TabulatorBuilder {
                     let action = actionBtn.dataset.action;
                     if (!action) {
                         action = actionBtn.classList.contains('action-create') ? 'create' : 'reset';
+                    }
+
+                    // Si l'action est un reset, la table se nettoie elle-même nativement
+                    if (action === 'reset') {
+                        const currentTable = column.getTable();
+                        currentTable.clearHeaderFilter();
+                        currentTable.clearSort();
+
+                        // Optionnel mais très UX : petit feedback visuel autonome
+                        FlashManager.info("Filtres et tris réinitialisés.", 3000);
                     }
 
                     const tableElement = column.getTable().element;
