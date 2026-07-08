@@ -9,7 +9,7 @@ use Cake\Event\EventInterface;
 
 /**
  * @class MenusController
- * @description Contrôleur d'API distribuant l'arborescence complète du menu pour le Front-End.
+ * @description Contrôleur d'API distribuant l'arborescence filtrée selon les rôles.
  * @property \App\Model\Table\MenusTable $Menus
  */
 class MenusController extends AppController
@@ -24,18 +24,8 @@ class MenusController extends AppController
     }
 
     /**
-     * @inheritDoc
-     */
-    public function beforeFilter(EventInterface $event)
-    {
-        parent::beforeFilter($event);
-        // Sécurité (ADR 0026) : Autorise la lecture du menu pour les profils connectés
-        $this->Authorization->skipAuthorization(['index']);
-    }
-
-    /**
      * Action Index : GET /api/menus.json
-     * Extrait la trinité de l'arbre ordonnée de manière fluide.
+     * Filtre les options de menus en fonction des habilitations et rôles.
      *
      * @return void
      */
@@ -43,11 +33,28 @@ class MenusController extends AppController
     {
         $this->request->allowMethod(['get']);
 
-        // Extraction brute et structuration en arbre native par l'ORM (`children`)
-        $menus = $this->Menus->find('threaded')
-            ->where(['active' => true])
-            ->orderBy(['lft' => 'ASC'])
-            ->all();
+        // 1. Récupération de l'identité de l'utilisateur connecté
+        /** @var \App\Model\Entity\User|null $user */
+        $user = $this->getRequest()->getAttribute('identity')?->getOriginalData();
+
+        // Initialisation de la requête de base
+        $query = $this->Menus->find('threaded')
+            ->where(['Menus.active' => true])
+            ->orderBy(['Menus.lft' => 'ASC']);
+
+        // 2. Application des verrous de rôles (Sauf si l'utilisateur est Super Admin)
+        if ($user === null) {
+            // Par sécurité (Fail-Closed), un utilisateur non connecté ne voit rien
+            $query->where(['1 = 0']);
+        } elseif (!$user->get('issuperuser')) {
+            // L'utilisateur n'est pas Super Admin : Filtrage par jointure stricte sur ses privilèges de rôle
+            $roleId = $user->get('role_id');
+            $query->innerJoinWith('RoleMenus', function ($q) use ($roleId) {
+                return $q->where(['RoleMenus.role_id' => $roleId]);
+            });
+        }
+
+        $menus = $query->all();
 
         $this->set(compact('menus'));
         $this->viewBuilder()->setOption('serialize', ['menus']);
