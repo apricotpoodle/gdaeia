@@ -37,22 +37,28 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>
     <?= $this->fetch('script') ?>
 </head>
 
 <body>
-    <nav class="top-nav">
-        <div class="top-nav-title">
-            <a href="<?= $this->Url->build('/') ?>"><span>Cake</span>PHP</a>
-        </div>
-        <div class="top-nav-links">
-            <a target="_blank" rel="noopener" href="https://book.cakephp.org/5/">Documentation</a>
-            <a target="_blank" rel="noopener" href="https://api.cakephp.org/">API</a>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold mb-0 h1" href="<?= $this->Url->build('/') ?>">
+                <i class="fas fa-shield-halved me-2 text-danger"></i><?= h($cakeDescription) ?>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top-navigation-menu" aria-controls="top-navigation-menu" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="top-navigation-menu">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="main-navbar-links">
+                </ul>
+            </div>
         </div>
     </nav>
+
     <main class="main">
         <div class="container-fluid mt-4">
             <?= $this->Flash->render() ?>
@@ -60,8 +66,12 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
             <?= $this->fetch('content') ?>
         </div>
     </main>
+
     <footer>
     </footer>
+
+    <?= $this->Html->script('core/Navigation/MenuManager.js', ['type' => 'module', 'block' => 'scriptBottom']) ?>
+    <?= $this->fetch('scriptBottom') ?>
 </body>
 
 </html>
