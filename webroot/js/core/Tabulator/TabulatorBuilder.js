@@ -27,7 +27,7 @@ export class TabulatorBuilder {
         /** @type {Array<string>} */
         this.actionButtons = [];
 
-        // NOUVEAU : Configuration par défaut de la stratégie de masquage visuel
+        // Configuration par défaut de la stratégie de masquage visuel
         /** @type {string} - 'COL_HIDE' (colonne entière) ou 'CELL_MASK' (cellule par cellule) */
         this.securityStrategy = 'COL_HIDE';
 
@@ -74,29 +74,22 @@ export class TabulatorBuilder {
 
     /**
      * Active la mémorisation de l'état de la grille (Tris et Filtres) dans le navigateur.
-     * Génère automatiquement un identifiant de persistance absolument unique en combinant
-     * l'URL de la page courante et le sélecteur de la table, libérant le développeur de cette contrainte.
      * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
      */
     enableStatePersistence() {
-        // 1. Nettoyage du chemin de l'URL (ex: "/users/index" devient "users-index")
         const safePath = window.location.pathname.replace(/[\/\\]/g, '-').replace(/^-+|-+$/g, '');
-
-        // 2. Nettoyage du sélecteur (ex: "#main-table" devient "main-table")
         const safeSelector = this.selector.replace(/[^a-zA-Z0-9_-]/g, '');
 
-        // 3. Combinaison infaillible assignée à la configuration
         this.config.persistenceID = `${safePath}-${safeSelector}`;
         this.config.persistenceMode = "local";
         this.config.persistence = {
             sort: true,
             filter: true,
-            headerFilter: true // <--- LA CLÉ MANQUANTE : Active la mémoire des champs de saisie !
+            headerFilter: true
         };
 
         return this;
     }
-
 
     /**
      * Enregistre un écouteur d'événement directement dans la configuration native.
@@ -175,16 +168,19 @@ export class TabulatorBuilder {
             field: "_actions",
             headerSort: false,
             headerFilter: false,
-            hozAlign: "center",
+            hozAlign: "left",
             width: 240,
 
             formatter: (cell) => {
-                let html = '<div class="d-flex justify-content-center align-items-center">';
+                // 💡 2. On utilise 'justify-content-start' (ou on l'omet, car c'est le comportement Flex par défaut)
+                // J'ajoute un petit 'ps-2' (padding-start) pour que les boutons ne collent pas trop à la bordure gauche
+                let html = '<div class="d-flex justify-content-start align-items-center ps-2">';
                 const rowData = cell.getRow().getData();
                 const gridRights = rowData.grid_rights || {};
                 const actionPermissions = gridRights.actions || {};
 
                 this.actionButtons.forEach(btnKey => {
+                    // Les boutons non autorisés renvoient désormais une chaîne vide
                     html += ButtonFactory.getCellButton(btnKey, actionPermissions);
                 });
 
@@ -196,6 +192,7 @@ export class TabulatorBuilder {
                 e.stopPropagation();
 
                 const btn = e.target.closest('.btn-action');
+                // Protection défensive au cas où (bien que les boutons disabled n'existent plus)
                 if (!btn || btn.classList.contains('disabled')) return;
 
                 const action = btn.dataset.action;
@@ -286,8 +283,10 @@ export class TabulatorBuilder {
                         currentTable.clearHeaderFilter();
                         currentTable.clearSort();
 
-                        // Optionnel mais très UX : petit feedback visuel autonome
-                        FlashManager.info("Filtres et tris réinitialisés.", 3000);
+                        // Feedback visuel autonome
+                        if (typeof FlashManager !== 'undefined') {
+                            FlashManager.info("Filtres et tris réinitialisés.", 3000);
+                        }
                     }
 
                     const tableElement = column.getTable().element;
@@ -313,7 +312,7 @@ export class TabulatorBuilder {
         // Lecture sécurisée du droit de création injecté par le serveur PHP (défaut à false si absent)
         const canCreateRecord = tableElement ? tableElement.getAttribute('data-can-create') === 'true' : false;
 
-        // Génération du titre de l'en-tête AVANT l'instanciation (Zéro re-rendu, performance maximale)
+        // Génération du titre de l'en-tête AVANT l'instanciation
         actionColumn.title = ButtonFactory.getHeaderDropdown({ create: canCreateRecord });
 
         if (!this.config.columns) this.config.columns = [];
@@ -401,8 +400,6 @@ export class TabulatorBuilder {
 
         // 5. ATTACHEMENT DIRECT (API Tabulator 5)
         table.on("rowClick", (e, row) => {
-            console.log("=> [TEST ULTIME DOM] Tabulator a détecté un clic sur la ligne ID :", row.getData().id);
-
             if (typeof globalTabulatorObserver !== "undefined") {
                 globalTabulatorObserver.publish(`${this.selector}:rowClick`, row.getData());
             }

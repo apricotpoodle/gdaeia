@@ -34,18 +34,23 @@ export class ButtonFactory {
         if (!config) return '';
 
         const isAllowed = rowPermissions[key] !== false;
+
+        // 💡 BAIL EARLY : Si l'action n'est pas autorisée, on ne génère pas de balise HTML
+        if (!isAllowed) {
+            return '';
+        }
+
         const target = config.target || '_self';
         const isEvent = config.isEvent ? 'true' : 'false';
-        const disabledClass = isAllowed ? '' : 'disabled pe-none opacity-25';
 
+        // Le bouton généré est systématiquement cliquable et pur
         return `
             <button type="button"
-                    class="btn btn-sm btn-${config.color} shadow-sm me-1 btn-action ${disabledClass}"
+                    class="btn btn-sm btn-${config.color} shadow-sm me-1 btn-action"
                     data-action="${key}"
                     data-target="${target}"
                     data-is-event="${isEvent}"
-                    ${isAllowed ? '' : 'disabled="disabled"'}
-                    title="${isAllowed ? config.title : 'Action non autorisée'}">
+                    title="${config.title}">
                 <i class="${config.icon} fa-fw"></i>
             </button>
         `;
@@ -58,7 +63,18 @@ export class ButtonFactory {
      */
     static getHeaderDropdown(globalPermissions = {}) {
         const canCreate = globalPermissions.create === true;
-        const createDisabledClass = canCreate ? '' : 'disabled pe-none opacity-50';
+
+        // 💡 On ne génère le bouton "Créer" que s'il est autorisé
+        const createItemHtml = canCreate ? `
+                    <li>
+                        <button class="dropdown-item text-success action-create fw-bold"
+                                data-action="create"
+                                type="button">
+                            <i class="fas fa-plus-circle me-2"></i> Créer un enregistrement
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+        ` : '';
 
         return `
             <div class="dropdown d-flex align-items-center justify-content-center" style="position: relative;">
@@ -66,15 +82,7 @@ export class ButtonFactory {
                     <i class="fas fa-cog"></i>
                 </button>
                 <ul class="dropdown-menu shadow position-absolute" style="top: 100%; right: 0; z-index: 9999; margin-top: 5px; display: none;">
-                    <li>
-                        <button class="dropdown-item text-success action-create fw-bold ${createDisabledClass}"
-                                ${canCreate ? '' : 'disabled="disabled"'}
-                                data-action="create"
-                                type="button">
-                            <i class="fas fa-plus-circle me-2"></i> Créer un enregistrement
-                        </button>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
+                    ${createItemHtml}
                     <li>
                         <button class="dropdown-item text-warning action-reset fw-bold" data-action="reset" type="button">
                             <i class="fas fa-undo me-2"></i> Réinitialiser les filtres
