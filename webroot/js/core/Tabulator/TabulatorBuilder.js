@@ -43,6 +43,8 @@ export class TabulatorBuilder {
             placeholder: "<div class='tabulator-empty-msg p-4 text-center text-muted'>Aucune donnée trouvée !</div>",
             ajaxLoader: true,
             ajaxLoaderLoading: "<div class='tabulator-loading-msg'><span>Chargement des données en cours...</span></div>",
+            // 💡 FIX : Défini ici par défaut (Sera conservé par l'infrastructure)
+            paginationPosition: "top",
             locale: "fr-fr",
             langs: {
                 "fr-fr": {
@@ -70,6 +72,29 @@ export class TabulatorBuilder {
                 }
             }
         };
+    }
+
+    /**
+     * Force le positionnement du système de pagination et des contrôles tout en haut de la grille.
+     * @returns {this} L'instance du builder pour le chaînage.
+     */
+    setControlsAtTop() {
+        // 💡 FIX : Ciblage de 'this.config' au lieu de 'this.options' absent
+        this.config.paginationPosition = "top";
+        return this;
+    }
+
+    /**
+     * Désactive, retire et rend complètement invisible le système de pagination et ses contrôles.
+     * @returns {this} L'instance du builder pour le chaînage.
+     */
+    disablePagination() {
+        // 💡 FIX : Ciblage de 'this.config' au lieu de 'this.options' absent
+        this.config.pagination = false;
+        delete this.config.paginationMode;
+        delete this.config.paginationSize;
+        delete this.config.paginationPosition;
+        return this;
     }
 
     /**
@@ -114,7 +139,7 @@ export class TabulatorBuilder {
     }
 
     setRemotePagination(size = 20) {
-        this.config.pagination = true;
+        this.config.pagination = true; // 💡 Note : en Tabulator 5+, préférez 'remote' au lieu de true si besoin
         this.config.paginationMode = "remote";
         this.config.sortMode = "remote";
         this.config.filterMode = "remote";
@@ -170,36 +195,28 @@ export class TabulatorBuilder {
             headerFilter: false,
             hozAlign: "left",
             width: 240,
-
             formatter: (cell) => {
-                // 💡 2. On utilise 'justify-content-start' (ou on l'omet, car c'est le comportement Flex par défaut)
-                // J'ajoute un petit 'ps-2' (padding-start) pour que les boutons ne collent pas trop à la bordure gauche
                 let html = '<div class="d-flex justify-content-start align-items-center ps-2">';
                 const rowData = cell.getRow().getData();
                 const gridRights = rowData.grid_rights || {};
                 const actionPermissions = gridRights.actions || {};
 
                 this.actionButtons.forEach(btnKey => {
-                    // Les boutons non autorisés renvoient désormais une chaîne vide
                     html += ButtonFactory.getCellButton(btnKey, actionPermissions);
                 });
 
                 html += '</div>';
                 return html;
             },
-
             cellClick: (e, cell) => {
                 e.stopPropagation();
-
                 const btn = e.target.closest('.btn-action');
-                // Protection défensive au cas où (bien que les boutons disabled n'existent plus)
                 if (!btn || btn.classList.contains('disabled')) return;
 
                 const action = btn.dataset.action;
                 const target = btn.dataset.target || '_self';
                 const isEvent = btn.dataset.isEvent === 'true';
                 const rowData = cell.getRow().getData();
-
                 const targetController = rowData.table_controller || this.controller;
                 const id = rowData.id;
 
@@ -224,25 +241,16 @@ export class TabulatorBuilder {
                     }
                 }
             },
-
-            // ========================================================
-            // CONTRÔLE MANUEL ET IMPÉRATIF DU DROPDOWN (ZÉRO CONFLIT)
-            // ========================================================
             headerClick: function (e, column) {
                 const toggleBtn = e.target.closest('.action-menu-btn');
-
-                // 1. Clic sur l'engrenage : Bascule manuelle de la visibilité
                 if (toggleBtn) {
                     e.preventDefault();
                     e.stopPropagation();
-
                     const dropdownContainer = toggleBtn.closest('.dropdown');
                     const menu = dropdownContainer ? dropdownContainer.querySelector('.dropdown-menu') : null;
 
                     if (menu) {
                         const isVisible = menu.style.display === 'block';
-
-                        // Fermeture globale préventive de sécurité
                         document.querySelectorAll('.dropdown-menu').forEach(m => {
                             m.style.display = 'none';
                             m.classList.remove('show');
@@ -251,8 +259,6 @@ export class TabulatorBuilder {
                         if (!isVisible) {
                             menu.style.display = 'block';
                             menu.classList.add('show');
-
-                            // Filet de sécurité : Fermer si on clique n'importe où ailleurs dans la page
                             const closeOnOutsideClick = (event) => {
                                 if (!dropdownContainer.contains(event.target)) {
                                     menu.style.display = 'none';
@@ -266,7 +272,6 @@ export class TabulatorBuilder {
                     return;
                 }
 
-                // 2. Clic sur une option du menu ("Créer", "Réinitialiser")
                 const actionBtn = e.target.closest('.action-create') || e.target.closest('.action-reset') || e.target.closest('[data-action]');
                 if (actionBtn) {
                     e.stopPropagation();
@@ -277,13 +282,10 @@ export class TabulatorBuilder {
                         action = actionBtn.classList.contains('action-create') ? 'create' : 'reset';
                     }
 
-                    // Si l'action est un reset, la table se nettoie elle-même nativement
                     if (action === 'reset') {
                         const currentTable = column.getTable();
                         currentTable.clearHeaderFilter();
                         currentTable.clearSort();
-
-                        // Feedback visuel autonome
                         if (typeof FlashManager !== 'undefined') {
                             FlashManager.info("Filtres et tris réinitialisés.", 3000);
                         }
@@ -296,7 +298,6 @@ export class TabulatorBuilder {
                         globalTabulatorObserver.publish(`${currentSelector}:action:${action}`);
                     }
 
-                    // Masquage immédiat du menu après exécution
                     const menuToHide = e.target.closest('.dropdown-menu');
                     if (menuToHide) {
                         menuToHide.style.display = 'none';
@@ -306,13 +307,8 @@ export class TabulatorBuilder {
             }
         };
 
-        // Récupération de l'élément DOM physique pour inspecter ses attributs data-*
         const tableElement = document.querySelector(this.selector);
-
-        // Lecture sécurisée du droit de création injecté par le serveur PHP (défaut à false si absent)
         const canCreateRecord = tableElement ? tableElement.getAttribute('data-can-create') === 'true' : false;
-
-        // Génération du titre de l'en-tête AVANT l'instanciation
         actionColumn.title = ButtonFactory.getHeaderDropdown({ create: canCreateRecord });
 
         if (!this.config.columns) this.config.columns = [];
@@ -324,15 +320,12 @@ export class TabulatorBuilder {
      * @returns {Tabulator} L'instance active et initialisée de Tabulator.
      */
     build() {
-        // 1. Compilation automatique de la colonne d'actions
         this._compileActionColumn();
 
-        // 2. STRATÉGIE A : 'COL_HIDE'
         if (this.securityStrategy === 'COL_HIDE') {
             this.config.ajaxResponse = function (url, params, response) {
                 if (response && response.data && response.data.length > 0) {
                     const finalColumnVisibility = {};
-
                     Object.assign(finalColumnVisibility, response.data[0].grid_rights?.columns || {});
 
                     response.data.forEach(row => {
@@ -361,7 +354,6 @@ export class TabulatorBuilder {
             };
         }
 
-        // 3. STRATÉGIE B : 'CELL_MASK'
         if (this.securityStrategy === 'CELL_MASK') {
             const originalRowFormatter = this.config.rowFormatter;
             const placeholderText = this.maskPlaceholder;
@@ -377,11 +369,9 @@ export class TabulatorBuilder {
 
                     row.getCells().forEach(cell => {
                         const fieldName = cell.getColumn().getField();
-
                         if (columnPermissions[fieldName] === false) {
                             cell.getElement().innerHTML = `
-                                <span class="text-muted text-decoration-line-through opacity-50"
-                                      title="Donnée confidentielle">
+                                <span class="text-muted text-decoration-line-through opacity-50" title="Donnée confidentielle">
                                     ${placeholderText}
                                 </span>
                             `;
@@ -391,14 +381,12 @@ export class TabulatorBuilder {
             };
         }
 
-        // 4. Instanciation physique du tableau
         const table = new Tabulator(this.selector, this.config);
 
         if (!this.config.ajaxURL) {
             console.warn("TabulatorBuilder: Aucune source Ajax configurée avant l'appel à build().");
         }
 
-        // 5. ATTACHEMENT DIRECT (API Tabulator 5)
         table.on("rowClick", (e, row) => {
             if (typeof globalTabulatorObserver !== "undefined") {
                 globalTabulatorObserver.publish(`${this.selector}:rowClick`, row.getData());
