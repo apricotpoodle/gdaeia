@@ -241,6 +241,9 @@ ServerRequest::addDetector('tablet', function ($request) {
 // \Cake\I18n\Time::setToStringFormat('dd.MM.yyyy HH:mm');
 
 
+// ==============================================================================
+// DÉROGATION DE SÉCURITÉ GLOBALE POUR DEBUGKIT (ADR Sécurité)
+// ==============================================================================
 
 EventManager::instance()->on('Controller.startup', function (EventInterface $event): void {
     /** * Récupération fortement typée du contrôleur émetteur de l'événement.
