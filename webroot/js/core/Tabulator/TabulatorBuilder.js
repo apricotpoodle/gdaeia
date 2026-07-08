@@ -103,12 +103,27 @@ export class TabulatorBuilder {
 
     /**
      * Désactive, retire et rend complètement invisible le système de pagination et ses contrôles.
+     * Supprime physiquement le conteneur HTML de pagination haute s'il a été injecté au-dessus de la table.
      * @returns {this} L'instance du builder pour le chaînage.
      */
     disablePagination() {
         this.config.pagination = false;
-        this.config.height = "400px"; // Hauteur fixe Solution 2
+        this.config.height = "400px"; // Hauteur de sécurité du Virtual DOM
 
+        // 💡 LE FIX ABSOLU : Nettoyage physique du DOM
+        // On cherche le conteneur que 'setControlsAtTop' a pu injecter juste avant
+        const targetTable = document.querySelector(this.selector);
+        if (targetTable) {
+            const containerId = `pagination-top-${targetTable.id || 'default'}`;
+            const pContainer = document.getElementById(containerId);
+
+            // S'il existe, on le supprime définitivement du DOM pour faire disparaître la bande grise
+            if (pContainer) {
+                pContainer.remove();
+            }
+        }
+
+        // Nettoyage complet des attributs de configuration devenus obsolètes
         if (this.config.paginationElement) {
             delete this.config.paginationElement;
         }
