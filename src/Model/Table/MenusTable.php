@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Table;
@@ -31,7 +32,7 @@ use Cake\Validation\Validator;
  *
  * @mixin \Cake\ORM\Behavior\TreeBehavior
  */
-class MenusTable extends Table
+class MenusTable extends AppTable
 {
     /**
      * Initialize method
