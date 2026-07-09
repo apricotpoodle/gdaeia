@@ -4,6 +4,7 @@
 **Statut :** Accepté
 
 ## Contexte
+
 Suite à la mise en place du routage des logs de courriels (ADR 0034), l'appel répété à la méthode `$this->log('Msg', 'level', ['scope' => ['email']])` au sein des contrôleurs et des mailers s'est avéré trop verbeux. Cela dégrade la lisibilité du code métier et viole le principe DRY (répétition du tableau de configuration du scope).
 
 ## Décision
