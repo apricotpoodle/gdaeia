@@ -177,7 +177,21 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
 
         // Load the authenticators. Session should be first.
         // Session just uses session data directly as identity, no identifier needed.
+        // 1. Session en premier lieu
         $service->loadAuthenticator('Authentication.Session');
+
+        // 2. 💡 AJOUT : Charger l'authentificateur de Cookie pour "Se souvenir de moi"
+        $service->loadAuthenticator('Authentication.Cookie', [
+            'fields' => $fields,
+            'rememberMeField' => 'remember_me', // Nom du champ dans le formulaire
+            'cookie' => [
+                'name' => 'CookieAuth',
+                'expires' => new \DateTime('+30 days'), // Durée de persistance
+                'httponly' => true,
+            ],
+        ]);
+
+        // 3. Formulaire classique
         $service->loadAuthenticator('Authentication.Form', [
             'identifier' => [
                 'className' => 'Authentication.Password',
