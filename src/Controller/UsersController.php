@@ -33,9 +33,9 @@ class UsersController extends AppController
         parent::beforeFilter($event);
 
         // 1. Autoriser le plugin Authentication à ne pas bloquer ces pages
-        $this->Authentication->allowUnauthenticated(['login', 'register', 'verify']);
+        $this->Authentication->allowUnauthenticated(['login', 'register', 'verify', 'forgotPassword']);
         // 2. CORRECTION : Autoriser le plugin Authorization à ignorer ces actions
-        $this->Authorization->skipAuthorization(['login', 'register', 'verify']);
+        $this->Authorization->skipAuthorization(['login', 'register', 'verify', 'forgotPassword']);
     }
 
     /**
@@ -141,5 +141,33 @@ class UsersController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
+    }
+
+    /**
+     * Action Forgot Password (GET/POST)
+     * Enclenche le flux de récupération par l'envoi d'un jeton à usage unique par email.
+     *
+     * @return \Cake\Http\Response|null
+     */
+    public function forgotPassword(): ?Response
+    {
+        if ($this->request->is('post')) {
+            $email = $this->request->getData('email');
+
+            // 💡 Logique métier standard (ADR 0028) :
+            // 1. Chercher l'utilisateur par son email dans la table Users.
+            // 2. Si trouvé, générer un token unique cryptographique et une date d'expiration.
+            // 3. Sauvegarder et expédier le lien sécurisé via SMTP (src/Mailer/UserMailer.php).
+
+            $this->Flash->success(__('Si cette adresse existe dans notre système, un email de réinitialisation vous a été envoyé.'));
+            return $this->redirect(['action' => 'login']);
+        }
+
+        // 💡 LE LOGIQUE DU COURT-CIRCUIT :
+        // On passe un flag au template pour lui dire "Affiche le mode récupération"
+        $this->set('isForgotPasswordMode', true);
+
+        // On force CakePHP à rendre le template 'login' au lieu de chercher 'forgot_password'
+        return $this->render('login');
     }
 }

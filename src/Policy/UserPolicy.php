@@ -109,4 +109,16 @@ class UserPolicy
     {
         return true;
     }
+
+
+    /**
+     * Check if a user (even unauthenticated) can access the forgot password pipeline.
+     *
+     * @param \Authorization\IdentityInterface|null $identity The identity context.
+     * @return bool
+     */
+    public function canForgotPassword(?IdentityInterface $identity): bool
+    {
+        return true; // Toujours accessible publiquement
+    }
 }
