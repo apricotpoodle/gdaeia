@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Log\EmailLoggerTrait;
+use App\Mailer\UserMailer;
 use Cake\Http\Response;
 
 use function Cake\Error\dd;
@@ -19,6 +21,8 @@ use function Cake\Error\dd;
  */
 class UsersController extends AppController
 {
+    use EmailLoggerTrait;
+
     /**
      * Called before the controller action. You can use this method to configure and customize components
      * or perform logic that needs to happen before each controller action.
@@ -154,27 +158,25 @@ class UsersController extends AppController
         if ($this->request->is('post')) {
             $email = $this->request->getData('email');
 
-            // 💡 Logique métier standard (ADR 0028) :
-            // 1. Chercher l'utilisateur par son email dans la table Users.
             /** @var \App\Model\Entity\User|null $user */
             $user = $this->Users->findByEmail($email)->first();
 
             if ($user !== null) {
-                // Génération d'un jeton hexadécimal de 64 caractères (ADR 0028)
                 $token = bin2hex(random_bytes(32));
 
                 $user->set('token', $token);
-                $user->set('token_expires', new \DateTime('+1 hour')); // Expire dans 1h
+                $user->set('token_expires', new \DateTime('+1 hour'));
 
-                $this->Users->saveOrFail($user);
+                if ($this->Users->save($user)) {
+                    $this->traceEmail("Lien de récupération généré pour {$email} : /users/reset-password/{$token}");
 
-                // Écriture dans les logs pour récupérer le lien en mode développement/test
-                $this->log("Lien de récupération pour {$email} : /users/reset-password/{$token}", 'info');
+                    // 💡 MAGIQUE : Une seule ligne, sécurisée, asynchrone (non-bloquante si erreur).
+                    $mailer = new UserMailer();
+                    $mailer->safeSend('forgotPassword', [$user]);
+                }
             }
 
-            // 2. Si trouvé, générer un token unique cryptographique et une date d'expiration.
-            // 3. Sauvegarder et expédier le lien sécurisé via SMTP (src/Mailer/UserMailer.php).
-
+            // Message de sécurité générique anti-énumération
             $this->Flash->success(__('Si cette adresse existe dans notre système, un email de réinitialisation vous a été envoyé.'));
             return $this->redirect(['action' => 'login']);
         }
