@@ -10,10 +10,12 @@
 
             <div class="text-center mb-4">
                 <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 text-primary rounded-circle p-4 mb-3" style="width: 80px; height: 80px;">
-                    <i class="fas fa-shield-check fa-3x"></i>
+                    <!-- <i class="fas fa-shield-check fa-3x"></i>
+                    <i class="fas fa-shield-alt fa-2x"></i> -->
+                    <i class="fas fa-user-shield fa-3x"></i>
                 </div>
                 <h2 class="fw-bold h4 text-dark mb-1">Portail d'Infrastructures</h2>
-                <p class="text-muted small">Système de validation et gestion des flux</p>
+                <p class="text-muted small">Système de validation et gestion des demandes d'embauche</p>
             </div>
 
             <?= $this->Flash->render() ?>
