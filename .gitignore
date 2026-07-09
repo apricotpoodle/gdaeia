@@ -66,4 +66,7 @@ logs/
 # Certificats locaux
 localhost.crt
 localhost.key
+
+# Spécifiques dév IA
 context_gemini.txt
+prompt_gemini.txt
