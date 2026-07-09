@@ -43,3 +43,4 @@ Ce dossier contient les *Architecture Decision Records* (ADR).
 | [ADR 0034](./0034-specialisation-logs-courriels.md) | Spécialisation et Routage des Logs de Courriels | **Accepté** |
 | [ADR 0035](./0035-trait-specialise-logs-email.md) | Simplification de l'écriture des Logs (EmailLoggerTrait) | **Accepté** |
 | [ADR 0036](./0036-encapsulation-expedition-email-safesend.md) | Encapsulation de l'expédition SMTP (safeSend) | **Accepté** |
+| [ADR 0037](./0037-hebergement-local-dependances-frontend.md) | Hébergement Local des Dépendances Front-end | **Accepté** |
