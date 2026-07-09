@@ -37,3 +37,9 @@ Ce dossier contient les *Architecture Decision Records* (ADR).
 | [ADR 0028](./0028-authentification-evolutive-et-impersonate.md) | Authentification évolutive et impersonate | **Accepté** |
 | [ADR 0029](./0029-workflow-git-feature-branch.md) | Workflow git feature branch | **Accepté** |
 | [ADR 0030](./0030-modernisation-scripts-modules-es6.md) | Modernisation de l'infrastructure front-end via les modules ES6 | **Accepté** |
+| [ADR 0031](./0031-exemption-securite-debugkit.md) | Stratégie d'exemption de sécurité pour les outils de développement | **Accepté** |
+| [ADR 0032](./0032-flux-de-travail-developpement.md) | Standardisation du flux de travail de développement | **Accepté** |
+| [ADR 0033](./0033-implementation-mailer-reinitialisation-mdp.md) | Architecture de la couche Mailer | **Accepté** |
+| [ADR 0034](./0034-specialisation-logs-courriels.md) | Spécialisation et Routage des Logs de Courriels | **Accepté** |
+| [ADR 0035](./0035-trait-specialise-logs-email.md) | Simplification de l'écriture des Logs (EmailLoggerTrait) | **Accepté** |
+| [ADR 0036](./0036-encapsulation-expedition-email-safesend.md) | Encapsulation de l'expédition SMTP (safeSend) | **Accepté** |
