@@ -156,6 +156,22 @@ class UsersController extends AppController
 
             // 💡 Logique métier standard (ADR 0028) :
             // 1. Chercher l'utilisateur par son email dans la table Users.
+            /** @var \App\Model\Entity\User|null $user */
+            $user = $this->Users->findByEmail($email)->first();
+
+            if ($user !== null) {
+                // Génération d'un jeton hexadécimal de 64 caractères (ADR 0028)
+                $token = bin2hex(random_bytes(32));
+
+                $user->set('token', $token);
+                $user->set('token_expires', new \DateTime('+1 hour')); // Expire dans 1h
+
+                $this->Users->saveOrFail($user);
+
+                // Écriture dans les logs pour récupérer le lien en mode développement/test
+                $this->log("Lien de récupération pour {$email} : /users/reset-password/{$token}", 'info');
+            }
+
             // 2. Si trouvé, générer un token unique cryptographique et une date d'expiration.
             // 3. Sauvegarder et expédier le lien sécurisé via SMTP (src/Mailer/UserMailer.php).
 
@@ -163,11 +179,55 @@ class UsersController extends AppController
             return $this->redirect(['action' => 'login']);
         }
 
-        // 💡 LE LOGIQUE DU COURT-CIRCUIT :
-        // On passe un flag au template pour lui dire "Affiche le mode récupération"
-        $this->set('isForgotPasswordMode', true);
+        return null;
+    }
 
-        // On force CakePHP à rendre le template 'login' au lieu de chercher 'forgot_password'
-        return $this->render('login');
+    /**
+     * Action Reset Password (GET/POST)
+     * Permet la saisie du nouveau mot de passe si le jeton est valide et actif.
+     *
+     * @param string|null $token Le jeton hexadécimal reçu par l'URL.
+     * @return \Cake\Http\Response|null
+     */
+    public function resetPassword(?string $token = null): ?Response
+    {
+        $this->Authorization->skipAuthorization();
+
+        if (empty($token)) {
+            $this->Flash->error(__('Jeton de récupération invalide ou manquant.'));
+            return $this->redirect(['action' => 'login']);
+        }
+
+        // Vérification de l'existence et de l'expiration du jeton
+        /** @var \App\Model\Entity\User|null $user */
+        $user = $this->Users->find()
+            ->where([
+                'token' => $token,
+                'token_expires >' => new \DateTime()
+            ])
+            ->first();
+
+        if ($user === null) {
+            $this->Flash->error(__('Ce lien de récupération a expiré ou est invalide.'));
+            return $this->redirect(['action' => 'login']);
+        }
+
+        if ($this->request->is(['post', 'put'])) {
+            // Le hachage s'exécute automatiquement dans l'entité User via _setPassword
+            $user = $this->Users->patchEntity($user, $this->request->getData());
+
+            // Consommation et destruction du jeton à usage unique
+            $user->set('token', null);
+            $user->set('token_expires', null);
+
+            if ($this->Users->save($user)) {
+                $this->Flash->success(__('Votre mot de passe a été modifié avec succès. Veuillez vous connecter.'));
+                return $this->redirect(['action' => 'login']);
+            }
+            $this->Flash->error(__('Impossible de mettre à jour le mot de passe. Veuillez réessayer.'));
+        }
+
+        $this->set(compact('token'));
+        return null;
     }
 }
