@@ -370,6 +370,17 @@ return [
             'url' => env('LOG_QUERIES_URL', null),
             'scopes' => ['cake.database.queries'],
         ],
+        // 💡 AJOUT : Notre nouveau canal dédié aux courriels
+        'email' => [
+            'className' => 'Cake\Log\Engine\FileLog',
+            'path' => LOGS,
+            'file' => 'email', // Créera le fichier logs/email.log
+            'url' => env('LOG_EMAIL_URL', null),
+            'scopes' => ['email'], // CRUCIAL : N'accepte QUE les messages taggués 'email'
+            'levels' => [], // Un tableau vide signifie : "J'accepte tous les niveaux de sévérité (info, error...)"
+        ],
+        // To enable this dedicated log routing, ensure that debug and error loggers have 'scopes' => false
+        // as shown above, so they don't duplicate the email logs.
     ],
 
     /*
