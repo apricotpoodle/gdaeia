@@ -69,8 +69,15 @@ class UsersController extends AppController
         $adapter = new TabulatorAdapter();
         $queryParams = $this->request->getQueryParams();
 
-        // 2. Préparation de la requête avec la relation vers la table Roles
-        $query = $this->Users->find()->contain(['Roles']);
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+
+        // =====================================================================
+        // 2. PRÉPARATION & SÉGRÉGATION DES DONNÉES (La "Vision" de l'opérateur)
+        // L'ORM se charge d'appliquer les règles métiers complexes via le Finder.
+        // =====================================================================
+        $query = $this->Users->find('visibleTo', user: $currentUser)
+            ->contain(['Roles']);
 
         // 3. Traduction des tris et filtres Tabulator vers la requête SQL
         $query = $adapter->adaptRequest($this->request, $query);

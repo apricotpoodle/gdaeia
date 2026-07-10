@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Table;
@@ -91,5 +92,20 @@ class UserDepartmentsTable extends Table
         $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
 
         return $rules;
+    }
+
+
+    /**
+     * Custom finder : Récupère la requête des lignes de départements associées à un utilisateur donné.
+     * Utilisation : ->find('departmentsOf', user: $userEntity)
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query L'objet Query de l'ORM.
+     * @param \App\Model\Entity\User $user L'entité de l'opérateur.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findDepartmentsOf(SelectQuery $query, \App\Model\Entity\User $user): SelectQuery
+    {
+        return $query->select(['UserDepartments.department_id'])
+            ->where(['UserDepartments.user_id' => $user->id]);
     }
 }
