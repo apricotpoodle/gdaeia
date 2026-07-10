@@ -16,6 +16,28 @@ use Authorization\IdentityInterface as AuthorizationIdentity;
  */
 class User extends AppEntity implements AuthenticationIdentity, AuthorizationIdentity
 {
+    /**
+     * 🆔 CARTOGRAPHIE DES RÔLES CRITIQUES (IDs de la base de données)
+     * Centraliser ces IDs ici évite les nombres magiques dans toute l'application.
+     */
+    public const ROLE_ADMIN                     = 1;
+    public const ROLE_DEMANDEUR                 = 2;
+    public const ROLE_1_VALIDEUR_POLE           = 3;
+    public const ROLE_2_VALIDEUR_RRH            = 4;
+    public const ROLE_3_VALIDEUR_DRH            = 5;
+    public const ROLE_4_VALIDEUR_CG             = 6;
+    public const ROLE_5_VALIDEUR_DIR            = 7;
+
+
+
+    /**
+     * Liste des IDs de rôles (ex: Staff, RH) autorisés à créer d'autres utilisateurs
+     * en dehors des Super Administrateurs.
+     */
+    public const ALLOWED_ROLES_FOR_CREATE = [self::ROLE_ADMIN];
+
+
+
     protected array $_accessible = [
         '*' => true,
         'id' => false,

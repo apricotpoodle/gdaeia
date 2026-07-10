@@ -4,7 +4,7 @@
  * @module views/Users/create
  */
 
-import { FlashManager } from '../../core/FlashManager.js';
+import { FlashManager } from '/js/core/FlashManager.js';
 
 class UserCreateForm {
     constructor() {

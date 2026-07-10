@@ -243,7 +243,9 @@ export class TabulatorBuilder {
             minWidth: calculatedWidth,      //  Protège les boutons de l'écrasement
             maxWidth: calculatedWidth + 30, // La laisse s'arrête de grandir après avoir absorbé le gap.
             widthGrow: 1,                   // Autorise l'absorption des pixels orphelins du gap
-            widthShrink: 0,                 // Interdit l'écrasement
+            widthShrink: 0,
+
+            // Interdit l'écrasement
             resizable: false,               // empêche le redimensionnement
 
             formatter: (cell) => {

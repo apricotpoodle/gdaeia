@@ -281,4 +281,22 @@ class UsersController extends AppController
 
         return $this->redirect(['action' => 'index']);
     }
+
+    /**
+     * Action Add (GET /users/add)
+     *
+     * Affiche le formulaire HTML de création d'un utilisateur.
+     * L'insertion réelle en base de données est déléguée à l'API en AJAX.
+     *
+     * @return \Cake\Http\Response|null|void Rendu du gabarit templates/Users/add.php
+     */
+    public function add()
+    {
+        // 1. VERROU DE SÉCURITÉ : Validation globale via la UserPolicy::canAdd()
+        // (Qui utilise désormais notre superbe constante ALLOWED_ROLES_FOR_CREATE)
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+
+        // 2. Initialisation d'une entité vide pour le FormHelper si nécessaire,
+        // mais ici on laisse CakePHP gérer le rendu automatique du template HTML.
+    }
 }
