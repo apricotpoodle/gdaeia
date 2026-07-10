@@ -467,4 +467,15 @@ export class TabulatorBuilder {
 
         return table;
     }
+
+    /**
+     * Définit la hauteur de la grille pour forcer l'apparition de l'ascenseur interne
+     * de Tabulator et empêcher le défilement de la fenêtre globale du navigateur.
+     * @param {string} height - Valeur CSS (ex: "100%", "400px", "calc(100vh - 150px)")
+     * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
+     */
+    setHeight(height) {
+        this.config.height = height;
+        return this;
+    }
 }

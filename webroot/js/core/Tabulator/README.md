@@ -190,3 +190,7 @@ return [
     'data' => $entitiesFigees,
     'last_page' => $pagingParams['pageCount'] ?? 1
 ];
+```
+
+### Confinement Visuel (Eviter le double scroll)
+Pour empêcher le navigateur de scroller (et perdre la barre de navigation), utilisez la méthode `.setHeight("calc(100vh - Xpx)")` dans votre `TabulatorFactory`. Tabulator gèrera son propre ascenseur interne tout en préservant l'affichage statique de la page (Voir ADR 0038).

@@ -52,7 +52,8 @@ export class TabulatorFactory {
             .setAjaxSource('/api/users.json')
             .setController('users')
             .addActions(['impersonate'])
-            .disablePagination()
+            // .disablePagination() <--- SUPPRIMÉ : On veut conserver les 20 lignes !
+            .setHeight("calc(100vh - 180px)") // <--- AJOUT : Bloque la grille avant le bas de l'écran
             .setColumns([
                 ColumnsFactory.id({ visible: true }),
                 ColumnsFactory.text("firstname", "Prénom"),
