@@ -235,38 +235,27 @@ class UsersController extends AppController
 
     /**
      * Infiltre la session d'un autre utilisateur (Impersonate).
-     * Action réservée au support technique (Super Admin).
      *
      * @param string|null $id Identifiant de l'utilisateur cible.
-     * @return \Cake\Http\Response|null Redirection après changement d'identité.
+     * @return \Cake\Http\Response|null Redirection.
      */
     public function impersonate(?string $id = null): ?Response
     {
-        // 1. Récupération de l'identité cible
         $targetUser = $this->Users->get($id);
 
-        // 2. VERROU DE SÉCURITÉ : Vérification de la Policy (canImpersonate)
-        // Seul un Super Admin peut usurper, et il ne peut pas usurper un autre Super Admin.
+        // 1. Délégation stricte de la sécurité à la Policy (Remplace le isStaff() en dur)
         $this->Authorization->authorize($targetUser, 'impersonate');
 
-        // 3. Récupération de l'identité actuelle (le Super Admin)
-        $currentUser = $this->Authentication->getIdentity();
+        // 2. MAGIE NATIVE CAKEPHP : Le plugin s'occupe de stocker l'ID d'origine
+        $this->Authentication->impersonate($targetUser);
 
-        if ($currentUser) {
-            // 4. Sauvegarde de l'ID du Super Admin dans la session
-            $this->request->getSession()->write('Auth.original_user_id', $currentUser->getIdentifier());
+        // $this->Flash->success(__("Vous naviguez désormais en tant que {0} {1} ({2}).", [
+        //     $targetUser->firstname,
+        //     $targetUser->lastname,
+        //     $targetUser->email
+        // ]));
 
-            // 5. Bascule d'identité via le composant d'Authentification CakePHP 5
-            $this->Authentication->setIdentity($targetUser);
-
-            $this->Flash->success(__("Vous naviguez désormais en tant que {0} {1} ({2}).", [
-                $targetUser->firstname,
-                $targetUser->lastname,
-                $targetUser->email
-            ]));
-        }
-
-        return $this->redirect('/'); // Redirection vers l'accueil de l'application
+        return $this->redirect('/');
     }
 
     /**
@@ -276,31 +265,16 @@ class UsersController extends AppController
      */
     public function revertIdentity(): ?Response
     {
-        // Pas besoin de règle métier complexe ici : si on a l'ID original en session, on a le droit de revenir.
+        // Pas besoin de droits pour annuler l'usurpation
         $this->Authorization->skipAuthorization();
 
-        $session = $this->request->getSession();
-        $originalUserId = $session->read('Auth.original_user_id');
+        // 💡 Utilisation de la méthode native isImpersonating()
+        if ($this->Authentication->isImpersonating()) {
 
-        if ($originalUserId) {
-            try {
-                // 1. On récupère le vrai Super Admin
-                $originalUser = $this->Users->get($originalUserId);
+            // Restaure la session d'origine instantanément
+            $this->Authentication->stopImpersonating();
 
-                // 2. On restaure l'identité
-                $this->Authentication->setIdentity($originalUser);
-
-                // 3. Nettoyage méticuleux de la trace en session
-                $session->delete('Auth.original_user_id');
-
-                $this->Flash->success(__("Retour à votre session Administrateur d'origine."));
-            } catch (\Exception $e) {
-                // Failsafe : si l'utilisateur original a été supprimé entre temps
-                $session->delete('Auth.original_user_id');
-                $this->Authentication->logout();
-                $this->Flash->error(__("Erreur lors de la restauration de session. Veuillez vous reconnecter."));
-                return $this->redirect(['action' => 'login']);
-            }
+            // $this->Flash->success(__("Retour à votre session Administrateur d'origine."));
         } else {
             $this->Flash->warning(__("Aucune session d'origine détectée."));
         }
