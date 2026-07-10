@@ -5,6 +5,7 @@
  */
 
 import { FlashManager } from '/js/core/FlashManager.js';
+import { NavigationManager } from '/js/core/NavigationManager.js';
 
 class UserCreateForm {
     constructor() {
@@ -29,6 +30,9 @@ class UserCreateForm {
 
         // 2. Écouteur de soumission
         this.formElement.addEventListener('submit', (e) => this.handleSubmit(e));
+
+        // 3. 💡 ACCESSIBILITÉ : Quitter la page avec la touche ESCAPE
+        NavigationManager.registerEscapeRedirect('/users/index');
     }
 
     /**
@@ -54,10 +58,10 @@ class UserCreateForm {
             const container = input.closest('.form-group-wrapper') || input.parentElement;
 
             if (accessLevel === 'NONE') {
-                container.classList.add('d-none'); // Masquage total de la zone
-            } else if (accessLevel === 'VIEW') {
+                container.classList.add('d-none'); // Masquage total
+            } else if (accessLevel === 'VIEW' || accessLevel === 'READONLY') { // 💡 FIX : Intercepte "READONLY"
                 input.setAttribute('disabled', 'disabled');
-                input.classList.add('bg-light', 'pe-none'); // Verrouillage en lecture seule
+                input.classList.add('bg-light', 'pe-none'); // Passage en lecture seule
             }
         });
     }

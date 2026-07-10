@@ -32,7 +32,7 @@
 
             <div class="form-group-wrapper mb-3">
                 <label for="username" class="form-label fw-bold">Identifiant (Username)</label>
-                <input type="text" name="username" id="username" class="form-control" required>
+                <input type="text" name="username" id="username" class="form-control" autocomplete="off" required>
             </div>
 
             <div class="form-group-wrapper mb-3">
@@ -42,7 +42,7 @@
 
             <div class="form-group-wrapper mb-3">
                 <label for="password" class="form-label fw-bold">Mot de passe</label>
-                <input type="password" name="password" id="password" class="form-control" required>
+                <input type="password" name="password" id="password" class="form-control" autocomplete="new-password" required>
             </div>
 
             <div class="row">
