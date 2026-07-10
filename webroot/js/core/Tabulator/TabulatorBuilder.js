@@ -478,4 +478,36 @@ export class TabulatorBuilder {
         this.config.height = height;
         return this;
     }
+
+    /**
+     * Active le défilement infini (Progressive Loading).
+     * Remplace la pagination classique par un chargement transparent au défilement.
+     * @param {number} size - Nombre d'enregistrements récupérés par requête Ajax.
+     * @returns {this} L'instance du builder pour le chaînage.
+     */
+    setContinuousScroll(size = 40) {
+        this.config.pagination = true; // Pré-requis Tabulator pour le chargement progressif
+        this.config.paginationMode = "remote";
+        this.config.sortMode = "remote";
+        this.config.filterMode = "remote";
+        this.config.paginationSize = size;
+        this.config.dataSendParams = { "sort": "sorters", "filter": "filters" };
+
+        // Activation de la magie Tabulator
+        this.config.progressiveLoad = "scroll";
+        this.config.progressiveLoadScrollMargin = 300; // Marge en pixels avant de déclencher l'Ajax
+
+        // Nettoyage de l'interface : On purge la barre de pagination classique si présente
+        const targetTable = document.querySelector(this.selector);
+        if (targetTable) {
+            const containerId = `pagination-top-${targetTable.id || 'default'}`;
+            const pContainer = document.getElementById(containerId);
+            if (pContainer) {
+                pContainer.remove();
+            }
+        }
+        delete this.config.paginationElement;
+
+        return this;
+    }
 }

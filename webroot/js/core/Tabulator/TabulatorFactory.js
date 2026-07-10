@@ -23,8 +23,7 @@ export class TabulatorFactory {
     static _createBaseGrid(selector) {
         return new TabulatorBuilder(selector)
             .enableStatePersistence() // Mémorisation locale
-            .setRemotePagination()    // Charge la pagination distante
-            .setControlsAtTop()       // 💡 FIX IMPÉRATIF : Force la ré-application en haut après la pagination
+            .setContinuousScroll(40)  // 💡 NOUVEAU STANDARD : Défilement infini par lots de 40
             ;
     }
 
