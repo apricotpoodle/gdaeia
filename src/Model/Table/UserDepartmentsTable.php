@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Table;
@@ -91,5 +92,19 @@ class UserDepartmentsTable extends Table
         $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
 
         return $rules;
+    }
+
+    /**
+     * Custom finder : Récupère la liste des IDs de départements d'un utilisateur.
+     * Utilisation dans les contrôleurs : ->find('myDepartmentIds', userId: $id)
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query L'objet Query de l'ORM.
+     * @param int $userId L'identifiant de l'opérateur.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findMyDepartmentIds(SelectQuery $query, int $userId): SelectQuery
+    {
+        return $query->select(['UserDepartments.department_id'])
+            ->where(['UserDepartments.user_id' => $userId]);
     }
 }

@@ -80,10 +80,7 @@ class UsersController extends AppController
 
         if (!$currentUser->get('issuperuser')) {
             // A. On récupère la liste des IDs des départements de l'opérateur courant
-            $myDepartmentIds = $this->Users->UserDepartments->find()
-                ->select(['department_id'])
-                ->where(['user_id' => $currentUser->id]);
-
+            $myDepartmentIds = $this->Users->UserDepartments->find('myDepartmentIds', userId: $currentUser->id);
             // B. On force la jointure : on ne garde que les utilisateurs ayant
             // au moins un département en commun avec l'opérateur courant.
             $query->innerJoinWith('UserDepartments', function ($q) use ($myDepartmentIds) {
