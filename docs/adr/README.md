@@ -48,3 +48,4 @@ Ce dossier contient les *Architecture Decision Records* (ADR).
 | [ADR 0039](./0039-chargement-progressif-scroll-infini.md) | Défilement Infini (Progressive Loading) au lieu de la Pagination | **Accepté** |
 | [ADR 0040](./0040-mecanisme-usurpation-identite-impersonate.md) | Mécanisme d'usurpation d'identité (Impersonate) | **Accepté** |
 | [ADR 0041](./0041-segregation-donnees-model-custom-finders.md) | Ségrégation des Données (RLS) Centralisée via Custom Finders | **Accepté** |
+| [ADR 0042](./0042-acl-granulaire-niveau-champ-formulaire.md) | ACL Granulaire au Niveau du Champ de Formulaire | **Accepté** |
