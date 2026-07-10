@@ -40,7 +40,7 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
     <?= $this->fetch('script') ?>
 </head>
 
-<body>
+<body class="vh-100 d-flex flex-column overflow-hidden">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container-fluid">
             <a class="navbar-brand fw-bold mb-0 h1" href="<?php echo $this->Url->build('/'); ?>">
@@ -61,8 +61,8 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
         </div>
     </nav>
 
-    <main class="main">
-        <div class="container-fluid mt-4">
+    <main class="main flex-grow-1 d-flex flex-column overflow-hidden">
+        <div class="container-fluid flex-grow-1 d-flex flex-column h-100 py-3">
             <?= $this->Flash->render() ?>
             <?= $this->fetch('content') ?>
         </div>
