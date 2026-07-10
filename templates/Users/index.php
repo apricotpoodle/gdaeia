@@ -18,19 +18,12 @@ $this->Html->script('https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.
 
 <?= $this->Html->script('views/Users/index.js', ['type' => 'module']); ?>
 
-<div class="d-flex flex-column" style="height: calc(100vh - 70px); min-height: 0;">
-
-    <div class="view-header p-2 bg-white border-bottom flex-shrink-0 d-flex justify-content-between align-items-center">
-        <h1 class="h5 mb-0 text-dark fw-bold">
-            <i class="fas fa-users me-2 text-primary"></i>Gestion des Opérateurs
-        </h1>
+<div class="d-flex flex-column h-100">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="h3 mb-0 text-gray-800">Gestion des Utilisateurs</h1>
     </div>
 
-    <div class="flex-grow-1 p-3 content-grid-wrapper" style="min-height: 0; overflow: hidden; background-color: #f8f9fa;">
-
-        <div class="w-100 h-100">
-            <?= $this->Tabulator->renderGrid('#users-table', 'Users') ?>
-        </div>
-
+    <div class="flex-grow-1" style="min-height: 0;">
+        <?= $this->Tabulator->renderGrid('#users-table', 'Users') ?>
     </div>
 </div>
