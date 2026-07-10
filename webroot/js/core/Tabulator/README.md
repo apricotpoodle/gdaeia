@@ -194,3 +194,6 @@ return [
 
 ### Confinement Visuel (Eviter le double scroll)
 Pour empêcher le navigateur de scroller (et perdre la barre de navigation), utilisez la méthode `.setHeight("calc(100vh - Xpx)")` dans votre `TabulatorFactory`. Tabulator gèrera son propre ascenseur interne tout en préservant l'affichage statique de la page (Voir ADR 0038).
+
+### Défilement Infini (Progressive Loading)
+Pour abandonner la barre de pagination classique au profit d'un défilement ininterrompu, utilisez la méthode `.setContinuousScroll(tailleDuLot)` dans le Builder. L'API CakePHP continuera à recevoir des paramètres de page (`page=1`, `page=2`), mais Tabulator concaténera les lignes de manière invisible pour l'utilisateur (ADR 0039).

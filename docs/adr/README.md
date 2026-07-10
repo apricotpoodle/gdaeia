@@ -45,3 +45,4 @@ Ce dossier contient les *Architecture Decision Records* (ADR).
 | [ADR 0036](./0036-encapsulation-expedition-email-safesend.md) | Encapsulation de l'expédition SMTP (safeSend) | **Accepté** |
 | [ADR 0037](./0037-hebergement-local-dependances-frontend.md) | Hébergement Local des Dépendances Front-end | **Accepté** |
 | [ADR 0038](./0038-confinement-hauteur-grilles-tabulator.md) | Confinement de la hauteur des grilles de données | **Accepté** |
+| [ADR 0039](./0039-chargement-progressif-scroll-infini.md) | Défilement Infini (Progressive Loading) au lieu de la Pagination | **Accepté** |
