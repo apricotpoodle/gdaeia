@@ -19,13 +19,14 @@ if (globalTabulatorObserver) {
     });
 
     globalTabulatorObserver.subscribe('#users-table:action:create', () => {
-        alert("Action : Ouvrir le formulaire de création");
+        // alert("Action : Ouvrir le formulaire de création");
+        window.location.href = '/users/add';
     });
 
     globalTabulatorObserver.subscribe('#users-table:action:edit', (user) => {
-        if (confirm(`Voulez-vous ouvrir la page de modification pour l'utilisateur ${user.firstname} ${user.lastname} ?`)) {
-            window.location.href = user._actionUrl;
-        }
+        // if (confirm(`Voulez-vous ouvrir la page de modification pour l'utilisateur ${user.firstname} ${user.lastname} ?`)) {
+        window.location.href = user._actionUrl;
+        // }
     });
 
 

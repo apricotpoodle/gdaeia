@@ -7,6 +7,7 @@ namespace App\Controller\Api;
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
 use Cake\Event\EventInterface;
+use Cake\Http\Response;
 
 /**
  * Class UsersController (API)
@@ -115,5 +116,67 @@ class UsersController extends AppController
         // 7. Rendu final sérialisé en JSON conforme CakePHP 5
         $this->set($output);
         $this->viewBuilder()->setOption('serialize', array_keys($output));
+    }
+
+    /**
+     * Endpoint : GET /api/users/get-form-schema.json
+     * Distribue le dictionnaire des droits sur les champs pour l'opérateur courant.
+     */
+    public function getFormSchema(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->skipAuthorization(); // L'action est ouverte aux connectés, le filtrage est dynamique
+
+        $service = new \App\Service\Security\FieldAuthorizationService();
+        $identity = $this->request->getAttribute('identity');
+
+        $schema = $service->getFieldSchema($identity, 'Users');
+
+        // Récupération optionnelle des listes pour hydrater les selects du formulaire (Roles)
+        $rolesTable = \Cake\ORM\TableRegistry::getTableLocator()->get('Roles');
+        $roles = $rolesTable->find('list', keyField: 'id', valueField: 'name')->toArray();
+
+        $this->set(compact('schema', 'roles'));
+        $this->viewBuilder()->setOption('serialize', ['schema', 'roles']);
+    }
+
+    /**
+     * Endpoint : POST /api/users/add.json
+     * Exécute la création d'un utilisateur après filtrage des champs.
+     */
+    public function add(): ?Response
+    {
+        $this->request->allowMethod(['post']);
+
+        // 1. Droit global de création (UserPolicy::canAdd)
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+
+        $user = $this->Users->newEmptyEntity();
+
+        $authService = new \App\Service\Security\FieldAuthorizationService();
+        $identity = $this->request->getAttribute('identity');
+
+        // 2. Protection double-sécurité : On filtre les données reçues contre le schéma de rôles
+        $schema = $authService->getFieldSchema($identity, 'Users');
+        $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
+
+        $user = $this->Users->patchEntity($user, $filteredData);
+
+        if ($this->Users->save($user)) {
+            return $this->response->withType('application/json')
+                ->withStringBody(json_encode(['success' => true]));
+        }
+
+        // Collecte des erreurs de validation de l'ORM si échec
+        $errors = $user->getErrors();
+        $message = __("Le formulaire contient des données invalides.");
+        if (!empty($errors)) {
+            $firstError = current(reset($errors));
+            $message = (string)$firstError;
+        }
+
+        return $this->response->withType('application/json')
+            ->withStatus(400)
+            ->withStringBody(json_encode(['success' => false, 'message' => $message]));
     }
 }
