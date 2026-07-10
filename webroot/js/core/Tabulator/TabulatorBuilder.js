@@ -377,6 +377,10 @@ export class TabulatorBuilder {
         this.config.sortMode = "remote";
         this.config.paginationSize = size;
 
+        // 🚨 LE FIX EST ICI : Application de l'ADR 0017 (Évite le crash preg_match de CakePHP)
+        // On force Tabulator à utiliser les mots "sorters" et "filters" dans l'URL
+        this.config.dataSendParams = { "sort": "sorters", "filter": "filters" };
+
         // Activation stricte selon la documentation v6.x
         this.config.progressiveLoad = "scroll";
         this.config.progressiveLoadScrollMargin = 150; // Marge plus serrée pour déclencher plus vite
