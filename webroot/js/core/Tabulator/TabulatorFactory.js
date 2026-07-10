@@ -67,11 +67,12 @@ export class TabulatorFactory {
                 ColumnsFactory.id({ visible: true }),
                 ColumnsFactory.text("firstname", "Prénom"),
                 ColumnsFactory.text("lastname", "Nom"),
-                ColumnsFactory.text("username", "Identifiant", { frozen: true }),
+                ColumnsFactory.text("role.name", "Rôle"),
+                // ColumnsFactory.text("username", "Identifiant", { frozen: true }),
                 ColumnsFactory.text("email", "Adresse Email"),
                 ColumnsFactory.boolean("issuperuser", "Administrateur"),
-                ColumnsFactory.dateRange("created", "Date d'inscription"),
-                ColumnsFactory.dateRange("modified", "Dernière modification")
+                // ColumnsFactory.dateRange("created", "Date d'inscription"),
+                // ColumnsFactory.dateRange("modified", "Dernière modification")
             ])
             .build();
     }
