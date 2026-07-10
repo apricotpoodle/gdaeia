@@ -354,6 +354,49 @@ export class TabulatorBuilder {
     }
 
     /**
+      * Définit la hauteur de la grille pour forcer l'apparition de l'ascenseur interne
+      * de Tabulator et empêcher le défilement de la fenêtre globale du navigateur.
+      * @param {string} height - Valeur CSS (ex: "100%", "400px", "calc(100vh - 150px)")
+      * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
+      */
+    setHeight(height) {
+        this.config.height = height;
+        return this;
+    }
+
+    /**
+        * Active le défilement infini (Progressive Loading).
+        * Remplace la pagination classique par un chargement transparent au défilement.
+        * @param {number} size - Nombre d'enregistrements récupérés par requête Ajax.
+        * @returns {this} L'instance du builder pour le chaînage.
+        */
+    setContinuousScroll(size = 20) {
+        // 💡 FIX 1 : Ne JAMAIS mettre pagination: true ici. Conflit majeur !
+        this.config.paginationMode = "remote";
+        this.config.filterMode = "remote";
+        this.config.sortMode = "remote";
+        this.config.paginationSize = size;
+
+        // Activation stricte selon la documentation v6.x
+        this.config.progressiveLoad = "scroll";
+        this.config.progressiveLoadScrollMargin = 150; // Marge plus serrée pour déclencher plus vite
+
+        // On désactive le loader visuel qui intercepte physiquement la molette
+        this.config.ajaxLoader = false;
+
+        // Purge du conteneur de pagination s'il existait
+        const targetTable = document.querySelector(this.selector);
+        if (targetTable) {
+            const containerId = `pagination-top-${targetTable.id || 'default'}`;
+            const pContainer = document.getElementById(containerId);
+            if (pContainer) pContainer.remove();
+        }
+        delete this.config.paginationElement;
+
+        return this;
+    }
+
+    /**
      * Finalise la construction de la grille et injecte les verrous de sécurité.
      * @returns {Tabulator} L'instance active et initialisée de Tabulator.
      */
@@ -361,13 +404,13 @@ export class TabulatorBuilder {
         // 1. Compilation automatique de la colonne d'actions
         this._compileActionColumn();
 
-        // Stockage du statut de la pagination pour la fermeture de contexte dans la fonction anonyme
-        const isPaginationDisabled = this.config.pagination === false;
+        // 💡 FIX 2 : Détection fiable pour ne PAS détruire les métadonnées (last_page)
+        const isProgressive = this.config.progressiveLoad === "scroll";
+        const isPaginationDisabled = !this.config.pagination && !isProgressive;
 
-        // 2. STRATÉGIE A : 'COL_HIDE' (Entièrement sécurisée pour l'Ajax brut et paginé)
+        // 2. STRATÉGIE A : 'COL_HIDE'
         if (this.securityStrategy === 'COL_HIDE') {
             this.config.ajaxResponse = function (url, params, response) {
-                // Étape A : Extraction défensive des lignes si la structure est paginée { data: [...] }
                 let rowsData = [];
                 if (response && response.data && Array.isArray(response.data)) {
                     rowsData = response.data;
@@ -375,8 +418,10 @@ export class TabulatorBuilder {
                     rowsData = response;
                 }
 
-                // Étape B : Application de la logique des droits d'affichage des colonnes
-                if (rowsData.length > 0) {
+                // On n'applique le masquage des colonnes que sur le premier lot
+                const isFirstPage = !params.page || params.page === 1;
+
+                if (isFirstPage && rowsData.length > 0) {
                     const finalColumnVisibility = {};
                     Object.assign(finalColumnVisibility, rowsData[0].grid_rights?.columns || {});
 
@@ -399,20 +444,17 @@ export class TabulatorBuilder {
                                 tableInstance.showColumn(fieldKey);
                             }
                         });
-                        tableInstance.redraw(true);
+                        // Pas de redraw(true) destructeur ici
                     }, 10);
                 }
 
-                // Étape C : Retour du format attendu selon l'état de la pagination
-                // Si pas de pagination -> Tabulator exige le tableau brut de lignes
-                // Si pagination distante -> Tabulator exige l'objet enveloppe global
+                // 💡 FIX CRUCIAL : Si progressiveLoad est actif, on renvoie l'objet complet {data, last_page}
                 if (isPaginationDisabled) {
                     return rowsData;
                 }
                 return response;
             };
         } else {
-            // Si pas de stratégie COL_HIDE mais pagination désactivée, on applique l'extracteur minimal
             if (isPaginationDisabled) {
                 this.config.ajaxResponse = function (url, params, response) {
                     if (response && response.data && Array.isArray(response.data)) {
@@ -466,48 +508,5 @@ export class TabulatorBuilder {
         });
 
         return table;
-    }
-
-    /**
-     * Définit la hauteur de la grille pour forcer l'apparition de l'ascenseur interne
-     * de Tabulator et empêcher le défilement de la fenêtre globale du navigateur.
-     * @param {string} height - Valeur CSS (ex: "100%", "400px", "calc(100vh - 150px)")
-     * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
-     */
-    setHeight(height) {
-        this.config.height = height;
-        return this;
-    }
-
-    /**
-     * Active le défilement infini (Progressive Loading).
-     * Remplace la pagination classique par un chargement transparent au défilement.
-     * @param {number} size - Nombre d'enregistrements récupérés par requête Ajax.
-     * @returns {this} L'instance du builder pour le chaînage.
-     */
-    setContinuousScroll(size = 40) {
-        this.config.pagination = true; // Pré-requis Tabulator pour le chargement progressif
-        this.config.paginationMode = "remote";
-        this.config.sortMode = "remote";
-        this.config.filterMode = "remote";
-        this.config.paginationSize = size;
-        this.config.dataSendParams = { "sort": "sorters", "filter": "filters" };
-
-        // Activation de la magie Tabulator
-        this.config.progressiveLoad = "scroll";
-        this.config.progressiveLoadScrollMargin = 300; // Marge en pixels avant de déclencher l'Ajax
-
-        // Nettoyage de l'interface : On purge la barre de pagination classique si présente
-        const targetTable = document.querySelector(this.selector);
-        if (targetTable) {
-            const containerId = `pagination-top-${targetTable.id || 'default'}`;
-            const pContainer = document.getElementById(containerId);
-            if (pContainer) {
-                pContainer.remove();
-            }
-        }
-        delete this.config.paginationElement;
-
-        return this;
     }
 }

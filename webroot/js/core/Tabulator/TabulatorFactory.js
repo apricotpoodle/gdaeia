@@ -23,7 +23,7 @@ export class TabulatorFactory {
     static _createBaseGrid(selector) {
         return new TabulatorBuilder(selector)
             .enableStatePersistence() // Mémorisation locale
-            .setContinuousScroll(40)  // 💡 NOUVEAU STANDARD : Défilement infini par lots de 40
+            .setContinuousScroll(20)  // 💡 NOUVEAU STANDARD : Défilement infini par lots de 20
             ;
     }
 
@@ -52,8 +52,12 @@ export class TabulatorFactory {
             .setController('users')
             .addActions(['impersonate'])
             // .disablePagination() // < --- SUPPRIMÉ : On veut conserver les 20 lignes!
-            // .setHeight("calc(100vh - 180px)") // <--- AJOUT : Bloque la grille avant le bas de l'écran
-            .setHeight("100%)") // 100% du parent flexbox
+            // .setHeight("100%)") // 100% du parent flexbox
+            // 💡 LA FENÊTRE : Il FAUT une hauteur absolue pour forcer l'ascenseur INTERNE.
+            // Si Flexbox bugue, utilise un calc strict pour garantir l'apparition de l'ascenseur.
+            .setHeight("calc(100vh - 180px)") // <--- AJOUT : Bloque la grille avant le bas de l'écran
+            // .setHeight("calc(100vh - 220px)")
+            // .setHeight("calc(100vh)")
             .setColumns([
                 ColumnsFactory.id({ visible: true }),
                 ColumnsFactory.text("firstname", "Prénom"),
