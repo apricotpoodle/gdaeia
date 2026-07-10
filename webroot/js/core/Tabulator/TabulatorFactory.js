@@ -24,6 +24,11 @@ export class TabulatorFactory {
         return new TabulatorBuilder(selector)
             .enableStatePersistence() // Mémorisation locale
             .setContinuousScroll(20)  // 💡 NOUVEAU STANDARD : Défilement infini par lots de 20
+            // 💡 Applique une règle de base à toutes les colonnes de la table
+            .setColumnDefaults({
+                widthGrow: 1,
+                tooltip: true // (Exemple : active les infobulles partout par défaut)
+            })
             ;
     }
 

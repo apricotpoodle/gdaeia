@@ -9,7 +9,8 @@ export class ColumnBuilder {
             field: field,
             title: title,
             headerSort: true,           // Active le tri sur l'entête
-            headerSortTristate: true,  // Active le comportement Tristate (Asc -> Desc -> Limpide)
+            headerSortTristate: true,   // Active le comportement Tristate (Asc -> Desc -> Limpide)
+            widthGrow: 3,               // Toutes les colonens s'étirent par défaut.
         };
     }
 

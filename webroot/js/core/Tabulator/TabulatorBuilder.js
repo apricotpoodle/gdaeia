@@ -226,13 +226,26 @@ export class TabulatorBuilder {
             return;
         }
 
+        // 💡 L'INTELLIGENCE : Calcul de la largeur stricte selon le nombre de boutons
+        // 3 boutons = ~138px / 12 boutons = ~462px
+        const buttonCount = this.actionButtons.length;
+        const calculatedWidth = Math.max(120, (buttonCount * 36) + 30);
+
         const actionColumn = {
             title: typeof ButtonFactory !== 'undefined' ? ButtonFactory.getHeaderDropdown() : 'Actions',
             field: "_actions",
             headerSort: false,
             headerFilter: false,
-            hozAlign: "left",
-            width: 240,
+            hozAlign: "right",
+            headerHozAlign: "right", // On aligne le bouton engrenage à droite
+
+            // Élasticité contrôlée
+            minWidth: calculatedWidth,      //  Protège les boutons de l'écrasement
+            maxWidth: calculatedWidth + 30, // La laisse s'arrête de grandir après avoir absorbé le gap.
+            widthGrow: 1,                   // Autorise l'absorption des pixels orphelins du gap
+            widthShrink: 0,                 // Interdit l'écrasement
+            resizable: false,               // empêche le redimensionnement
+
             formatter: (cell) => {
                 let html = '<div class="d-flex justify-content-start align-items-center ps-2">';
                 const rowData = cell.getRow().getData();

@@ -31,6 +31,7 @@ export class ColumnsFactory {
                 {
                     visible: false, // Masqué par défaut
                     width: 70,      // Largeur standard pour les ids
+                    widthGrow: 0,  // Un Id n'a pas besoin de s'étirer.
                     ...overrides    // Application des surcharges utilisateur
                 }
             )
@@ -73,7 +74,10 @@ export class ColumnsFactory {
             .setHeaderFilter("list", {
                 values: { "true": "Oui", "false": "Non", "": "Tous" }
             })
-            .setOptions(overrides)
+            .setOptions({
+                widthGrow: 0,  // Un Id n'a pas besoin de s'étirer.
+                ...overrides
+            })
             .build();
     }
 
