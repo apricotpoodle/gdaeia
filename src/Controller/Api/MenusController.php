@@ -101,14 +101,14 @@ class MenusController extends AppController
                     'email' => $userWithRole->get('email'),
                     'role_name' => $userWithRole->role ? $userWithRole->role->get('name') : 'Sans Rôle',
                     'issuperuser' => (bool)$userWithRole->get('issuperuser'),
-                    'is_impersonated' => $this->getRequest()->getSession()->check('Auth.original_user_id'),
+                    'is_impersonated' => $this->Authentication->isImpersonating(),
                 ];
             } catch (\Throwable $th) {
                 $userData = [
                     'email' => $user->get('email'),
                     'role_name' => 'Utilisateur',
                     'issuperuser' => (bool)$user->get('issuperuser'),
-                    'is_impersonated' => $this->getRequest()->getSession()->check('Auth.original_user_id'),
+                    'is_impersonated' => $this->Authentication->isImpersonating(),
                 ];
             }
         }
