@@ -69,29 +69,15 @@ class UsersController extends AppController
         $adapter = new TabulatorAdapter();
         $queryParams = $this->request->getQueryParams();
 
-        // 2. Préparation de la requête avec la relation vers la table Roles
-        $query = $this->Users->find()->contain(['Roles']);
-
-        // =====================================================================
-        // 🛡️ SÉGRÉGATION DES DONNÉES (La "Vision" de l'opérateur)
-        // =====================================================================
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
 
-        if (!$currentUser->get('issuperuser')) {
-            // A. On récupère la liste des IDs des départements de l'opérateur courant
-            $myDepartmentIds = $this->Users->UserDepartments->find('myDepartmentIds', userId: $currentUser->id);
-            // B. On force la jointure : on ne garde que les utilisateurs ayant
-            // au moins un département en commun avec l'opérateur courant.
-            $query->innerJoinWith('UserDepartments', function ($q) use ($myDepartmentIds) {
-                return $q->where(['UserDepartments.department_id IN' => $myDepartmentIds]);
-            })
-                // C. Le distinct() est VITAL pour éviter les lignes en double si deux
-                // utilisateurs partagent PLUSIEURS départements en commun !
-                ->distinct(['Users.id']);
-            // dd([$myDepartmentIds->all(), $query->sql()]);
-        }
         // =====================================================================
+        // 2. PRÉPARATION & SÉGRÉGATION DES DONNÉES (La "Vision" de l'opérateur)
+        // L'ORM se charge d'appliquer les règles métiers complexes via le Finder.
+        // =====================================================================
+        $query = $this->Users->find('visibleTo', user: $currentUser)
+            ->contain(['Roles']);
 
         // 3. Traduction des tris et filtres Tabulator vers la requête SQL
         $query = $adapter->adaptRequest($this->request, $query);

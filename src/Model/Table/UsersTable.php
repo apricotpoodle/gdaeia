@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Table;
@@ -141,5 +142,33 @@ class UsersTable extends Table
         $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
 
         return $rules;
+    }
+
+    /**
+     * Custom finder : Restreint la liste des utilisateurs à ceux visibles par l'opérateur.
+     * Les Super Admins voient tout le monde. Les autres ne voient que les membres
+     * partageant au moins un département en commun.
+     * * Utilisation : ->find('visibleTo', user: $currentUser)
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query L'objet Query de l'ORM.
+     * @param \App\Model\Entity\User $user L'opérateur courant.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findVisibleTo(SelectQuery $query, \App\Model\Entity\User $user): SelectQuery
+    {
+        // 1. Le Super Admin a une vision globale
+        if ($user->get('issuperuser')) {
+            return $query;
+        }
+
+        // 2. Utilisation de notre Finder personalisé pour obtenir le périmètre
+        $myDepartmentIds = $this->UserDepartments->find('departmentsOf', user: $user);
+
+        // 3. Application du filtre strict
+        return $query->innerJoinWith('UserDepartments', function ($q) use ($myDepartmentIds) {
+            return $q->where(['UserDepartments.department_id IN' => $myDepartmentIds]);
+            // Le distinct() est VITAL pour éviter les lignes en double si deux
+            // utilisateurs partagent PLUSIEURS départements en commun !
+        })->distinct(['Users.id']);
     }
 }
