@@ -36,8 +36,6 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
      */
     public const ALLOWED_ROLES_FOR_CREATE = [self::ROLE_ADMIN];
 
-
-
     protected array $_accessible = [
         '*' => true,
         'id' => false,
@@ -48,7 +46,6 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
         'password',
         'token'
     ];
-
 
     public function getIdentifier(): int|string|null
     {
@@ -81,34 +78,6 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
 
         return $this;
     }
-
-
-    // /**
-    //  * Application du scénario de test sur les boutons.
-    //  * @return array<string, bool>
-    //  */
-    // protected function getActionPermissions(): array
-    // {
-
-    //     return [
-    //         'view' => true,
-    //         'edit' => ($this->id % 2 === 0), // Autorisé uniquement pour les IDs pairs
-    //         'delete' => ($this->id % 2 !== 0), // Désactivé pour tout le monde
-    //         'impersonate' => ($this->id % 2 === 0), // Autorisé uniquement pour les IDs pairs
-    //     ];
-    // }
-
-    // /**
-    //  * Application du scénario de test sur les colonnes.
-    //  * @return array<string, bool>
-    //  */
-    // protected function getColumnVisibility(): array
-    // {
-    //     return [
-    //         'email' => true,
-    //         'issuperuser' => ($this->id % 2 == 0), // On force le masquage de la colonne Super Admin
-    //     ];
-    // }
 
     /**
      * automatically hash passwords when users update their password

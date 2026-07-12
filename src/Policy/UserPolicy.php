@@ -34,26 +34,31 @@ class UserPolicy
      */
     public function canIndex(IdentityInterface $identity): bool
     {
+        // Vrai si Super Admin ET que la cible n'est PAS un Super Admin
+        $user = $this->getValidUser($identity);
+        if (!$user) return false; // Par sécurité, on bloque si ce n'est pas un User valide
+
         return true;
     }
 
     /**
      * Détermine si l'opérateur a le droit de créer un utilisateur.
      *
-     * @param \Authorization\IdentityInterface $user L'opérateur connecté.
-     * @param \App\Model\Entity\User $resource L'entité utilisateur vierge à créer.
+     * @param \Authorization\IdentityInterface $identity L'opérateur connecté.
      * @return bool
      */
-    public function canAdd(IdentityInterface $user, User $resource): bool
+    public function canAdd(IdentityInterface $identity): bool
     {
-        /** @var \App\Model\Entity\User $currentUser */
-        $currentUser = $user->getOriginalData();
+        // Vrai si Super Admin ET que la cible n'est PAS un Super Admin
+        /** @var \App\Model\Entity\User $user */
+        $user = $this->getValidUser($identity);
+        if (!$user) return false; // Par sécurité, on bloque si ce n'est pas un User valide
 
         // Règle métier : Seul un Super Admin ou un profil "Staff/RH" (par exemple, le rôle ID 1 ou 2)
         // a le droit d'accéder au formulaire de création.
-        return $currentUser->get('issuperuser') || in_array(
-            $currentUser->get('role_id'),
-            $currentUser::ALLOWED_ROLES_FOR_CREATE,
+        return $user->get('issuperuser') || in_array(
+            $user->get('role_id'),
+            $user::ALLOWED_ROLES_FOR_CREATE,
             true // true active la vérification stricte des types
         );
     }
