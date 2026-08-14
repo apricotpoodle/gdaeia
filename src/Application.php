@@ -18,7 +18,19 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Command\TestEmailCommand;
 use App\Middleware\HostHeaderMiddleware;
+use Authentication\AuthenticationService;
+use Authentication\AuthenticationServiceInterface;
+use Authentication\AuthenticationServiceProviderInterface;
+use Authentication\Identifier\PasswordIdentifier;
+use Authentication\Middleware\AuthenticationMiddleware;
+use Authorization\AuthorizationService;
+use Authorization\AuthorizationServiceInterface;
+use Authorization\AuthorizationServiceProviderInterface;
+use Authorization\Middleware\AuthorizationMiddleware;
+use Authorization\Policy\OrmResolver;
+use Cake\Console\CommandCollection;
 use Cake\Core\Configure;
 use Cake\Core\ContainerInterface;
 use Cake\Datasource\FactoryLocator;
@@ -29,19 +41,9 @@ use Cake\Http\Middleware\BodyParserMiddleware;
 use Cake\Http\Middleware\CsrfProtectionMiddleware;
 use Cake\Http\MiddlewareQueue;
 use Cake\ORM\Locator\TableLocator;
+use Cake\Routing\Router;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
-use Authentication\AuthenticationService;
-use Authentication\AuthenticationServiceInterface;
-use Authentication\AuthenticationServiceProviderInterface;
-use Authentication\Identifier\PasswordIdentifier;
-use Authentication\Middleware\AuthenticationMiddleware;
-use Cake\Routing\Router;
-use Authorization\AuthorizationService;
-use Authorization\AuthorizationServiceInterface;
-use Authorization\AuthorizationServiceProviderInterface;
-use Authorization\Middleware\AuthorizationMiddleware;
-use Authorization\Policy\OrmResolver;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -228,4 +230,19 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
 
         return new AuthorizationService($resolver);
     }
-}
+
+/**
+ * Configure les commandes CLI de l'application.
+ *
+ * @param CommandCollection $commands La collection de commandes.
+ * @return CommandCollection
+ */
+public function console(CommandCollection $commands): CommandCollection
+{
+    $commands = parent::console($commands);
+
+    // Enregistrement explicite de la commande
+    $commands->add('test_email', TestEmailCommand::class);
+
+    return $commands;
+}}
