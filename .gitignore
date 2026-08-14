@@ -70,3 +70,5 @@ localhost.key
 # Spécifiques dév IA
 context_gemini.txt
 prompt_gemini.txt
+context_cakephp5.txt
+context_tabulator.txt
