@@ -49,4 +49,4 @@ Ce dossier contient les *Architecture Decision Records* (ADR).
 | [ADR 0040](./0040-mecanisme-usurpation-identite-impersonate.md) | Mécanisme d'usurpation d'identité (Impersonate) | **Accepté** |
 | [ADR 0041](./0041-segregation-donnees-model-custom-finders.md) | Ségrégation des Données (RLS) Centralisée via Custom Finders | **Accepté** |
 | [ADR 0042](./0042-acl-granulaire-niveau-champ-formulaire.md) | ACL Granulaire au Niveau du Champ de Formulaire | **Accepté** |
-| [ADR 0044](./0044-commande-test-envoi-email.md) | Commande CLI de test d'envoi de courriels et serveur Mailpit | **Accepté** |
+| [ADR 0043](./0043-commande-test-envoi-email.md) | Commande CLI de test d'envoi de courriels et serveur Mailpit | **Accepté** |

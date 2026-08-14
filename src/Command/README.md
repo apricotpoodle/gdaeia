@@ -11,4 +11,4 @@ Ce répertoire contient les commandes en ligne de commande (CLI) accessibles via
 * **Prod** : Routage vers le serveur SMTP officiel via la configuration `app_local.php` / `.env`.
 
 ## ADR Associés
-* [ADR 0044 : Commande CLI de test d'envoi de courriels et serveur Mailpit](../../docs/adr/0044-commande-test-envoi-email.md)
+* [ADR 0043 : Commande CLI de test d'envoi de courriels et serveur Mailpit](../../docs/adr/0043-commande-test-envoi-email.md)

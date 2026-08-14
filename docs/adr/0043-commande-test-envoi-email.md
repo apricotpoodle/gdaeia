@@ -1,4 +1,4 @@
-# ADR 0044 : Commande CLI de test d'envoi de courriels et serveur d'interception Mailpit
+# ADR 0043 : Commande CLI de test d'envoi de courriels et serveur d'interception Mailpit
 
 **Date :** 14 Août 2026  
 **Statut :** Accepté
