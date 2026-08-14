@@ -7,6 +7,7 @@ use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use Search\Manager;
 
 /**
  * Applicationforms Model
@@ -60,6 +61,10 @@ class ApplicationformsTable extends Table
 
         $this->addBehavior('Timestamp');
 
+        $this->addBehavior('Search.Search', [
+            'emptyState' => false,
+        ]);
+
         $this->belongsTo('Departments', [
             'foreignKey' => 'department_id',
             'joinType' => 'INNER',
@@ -111,6 +116,55 @@ class ApplicationformsTable extends Table
         $this->hasMany('Validations', [
             'foreignKey' => 'applicationform_id',
         ]);
+    }
+
+    /**
+     * Configuration des filtres de recherche pour FriendsOfCake/Search
+     *
+     * @return \Search\Manager
+     */
+    public function searchManager(): Manager
+    {
+        $searchManager = $this->behaviors()->get('Search')->searchManager();
+
+        // Filtre exact par département
+        $searchManager->value('department_id');
+
+        // 🚀 FILTRE CALLBACK FULLTEXT PERFORMANCE (MATCH AGAINST IN BOOLEAN MODE)
+        $searchManager->callback('q', [
+            'callback' => function (SelectQuery $query, array $args, \Search\Model\Filter\Callback $filter) {
+                $searchValue = trim((string)($args['q'] ?? ''));
+                if ($searchValue === '') {
+                    return true;
+                }
+
+                // Découpage et normalisation des termes pour MySQL BOOLEAN MODE (+mot*)
+                $terms = array_filter(explode(' ', $searchValue));
+                $booleanQuery = '';
+                foreach ($terms as $term) {
+                    $term = trim($term);
+                    if ($term !== '') {
+                        $booleanQuery .= '+' . $term . '* ';
+                    }
+                }
+
+                $booleanQuery = trim($booleanQuery);
+                if ($booleanQuery === '') {
+                    return true;
+                }
+
+                // Application de la recherche FULLTEXT multi-colonnes
+                $query->where([
+                    'MATCH(Applicationforms.jobtitle, Applicationforms.applicantname, Applicationforms.qualification, Applicationforms.reasonforreplacement) AGAINST(:search IN BOOLEAN MODE)' => [
+                        'search' => $booleanQuery,
+                    ],
+                ]);
+
+                return true;
+            },
+        ]);
+
+        return $searchManager;
     }
 
     /**

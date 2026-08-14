@@ -50,3 +50,4 @@ Ce dossier contient les *Architecture Decision Records* (ADR).
 | [ADR 0041](./0041-segregation-donnees-model-custom-finders.md) | Ségrégation des Données (RLS) Centralisée via Custom Finders | **Accepté** |
 | [ADR 0042](./0042-acl-granulaire-niveau-champ-formulaire.md) | ACL Granulaire au Niveau du Champ de Formulaire | **Accepté** |
 | [ADR 0043](./0043-commande-test-envoi-email.md) | Commande CLI de test d'envoi de courriels et serveur Mailpit | **Accepté** |
+| [ADR 0044](./0044-filtre-recherche-fulltext-search-plugin.md) | Recherche FULLTEXT MySQL via Callback FriendsOfCake/Search | **Accepté** |
