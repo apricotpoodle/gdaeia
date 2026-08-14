@@ -6,17 +6,13 @@ namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
-use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
 
 /**
  * Class FieldAuthorizationsController (API)
  *
- * Exposition REST/JSON pour la gestion de la sécurité granulaire au niveau des champs.
- *
- * @package App\Controller\Api
- * @property \App\Model\Table\FieldAuthorizationsTable $FieldAuthorizations
+ * Exposition REST/JSON pour la gestion de la sécurité granulaire des champs.
  */
 class FieldAuthorizationsController extends AppController
 {
@@ -34,34 +30,33 @@ class FieldAuthorizationsController extends AppController
     /**
      * Endpoint : GET /api/field-authorizations.json
      *
-     * Distribue la liste des autorisations par champ pour la grille Tabulator.
-     *
      * @return void
      */
     public function index(): void
     {
         $this->request->allowMethod(['get']);
 
-        // Sécurité : Vérification via la Policy
-        $this->Authorization->authorize($this->FieldAuthorizations->newEmptyEntity(), 'index');
+        // 💡 Instanciation explicite de la table et vérification d'autorisation
+        $table = $this->fetchTable('FieldAuthorizations');
+        $entity = $table->newEmptyEntity();
+        
+        // C'est cet appel qui valide la vérification auprès du middleware :
+        $this->Authorization->authorize($entity, 'index');
 
         $adapter = new TabulatorAdapter();
         $queryParams = $this->request->getQueryParams();
 
-        $query = $this->FieldAuthorizations->find()
-            ->contain(['Roles']);
-
+        // Requête avec chargement de l'association Roles
+        $query = $table->find()->contain(['Roles']);
         $query = $adapter->adaptRequest($this->request, $query);
 
         $paginatedData = $this->paginate($query, [
             'limit' => (int)($queryParams['size'] ?? 20),
             'page' => (int)($queryParams['page'] ?? 1),
-            'sortableFields' => [],
+            'sortableFields' => ['id', 'resource', 'field', 'access_level', 'role_id'],
         ]);
 
-        $rightsFormatter = $this->createGridRightsFormatter();
-
-        $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);
+        $output = $adapter->adaptResponse($paginatedData);
 
         $this->set($output);
         $this->viewBuilder()->setOption('serialize', array_keys($output));
@@ -76,31 +71,26 @@ class FieldAuthorizationsController extends AppController
     {
         $this->request->allowMethod(['post']);
 
-        $record = $this->FieldAuthorizations->newEmptyEntity();
+        $table = $this->fetchTable('FieldAuthorizations');
+        $record = $table->newEmptyEntity();
+        
         $this->Authorization->authorize($record, 'add');
 
-        $record = $this->FieldAuthorizations->patchEntity($record, $this->request->getData());
+        $record = $table->patchEntity($record, $this->request->getData());
 
-        if ($this->FieldAuthorizations->save($record)) {
+        if ($table->save($record)) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'success' => true,
-                    'message' => __('Règle d\'autorisation enregistrée avec succès.'),
+                    'message' => __('Règle enregistrée avec succès.'),
                 ]));
-        }
-
-        $errors = $record->getErrors();
-        $message = __("Erreur lors de l'enregistrement de la règle.");
-        if (!empty($errors)) {
-            $firstError = current(reset($errors));
-            $message = (string)$firstError;
         }
 
         return $this->response->withType('application/json')
             ->withStatus(400)
             ->withStringBody(json_encode([
                 'success' => false,
-                'message' => $message,
+                'message' => __('Erreur lors de l\'enregistrement de la règle.'),
             ]));
     }
 
@@ -114,12 +104,14 @@ class FieldAuthorizationsController extends AppController
     {
         $this->request->allowMethod(['post', 'put']);
 
-        $record = $this->FieldAuthorizations->get($id);
+        $table = $this->fetchTable('FieldAuthorizations');
+        $record = $table->get($id);
+
         $this->Authorization->authorize($record, 'edit');
 
-        $record = $this->FieldAuthorizations->patchEntity($record, $this->request->getData());
+        $record = $table->patchEntity($record, $this->request->getData());
 
-        if ($this->FieldAuthorizations->save($record)) {
+        if ($table->save($record)) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'success' => true,
@@ -145,10 +137,12 @@ class FieldAuthorizationsController extends AppController
     {
         $this->request->allowMethod(['post', 'delete']);
 
-        $record = $this->FieldAuthorizations->get($id);
+        $table = $this->fetchTable('FieldAuthorizations');
+        $record = $table->get($id);
+
         $this->Authorization->authorize($record, 'delete');
 
-        if ($this->FieldAuthorizations->delete($record)) {
+        if ($table->delete($record)) {
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode([
                     'success' => true,
@@ -167,29 +161,31 @@ class FieldAuthorizationsController extends AppController
     /**
      * Endpoint : GET /api/field-authorizations/get-resources-and-fields.json
      *
-     * Fournit les métadonnées pour hydrater les formulaires d'administration :
-     * - Liste des Rôles
-     * - Liste des Ressources (tables/modèles) et de leurs colonnes actives
-     *
      * @return void
      */
-    public function getResourcesAndFields(): void
+public function getResourcesAndFields(): void
     {
         $this->request->allowMethod(['get']);
-        $this->Authorization->authorize($this->FieldAuthorizations->newEmptyEntity(), 'index');
 
-        // 1. Liste des Rôles
+        $table = $this->fetchTable('FieldAuthorizations');
+        $this->Authorization->authorize($table->newEmptyEntity(), 'index');
+
         $rolesTable = TableRegistry::getTableLocator()->get('Roles');
         $roles = $rolesTable->find('list', keyField: 'id', valueField: 'name')->toArray();
 
-        // 2. Mappage dynamique des ressources et de leurs colonnes
-        $resources = [
-            'Users' => $this->getColumnsFromTable('Users'),
-            'Applicationforms' => $this->getColumnsFromTable('Applicationforms'),
-            'Departments' => $this->getColumnsFromTable('Departments'),
-        ];
+        // Introspection sécurisée table par table
+        $resources = [];
+        foreach (['Users', 'Applicationforms', 'Departments'] as $tableName) {
+            try {
+                $locator = TableRegistry::getTableLocator();
+                if ($locator->exists($tableName) || class_exists("App\\Model\\Table\\{$tableName}Table")) {
+                    $resources[$tableName] = $locator->get($tableName)->getSchema()->columns();
+                }
+            } catch (\Throwable $e) {
+                // Ignore silencieusement si la table n'est pas instanciable
+            }
+        }
 
-        // 3. Niveaux d'accès valides
         $accessLevels = [
             'EDIT' => __('Édition (Complet)'),
             'VIEW' => __('Lecture Seule'),
@@ -203,16 +199,20 @@ class FieldAuthorizationsController extends AppController
     /**
      * Extrait la liste des colonnes d'une table donnée.
      *
-     * @param string $tableName Nom de la table ORM.
+     * @param string $tableName
      * @return array<string>
      */
     private function getColumnsFromTable(string $tableName): array
     {
         try {
-            $table = TableRegistry::getTableLocator()->get($tableName);
-            return $table->getSchema()->columns();
+            $locator = TableRegistry::getTableLocator();
+            if ($locator->exists($tableName) || class_exists("App\\Model\\Table\\{$tableName}Table")) {
+                return $locator->get($tableName)->getSchema()->columns();
+            }
         } catch (\Throwable $e) {
-            return [];
+            // Silence en cas d'absence
         }
+
+        return [];
     }
 }

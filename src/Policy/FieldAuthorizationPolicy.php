@@ -11,16 +11,14 @@ use Authorization\IdentityInterface;
 /**
  * Class FieldAuthorizationPolicy
  *
- * Définit les règles d'accès métier pour l'administration de la sécurité des champs.
- *
- * @package App\Policy
+ * Politiques d'accès pour la gestion de la sécurité des champs.
  */
 class FieldAuthorizationPolicy
 {
     /**
-     * Méthode utilitaire pour extraire et vérifier l'entité User.
+     * Extraire l'utilisateur connecté depuis l'identité.
      *
-     * @param \Authorization\IdentityInterface $identity L'identité connectée.
+     * @param \Authorization\IdentityInterface $identity
      * @return \App\Model\Entity\User|null
      */
     private function getValidUser(IdentityInterface $identity): ?User
@@ -31,9 +29,9 @@ class FieldAuthorizationPolicy
     }
 
     /**
-     * Vérifie si l'utilisateur a le droit de lister les règles de sécurité.
+     * Autorisation pour la liste (index)
      *
-     * @param \Authorization\IdentityInterface $identity L'opérateur connecté.
+     * @param \Authorization\IdentityInterface $identity
      * @return bool
      */
     public function canIndex(IdentityInterface $identity): bool
@@ -44,9 +42,23 @@ class FieldAuthorizationPolicy
     }
 
     /**
-     * Vérifie si l'utilisateur a le droit d'ajouter une règle de sécurité.
+     * Autorisation pour l'affichage d'un élément (view)
      *
-     * @param \Authorization\IdentityInterface $identity L'opérateur connecté.
+     * @param \Authorization\IdentityInterface $identity
+     * @param \App\Model\Entity\FieldAuthorization $record
+     * @return bool
+     */
+    public function canView(IdentityInterface $identity, FieldAuthorization $record): bool
+    {
+        $user = $this->getValidUser($identity);
+
+        return $user !== null && (bool)$user->get('issuperuser');
+    }
+
+    /**
+     * Autorisation pour l'ajout (add)
+     *
+     * @param \Authorization\IdentityInterface $identity
      * @return bool
      */
     public function canAdd(IdentityInterface $identity): bool
@@ -57,10 +69,10 @@ class FieldAuthorizationPolicy
     }
 
     /**
-     * Vérifie si l'utilisateur a le droit d'éditer une règle de sécurité.
+     * Autorisation pour l'édition (edit)
      *
-     * @param \Authorization\IdentityInterface $identity L'opérateur connecté.
-     * @param \App\Model\Entity\FieldAuthorization $record La règle ciblée.
+     * @param \Authorization\IdentityInterface $identity
+     * @param \App\Model\Entity\FieldAuthorization $record
      * @return bool
      */
     public function canEdit(IdentityInterface $identity, FieldAuthorization $record): bool
@@ -71,10 +83,10 @@ class FieldAuthorizationPolicy
     }
 
     /**
-     * Vérifie si l'utilisateur a le droit de supprimer une règle de sécurité.
+     * Autorisation pour la suppression (delete)
      *
-     * @param \Authorization\IdentityInterface $identity L'opérateur connecté.
-     * @param \App\Model\Entity\FieldAuthorization $record La règle ciblée.
+     * @param \Authorization\IdentityInterface $identity
+     * @param \App\Model\Entity\FieldAuthorization $record
      * @return bool
      */
     public function canDelete(IdentityInterface $identity, FieldAuthorization $record): bool

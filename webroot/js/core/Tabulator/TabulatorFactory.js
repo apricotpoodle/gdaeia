@@ -76,4 +76,32 @@ export class TabulatorFactory {
             ])
             .build();
     }
+
+    static createFieldAuthorizationsGrid(selector = "#fieldauthorizations-grid") {
+        return this._createActionGrid(selector)
+            .setAjaxSource('/api/field-authorizations.json')
+            .setController('field-authorizations')
+            .setHeight('calc(100vh - 240px)')
+            .setColumns([
+                { title: 'ID', field: 'id', width: 70 },
+                { 
+                    title: 'Rôle', 
+                    field: 'role.name', 
+                    formatter: (cell) => cell.getRow().getData().role?.name || 'N/A'
+                },
+                { title: 'Ressource', field: 'resource', headerFilter: 'input' },
+                { title: 'Champ', field: 'field', headerFilter: 'input' },
+                { 
+                    title: 'Niveau d\'Accès', 
+                    field: 'access_level',
+                    formatter: (cell) => {
+                        const val = cell.getValue();
+                        const classes = { 'EDIT': 'bg-success', 'VIEW': 'bg-info text-dark', 'NONE': 'bg-danger' };
+                        return `<span class="badge ${classes[val] || 'bg-secondary'}">${val || 'N/A'}</span>`;
+                    }
+                }
+            ])
+            .setWithActions(['edit', 'delete'])
+            .build();
+    }
 }

@@ -1,14 +1,20 @@
-import { TabulatorBuilder } from '../../core/TabulatorBuilder.js';
-import { TabulatorObserver } from '../../core/TabulatorObserver.js';
+// ==============================================================================
+// Fichier : webroot/js/views/FieldAuthorizations/index.js
+// Rôle : Orchestrateur de la vue Index des Autorisations de Champs
+// ==============================================================================
 
-/**
- * Orchestrateur de vue pour l'administration des FieldAuthorizations.
- */
-document.addEventListener('DOMContentLoaded', async () => {
-    const tableSelector = '#field-authorizations-table';
-    let metadata = { roles: {}, resources: {}, accessLevels: {} };
+import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js';
+import { globalTabulatorObserver } from '../../core/Tabulator/TabulatorObserver.js';
+import { FlashManager } from '../../core/FlashManager.js';
 
-    // 1. Récupération des métadonnées pour hydrater les selects
+// 1. Instanciation directe via la Factory
+const fieldAuthTable = TabulatorFactory.createFieldAuthorizationsGrid("#fieldauthorizations-grid");
+
+// Métadonnées globales pour alimenter les listes déroulantes de la modale
+let metadata = { roles: {}, resources: {}, accessLevels: {} };
+
+// Chargement asynchrone des métadonnées
+(async () => {
     try {
         const response = await fetch('/api/field-authorizations/get-resources-and-fields.json');
         if (response.ok) {
@@ -16,168 +22,137 @@ document.addEventListener('DOMContentLoaded', async () => {
             populateFormSelects(metadata);
         }
     } catch (e) {
-        console.error('Erreur lors du chargement des métadonnées :', e);
+        console.error('Erreur chargement métadonnées :', e);
     }
+})();
 
-    // 2. Construction de la grille Tabulator
-    const grid = new TabulatorBuilder(tableSelector)
-        .setController('field-authorizations')
-        .setContinuousScroll(40)
-        .setHeight('calc(100vh - 240px)')
-        .setColumns([
-            { title: 'ID', field: 'id', width: 70, sorter: 'number' },
-            { 
-                title: 'Rôle', 
-                field: 'role.name', 
-                headerFilter: 'select', 
-                headerFilterParams: { values: metadata.roles } 
-            },
-            { 
-                title: 'Ressource', 
-                field: 'resource', 
-                headerFilter: 'input' 
-            },
-            { 
-                title: 'Champ', 
-                field: 'field', 
-                headerFilter: 'input' 
-            },
-            { 
-                title: 'Niveau d\'Accès', 
-                field: 'access_level', 
-                headerFilter: 'select',
-                headerFilterParams: { values: metadata.accessLevels },
-                formatter: (cell) => {
-                    const val = cell.getValue();
-                    let badgeClass = 'bg-secondary';
-                    if (val === 'EDIT') badgeClass = 'bg-success';
-                    if (val === 'VIEW') badgeClass = 'bg-info text-dark';
-                    if (val === 'NONE') badgeClass = 'bg-danger';
-                    return `<span class="badge ${badgeClass}">${val}</span>`;
-                }
-            }
-        ])
-        .setWithActions(['edit', 'delete'])
-        .build();
+// 2. Écouteurs d'événements via le canal Pub/Sub global
+if (globalTabulatorObserver) {
 
-    // 3. Écoute des événements de ligne (Observer)
-    const observer = new TabulatorObserver(tableSelector);
-
-    observer.on('edit', (row) => {
-        openModalForEdit(row.getData());
+    // Action : Ouvrir la modale pour Ajouter
+    globalTabulatorObserver.subscribe('#fieldauthorizations-grid:action:create', () => {
+        openModalForCreate();
     });
 
-    observer.on('delete', async (row) => {
-        const data = row.getData();
-        if (confirm(`Supprimer la règle pour ${data.resource}.${data.field} ?`)) {
+    // Action : Ouvrir la modale pour Éditer
+    globalTabulatorObserver.subscribe('#fieldauthorizations-grid:action:edit', (rule) => {
+        openModalForEdit(rule);
+    });
+
+    // Action : Supprimer une règle
+    globalTabulatorObserver.subscribe('#fieldauthorizations-grid:action:delete', async (rule) => {
+        if (confirm(`⚠️ Voulez-vous supprimer la règle pour ${rule.resource}.${rule.field} ?`)) {
             try {
-                const res = await fetch(`/api/field-authorizations/delete/${data.id}.json`, {
+                const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
+                if (!csrfToken) throw new Error("Jeton CSRF manquant.");
+
+                const response = await fetch(`/api/field-authorizations/delete/${rule.id}.json`, {
                     method: 'POST',
-                    headers: { 'X-CSRF-Token': getCsrfToken() }
+                    headers: {
+                        'X-CSRF-Token': csrfToken,
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
                 });
-                if (res.ok) {
-                    grid.replaceData();
+
+                if (response.ok) {
+                    fieldAuthTable.deleteRow(rule.id);
+                    FlashManager.success(`Règle pour <strong>${rule.resource}.${rule.field}</strong> supprimée avec succès.`);
+                } else {
+                    let serverMessage = `Erreur serveur (Code ${response.status})`;
+                    try {
+                        const errorPayload = await response.json();
+                        if (errorPayload && errorPayload.message) serverMessage = errorPayload.message;
+                    } catch (e) {}
+                    throw new Error(serverMessage);
                 }
-            } catch (err) {
-                alert('Erreur lors de la suppression.');
+            } catch (error) {
+                console.error("Erreur suppression :", error);
+                FlashManager.error(`<strong>Action refusée :</strong> ${error.message}`);
             }
         }
     });
+}
 
-    // 4. Gestion de la Modale de Saisie
-    const modalEl = document.getElementById('ruleModal');
-    const modal = new bootstrap.Modal(modalEl);
-    const form = document.getElementById('ruleForm');
+// 3. Gestion de la Modale Bootstrap & Formulaire
+const modalEl = document.getElementById('ruleModal');
+const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+const form = document.getElementById('ruleForm');
 
-    document.getElementById('btn-add-rule')?.addEventListener('click', () => {
-        form.reset();
-        document.getElementById('rule-id').value = '';
-        document.getElementById('ruleModalLabel').textContent = 'Nouvelle Règle';
-        triggerResourceChange();
-        modal.show();
-    });
+document.getElementById('btn-add-rule')?.addEventListener('click', () => {
+    openModalForCreate();
+});
 
-    document.getElementById('rule-resource')?.addEventListener('change', () => {
-        triggerResourceChange();
-    });
+document.getElementById('rule-resource')?.addEventListener('change', () => {
+    triggerResourceChange();
+});
 
-    form?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const id = document.getElementById('rule-id').value;
-        const url = id 
-            ? `/api/field-authorizations/edit/${id}.json` 
-            : '/api/field-authorizations/add.json';
+form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('rule-id').value;
+    const url = id ? `/api/field-authorizations/edit/${id}.json` : '/api/field-authorizations/add.json';
+    const payload = Object.fromEntries(new FormData(form).entries());
 
-        const formData = new FormData(form);
-        const payload = Object.fromEntries(formData.entries());
+    try {
+        const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken || '' 
+            },
+            body: JSON.stringify(payload)
+        });
 
-        try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': getCsrfToken() 
-                },
-                body: JSON.stringify(payload)
-            });
-
-            const result = await res.json();
-            if (res.ok && result.success) {
-                modal.hide();
-                grid.replaceData();
-            } else {
-                alert(result.message || 'Erreur lors de l\'enregistrement.');
-            }
-        } catch (err) {
-            alert('Erreur réseau.');
+        if (response.ok) {
+            modal?.hide();
+            fieldAuthTable.replaceData(); // Rafraîchit les données de la grille
+            FlashManager.success('Règle d\'autorisation enregistrée.');
+        } else {
+            const err = await response.json();
+            FlashManager.error(err.message || 'Erreur lors de l\'enregistrement.');
         }
-    });
-
-    function populateFormSelects(meta) {
-        const roleSelect = document.getElementById('rule-role-id');
-        const resourceSelect = document.getElementById('rule-resource');
-        const accessSelect = document.getElementById('rule-access-level');
-
-        if (roleSelect) {
-            roleSelect.innerHTML = Object.entries(meta.roles)
-                .map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
-        }
-
-        if (resourceSelect) {
-            resourceSelect.innerHTML = Object.keys(meta.resources)
-                .map(res => `<option value="${res}">${res}</option>`).join('');
-        }
-
-        if (accessSelect) {
-            accessSelect.innerHTML = Object.entries(meta.accessLevels)
-                .map(([code, label]) => `<option value="${code}">${label}</option>`).join('');
-        }
-    }
-
-    function triggerResourceChange() {
-        const selectedResource = document.getElementById('rule-resource').value;
-        const fieldSelect = document.getElementById('rule-field');
-        const columns = metadata.resources[selectedResource] || [];
-
-        if (fieldSelect) {
-            fieldSelect.innerHTML = columns
-                .map(col => `<option value="${col}">${col}</option>`).join('');
-        }
-    }
-
-    function openModalForEdit(data) {
-        document.getElementById('rule-id').value = data.id;
-        document.getElementById('rule-role-id').value = data.role_id;
-        document.getElementById('rule-resource').value = data.resource;
-        triggerResourceChange();
-        document.getElementById('rule-field').value = data.field;
-        document.getElementById('rule-access-level').value = data.access_level;
-        document.getElementById('ruleModalLabel').textContent = 'Modifier la Règle';
-        modal.show();
-    }
-
-    function getCsrfToken() {
-        const meta = document.querySelector('meta[name="csrf-token"]');
-        return meta ? meta.getAttribute('content') : '';
+    } catch (err) {
+        FlashManager.error('Erreur réseau.');
     }
 });
+
+// Helpers internes
+function openModalForCreate() {
+    form?.reset();
+    document.getElementById('rule-id').value = '';
+    triggerResourceChange();
+    modal?.show();
+}
+
+function openModalForEdit(data) {
+    document.getElementById('rule-id').value = data.id;
+    document.getElementById('rule-role-id').value = data.role_id;
+    document.getElementById('rule-resource').value = data.resource;
+    triggerResourceChange();
+    document.getElementById('rule-field').value = data.field;
+    document.getElementById('rule-access-level').value = data.access_level;
+    modal?.show();
+}
+
+function populateFormSelects(meta) {
+    if (meta.roles) {
+        document.getElementById('rule-role-id').innerHTML = Object.entries(meta.roles)
+            .map(([id, name]) => `<option value="${id}">${name}</option>`).join('');
+    }
+    if (meta.resources) {
+        document.getElementById('rule-resource').innerHTML = Object.keys(meta.resources)
+            .map(res => `<option value="${res}">${res}</option>`).join('');
+    }
+    if (meta.accessLevels) {
+        document.getElementById('rule-access-level').innerHTML = Object.entries(meta.accessLevels)
+            .map(([code, label]) => `<option value="${code}">${label}</option>`).join('');
+    }
+}
+
+function triggerResourceChange() {
+    const res = document.getElementById('rule-resource')?.value;
+    const columns = metadata.resources[res] || [];
+    document.getElementById('rule-field').innerHTML = columns
+        .map(col => `<option value="${col}">${col}</option>`).join('');
+}
