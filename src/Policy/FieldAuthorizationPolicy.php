@@ -37,8 +37,9 @@ class FieldAuthorizationPolicy
     public function canIndex(IdentityInterface $identity): bool
     {
         $user = $this->getValidUser($identity);
-
-        return $user !== null && (bool)$user->get('issuperuser');
+        $result = $user !== null && (bool)$user->get('issuperuser');
+        // dd($result);
+        return $result;
     }
 
     /**
