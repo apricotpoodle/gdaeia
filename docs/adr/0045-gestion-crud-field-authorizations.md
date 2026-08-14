@@ -1,18 +1,15 @@
-# ADR 0045 : Administration CRUD de la sécurité granulaire des champs (FieldAuthorizations)
+# ADR 0045 : Administration CRUD de la sécurité des champs (FieldAuthorizations)
 
-**Date :** 14 Août 2026  
+**Date :** 14 Août 2026
 **Statut :** Accepté
 
 ## Contexte
-La sécurité granulaire au niveau des champs (`Field-Level Security` / ADR 0042) nécessite une interface d'administration permettant aux Super Administrateurs de configurer dynamiquement les matrices d'accès `[Rôle, Ressource, Champ, Niveau d'Accès]` sans intervention en base de données.
+L'application intègre une sécurité au niveau des champs (Field-Level ACL) pilotée par la table `field_authorizations`. Les super-administrateurs ont besoin d'une interface pour configurer dynamiquement ces permissions (qui peut voir ou éditer quel champ pour quelle ressource).
 
 ## Décision
-1. **Contrôleur Web (`FieldAuthorizationsController`)** : Rendu de la coquille HTML d'administration protégée par `FieldAuthorizationPolicy::canIndex`.
-2. **API REST (`Api/FieldAuthorizationsController`)** :
-   - `index()` : Alimentation de la grille Tabulator avec filtres d'en-tête par Rôle, Ressource et Access Level.
-   - `getResourcesAndFields()` : Introspection ORM renvoyant dynamiquement les colonnes actives des tables cibles.
-   - `add()`, `edit()`, `delete()` : Endpoints de mutation sécurisés par la Policy.
-3. **IHM & JS ES6 (`webroot/js/views/FieldAuthorizations/index.js`)** : Interface réactive avec modale d'édition et synchronisation en temps réel de la grille via `TabulatorObserver`.
+1. **Routage API Exclusif** : Suivant l'ADR 0009, le contrôleur Web `FieldAuthorizationsController` ne servira que la coquille HTML. Les opérations d'ajout, modification et suppression sont déléguées à `Api\FieldAuthorizationsController`.
+2. **Skinny Controller** : Les méthodes de l'API (`add`, `edit`, `delete`) s'appuient sur l'ORM natif pour limiter la logique métier dans le contrôleur. Les vérifications de sécurité s'appuient strictement sur `FieldAuthorizationPolicy` via le composant d'autorisation.
+3. **Réponses JSON Standardisées** : Toutes les opérations de mutation (POST/PUT/DELETE) retourneront un payload standardisé `{ "success": bool, "message": string, "errors": array|null }` manipulable facilement par l'adaptateur Ajax de Tabulator.
 
-## Justification
-Cette solution complète l'ADR 0042 en offrant une gestion 100 % autonome et sécurisée de la politique d'accès par champ, entièrement intégrée à notre architecture découplée (Tabulator + API + Policy).
+## Justification (KISS & SoC)
+Déléguer la persistance à une API JSON maintient le couplage lâche exigé par Tabulator. Les opérations de persistance s'appuient nativement sur l'entité CakePHP, déléguant la validation des données au modèle `FieldAuthorizationsTable` de manière centralisée (DRY).

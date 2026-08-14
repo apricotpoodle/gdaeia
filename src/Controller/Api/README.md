@@ -10,3 +10,4 @@ Ce répertoire regroupe les contrôleurs d'API exposant les ressources au format
 
 ## Liens ADR
 * [ADR 0045 : Administration CRUD de la sécurité des champs](../../docs/adr/0045-gestion-crud-field-authorizations.md)
+* [ADR 0046 : Standardisation du CRUD hybride (FieldAuthorizations)](../../docs/adr/0046-standardisation-crud-field-authorizations.md)

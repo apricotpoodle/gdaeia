@@ -1,62 +1,40 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
+use Cake\Event\EventInterface;
 use Cake\Http\Response;
-use Cake\ORM\TableRegistry;
 
-/**
- * Class FieldAuthorizationsController (API)
- *
- * Exposition REST/JSON pour la gestion de la sécurité granulaire des champs.
- */
 class FieldAuthorizationsController extends AppController
 {
-    /**
-     * Initialisation du contrôleur API.
-     *
-     * @return void
-     */
     public function initialize(): void
     {
         parent::initialize();
         $this->viewBuilder()->setClassName('Json');
     }
 
-    /**
-     * Endpoint : GET /api/field-authorizations.json
-     *
-     * @return void
-     */
     public function index(): void
     {
         $this->request->allowMethod(['get']);
-
-        // 💡 Instanciation explicite de la table et vérification d'autorisation
-        $table = $this->fetchTable('FieldAuthorizations');
-        $entity = $table->newEmptyEntity();
-        
-        // C'est cet appel qui valide la vérification auprès du middleware :
-        $this->Authorization->authorize($entity, 'index');
+        $this->Authorization->authorize($this->FieldAuthorizations->newEmptyEntity(), 'index');
 
         $adapter = new TabulatorAdapter();
         $queryParams = $this->request->getQueryParams();
 
-        // Requête avec chargement de l'association Roles
-        $query = $table->find()->contain(['Roles']);
+        $query = $this->FieldAuthorizations->find()->contain(['Roles']);
         $query = $adapter->adaptRequest($this->request, $query);
 
         $paginatedData = $this->paginate($query, [
             'limit' => (int)($queryParams['size'] ?? 20),
-            'page' => (int)($queryParams['page'] ?? 1),
-            'sortableFields' => ['id', 'resource', 'field', 'access_level', 'role_id'],
+            'page'  => (int)($queryParams['page'] ?? 1),
+            'sortableFields' => [] 
         ]);
 
-        $output = $adapter->adaptResponse($paginatedData);
+        $rightsFormatter = $this->createGridRightsFormatter();
+        $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);
 
         $this->set($output);
         $this->viewBuilder()->setOption('serialize', array_keys($output));
@@ -64,155 +42,58 @@ class FieldAuthorizationsController extends AppController
 
     /**
      * Endpoint : POST /api/field-authorizations/add.json
-     *
-     * @return \Cake\Http\Response
      */
-    public function add(): Response
+    public function add(): ?Response
     {
         $this->request->allowMethod(['post']);
+        $this->Authorization->authorize($this->FieldAuthorizations->newEmptyEntity(), 'add');
 
-        $table = $this->fetchTable('FieldAuthorizations');
-        $record = $table->newEmptyEntity();
+        $fieldAuthorization = $this->FieldAuthorizations->newEmptyEntity();
+        $fieldAuthorization = $this->FieldAuthorizations->patchEntity($fieldAuthorization, $this->request->getData());
+
+        if ($this->FieldAuthorizations->save($fieldAuthorization)) {
+            return $this->response->withType('application/json')
+                ->withStringBody(json_encode(['success' => true]));
+        }
+
+        return $this->handleValidationError($fieldAuthorization);
+    }
+
+    /**
+     * Endpoint : PUT/PATCH /api/field-authorizations/edit/{id}.json
+     */
+    public function edit(string $id): ?Response
+    {
+        $this->request->allowMethod(['post', 'put', 'patch']);
         
-        $this->Authorization->authorize($record, 'add');
+        $fieldAuthorization = $this->FieldAuthorizations->get($id);
+        $this->Authorization->authorize($fieldAuthorization, 'edit');
 
-        $record = $table->patchEntity($record, $this->request->getData());
+        $fieldAuthorization = $this->FieldAuthorizations->patchEntity($fieldAuthorization, $this->request->getData());
 
-        if ($table->save($record)) {
+        if ($this->FieldAuthorizations->save($fieldAuthorization)) {
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'success' => true,
-                    'message' => __('Règle enregistrée avec succès.'),
-                ]));
+                ->withStringBody(json_encode(['success' => true]));
+        }
+
+        return $this->handleValidationError($fieldAuthorization);
+    }
+
+    /**
+     * Extraction DRY de la gestion des erreurs de validation
+     */
+    private function handleValidationError(\Cake\Datasource\EntityInterface $entity): Response
+    {
+        $errors = $entity->getErrors();
+        $message = __("Le formulaire contient des données invalides.");
+        
+        if (!empty($errors)) {
+            $firstError = current(reset($errors));
+            $message = (string)$firstError;
         }
 
         return $this->response->withType('application/json')
             ->withStatus(400)
-            ->withStringBody(json_encode([
-                'success' => false,
-                'message' => __('Erreur lors de l\'enregistrement de la règle.'),
-            ]));
-    }
-
-    /**
-     * Endpoint : PUT/POST /api/field-authorizations/edit/{id}.json
-     *
-     * @param string|null $id Identifiant de la règle.
-     * @return \Cake\Http\Response
-     */
-    public function edit(?string $id = null): Response
-    {
-        $this->request->allowMethod(['post', 'put']);
-
-        $table = $this->fetchTable('FieldAuthorizations');
-        $record = $table->get($id);
-
-        $this->Authorization->authorize($record, 'edit');
-
-        $record = $table->patchEntity($record, $this->request->getData());
-
-        if ($table->save($record)) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'success' => true,
-                    'message' => __('Règle mise à jour avec succès.'),
-                ]));
-        }
-
-        return $this->response->withType('application/json')
-            ->withStatus(400)
-            ->withStringBody(json_encode([
-                'success' => false,
-                'message' => __('Impossible de mettre à jour la règle.'),
-            ]));
-    }
-
-    /**
-     * Endpoint : DELETE /api/field-authorizations/delete/{id}.json
-     *
-     * @param string|null $id Identifiant de la règle.
-     * @return \Cake\Http\Response
-     */
-    public function delete(?string $id = null): Response
-    {
-        $this->request->allowMethod(['post', 'delete']);
-
-        $table = $this->fetchTable('FieldAuthorizations');
-        $record = $table->get($id);
-
-        $this->Authorization->authorize($record, 'delete');
-
-        if ($table->delete($record)) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
-                    'success' => true,
-                    'message' => __('Règle supprimée avec succès.'),
-                ]));
-        }
-
-        return $this->response->withType('application/json')
-            ->withStatus(400)
-            ->withStringBody(json_encode([
-                'success' => false,
-                'message' => __('Impossible de supprimer la règle.'),
-            ]));
-    }
-
-    /**
-     * Endpoint : GET /api/field-authorizations/get-resources-and-fields.json
-     *
-     * @return void
-     */
-public function getResourcesAndFields(): void
-    {
-        $this->request->allowMethod(['get']);
-
-        $table = $this->fetchTable('FieldAuthorizations');
-        $this->Authorization->authorize($table->newEmptyEntity(), 'index');
-
-        $rolesTable = TableRegistry::getTableLocator()->get('Roles');
-        $roles = $rolesTable->find('list', keyField: 'id', valueField: 'name')->toArray();
-
-        // Introspection sécurisée table par table
-        $resources = [];
-        foreach (['Users', 'Applicationforms', 'Departments'] as $tableName) {
-            try {
-                $locator = TableRegistry::getTableLocator();
-                if ($locator->exists($tableName) || class_exists("App\\Model\\Table\\{$tableName}Table")) {
-                    $resources[$tableName] = $locator->get($tableName)->getSchema()->columns();
-                }
-            } catch (\Throwable $e) {
-                // Ignore silencieusement si la table n'est pas instanciable
-            }
-        }
-
-        $accessLevels = [
-            'EDIT' => __('Édition (Complet)'),
-            'VIEW' => __('Lecture Seule'),
-            'NONE' => __('Masqué / Interdit'),
-        ];
-
-        $this->set(compact('roles', 'resources', 'accessLevels'));
-        $this->viewBuilder()->setOption('serialize', ['roles', 'resources', 'accessLevels']);
-    }
-
-    /**
-     * Extrait la liste des colonnes d'une table donnée.
-     *
-     * @param string $tableName
-     * @return array<string>
-     */
-    private function getColumnsFromTable(string $tableName): array
-    {
-        try {
-            $locator = TableRegistry::getTableLocator();
-            if ($locator->exists($tableName) || class_exists("App\\Model\\Table\\{$tableName}Table")) {
-                return $locator->get($tableName)->getSchema()->columns();
-            }
-        } catch (\Throwable $e) {
-            // Silence en cas d'absence
-        }
-
-        return [];
+            ->withStringBody(json_encode(['success' => false, 'message' => $message]));
     }
 }
