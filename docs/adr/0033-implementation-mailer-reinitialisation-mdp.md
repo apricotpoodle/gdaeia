@@ -13,3 +13,6 @@ Le flux de récupération de mot de passe nécessite l'envoi de courriels transa
 
 ## Justification
 Cette séparation garantit un code hautement testable et maintenable. Toute modification de l'identité d'expédition de l'entreprise s'opère dans l'unique fichier `AppMailer`, se propageant instantanément à l'ensemble du système (KISS & DRY).
+
+## Sécurité du flux de réinitialisation
+- Les actions `forgotPassword` et `resetPassword` sont déclarées explicite dans `UsersController::beforeFilter()` avec `allowUnauthenticated()` et `skipAuthorization()` afin de permettre aux utilisateurs non authentifiés de réinitialiser leur mot de passe sans être redirigés vers l'IHM de login.

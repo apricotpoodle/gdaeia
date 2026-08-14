@@ -37,9 +37,9 @@ class UsersController extends AppController
         parent::beforeFilter($event);
 
         // 1. Autoriser le plugin Authentication à ne pas bloquer ces pages
-        $this->Authentication->allowUnauthenticated(['login', 'register', 'verify', 'forgotPassword']);
+        $this->Authentication->allowUnauthenticated(['login', 'register', 'verify', 'forgotPassword','resetPassword']);
         // 2. CORRECTION : Autoriser le plugin Authorization à ignorer ces actions
-        $this->Authorization->skipAuthorization(['login', 'register', 'verify', 'forgotPassword']);
+        $this->Authorization->skipAuthorization(['login', 'register', 'verify', 'forgotPassword','resetPassword']);
     }
 
     /**
