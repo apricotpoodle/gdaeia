@@ -121,7 +121,6 @@ class UserPolicy
         return true;
     }
 
-
     /**
      * Check if a user (even unauthenticated) can access the forgot password pipeline.
      *
