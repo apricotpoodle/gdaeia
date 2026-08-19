@@ -87,7 +87,7 @@ class ApplicationformPolicy
         if (!$user) return false;
 
         // Le Super Admin ou le créateur de la demande
-        return $user->get('issuperuser') || $applicationform->user_id === $user->id;
+        return $user->get('issuperuser') || $applicationform->user_id === $user->id || in_array($user->get('role_id'),Applicationform::ALLOWED_ROLES_FOR_EDIT);
     }
 
     /**

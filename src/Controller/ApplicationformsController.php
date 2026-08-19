@@ -26,8 +26,15 @@ class ApplicationformsController extends AppController
     public function view(string $id): void
     {
         $applicationform = $this->Applicationforms->get($id, contain: [
-            'Departments', 'Users', 'Contracttypes', 'Hiringreasons',
-            'Budgetfeatures', 'Professionalcategories', 'Worktimes', 'Periods', 'Yesnos'
+            'Departments',
+            'Users',
+            'Contracttypes',
+            'Hiringreasons',
+            'Budgetfeatures',
+            'Professionalcategories',
+            'Worktimes',
+            'Periods',
+            'Yesnos'
         ]);
         $this->Authorization->authorize($applicationform, 'view');
 

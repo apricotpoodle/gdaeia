@@ -212,7 +212,10 @@ export class TabulatorBuilder {
         this.config.persistence = {
             sort: true,
             filter: true,
-            headerFilter: true
+            headerFilter: true,
+            group: true,
+            page: true,
+            columns: ["width", "visible", "title"]
         };
 
         return this;

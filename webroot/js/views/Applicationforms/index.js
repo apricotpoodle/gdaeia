@@ -34,7 +34,8 @@ if (globalTabulatorObserver) {
     // Signal d'action : Suppression asynchrone (AJAX / Fetch) avec jeton CSRF
     globalTabulatorObserver.subscribe(`${tableSelector}:action:delete`, async (demande) => {
         const posteTitle = demande.jobtitle || `#${demande.id}`;
-        if (confirm(`⚠️ ATTENTION : Êtes-vous sûr de vouloir supprimer la demande "${posteTitle}" ?`)) {
+        const demandeId = demande.id;
+        if (confirm(`⚠️ ATTENTION : Êtes-vous sûr de vouloir supprimer définitivement la demande n° ${demandeId} ("${posteTitle}") ?`)) {
             try {
                 // Extraction du jeton CSRF injecté par le Layout principal
                 const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
