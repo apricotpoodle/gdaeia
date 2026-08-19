@@ -43,7 +43,6 @@ export class TabulatorBuilder {
             placeholder: "<div class='tabulator-empty-msg p-4 text-center text-muted'>Aucune donnée trouvée !</div>",
             ajaxLoader: true,
             ajaxLoaderLoading: "<div class='tabulator-loading-msg'><span>Chargement des données en cours...</span></div>",
-            // 💡 FIX : Défini ici par défaut (Sera conservé par l'infrastructure)
             paginationPosition: "top",
             locale: "fr-fr",
             langs: {
@@ -74,12 +73,86 @@ export class TabulatorBuilder {
         };
     }
 
+    // =========================================================================
+    // 💡 EXTENSIBILITÉ & SCHÉMAS D'OPTIONS (ADR - Configuration Fluide)
+    // =========================================================================
+
+    /**
+     * Schéma 1.a : Définit une seule option brute dans la configuration.
+     * @param {string} key - La clé d'option Tabulator (ex: "autoResize")
+     * @param {*} value - La valeur à assigner
+     * @returns {this} L'instance du builder pour le chaînage.
+     */
+    setOption(key, value) {
+        this.config[key] = value;
+        return this;
+    }
+
+    /**
+     * Schéma 1.b : Remplace ou écrase la configuration globale par un nouvel objet d'options.
+     * @param {Object} optionsObject - Objet contenant les options brutes Tabulator.
+     * @returns {this} L'instance du builder pour le chaînage.
+     */
+    setOptions(optionsObject = {}) {
+        this.config = { ...this.config, ...optionsObject };
+        return this;
+    }
+
+    /**
+     * Schéma 2 : Fusionne des options personnalisées complémentaires sans écraser la configuration existante.
+     * Alias récursif pour `addOptions`.
+     * @param {Object} options - Options supplémentaires à fusionner.
+     * @returns {this} L'instance du builder pour le chaînage.
+     */
+    setExtraOptions(options = {}) {
+        return this.addOptions(options);
+    }
+
+    /**
+     * Schéma 2 : Fusionne des options personnalisées complémentaires avec les options par défaut.
+     * @param {Object} options - Options supplémentaires à fusionner.
+     * @returns {this} L'instance du builder pour le chaînage.
+     */
+    addOptions(options = {}) {
+        Object.keys(options).forEach(key => {
+            if (typeof options[key] === 'object' && options[key] !== null && !Array.isArray(options[key])) {
+                this.config[key] = { ...(this.config[key] || {}), ...options[key] };
+            } else {
+                this.config[key] = options[key];
+            }
+        });
+        return this;
+    }
+
+    /**
+     * Schéma 3 (Fluent) : Active ou désactive le redimensionnement automatique en fonction du conteneur.
+     * @param {boolean} flag - True pour activer, False pour désactiver (ex: pour éviter les boucles Flexbox).
+     * @returns {this} L'instance du builder pour le chaînage.
+     */
+    setAutoResize(flag = true) {
+        this.config.autoResize = flag;
+        return this;
+    }
+
+    /**
+     * Schéma 3 (Fluent) : Définit la disposition des colonnes.
+     * @param {string} layoutMode - Ex: "fitColumns", "fitData", "fitDataFill"
+     * @returns {this} L'instance du builder pour le chaînage.
+     */
+    setLayout(layoutMode) {
+        this.config.layout = layoutMode;
+        return this;
+    }
+
+    // =========================================================================
+    // MÉTHODES STANDARD DU BUILDER
+    // =========================================================================
+
     /**
      * Force le positionnement du système de pagination et des contrôles tout en haut de la grille.
      * @returns {this} L'instance du builder pour le chaînage.
      */
     setControlsAtTop() {
-        // 1. Détection ou création d'un conteneur dédié à la pagination haute
         const targetTable = document.querySelector(this.selector);
         if (targetTable) {
             let containerId = `pagination-top-${targetTable.id || 'default'}`;
@@ -88,14 +161,11 @@ export class TabulatorBuilder {
             if (!pContainer) {
                 pContainer = document.createElement("div");
                 pContainer.id = containerId;
-                // Classes de style Bootstrap pour rendre le bandeau propre et compact en haut
                 pContainer.className = "tabulator-controls-top-wrapper mb-2 p-2 bg-light border rounded shadow-sm d-flex justify-content-between align-items-center";
 
-                // Insertion physique immédiate juste AVANT l'élément de la table
                 targetTable.parentNode.insertBefore(pContainer, targetTable);
             }
 
-            // 2. Assignation de l'élément cible dans la configuration de Tabulator
             this.config.paginationElement = pContainer;
         }
         return this;
@@ -103,28 +173,22 @@ export class TabulatorBuilder {
 
     /**
      * Désactive, retire et rend complètement invisible le système de pagination et ses contrôles.
-     * Supprime physiquement le conteneur HTML de pagination haute s'il a été injecté au-dessus de la table.
      * @returns {this} L'instance du builder pour le chaînage.
      */
     disablePagination() {
         this.config.pagination = false;
-        // 💡 OPTIMISATION FLUIDE : Remplace "400px" par "100%" pour occuper tout l'espace disponible
         this.config.height = "100%";
 
-        // 💡 LE FIX ABSOLU : Nettoyage physique du DOM
-        // On cherche le conteneur que 'setControlsAtTop' a pu injecter juste avant
         const targetTable = document.querySelector(this.selector);
         if (targetTable) {
             const containerId = `pagination-top-${targetTable.id || 'default'}`;
             const pContainer = document.getElementById(containerId);
 
-            // S'il existe, on le supprime définitivement du DOM pour faire disparaître la bande grise
             if (pContainer) {
                 pContainer.remove();
             }
         }
 
-        // Nettoyage complet des attributs de configuration devenus obsolètes
         if (this.config.paginationElement) {
             delete this.config.paginationElement;
         }
@@ -177,7 +241,7 @@ export class TabulatorBuilder {
     }
 
     setRemotePagination(size = 20) {
-        this.config.pagination = true; // 💡 Note : en Tabulator 5+, préférez 'remote' au lieu de true si besoin
+        this.config.pagination = true;
         this.config.paginationMode = "remote";
         this.config.sortMode = "remote";
         this.config.filterMode = "remote";
@@ -218,6 +282,45 @@ export class TabulatorBuilder {
     }
 
     /**
+     * Définit la hauteur de la grille pour forcer l'apparition de l'ascenseur interne
+     * de Tabulator et empêcher le défilement de la fenêtre globale du navigateur.
+     * @param {string} height - Valeur CSS (ex: "100%", "400px", "calc(100vh - 150px)")
+     * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
+     */
+    setHeight(height) {
+        this.config.height = height;
+        return this;
+    }
+
+    /**
+     * Active le défilement infini (Progressive Loading).
+     * Remplace la pagination classique par un chargement transparent au défilement.
+     * @param {number} size - Nombre d'enregistrements récupérés par requête Ajax.
+     * @returns {this} L'instance du builder pour le chaînage.
+     */
+    setContinuousScroll(size = 20) {
+        this.config.paginationMode = "remote";
+        this.config.filterMode = "remote";
+        this.config.sortMode = "remote";
+        this.config.paginationSize = size;
+        this.config.dataSendParams = { "sort": "sorters", "filter": "filters" };
+
+        this.config.progressiveLoad = "scroll";
+        this.config.progressiveLoadScrollMargin = 150;
+        this.config.ajaxLoader = false;
+
+        const targetTable = document.querySelector(this.selector);
+        if (targetTable) {
+            const containerId = `pagination-top-${targetTable.id || 'default'}`;
+            const pContainer = document.getElementById(containerId);
+            if (pContainer) pContainer.remove();
+        }
+        delete this.config.paginationElement;
+
+        return this;
+    }
+
+    /**
      * Compile et injecte la colonne "Actions" avec routage dynamique et gestion des droits.
      * @private
      */
@@ -226,8 +329,6 @@ export class TabulatorBuilder {
             return;
         }
 
-        // 💡 L'INTELLIGENCE : Calcul de la largeur stricte selon le nombre de boutons
-        // 3 boutons = ~138px / 12 boutons = ~462px
         const buttonCount = this.actionButtons.length;
         const calculatedWidth = Math.max(120, (buttonCount * 36) + 30);
 
@@ -237,16 +338,12 @@ export class TabulatorBuilder {
             headerSort: false,
             headerFilter: false,
             hozAlign: "right",
-            headerHozAlign: "right", // On aligne le bouton engrenage à droite
-
-            // Élasticité contrôlée
-            minWidth: calculatedWidth,      //  Protège les boutons de l'écrasement
-            maxWidth: calculatedWidth + 30, // La laisse s'arrête de grandir après avoir absorbé le gap.
-            widthGrow: 1,                   // Autorise l'absorption des pixels orphelins du gap
+            headerHozAlign: "right",
+            minWidth: calculatedWidth,
+            maxWidth: calculatedWidth + 30,
+            widthGrow: 1,
             widthShrink: 0,
-
-            // Interdit l'écrasement
-            resizable: false,               // empêche le redimensionnement
+            resizable: false,
 
             formatter: (cell) => {
                 let html = '<div class="d-flex justify-content-start align-items-center ps-2">';
@@ -369,65 +466,15 @@ export class TabulatorBuilder {
     }
 
     /**
-      * Définit la hauteur de la grille pour forcer l'apparition de l'ascenseur interne
-      * de Tabulator et empêcher le défilement de la fenêtre globale du navigateur.
-      * @param {string} height - Valeur CSS (ex: "100%", "400px", "calc(100vh - 150px)")
-      * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
-      */
-    setHeight(height) {
-        this.config.height = height;
-        return this;
-    }
-
-    /**
-        * Active le défilement infini (Progressive Loading).
-        * Remplace la pagination classique par un chargement transparent au défilement.
-        * @param {number} size - Nombre d'enregistrements récupérés par requête Ajax.
-        * @returns {this} L'instance du builder pour le chaînage.
-        */
-    setContinuousScroll(size = 20) {
-        // 💡 FIX 1 : Ne JAMAIS mettre pagination: true ici. Conflit majeur !
-        this.config.paginationMode = "remote";
-        this.config.filterMode = "remote";
-        this.config.sortMode = "remote";
-        this.config.paginationSize = size;
-
-        // 🚨 LE FIX EST ICI : Application de l'ADR 0017 (Évite le crash preg_match de CakePHP)
-        // On force Tabulator à utiliser les mots "sorters" et "filters" dans l'URL
-        this.config.dataSendParams = { "sort": "sorters", "filter": "filters" };
-
-        // Activation stricte selon la documentation v6.x
-        this.config.progressiveLoad = "scroll";
-        this.config.progressiveLoadScrollMargin = 150; // Marge plus serrée pour déclencher plus vite
-
-        // On désactive le loader visuel qui intercepte physiquement la molette
-        this.config.ajaxLoader = false;
-
-        // Purge du conteneur de pagination s'il existait
-        const targetTable = document.querySelector(this.selector);
-        if (targetTable) {
-            const containerId = `pagination-top-${targetTable.id || 'default'}`;
-            const pContainer = document.getElementById(containerId);
-            if (pContainer) pContainer.remove();
-        }
-        delete this.config.paginationElement;
-
-        return this;
-    }
-
-    /**
      * Finalise la construction de la grille et injecte les verrous de sécurité.
      * @returns {Tabulator} L'instance active et initialisée de Tabulator.
      */
     build() {
-        // 1. Compilation automatique de la colonne d'actions
         this._compileActionColumn();
 
-        // 💡 FIX 2 : Détection fiable pour ne PAS détruire les métadonnées (last_page)
         const isProgressive = this.config.progressiveLoad === "scroll";
         const isPaginationDisabled = !this.config.pagination && !isProgressive;
 
-        // 2. STRATÉGIE A : 'COL_HIDE'
         if (this.securityStrategy === 'COL_HIDE') {
             this.config.ajaxResponse = function (url, params, response) {
                 let rowsData = [];
@@ -437,7 +484,6 @@ export class TabulatorBuilder {
                     rowsData = response;
                 }
 
-                // On n'applique le masquage des colonnes que sur le premier lot
                 const isFirstPage = !params.page || params.page === 1;
 
                 if (isFirstPage && rowsData.length > 0) {
@@ -463,11 +509,9 @@ export class TabulatorBuilder {
                                 tableInstance.showColumn(fieldKey);
                             }
                         });
-                        // Pas de redraw(true) destructeur ici
                     }, 10);
                 }
 
-                // 💡 FIX CRUCIAL : Si progressiveLoad est actif, on renvoie l'objet complet {data, last_page}
                 if (isPaginationDisabled) {
                     return rowsData;
                 }
@@ -484,7 +528,6 @@ export class TabulatorBuilder {
             }
         }
 
-        // 3. STRATÉGIE B : 'CELL_MASK'
         if (this.securityStrategy === 'CELL_MASK') {
             const originalRowFormatter = this.config.rowFormatter;
             const placeholderText = this.maskPlaceholder;
@@ -512,14 +555,12 @@ export class TabulatorBuilder {
             };
         }
 
-        // 4. Instanciation physique du tableau
         const table = new Tabulator(this.selector, this.config);
 
         if (!this.config.ajaxURL) {
             console.warn("TabulatorBuilder: Aucune source Ajax configurée avant l'appel à build().");
         }
 
-        // 5. Attachement des événements
         table.on("rowClick", (e, row) => {
             if (typeof globalTabulatorObserver !== "undefined") {
                 globalTabulatorObserver.publish(`${this.selector}:rowClick`, row.getData());

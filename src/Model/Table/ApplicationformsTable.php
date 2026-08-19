@@ -282,4 +282,38 @@ class ApplicationformsTable extends Table
 
         return $rules;
     }
+
+    /**
+     * Custom finder : Restreint la liste des demandes à celles visibles par l'opérateur.
+     * - Les Super Admins voient tout.
+     * - Les autres ne voient que les demandes liées à un département qu'ils gèrent/observent,
+     *   ou les demandes dont ils sont les créateurs.
+     *
+     * Utilisation : ->find('visibleTo', user: $currentUser)
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query L'objet Query de l'ORM.
+     * @param \App\Model\Entity\User $user L'opérateur courant.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findVisibleTo(SelectQuery $query, \App\Model\Entity\User $user): SelectQuery
+    {
+        // 1. Le Super Admin a une vision globale (pas de filtre)
+        if ($user->get('issuperuser')) {
+            return $query;
+        }
+
+        // 2. Récupération du périmètre des départements de l'utilisateur
+        // On s'appuie sur la table de liaison UserDepartments
+        $userDepartmentsTable = \Cake\ORM\TableRegistry::getTableLocator()->get('UserDepartments');
+        $myDepartmentIds = $userDepartmentsTable->find('departmentsOf', user: $user);
+
+        // 3. Application du filtre strict (Créateur OU Appartient à mon département)
+        return $query->where([
+            'OR' => [
+                'Applicationforms.user_id' => $user->id,
+                'Applicationforms.department_id IN' => $myDepartmentIds
+            ]
+        ]);
+    }
+
 }

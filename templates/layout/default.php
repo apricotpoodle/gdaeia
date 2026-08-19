@@ -29,16 +29,25 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
         <?= $this->fetch('title') ?>
     </title>
     <?= $this->Html->meta('icon') ?>
-
+    <!-- CSRF Token pour les requêtes AJAX (ADR 0027) -->
+    <?= $this->Html->meta('csrfToken', $this->request->getAttribute('csrfToken')) ?>
     <!-- Bibliothèques externes (CDN) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    
-    <!-- Tabulator (Local Vendor) -->
+
+    <!-- Tabulator & Luxon (Local Vendor) -->
     <?= $this->Html->css('vendor/tabulator/tabulator.min.css') ?>
     <?= $this->Html->css('tabulator/custom-theme.css') ?>
+
+    <?= $this->Html->script('vendor/luxon/luxon.min.js') ?>
     <?= $this->Html->script('vendor/tabulator/tabulator.min.js') ?>
+
+    <!-- Infrastructure Tabulator (ADR ES6 Modules) -->
+    <!-- Ajout indispensable de 'type' => 'module' -->
+    <?= $this->Html->script('core/Tabulator/TabulatorObserver.js', ['type' => 'module']) ?>
+    <?= $this->Html->script('core/Tabulator/TabulatorBuilder.js', ['type' => 'module']) ?>
+    <?= $this->Html->script('core/Tabulator/TabulatorFactory.js', ['type' => 'module']) ?>
 
     <!-- Blocs dynamiques CakePHP -->
     <?= $this->fetch('meta') ?>

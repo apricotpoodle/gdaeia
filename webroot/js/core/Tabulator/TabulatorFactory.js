@@ -104,4 +104,27 @@ export class TabulatorFactory {
             .setWithActions(['edit', 'delete'])
             .build();
     }
+
+    /**
+     * Fabrique dédiée à la configuration de la grille des Demandes de Recrutement (APPLICATIONFORMS).
+     * @static
+     * @param {string} [selector="#applicationforms-table"] - Le sélecteur CSS cible.
+     * @returns {Tabulator} L'instance finale de la grille Tabulator.
+     */
+    static createApplicationformsGrid(selector = "#applicationforms-table") {
+        return this._createActionGrid(selector)
+            .setAjaxSource('/api/applicationforms.json')
+            .setController('applicationforms')
+            .setHeight("calc(100vh - 180px)")
+            .setColumns([
+                ColumnsFactory.id({ visible: true }),
+                ColumnsFactory.text("jobtitle", "Intitulé du poste"),
+                ColumnsFactory.text("department.name", "Département"),
+                ColumnsFactory.text("user.firstname", "Demandeur"),
+                ColumnsFactory.text("contracttype.name", "Type de contrat"),
+                ColumnsFactory.dateRange("created", "Créée le")
+            ])
+            .setWithActions(['view', 'edit', 'delete'])
+            .build();
+    }
 }
