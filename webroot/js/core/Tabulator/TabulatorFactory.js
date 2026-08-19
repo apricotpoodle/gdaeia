@@ -114,6 +114,8 @@ export class TabulatorFactory {
     static createApplicationformsGrid(selector = "#applicationforms-table") {
         return this._createActionGrid(selector)
             .setAjaxSource('/api/applicationforms.json')
+            // 💡 SUPPRESSION DE fitColumns : On autorise le comportement fitDataFill
+            .setLayout("fitDataFill")
             .setController('applicationforms')
             .setHeight("calc(100vh - 180px)")
             .setColumns([

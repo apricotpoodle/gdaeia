@@ -3,6 +3,18 @@
  * * @package Core\Style\Tabulator
  */
 
+/* Empêche le débordement de la grille hors de l'écran */
+.tabulator {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+}
+
+/* Protège l'en-tête de la colonne Actions du retour à la ligne */
+.tabulator .tabulator-header .tabulator-col[tabulator-field="_actions"] {
+    white-space: nowrap !important;
+    overflow: visible !important;
+}
+
 /* Alignement et design du calque de chargement AJAX */
 .tabulator-loading-msg {
     display: inline-block;

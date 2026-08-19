@@ -201,6 +201,7 @@ export class TabulatorBuilder {
 
     /**
      * Active la mémorisation de l'état de la grille (Tris et Filtres) dans le navigateur.
+     * Exclut strictement la colonne d'actions de la sauvegarde structurelle.
      * @returns {TabulatorBuilder} L'instance courante pour le chaînage.
      */
     enableStatePersistence() {
@@ -215,7 +216,7 @@ export class TabulatorBuilder {
             headerFilter: true,
             group: true,
             page: true,
-            columns: ["width", "visible", "title"]
+            columns: false, // ["width", "visible"]
         };
 
         return this;
@@ -342,6 +343,10 @@ export class TabulatorBuilder {
             headerFilter: false,
             hozAlign: "right",
             headerHozAlign: "right",
+            // 💡 INDIQUE À TABULATOR D'IGNORER CETTE COLONNE POUR LA PERSISTANCE
+            persistence: false,
+            // 💡 2. VERROU STRICT : Interdit à Tabulator d'étirer ou d'écraser cette colonne
+            width: calculatedWidth,
             minWidth: calculatedWidth,
             maxWidth: calculatedWidth + 30,
             widthGrow: 1,
