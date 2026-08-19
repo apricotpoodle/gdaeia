@@ -3,10 +3,12 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use SebastianBergmann\CodeCoverage\Driver\Selector;
 
 /**
  * Departments Model
@@ -35,7 +37,7 @@ use Cake\Validation\Validator;
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  * @mixin \Cake\ORM\Behavior\TreeBehavior
  */
-class DepartmentsTable extends Table
+class DepartmentsTable extends AppTable
 {
     /**
      * Initialize method
@@ -139,11 +141,36 @@ class DepartmentsTable extends Table
     {
         $rules->add($rules->isUnique(['code']), ['errorField' => 'code', 'message' => __('Ce code existe déjà.')]);
         $rules->add($rules->isUnique(['name']), ['errorField' => 'name', 'message' => __('Ce nom existe déjà.')]);
-        
+
         $rules->add($rules->existsIn(['parent_id'], 'ParentDepartments'), ['errorField' => 'parent_id']);
         $rules->add($rules->existsIn(['cgr_code_id'], 'DefaultCgrCode'), ['errorField' => 'cgr_code_id']);
         $rules->add($rules->existsIn(['cgr_strategy_id'], 'CgrStrategies'), ['errorField' => 'cgr_strategy_id']);
 
         return $rules;
     }
+
+    /**
+     * Custom finder 'visibleTo' pour la table Departments.
+     * - Les Super Admins voient tous les départements.
+     * - Les autres utilisateurs ne voient que les départements auxquels ils sont rattachés.
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query
+     * @param \App\Model\Entity\User $user
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
+    {
+        $query = parent::findVisibleTo($query, $user);
+        if ($user->get('issuperuser')) {
+            return $query;
+        }
+
+        $userDepartmentsTable = \Cake\ORM\TableRegistry::getTableLocator()->get('UserDepartments');
+        $myDepartmentIds = $userDepartmentsTable->find('departmentsOf', user: $user);
+
+        return $query->where([
+            'Departments.id IN' => $myDepartmentIds
+        ]);
+    }
+
 }

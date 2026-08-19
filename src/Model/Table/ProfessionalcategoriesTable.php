@@ -29,7 +29,7 @@ use Cake\Validation\Validator;
  *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class ProfessionalcategoriesTable extends Table
+class ProfessionalcategoriesTable extends AppTable
 {
     /**
      * Initialize method

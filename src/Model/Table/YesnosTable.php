@@ -29,7 +29,7 @@ use Cake\Validation\Validator;
  *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class YesnosTable extends Table
+class YesnosTable extends AppTable
 {
     /**
      * Initialize method

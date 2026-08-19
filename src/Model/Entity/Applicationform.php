@@ -46,8 +46,15 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\ValidationVisa[] $validation_visas
  * @property \App\Model\Entity\Validation[] $validations
  */
-class Applicationform extends Entity
+class Applicationform extends AppEntity
 {
+    /**
+     * Liste des IDs de rôles (ex: Staff, RH) autorisés à créer d'autres utilisateurs
+     * en dehors des Super Administrateurs.
+     */
+    public const ALLOWED_ROLES_FOR_CREATE = [self::ROLE_ADMIN];
+    public const ALLOWED_ROLES_FOR_EDIT   = [self::ROLE_ADMIN];
+
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
      *

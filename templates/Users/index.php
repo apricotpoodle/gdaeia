@@ -8,11 +8,11 @@
 
 // Injection des librairies externes (Tabulator) et de notre script spécifique dans le bloc <head>
 // 1. CSS
-$this->Html->css('https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css', ['block' => true]);
-$this->Html->css('tabulator/custom-theme.css', ['block' => true]);
+// $this->Html->css('https://unpkg.com/tabulator-tables@5.5.0/dist/css/tabulator.min.css', ['block' => true]);
+// $this->Html->css('tabulator/custom-theme.css', ['block' => true]);
 
 // 2. JS - Librairie externe
-$this->Html->script('https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js', ['block' => true]);
+// $this->Html->script('https://unpkg.com/tabulator-tables@5.5.0/dist/js/tabulator.min.js', ['block' => true]);
 
 ?>
 

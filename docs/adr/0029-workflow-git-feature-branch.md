@@ -1,6 +1,7 @@
 # 🔄 Workflow Git : Le Feature Branch Flow
 
-Ce document décrit le flux de travail standard de l'application (basé sur le GitHub/GitLab Flow). Toute nouvelle fonctionnalité, correction de bug ou expérimentation doit suivre ce cycle de vie strict afin de garantir la stabilité de la branche `main`.
+Ce document décrit le flux de travail standard de l'application (basé sur le GitHub/GitLab Flow).
+Toute nouvelle fonctionnalité, correction de bug ou expérimentation doit suivre ce cycle de vie strict afin de garantir la stabilité de la branche `main`.
 
 ---
 
@@ -27,13 +28,34 @@ git checkout -b feature/ma-nouvelle-fonctionnalite
 
 ## 💻 Étape 2 : Développer et Commiter (Le Quotidien)
 Développez votre code et faites des commits atomiques (petits et logiques) avec des messages respectant la norme Conventional Commits (ex: feat(module): description).
+### Documentation
 
-### Via CLI
+- Renseigner tout fichier README.md local et tout fichier ADR.
+    - Créer des fichiers README.md Locaux aux bons endroits.
+    - Toujours préciser le lien à rajouter dans le README.md des ADR.
+    - Toujours bien renseigner les fichiers ADR et les fichiers README.md locaux concernés par le travail en cours.
+
+### Developpement
+
+- Renseigner tout fichier README.md local et tout fichier ADR.
+    - Créer des fichiers README.md Locaux aux bons endroits.
+    - Toujours préciser le lien à rajouter dans le README.md des ADR.
+    - Toujours bien renseigner les fichiers ADR et les fichiers README.md locaux concernés par le travail en cours.
+- Toujours favoriser le code DRY, SOLID, voire  KISS et les patrons de conception (Style GoF) et toute bonne pratique industrielle de développement..
+    - Suggérer toute bonne pratique et poser des questions, en cas de doute, afin d'éliminer toute hallucination.
+
+- Au niveau du code CakePHP, privilegier les "fat Models" et les "skinny Controllers".
+
+### Commit
+
+Les messages de commit seront fournis dans leur entiereté, donc titre compris, au format bloc de code prêt à être copié collé.
+
+#### Via CLI
 ```Bash
 git add src/MonFichier.php
 git commit -m "feat(module): ajout de la nouvelle fonction"
 ```
-### Via Lazygit
+#### Via Lazygit
 1. Panneau Files (touche 1).
 
 2. Appuyez sur Espace sur les fichiers modifiés pour les indexer (Stage).
