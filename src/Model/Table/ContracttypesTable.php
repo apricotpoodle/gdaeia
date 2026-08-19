@@ -29,7 +29,7 @@ use Cake\Validation\Validator;
  *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class ContracttypesTable extends Table
+class ContracttypesTable extends AppTable
 {
     /**
      * Initialize method
