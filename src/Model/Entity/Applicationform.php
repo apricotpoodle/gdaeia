@@ -3,6 +3,53 @@ declare(strict_types=1);
 
 namespace App\Model\Entity;
 
+/**
+ * Applicationform Entity
+ *
+ * @property int $id
+ * @property int $department_id
+ * @property int $user_id
+ * @property string|null $cgr
+ * @property int $contracttype_id
+ * @property int $hiringreason_id
+ * @property string|null $reasonforreplacement
+ * @property int $budgetfeature_id
+ * @property string $jobtitle
+ * @property int $professionalcategory_id
+ * @property int $worktime_id
+ * @property string|null $workingtimedistribution
+ * @property string $grossremuneration
+ * @property int $period_id
+ * @property string|null $qualification
+ * @property \Cake\I18n\Date|null $begin_at
+ * @property \Cake\I18n\Date|null $end_at
+ * @property string|null $applicantname
+ * @property int $yesno_id
+ * @property int|null $collaborator_id
+ * @property \Cake\I18n\DateTime|null $archived
+ * @property \Cake\I18n\DateTime|null $deleted
+ * @property \Cake\I18n\DateTime $created
+ * @property \Cake\I18n\DateTime|null $modified
+ *
+ * @property \App\Model\Entity\Department $department
+ * @property \App\Model\Entity\User $user
+ * @property \App\Model\Entity\Contracttype $contracttype
+ * @property \App\Model\Entity\Hiringreason $hiringreason
+ * @property \App\Model\Entity\Budgetfeature $budgetfeature
+ * @property \App\Model\Entity\Professionalcategory $professionalcategory
+ * @property \App\Model\Entity\Worktime $worktime
+ * @property \App\Model\Entity\Period $period
+ * @property \App\Model\Entity\Yesno $yesno
+ * @property \App\Model\Entity\Applicationformstatus[] $applicationformstatuses
+ * @property \App\Model\Entity\Applicationvalidationstep[] $applicationvalidationsteps
+ * @property \App\Model\Entity\Currentvalidationrole[] $currentvalidationroles
+ * @property \App\Model\Entity\ValidationVisa[] $validation_visas
+ * @property \App\Model\Entity\Validation[] $validations
+ * @property \App\Model\Entity\Comment[] $comments
+ */
+class Applicationform extends AppEntity
+{
+
 public const ALLOWED_ROLES_FOR_EDIT   = [self::ROLE_ADMIN];
 
 /**

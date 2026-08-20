@@ -85,6 +85,7 @@ return function (RouteBuilder $routes): void {
         $builder->resources('Users'); // Crée automatiquement les routes RESTful (GET /api/users)
         $builder->resources('FieldAuthorizations');
         $builder->resources('Applicationforms');
+        $builder->resources('Comments');
         $builder->fallbacks();
     });
 

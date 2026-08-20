@@ -1,125 +1,139 @@
 <?php
 /**
- * Vue de consultation d'une Demande de Recrutement
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Applicationform $applicationform
+ * @var \Authorization\IdentityInterface|null $identity
  */
 ?>
-
-<div class="applicationforms view content">
-    <!-- En-tête de la page avec boutons d'action -->
+<div class="row">
+    <!-- Panel d'actions contextuelles (Conforme ADR 0046) -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="mb-1"><?= h($applicationform->jobtitle) ?></h3>
-            <span class="badge bg-secondary">Demande #<?= h($applicationform->id) ?></span>
-        </div>
+        <h2><?= h($applicationform->jobtitle) ?> <small class="text-muted">(#<?= h($applicationform->id) ?>)</small></h2>
+
         <div class="d-flex gap-2">
-            <a href="<?= $this->Url->build(['action' => 'index']) ?>" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-arrow-left me-1"></i> <?= __('Retour à la liste') ?>
-            </a>
-            <a href="<?= $this->Url->build(['action' => 'edit', $applicationform->id]) ?>" class="btn btn-primary btn-sm">
-                <i class="fas fa-edit me-1"></i> <?= __('Modifier') ?>
-            </a>
+            <?= $this->Html->link(
+                '<i class="fas fa-arrow-left me-1"></i> ' . __('Retour à la liste'),
+                ['action' => 'index'],
+                ['escape' => false, 'class' => 'btn btn-outline-secondary btn-sm']
+            ) ?>
+
+            <?php if ($identity?->can('edit', $applicationform)): ?>
+                <?= $this->Html->link(
+                    '<i class="fas fa-edit me-1"></i> ' . __('Modifier'),
+                    ['action' => 'edit', $applicationform->id],
+                    ['escape' => false, 'class' => 'btn btn-outline-primary btn-sm']
+                ) ?>
+            <?php endif; ?>
+
+            <?php if ($identity?->can('delete', $applicationform)): ?>
+                <?= $this->Form->postLink(
+                    '<i class="fas fa-trash me-1"></i> ' . __('Supprimer'),
+                    ['action' => 'delete', $applicationform->id],
+                    [
+                        'escape' => false,
+                        'confirm' => __('Êtes-vous sûr de vouloir supprimer la demande #{0} ?', $applicationform->id),
+                        'class' => 'btn btn-outline-danger btn-sm'
+                    ]
+                ) ?>
+            <?php endif; ?>
         </div>
     </div>
+    <div class="column-responsive column-80">
+        <div class="applicationforms view content">
+            <h3><?= h($applicationform->jobtitle) ?> (#<?= h($applicationform->id) ?>)</h3>
+            
+            <?php if ($applicationform->archived): ?>
+                <div class="alert alert-warning">
+                    <?= __('Cette fiche a été archivée le {0}.', h($applicationform->archived->format('d/m/Y H:i'))) ?>
+                </div>
+            <?php endif; ?>
 
-    <div class="row g-4">
-        <!-- Informations Générales -->
-        <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-light fw-bold">
-                    <i class="fas fa-info-circle me-2 text-primary"></i><?= __('Informations Générales') ?>
-                </div>
-                <div class="card-body">
-                    <table class="table table-borderless mb-0">
-                        <tr>
-                            <th class="ps-0 text-muted" style="width: 40%;"><?= __('Département') ?></th>
-                            <td class="fw-bold"><?= $applicationform->hasValue('department') ? h($applicationform->department->name) : '-' ?></td>
-                        </tr>
-                        <tr>
-                            <th class="ps-0 text-muted"><?= __('Demandeur') ?></th>
-                            <td><?= $applicationform->hasValue('user') ? h($applicationform->user->firstname . ' ' . $applicationform->user->lastname) : '-' ?></td>
-                        </tr>
-                        <tr>
-                            <th class="ps-0 text-muted"><?= __('Intitulé du poste') ?></th>
-                            <td class="fw-bold"><?= h($applicationform->jobtitle) ?></td>
-                        </tr>
-                        <tr>
-                            <th class="ps-0 text-muted"><?= __('CGR') ?></th>
-                            <td><?= h($applicationform->cgr ?: '-') ?></td>
-                        </tr>
-                        <tr>
-                            <th class="ps-0 text-muted"><?= __('Créée le') ?></th>
-                            <td><?= h($applicationform->created->format('d/m/Y H:i')) ?></td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
+            <table>
+                <tr>
+                    <th><?= __('Intitulé du poste') ?></th>
+                    <td><?= h($applicationform->jobtitle) ?></td>
+                </tr>
+                <tr>
+                    <th><?= __('Département / Service') ?></th>
+                    <td><?= $applicationform->has('department') ? h($applicationform->department->name) : '' ?></td>
+                </tr>
+                <tr>
+                    <th><?= __('Demandeur') ?></th>
+                    <td><?= $applicationform->has('user') ? h($applicationform->user->email) : '' ?></td>
+                </tr>
+                <tr>
+                    <th><?= __('Type de contrat') ?></th>
+                    <td><?= $applicationform->has('contracttype') ? h($applicationform->contracttype->name) : '' ?></td>
+                </tr>
+                <tr>
+                    <th><?= __('Motif d\'embauche') ?></th>
+                    <td><?= $applicationform->has('hiringreason') ? h($applicationform->hiringreason->name) : '' ?></td>
+                </tr>
+                <tr>
+                    <th><?= __('Collaborateur concerné (ID)') ?></th>
+                    <td><?= $applicationform->collaborator_id ? h($applicationform->collaborator_id) : 'N/A' ?></td>
+                </tr>
+                <tr>
+                    <th><?= __('Rémunération brute') ?></th>
+                    <td><?= $this->Number->currency($applicationform->grossremuneration, 'EUR') ?></td>
+                </tr>
+                <tr>
+                    <th><?= __('Dates de contrat') ?></th>
+                    <td>
+                        <?= $applicationform->begin_at ? h($applicationform->begin_at->format('d/m/Y')) : '-' ?>
+                        <?= $applicationform->end_at ? ' au ' . h($applicationform->end_at->format('d/m/Y')) : '' ?>
+                    </td>
+                </tr>
+            </table>
 
-        <!-- Caractéristiques du Poste & Contrat -->
-        <div class="col-md-6">
-            <div class="card shadow-sm h-100">
-                <div class="card-header bg-light fw-bold">
-                    <i class="fas fa-briefcase me-2 text-primary"></i><?= __('Caractéristiques du Poste') ?>
-                </div>
-                <div class="card-body">
-                    <table class="table table-borderless mb-0">
-                        <tr>
-                            <th class="ps-0 text-muted" style="width: 40%;"><?= __('Type de contrat') ?></th>
-                            <td><span class="badge bg-info text-dark"><?= $applicationform->hasValue('contracttype') ? h($applicationform->contracttype->name) : '-' ?></span></td>
-                        </tr>
-                        <tr>
-                            <th class="ps-0 text-muted"><?= __('Motif du recrutement') ?></th>
-                            <td><?= $applicationform->hasValue('hiringreason') ? h($applicationform->hiringreason->name) : '-' ?></td>
-                        </tr>
-                        <tr>
-                            <th class="ps-0 text-muted"><?= __('Catégorie Prof.') ?></th>
-                            <td><?= $applicationform->hasValue('professionalcategory') ? h($applicationform->professionalcategory->name) : '-' ?></td>
-                        </tr>
-                        <tr>
-                            <th class="ps-0 text-muted"><?= __('Temps de travail') ?></th>
-                            <td><?= $applicationform->hasValue('worktime') ? h($applicationform->worktime->name) : '-' ?></td>
-                        </tr>
-                        <tr>
-                            <th class="ps-0 text-muted"><?= __('Période') ?></th>
-                            <td><?= $applicationform->hasValue('period') ? h($applicationform->period->name) : '-' ?></td>
-                        </tr>
-                    </table>
-                </div>
-            </div>
-        </div>
+            <hr />
 
-        <!-- Volet Budgétaire & Précisions -->
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-light fw-bold">
-                    <i class="fas fa-coins me-2 text-primary"></i><?= __('Volet Budgétaire & Précisions') ?>
-                </div>
-                <div class="card-body">
-                    <div class="row g-3 mb-3">
-                        <div class="col-md-4">
-                            <span class="text-muted d-block small"><?= __('Prévu au budget') ?></span>
-                            <span class="fw-bold"><?= $applicationform->hasValue('yesno') ? h($applicationform->yesno->name) : '-' ?></span>
-                        </div>
-                        <div class="col-md-4">
-                            <span class="text-muted d-block small"><?= __('Caractéristique budgétaire') ?></span>
-                            <span class="fw-bold"><?= $applicationform->hasValue('budgetfeature') ? h($applicationform->budgetfeature->name) : '-' ?></span>
-                        </div>
-                        <div class="col-md-4">
-                            <span class="text-muted d-block small"><?= __('Rémunération brute') ?></span>
-                            <span class="fw-bold"><?= number_format((float)$applicationform->grossremuneration, 2, ',', ' ') ?> €</span>
-                        </div>
-                    </div>
-                    <?php if (!empty($applicationform->reasonforreplacement)): ?>
-                        <hr />
-                        <div>
-                            <span class="text-muted d-block small mb-1"><?= __('Précisions / Motif du remplacement') ?></span>
-                            <p class="mb-0 text-dark bg-light p-3 rounded border"><?= nl2br(h($applicationform->reasonforreplacement)) ?></p>
-                        </div>
+            <div class="comments-section">
+                <h4><?= __('Observations et Fil de discussion') ?></h4>
+
+                <div id="comments-list">
+                    <?php if (!empty($applicationform->comments)): ?>
+                        <?php foreach ($applicationform->comments as $comment): ?>
+                            <div class="comment-item" style="margin-left: <?= ($comment->parent_id ? '30px' : '0') ?>; border-left: 2px solid #ccc; padding-left: 10px; margin-bottom: 10px;">
+                                <p style="margin-bottom: 0;">
+                                    <strong><?= h($comment->user ? $comment->user->email : 'Anonyme') ?></strong>
+                                    <small>(<?= h($comment->type) ?>) - <?= h($comment->created->format('d/m/Y H:i')) ?></small>
+                                </p>
+                                <div><?= nl2br(h($comment->content)) ?></div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                        <p><em><?= __('Aucune observation ou commentaire pour le moment.') ?></em></p>
                     <?php endif; ?>
+                </div>
+
+                <div class="add-comment-box" style="margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 4px;">
+                    <h5><?= __('Ajouter une observation / un message') ?></h5>
+                    <form id="form-add-comment" data-csrf-token="<?= h($this->request->getAttribute('csrfToken')) ?>">
+                        <input type="hidden" name="model" value="Applicationforms" />
+                        <input type="hidden" name="foreign_key" value="<?= $applicationform->id ?>" />
+                        
+                        <div class="input select">
+                            <label for="comment-type"><?= __('Contexte') ?></label>
+                            <select name="type" id="comment-type">
+                                <option value="GENERAL"><?= __('Général / Remarque') ?></option>
+                                <option value="OBSERVATION"><?= __('Observation') ?></option>
+                                <option value="HIRING_REASON"><?= __('Précision Motif Embauche') ?></option>
+                                <option value="PART_TIME"><?= __('Précision Temps Partiel') ?></option>
+                            </select>
+                        </div>
+
+                        <div class="input textarea">
+                            <textarea name="content" id="comment-content" rows="3" required placeholder="<?= __('Saisissez votre remarque...') ?>"></textarea>
+                        </div>
+
+                        <button type="submit" class="button"><?= __('Envoyer l\'observation') ?></button>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Injection propre du JS selon ADR 0046 -->
+<?= $this->Html->script('views/applicationforms/comments-handler', ['block' => true]) ?>
