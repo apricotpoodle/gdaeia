@@ -250,7 +250,49 @@ class ApplicationformsTable extends Table
 
         $validator
             ->date('end_at')
-            ->allowEmptyDate('end_at');
+            ->allowEmptyDate('end_at')
+            // Règle 1 : La date de fin doit être supérieure à la date de début
+            ->add('end_at', 'greaterThanBegin', [
+                'rule' => function ($value, array $context) {
+                    if (empty($value) || empty($context['data']['begin_at'])) {
+                        return true;
+                    }
+
+                    return strtotime((string)$value) >= strtotime((string)$context['data']['begin_at']);
+                },
+                'message' => __('La date de fin doit être strictement supérieure à la date de début.'),
+            ])
+            // Règle 2 : Cohérence selon le type de contrat (CDI vs CDD)
+            ->add('end_at', 'contractTypeCoherence', [
+                'rule' => function ($value, array $context) {
+                    $contractTypeId = $context['data']['contracttype_id'] ?? null;
+                    if (!$contractTypeId) {
+                        return true;
+                    }
+
+                    // Récupération du type de contrat
+                    $contracttypesTable = TableRegistry::getTableLocator()->get('Contracttypes');
+                    $contractType = $contracttypesTable->find()->where(['id' => $contractTypeId])->first();
+
+                    if (!$contractType) {
+                        return true;
+                    }
+
+                    $code = strtoupper(trim($contractType->code));
+
+                    // CDI : La date de fin DOIT être nulle
+                    if ($code === 'CDI' && !empty($value)) {
+                        return __('Un contrat de type CDI ne peut pas comporter de date de fin.');
+                    }
+
+                    // CDD : La date de fin est OBLIGATOIRE
+                    if (in_array($code, ['CDD', 'CTT', 'ALT']) && empty($value)) {
+                        return __('La date de fin est obligatoire pour un contrat à durée déterminée.');
+                    }
+
+                    return true;
+                },
+            ]);
 
         $validator
             ->scalar('applicantname')
