@@ -262,4 +262,20 @@ class ApplicationformsController extends AppController
         $this->set($output);
         $this->viewBuilder()->setOption('serialize', array_keys($output));
     }
+
+    /**
+     * Endpoint : GET /api/applicationforms/getCgrConfig/{departmentId}.json
+     */
+    public function getCgrConfig(string $departmentId): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->skipAuthorization();
+
+        $resolver = new \App\Service\CgrResolverService();
+        $config = $resolver->getCgrConfigForDepartment((int)$departmentId);
+
+        $this->set($config);
+        $this->viewBuilder()->setOption('serialize', array_keys($config));
+    }
+    
 }

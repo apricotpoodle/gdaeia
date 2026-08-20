@@ -49,8 +49,28 @@ namespace App\Model\Entity;
  */
 class Applicationform extends AppEntity
 {
+/**
+ * Cartographie des zones d'IHM
+ */
+public const ZONE_ADMIN        = 'admin';
+public const ZONE_CONTRAT      = 'contrat';
+public const ZONE_REMUNERATION = 'remuneration';
+public const ZONE_RESERVES     = 'reserves';
+public const ZONE_COMMENTAIRES = 'commentaires';
+
+/**
+ * Liste exhaustive des zones de l'IHM
+ */
+public const UI_ZONES = [
+    self::ZONE_ADMIN,
+    self::ZONE_CONTRAT,
+    self::ZONE_REMUNERATION,
+    self::ZONE_RESERVES,
+    self::ZONE_COMMENTAIRES,
+];
 
 public const ALLOWED_ROLES_FOR_EDIT   = [self::ROLE_ADMIN];
+public const ALLOWED_ROLES_FOR_ZONE_RESERVES  = [self::ROLE_ADMIN, self::ROLE_4_VALIDEUR_CG];
 
 /**
  * Fields that can be mass assigned using newEntity() or patchEntity().

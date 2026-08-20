@@ -13,6 +13,14 @@ use Exception;
  */
 class ApplicationformsController extends AppController
 {
+    public function beforeFilter(\Cake\Event\EventInterface $event): void
+    {
+        parent::beforeFilter($event);
+        
+        // Optionnel : Si une action particulière ne requiert pas de Policy
+        // $this->Authorization->skipAuthorization(['actionSansCheck']);
+    }
+
     /**
      * Action Index (GET / ou /applicationforms)
      */
@@ -49,7 +57,10 @@ class ApplicationformsController extends AppController
      */
     public function add(): void
     {
-        $this->Authorization->authorize($this->Applicationforms->newEmptyEntity(), 'add');
+        $applicationform = $this->Applicationforms->newEmptyEntity();
+        $this->Authorization->authorize($applicationform, 'add');
+
+        $this->set(compact('applicationform'));
     }
 
     /**
@@ -58,10 +69,32 @@ class ApplicationformsController extends AppController
      */
     public function edit(string $id): void
     {
-        $applicationform = $this->Applicationforms->get($id);
+        $applicationform = $this->Applicationforms->get($id, contain: ['Comments']);
         $this->Authorization->authorize($applicationform, 'edit');
 
-        $this->set(compact('applicationform'));
+        // Récupération des listes pour les selects
+        $departments = $this->Applicationforms->Departments->find('list')->toArray();
+        $contracttypes = $this->Applicationforms->Contracttypes->find('list')->toArray();
+        $hiringreasons = $this->Applicationforms->Hiringreasons->find('list')->toArray();
+        $professionalcategories = $this->Applicationforms->Professionalcategories->find('list')->toArray();
+        $worktimes = $this->Applicationforms->Worktimes->find('list')->toArray();
+        $periods = $this->Applicationforms->Periods->find('list')->toArray();
+        $budgetfeatures = $this->Applicationforms->Budgetfeatures->find('list')->toArray();
+        $yesnos = $this->Applicationforms->Yesnos->find('list')->toArray();
+        $collaborators = $this->Applicationforms->Users->find('list', keyField: 'id', valueField: 'email')->toArray();
+
+        $this->set(compact(
+            'applicationform',
+            'departments',
+            'contracttypes',
+            'hiringreasons',
+            'professionalcategories',
+            'worktimes',
+            'periods',
+            'budgetfeatures',
+            'yesnos',
+            'collaborators'
+        ));
     }
 
     /**
