@@ -26,7 +26,7 @@ La production de code doit respecter simultanément les principes suivants :
 
 ### Étape 4 : Intégration (Fusion automatisée)
 * Une fois la fonctionnalité finalisée et validée, la branche courante est fusionnée dans `main`.
-* Cette opération d'intégration doit obligatoirement être réalisée via le script d'automatisation de fusion prévu à cet effet dans le projet, garantissant ainsi l'intégrité de l'historique et le respect des hooks de déploiement. script : `finish_feature`. L'IA fournira toujours le titre et/ou le contenu du pessage de commit général.
+* Cette opération d'intégration doit obligatoirement être réalisée via le script d'automatisation de fusion prévu à cet effet dans le projet, garantissant ainsi l'intégrité de l'historique et le respect des hooks de déploiement. script : `finish_feature`. L'IA fournira toujours le titre et/ou le contenu du message de commit général.
 
 ## 3. Conséquences
 
