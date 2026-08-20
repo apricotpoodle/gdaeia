@@ -7,28 +7,37 @@
 ?>
 <div class="row">
     <!-- Panel d'actions contextuelles (Conforme ADR 0046) -->
-    <aside class="column">
-        <div class="side-nav">
-            <h4 class="heading"><?= __('Actions') ?></h4>
-            <?= $this->Html->link(__('← Retour à la liste'), ['action' => 'index'], ['class' => 'side-nav-item button button-outline']) ?>
-            
-            <?php if ($identity && $identity->can('edit', $applicationform)): ?>
-                <?= $this->Html->link(__('Modifier la demande'), ['action' => 'edit', $applicationform->id], ['class' => 'side-nav-item button']) ?>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><?= h($applicationform->jobtitle) ?> <small class="text-muted">(#<?= h($applicationform->id) ?>)</small></h2>
+
+        <div class="d-flex gap-2">
+            <?= $this->Html->link(
+                '<i class="fas fa-arrow-left me-1"></i> ' . __('Retour à la liste'),
+                ['action' => 'index'],
+                ['escape' => false, 'class' => 'btn btn-outline-secondary btn-sm']
+            ) ?>
+
+            <?php if ($identity?->can('edit', $applicationform)): ?>
+                <?= $this->Html->link(
+                    '<i class="fas fa-edit me-1"></i> ' . __('Modifier'),
+                    ['action' => 'edit', $applicationform->id],
+                    ['escape' => false, 'class' => 'btn btn-outline-primary btn-sm']
+                ) ?>
             <?php endif; ?>
 
-            <?php if ($identity && $identity->can('delete', $applicationform)): ?>
+            <?php if ($identity?->can('delete', $applicationform)): ?>
                 <?= $this->Form->postLink(
-                    __('Supprimer'),
+                    '<i class="fas fa-trash me-1"></i> ' . __('Supprimer'),
                     ['action' => 'delete', $applicationform->id],
                     [
+                        'escape' => false,
                         'confirm' => __('Êtes-vous sûr de vouloir supprimer la demande #{0} ?', $applicationform->id),
-                        'class' => 'side-nav-item button button-danger'
+                        'class' => 'btn btn-outline-danger btn-sm'
                     ]
                 ) ?>
             <?php endif; ?>
         </div>
-    </aside>
-
+    </div>
     <div class="column-responsive column-80">
         <div class="applicationforms view content">
             <h3><?= h($applicationform->jobtitle) ?> (#<?= h($applicationform->id) ?>)</h3>
