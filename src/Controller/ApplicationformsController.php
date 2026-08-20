@@ -66,13 +66,32 @@ class ApplicationformsController extends AppController
     /**
      * Action Edit (GET /applicationforms/edit/{id})
      * Livrera la coquille HTML du formulaire de modification.
+     *
+     * @param string $id Identifiant de la demande.
+     * @return ?Response Redirection ou rendu HTML.
      */
-    public function edit(string $id): void
+    public function edit(string $id): ?Response
     {
         $applicationform = $this->Applicationforms->get($id, contain: ['Comments']);
+        // 1 chargement de l'entité
+        $applicationform = $this->Applicationforms->get($id, contain: ['Comments']);
+        // 2. Verou d'autorisation strict (doit eetre executế avant tout traitement )
         $this->Authorization->authorize($applicationform, 'edit');
+        // 3. Traitement de la soumission POST / PUT
+        if ($this->request->is(['post', 'put', 'patch'])) {
+            $applicationform = $this->Applicationforms->patchEntity($applicationform, $this->request->getData());
 
         // Récupération des listes pour les selects
+            if ($this->Applicationforms->save($applicationform)) {
+                $this->Flash->success(__('La demande de recrutement #{0} a été mise à jour avec succès.', $applicationform->id));
+
+                return $this->redirect(['action' => 'index']);
+            }
+
+            $this->Flash->error(__('Impossible de mettre à jour la demande. Veuillez corriger les erreurs ci-dessous.'));
+        }
+
+        // 4. Chargement des listes pour le rendu du formulaire
         $departments = $this->Applicationforms->Departments->find('list')->toArray();
         $contracttypes = $this->Applicationforms->Contracttypes->find('list')->toArray();
         $hiringreasons = $this->Applicationforms->Hiringreasons->find('list')->toArray();
@@ -95,6 +114,8 @@ class ApplicationformsController extends AppController
             'yesnos',
             'collaborators'
         ));
+        
+        return null;
     }
 
     /**

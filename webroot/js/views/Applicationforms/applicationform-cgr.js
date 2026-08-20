@@ -28,6 +28,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const currentParts = initialValue ? initialValue.split('-') : [];
 
             // Pour chaque zone requise (ex: SERVICE, puis TITRE...)
+            // Parcours de chaque type requis par la stratégie du département
             data.schema.forEach((segmentType, index) => {
                 const select = document.createElement('select');
                 select.className = 'form-select form-select-sm cgr-segment-select';
@@ -43,6 +44,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     k => k.toUpperCase() === segmentType.toUpperCase()
                 );
                 const availableOptions = targetKey ? data.options[targetKey] : [];
+                defaultOption.textContent = `-- ${segmentType} --`;
+                select.appendChild(defaultOption);
+
+                // Recherche exacte ou insensible à la casse dans les clés retournées
+                const cleanType = String(segmentType).trim().toUpperCase();
+                const matchedKey = Object.keys(data.options || {}).find(k => k.trim().toUpperCase() === cleanType);
+                const availableOptions = matchedKey ? data.options[matchedKey] : [];
 
                 if (availableOptions.length === 0) {
                     const emptyOpt = document.createElement('option');
@@ -66,6 +74,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 cgrContainer.appendChild(select);
             });
             
+
             updateFinalCgrValue();
         })
         .catch(err => console.error('Erreur chargement CGR:', err));

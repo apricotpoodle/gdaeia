@@ -13,6 +13,7 @@ $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
         <h2>
             <i class="bi bi-file-earmark-text bg-primary text-white p-2 rounded me-2"></i>
+            <i class="bi bi-file-earmark-text bg-primary text-white p-2 rounded me-2"><?=  h($applicationform->id) ?></i>
             <?= h($applicationform->jobtitle ?? __('Nouvelle Demande')) ?>
         </h2>
         
@@ -68,6 +69,7 @@ $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
                                     'id' => 'cgr-final-input',
                                     'class' => 'form-control bg-light',
                                     'readonly' => true,
+                                    'disabled' => !$canEditAdmin, // désactivé uniquement si pas les droits sur la zone Admin
                                     'label' => false,
                                 ]) ?>
                             </div>
