@@ -1,14 +1,14 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Service\Security;
 
-use Cake\ORM\TableRegistry;
 use Authorization\IdentityInterface;
+use Cake\ORM\TableRegistry;
 
 /**
  * Class FieldAuthorizationService
+ *
  * @description Gère et filtre les permissions structurelles au niveau des champs (Field-Level ACL).
  * @package App\Service\Security
  */
@@ -39,7 +39,7 @@ class FieldAuthorizationService
         $records = $authTable->find()
             ->where([
                 'role_id' => $roleId,
-                'resource' => $resource
+                'resource' => $resource,
             ])
             ->all()
             ->toArray();
@@ -69,6 +69,7 @@ class FieldAuthorizationService
                 unset($data[$field]); // Purge immédiate du champ non autorisé
             }
         }
+
         return $data;
     }
 }

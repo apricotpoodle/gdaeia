@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Policy;
@@ -22,6 +21,7 @@ class ApplicationformPolicy
     private function getValidUser(IdentityInterface $identity): ?User
     {
         $user = $identity->getOriginalData();
+
         return $user instanceof User ? $user : null;
     }
 
@@ -52,7 +52,9 @@ class ApplicationformPolicy
     public function canView(IdentityInterface $identity, Applicationform $applicationform): bool
     {
         $user = $this->getValidUser($identity);
-        if (!$user) return false;
+        if (!$user) {
+            return false;
+        }
 
         // Le Super Admin a toujours accès, sinon à affiner selon les règles métier
         return true;
@@ -68,7 +70,9 @@ class ApplicationformPolicy
     public function canAdd(IdentityInterface $identity, Applicationform $applicationform): bool
     {
         $user = $this->getValidUser($identity);
-        if (!$user) return false;
+        if (!$user) {
+            return false;
+        }
 
         // Exemple : Tout profil autorisé à se connecter peut initier une demande
         return true;
@@ -84,10 +88,12 @@ class ApplicationformPolicy
     public function canEdit(IdentityInterface $identity, Applicationform $applicationform): bool
     {
         $user = $this->getValidUser($identity);
-        if (!$user) return false;
+        if (!$user) {
+            return false;
+        }
 
         // Le Super Admin ou le créateur de la demande
-        return $user->get('issuperuser') || $applicationform->user_id === $user->id || in_array($user->get('role_id'),Applicationform::ALLOWED_ROLES_FOR_EDIT);
+        return $user->get('issuperuser') || $applicationform->user_id === $user->id || in_array($user->get('role_id'), Applicationform::ALLOWED_ROLES_FOR_EDIT);
     }
 
     /**
@@ -100,7 +106,9 @@ class ApplicationformPolicy
     public function canDelete(IdentityInterface $identity, Applicationform $applicationform): bool
     {
         $user = $this->getValidUser($identity);
-        if (!$user) return false;
+        if (!$user) {
+            return false;
+        }
 
         // Règle restrictive : Super Admin ou propriétaire de la demande
         return $user->get('issuperuser') || $applicationform->user_id === $user->id;

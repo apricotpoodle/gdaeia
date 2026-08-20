@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Controller\Api;
@@ -7,6 +6,7 @@ namespace App\Controller\Api;
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
@@ -58,6 +58,7 @@ class ApplicationformsController extends AppController
         $periodsTable = TableRegistry::getTableLocator()->get('Periods');
         $budgetfeaturesTable = TableRegistry::getTableLocator()->get('Budgetfeatures');
         $yesnosTable = TableRegistry::getTableLocator()->get('Yesnos');
+        $usersTable = TableRegistry::getTableLocator()->get('Users');
 
         // Application systématique du finder 'visibleTo' avec l'utilisateur courant (ADR 0041)
         $departments = $departmentsTable
@@ -100,6 +101,11 @@ class ApplicationformsController extends AppController
             ->find('list', keyField: 'id', valueField: 'name')
             ->toArray();
 
+        $collaborators = $usersTable
+            ->find('visibleTo', user: $currentUser)
+            ->find('list', keyField: 'id', valueField: 'email')
+            ->toArray();
+
         $this->set(compact(
             'schema',
             'departments',
@@ -109,7 +115,8 @@ class ApplicationformsController extends AppController
             'worktimes',
             'periods',
             'budgetfeatures',
-            'yesnos'
+            'yesnos',
+            'collaborators',
         ));
 
         $this->viewBuilder()->setOption('serialize', [
@@ -121,7 +128,8 @@ class ApplicationformsController extends AppController
             'worktimes',
             'periods',
             'budgetfeatures',
-            'yesnos'
+            'yesnos',
+            'collaborators',
         ]);
     }
 
@@ -153,7 +161,8 @@ class ApplicationformsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode(['success' => true, 'id' => $applicationform->id]));
         }
-
+        
+        /** @var \Cake\Datasource\EntityInterface $applicationform */
         return $this->handleValidationError($applicationform);
     }
 
@@ -180,16 +189,20 @@ class ApplicationformsController extends AppController
                 ->withStringBody(json_encode(['success' => true]));
         }
 
+        /** @var \Cake\Datasource\EntityInterface $applicationform */
         return $this->handleValidationError($applicationform);
     }
 
     /**
      * Gestion centralisée des erreurs de validation
+     * 
+     * @param \Cake\Datasource\EntityInterface $entity
+     * @return \Cake\Http\Response
      */
-    private function handleValidationError(\Cake\Datasource\EntityInterface $entity): Response
+    private function handleValidationError(EntityInterface $entity): Response
     {
         $errors = $entity->getErrors();
-        $message = __("Le formulaire contient des données invalides.");
+        $message = __('Le formulaire contient des données invalides.');
 
         if (!empty($errors)) {
             $firstError = current(reset($errors));
@@ -225,7 +238,8 @@ class ApplicationformsController extends AppController
                 'Departments',
                 'Users',
                 'Contracttypes',
-                'Hiringreasons'
+                'Hiringreasons',
+                'Comments',
             ]);
 
         // 2. Application des tris et filtres Tabulator
@@ -235,7 +249,7 @@ class ApplicationformsController extends AppController
         $paginatedData = $this->paginate($query, [
             'limit' => (int)($queryParams['size'] ?? 40), // Valeur conseillée pour le scroll progressif (ADR 0039)
             'page'  => (int)($queryParams['page'] ?? 1),
-            'sortableFields' => []
+            'sortableFields' => [],
         ]);
 
         // 4. Droits dynamiques de la grille

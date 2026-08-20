@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 /**
@@ -20,8 +19,6 @@ namespace App\Controller;
 
 use Cake\Controller\Controller;
 use Cake\Datasource\EntityInterface;
-use Cake\Event\EventInterface;
-use Override;
 
 /**
  * Application Controller

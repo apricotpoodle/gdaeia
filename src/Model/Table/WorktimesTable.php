@@ -3,16 +3,13 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
-use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
  * Worktimes Model
  *
  * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
- *
  * @method \App\Model\Entity\Worktime newEmptyEntity()
  * @method \App\Model\Entity\Worktime newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Worktime> newEntities(array $data, array $options = [])
@@ -26,7 +23,6 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Worktime>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Worktime> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Worktime>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Worktime>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Worktime>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Worktime> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class WorktimesTable extends AppTable

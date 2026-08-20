@@ -1,13 +1,14 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
+use App\Service\Security\FieldAuthorizationService;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
+use Cake\ORM\TableRegistry;
 
 /**
  * Class UsersController (API)
@@ -89,7 +90,7 @@ class UsersController extends AppController
             'page'  => (int)($queryParams['page'] ?? 1),
             // SÉCURITÉ : On interdit au Paginator CakePHP de trier via l'URL,
             // car le TabulatorAdapter a déjà appliqué les tris sur l'objet $query.
-            'sortableFields' => []
+            'sortableFields' => [],
         ]);
 
         // =====================================================================
@@ -98,7 +99,6 @@ class UsersController extends AppController
         $rightsFormatter = $this->createGridRightsFormatter(
             // Actions métiers spécifiques s'ajoutant au CRUD de base (view, edit, delete)
             ['impersonate'],
-
             // Callback pour piloter la visibilité dynamique des cellules/colonnes
             function ($entity, $authorization) {
                 return [
@@ -107,7 +107,7 @@ class UsersController extends AppController
                     // verra/pilotera l'interrupteur Super Utilisateur dans sa ligne
                     'issuperuser' => $authorization->can($entity, 'delete'),
                 ];
-            }
+            },
         );
 
         // 6. Formatage de la structure de réponse par l'adaptateur agnostique
@@ -127,13 +127,13 @@ class UsersController extends AppController
         $this->request->allowMethod(['get']);
         $this->Authorization->skipAuthorization(); // L'action est ouverte aux connectés, le filtrage est dynamique
 
-        $service = new \App\Service\Security\FieldAuthorizationService();
+        $service = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
 
         $schema = $service->getFieldSchema($identity, 'Users');
 
         // Récupération optionnelle des listes pour hydrater les selects du formulaire (Roles)
-        $rolesTable = \Cake\ORM\TableRegistry::getTableLocator()->get('Roles');
+        $rolesTable = TableRegistry::getTableLocator()->get('Roles');
         $roles = $rolesTable->find('list', keyField: 'id', valueField: 'name')->toArray();
 
         $this->set(compact('schema', 'roles'));
@@ -153,7 +153,7 @@ class UsersController extends AppController
 
         $user = $this->Users->newEmptyEntity();
 
-        $authService = new \App\Service\Security\FieldAuthorizationService();
+        $authService = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
 
         // 2. Protection double-sécurité : On filtre les données reçues contre le schéma de rôles
@@ -169,7 +169,7 @@ class UsersController extends AppController
 
         // Collecte des erreurs de validation de l'ORM si échec
         $errors = $user->getErrors();
-        $message = __("Le formulaire contient des données invalides.");
+        $message = __('Le formulaire contient des données invalides.');
         if (!empty($errors)) {
             $firstError = current(reset($errors));
             $message = (string)$firstError;

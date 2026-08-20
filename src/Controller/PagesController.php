@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 /**
@@ -47,7 +46,8 @@ class PagesController extends AppController
      */
     public function display(string ...$path): ?Response
     {
-        $this->Authorization->skipAuthorization();;
+        $this->Authorization->skipAuthorization();
+
         if (!$path) {
             return $this->redirect('/');
         }

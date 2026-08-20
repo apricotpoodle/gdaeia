@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 /**
@@ -41,9 +40,10 @@ use Cake\Http\Middleware\BodyParserMiddleware;
 use Cake\Http\Middleware\CsrfProtectionMiddleware;
 use Cake\Http\MiddlewareQueue;
 use Cake\ORM\Locator\TableLocator;
-use Cake\Routing\Router;
 use Cake\Routing\Middleware\AssetMiddleware;
 use Cake\Routing\Middleware\RoutingMiddleware;
+use Cake\Routing\Router;
+use DateTime;
 use Psr\Http\Message\ServerRequestInterface;
 
 /**
@@ -188,7 +188,7 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
             'rememberMeField' => 'remember_me', // Nom du champ dans le formulaire
             'cookie' => [
                 'name' => 'CookieAuth',
-                'expires' => new \DateTime('+30 days'), // Durée de persistance
+                'expires' => new DateTime('+30 days'), // Durée de persistance
                 'httponly' => true,
             ],
         ]);
@@ -231,18 +231,19 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         return new AuthorizationService($resolver);
     }
 
-/**
- * Configure les commandes CLI de l'application.
- *
- * @param CommandCollection $commands La collection de commandes.
- * @return CommandCollection
- */
-public function console(CommandCollection $commands): CommandCollection
-{
-    $commands = parent::console($commands);
+    /**
+     * Configure les commandes CLI de l'application.
+     *
+     * @param \Cake\Console\CommandCollection $commands La collection de commandes.
+     * @return \Cake\Console\CommandCollection
+     */
+    public function console(CommandCollection $commands): CommandCollection
+    {
+        $commands = parent::console($commands);
 
-    // Enregistrement explicite de la commande
-    $commands->add('test_email', TestEmailCommand::class);
+        // Enregistrement explicite de la commande
+        $commands->add('test_email', TestEmailCommand::class);
 
-    return $commands;
-}}
+        return $commands;
+    }
+}

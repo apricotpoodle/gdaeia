@@ -1,9 +1,9 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -17,7 +17,6 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\UrdsTable&\Cake\ORM\Association\HasMany $Urds
  * @property \App\Model\Table\UserDepartmentsTable&\Cake\ORM\Association\HasMany $UserDepartments
  * @property \App\Model\Table\ValidationsTable&\Cake\ORM\Association\HasMany $Validations
- *
  * @method \App\Model\Entity\User newEmptyEntity()
  * @method \App\Model\Entity\User newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\User> newEntities(array $data, array $options = [])
@@ -31,7 +30,6 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\User>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\User> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\User>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\User>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\User>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\User> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class UsersTable extends Table
@@ -154,7 +152,7 @@ class UsersTable extends Table
      * @param \App\Model\Entity\User $user L'opérateur courant.
      * @return \Cake\ORM\Query\SelectQuery
      */
-    public function findVisibleTo(SelectQuery $query, \App\Model\Entity\User $user): SelectQuery
+    public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
         // 1. Le Super Admin a une vision globale
         if ($user->get('issuperuser')) {

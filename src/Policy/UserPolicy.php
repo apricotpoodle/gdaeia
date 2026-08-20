@@ -1,19 +1,16 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Policy;
 
 use App\Model\Entity\User;
 use Authorization\IdentityInterface;
-use Authorization\Policy\Result;
 
 /**
  * Users policy
  */
 class UserPolicy
 {
-
     /**
      * Méthode utilitaire DRY : Extrait et garantit le type de l'identité connectée.
      * Si l'identité n'est pas un humain (ex: un démon système ou une API), renvoie null.
@@ -36,7 +33,9 @@ class UserPolicy
     {
         // Vrai si Super Admin ET que la cible n'est PAS un Super Admin
         $user = $this->getValidUser($identity);
-        if (!$user) return false; // Par sécurité, on bloque si ce n'est pas un User valide
+        if (!$user) {
+            return false; // Par sécurité, on bloque si ce n'est pas un User valide
+        }
 
         return true;
     }
@@ -52,14 +51,16 @@ class UserPolicy
         // Vrai si Super Admin ET que la cible n'est PAS un Super Admin
         /** @var \App\Model\Entity\User $user */
         $user = $this->getValidUser($identity);
-        if (!$user) return false; // Par sécurité, on bloque si ce n'est pas un User valide
+        if (!$user) {
+            return false; // Par sécurité, on bloque si ce n'est pas un User valide
+        }
 
         // Règle métier : Seul un Super Admin ou un profil "Staff/RH" (par exemple, le rôle ID 1 ou 2)
         // a le droit d'accéder au formulaire de création.
         return $user->get('issuperuser') || in_array(
             $user->get('role_id'),
             $user::ALLOWED_ROLES_FOR_CREATE,
-            true // true active la vérification stricte des types
+            true, // true active la vérification stricte des types
         );
     }
 
@@ -74,9 +75,11 @@ class UserPolicy
     {
         // Vrai si Super Admin ET que la cible n'est PAS un Super Admin
         $user = $this->getValidUser($identity);
-        if (!$user) return false; // Par sécurité, on bloque si ce n'est pas un User valide
+        if (!$user) {
+            return false; // Par sécurité, on bloque si ce n'est pas un User valide
+        }
 
-        return (bool) $user->get('issuperuser') && !(bool)$target->get('issuperuser');
+        return (bool)$user->get('issuperuser') && !(bool)$target->get('issuperuser');
     }
 
     /**
@@ -89,7 +92,9 @@ class UserPolicy
     public function canEdit(IdentityInterface $identity, User $target): bool
     {
         $user = $this->getValidUser($identity);
-        if (!$user) return false; // Par sécurité, on bloque si ce n'est pas un User valide
+        if (!$user) {
+            return false; // Par sécurité, on bloque si ce n'est pas un User valide
+        }
 
         return (bool)$user->get('issuperuser') || $user->get('id') === $target->get('id');
     }
@@ -104,7 +109,9 @@ class UserPolicy
     public function canDelete(IdentityInterface $identity, User $target): bool
     {
         $user = $this->getValidUser($identity);
-        if (!$user) return false;
+        if (!$user) {
+            return false;
+        }
 
         return (bool)$user->get('issuperuser') && $user->get('id') !== $target->get('id');
     }

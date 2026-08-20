@@ -1,12 +1,12 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Mailer;
 
-use Cake\Mailer\Mailer;
-use Cake\Core\Configure;
 use App\Log\EmailLoggerTrait;
+use Cake\Core\Configure;
+use Cake\Mailer\Mailer;
+use Throwable;
 
 /**
  * @class AppMailer
@@ -56,7 +56,7 @@ class AppMailer extends Mailer
             $this->traceEmail("Succès SMTP : Courriel '{$action}' expédié vers {$to}.");
 
             return true;
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             // Si l'erreur survient avant l'assignation du destinataire, on évite un crash
             $toArray = $this->getTo();
             $to = !empty($toArray) ? implode(', ', array_keys($toArray)) : 'destinataire non défini';

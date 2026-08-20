@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use Exception;
+
 class FieldAuthorizationsController extends AppController
 {
     /**
@@ -31,7 +33,7 @@ class FieldAuthorizationsController extends AppController
     {
         $fieldAuthorization = $this->FieldAuthorizations->get($id);
         $this->Authorization->authorize($fieldAuthorization, 'edit');
-        
+
         $this->set(compact('fieldAuthorization'));
     }
 
@@ -44,7 +46,7 @@ class FieldAuthorizationsController extends AppController
     public function delete(?string $id = null)
     {
         $this->request->allowMethod(['post', 'delete']);
-        
+
         $fieldAuthorization = $this->FieldAuthorizations->get($id);
         $this->Authorization->authorize($fieldAuthorization, 'delete');
 
@@ -54,9 +56,9 @@ class FieldAuthorizationsController extends AppController
                 $message = __("La règle d'autorisation a été supprimée avec succès.");
                 $success = true;
             } else {
-                throw new \Exception(__("L'ORM a refusé la suppression de l'enregistrement."));
+                throw new Exception(__("L'ORM a refusé la suppression de l'enregistrement."));
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $message = $e->getMessage();
         }
 
@@ -67,7 +69,7 @@ class FieldAuthorizationsController extends AppController
                 ->withStatus($success ? 200 : 400)
                 ->withStringBody(json_encode([
                     'success' => $success,
-                    'message' => $message
+                    'message' => $message,
                 ]));
         }
 

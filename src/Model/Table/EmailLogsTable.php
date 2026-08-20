@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query\SelectQuery;
-use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -12,7 +10,6 @@ use Cake\Validation\Validator;
  * EmailLogs Model
  *
  * @property \App\Model\Table\EmailRecipientsTable&\Cake\ORM\Association\HasMany $EmailRecipients
- *
  * @method \App\Model\Entity\EmailLog newEmptyEntity()
  * @method \App\Model\Entity\EmailLog newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\EmailLog> newEntities(array $data, array $options = [])
@@ -26,7 +23,6 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\EmailLog>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\EmailLog> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\EmailLog>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\EmailLog>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\EmailLog>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\EmailLog> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class EmailLogsTable extends Table

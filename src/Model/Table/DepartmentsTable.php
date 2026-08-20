@@ -6,9 +6,8 @@ namespace App\Model\Table;
 use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
-use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use SebastianBergmann\CodeCoverage\Driver\Selector;
 
 /**
  * Departments Model
@@ -19,7 +18,6 @@ use SebastianBergmann\CodeCoverage\Driver\Selector;
  * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\HasMany $ChildDepartments
  * @property \App\Model\Table\CgrCodesTable&\Cake\ORM\Association\HasMany $OwnedCgrCodes
  * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
- *
  * @method \App\Model\Entity\Department newEmptyEntity()
  * @method \App\Model\Entity\Department newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Department> newEntities(array $data, array $options = [])
@@ -33,7 +31,6 @@ use SebastianBergmann\CodeCoverage\Driver\Selector;
  * @method iterable<\App\Model\Entity\Department>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Department> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Department>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Department>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Department>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Department> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  * @mixin \Cake\ORM\Behavior\TreeBehavior
  */
@@ -165,12 +162,11 @@ class DepartmentsTable extends AppTable
             return $query;
         }
 
-        $userDepartmentsTable = \Cake\ORM\TableRegistry::getTableLocator()->get('UserDepartments');
+        $userDepartmentsTable = TableRegistry::getTableLocator()->get('UserDepartments');
         $myDepartmentIds = $userDepartmentsTable->find('departmentsOf', user: $user);
 
         return $query->where([
-            'Departments.id IN' => $myDepartmentIds
+            'Departments.id IN' => $myDepartmentIds,
         ]);
     }
-
 }

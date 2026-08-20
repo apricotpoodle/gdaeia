@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -12,7 +11,6 @@ use Cake\Validation\Validator;
  * FieldAuthorizations Model
  *
  * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\BelongsTo $Roles
- *
  * @method \App\Model\Entity\FieldAuthorization newEmptyEntity()
  * @method \App\Model\Entity\FieldAuthorization newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\FieldAuthorization> newEntities(array $data, array $options = [])
@@ -26,7 +24,6 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\FieldAuthorization>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\FieldAuthorization> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\FieldAuthorization>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\FieldAuthorization>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\FieldAuthorization>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\FieldAuthorization> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class FieldAuthorizationsTable extends Table

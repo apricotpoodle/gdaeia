@@ -3,16 +3,13 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
-use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
  * Contracttypes Model
  *
  * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
- *
  * @method \App\Model\Entity\Contracttype newEmptyEntity()
  * @method \App\Model\Entity\Contracttype newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Contracttype> newEntities(array $data, array $options = [])
@@ -26,7 +23,6 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Contracttype> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Contracttype>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Contracttype> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class ContracttypesTable extends AppTable

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Http\Response;
+use Exception;
 
 /**
  * Class ApplicationformsController (Web)
@@ -34,7 +35,7 @@ class ApplicationformsController extends AppController
             'Professionalcategories',
             'Worktimes',
             'Periods',
-            'Yesnos'
+            'Yesnos',
         ]);
         $this->Authorization->authorize($applicationform, 'view');
 
@@ -79,12 +80,12 @@ class ApplicationformsController extends AppController
         $success = false;
         try {
             if ($this->Applicationforms->delete($applicationform)) {
-                $message = __("La demande de recrutement #{0} a été supprimée avec succès.", $id);
+                $message = __('La demande de recrutement #{0} a été supprimée avec succès.', $id);
                 $success = true;
             } else {
-                throw new \Exception(__("L'ORM a refusé la suppression de l'enregistrement."));
+                throw new Exception(__("L'ORM a refusé la suppression de l'enregistrement."));
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $message = $e->getMessage();
         }
 
@@ -95,7 +96,7 @@ class ApplicationformsController extends AppController
                 ->withStatus($success ? 200 : 400)
                 ->withStringBody(json_encode([
                     'success' => $success,
-                    'message' => $message
+                    'message' => $message,
                 ]));
         }
 
