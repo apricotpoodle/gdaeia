@@ -42,5 +42,9 @@ class AppView extends View
         parent::initialize();
         // Chargement global du Helper d'infrastructure
         $this->loadHelper('Tabulator');
+        // Rend l'objet $identity automatiquement accessible dans toutes les vues (.php)
+        $identity = $this->getRequest()->getAttribute('identity');
+        $this->set('identity', $identity);
+
     }
 }

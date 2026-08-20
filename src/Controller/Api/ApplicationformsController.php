@@ -240,6 +240,7 @@ class ApplicationformsController extends AppController
                 'Contracttypes',
                 'Hiringreasons',
                 'Comments',
+                'Comments' => ['Users'], // Charge le fil de discussion et ses auteurs
             ]);
 
         // 2. Application des tris et filtres Tabulator

@@ -36,6 +36,7 @@ class ApplicationformsController extends AppController
             'Worktimes',
             'Periods',
             'Yesnos',
+            'Comments' => ['Users'], // Charge le fil de discussion et ses auteurs
         ]);
         $this->Authorization->authorize($applicationform, 'view');
 
