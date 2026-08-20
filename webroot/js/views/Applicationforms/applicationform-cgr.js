@@ -27,7 +27,6 @@ document.addEventListener('DOMContentLoaded', function () {
             cgrFinalInput.readOnly = true;
             const currentParts = initialValue ? initialValue.split('-') : [];
 
-            // Pour chaque zone requise (ex: SERVICE, puis TITRE...)
             // Parcours de chaque type requis par la stratégie du département
             data.schema.forEach((segmentType, index) => {
                 const select = document.createElement('select');
@@ -36,18 +35,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
-                defaultOption.textContent = `-- Choisir ${segmentType} --`;
-                select.appendChild(defaultOption);
-
-                // Recherche insensible à la casse dans data.options
-                const targetKey = Object.keys(data.options || {}).find(
-                    k => k.toUpperCase() === segmentType.toUpperCase()
-                );
-                const availableOptions = targetKey ? data.options[targetKey] : [];
                 defaultOption.textContent = `-- ${segmentType} --`;
                 select.appendChild(defaultOption);
 
-                // Recherche exacte ou insensible à la casse dans les clés retournées
+                // Recherche insensible à la casse dans les clés de data.options
                 const cleanType = String(segmentType).trim().toUpperCase();
                 const matchedKey = Object.keys(data.options || {}).find(k => k.trim().toUpperCase() === cleanType);
                 const availableOptions = matchedKey ? data.options[matchedKey] : [];
@@ -73,7 +64,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 select.addEventListener('change', updateFinalCgrValue);
                 cgrContainer.appendChild(select);
             });
-            
 
             updateFinalCgrValue();
         })
@@ -86,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const values = Array.from(selects).map(s => s.value).filter(Boolean);
 
-        // Si tous les sous-choix sont faits, on fabrique la chaîne finale (ex: "S01-T02")
+        // Si tous les sous-choix sont faits, fabrication de la chaîne finale (ex: "S01-T02")
         if (values.length === selects.length) {
             cgrFinalInput.value = values.join('-');
         } else {

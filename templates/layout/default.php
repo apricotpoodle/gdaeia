@@ -40,6 +40,7 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
     <?= $this->Html->css('vendor/tabulator/tabulator.min.css') ?>
     <?= $this->Html->css('tabulator/custom-theme.css') ?>
 
+    <?= $this->Html->script('app') ?>
     <?= $this->Html->script('vendor/luxon/luxon.min.js') ?>
     <?= $this->Html->script('vendor/tabulator/tabulator.min.js') ?>
 

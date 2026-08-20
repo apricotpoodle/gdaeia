@@ -16,9 +16,6 @@ class ApplicationformsController extends AppController
     public function beforeFilter(\Cake\Event\EventInterface $event): void
     {
         parent::beforeFilter($event);
-        
-        // Optionnel : Si une action particulière ne requiert pas de Policy
-        // $this->Authorization->skipAuthorization(['actionSansCheck']);
     }
 
     /**
@@ -44,7 +41,7 @@ class ApplicationformsController extends AppController
             'Worktimes',
             'Periods',
             'Yesnos',
-            'Comments' => ['Users'], // Charge le fil de discussion et ses auteurs
+            'Comments' => ['Users'],
         ]);
         $this->Authorization->authorize($applicationform, 'view');
 
@@ -53,7 +50,6 @@ class ApplicationformsController extends AppController
 
     /**
      * Action Add (GET /applicationforms/add)
-     * Livrera la coquille HTML du formulaire de création.
      */
     public function add(): void
     {
@@ -64,24 +60,23 @@ class ApplicationformsController extends AppController
     }
 
     /**
-     * Action Edit (GET /applicationforms/edit/{id})
-     * Livrera la coquille HTML du formulaire de modification.
+     * Action Edit (GET/POST /applicationforms/edit/{id})
      *
      * @param string $id Identifiant de la demande.
-     * @return ?Response Redirection ou rendu HTML.
+     * @return \Cake\Http\Response|null Redirection ou rendu HTML.
      */
     public function edit(string $id): ?Response
     {
+        // 1. Chargement de l'entité
         $applicationform = $this->Applicationforms->get($id, contain: ['Comments']);
-        // 1 chargement de l'entité
-        $applicationform = $this->Applicationforms->get($id, contain: ['Comments']);
-        // 2. Verou d'autorisation strict (doit eetre executế avant tout traitement )
+
+        // 2. Verrou d'autorisation strict (exécuté avant tout traitement)
         $this->Authorization->authorize($applicationform, 'edit');
-        // 3. Traitement de la soumission POST / PUT
+
+        // 3. Traitement de la soumission POST / PUT / PATCH
         if ($this->request->is(['post', 'put', 'patch'])) {
             $applicationform = $this->Applicationforms->patchEntity($applicationform, $this->request->getData());
 
-        // Récupération des listes pour les selects
             if ($this->Applicationforms->save($applicationform)) {
                 $this->Flash->success(__('La demande de recrutement #{0} a été mise à jour avec succès.', $applicationform->id));
 
@@ -114,13 +109,12 @@ class ApplicationformsController extends AppController
             'yesnos',
             'collaborators'
         ));
-        
+
         return null;
     }
 
     /**
      * Action Delete Hybride (POST/DELETE /applicationforms/delete/{id})
-     * Intercepte XHR pour Tabulator ou effectue une redirection HTML avec Flash.
      *
      * @param string|null $id Identifiant de la demande.
      * @return \Cake\Http\Response|null Redirection ou payload JSON.
@@ -144,7 +138,6 @@ class ApplicationformsController extends AppController
             $message = $e->getMessage();
         }
 
-        // Interception XHR/AJAX pour la grille Tabulator
         if ($this->request->is('ajax') || $this->request->accepts('application/json')) {
             return $this->response
                 ->withType('application/json')
