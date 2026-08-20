@@ -21,10 +21,10 @@ class FieldAuthorizationsTablePolicy
         // AJOUTEZ CETTE LIGNE ICI :
         // dd('ARRIVÉ DANS LA POLICY !');
         // dd($user);
-        /** @var User $u */
+        /** @var \App\Policy\User $u */
         $u = $user->getOriginalData();
         // Exemple de logique (à adapter selon votre application) :
-        if ($u->role_id != 1){  // get('role_id') === 1) {
+        if ($u->role_id != 1) {  // get('role_id') === 1) {
             // dd('result true pour table Policy');
             return true;
         }

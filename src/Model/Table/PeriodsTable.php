@@ -3,16 +3,13 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
-use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
  * Periods Model
  *
  * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
- *
  * @method \App\Model\Entity\Period newEmptyEntity()
  * @method \App\Model\Entity\Period newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Period> newEntities(array $data, array $options = [])
@@ -26,7 +23,6 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Period> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Period>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Period> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class PeriodsTable extends AppTable

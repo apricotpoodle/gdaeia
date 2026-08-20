@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -14,7 +13,6 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\BelongsTo $Departments
  * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\BelongsTo $Roles
  * @property \App\Model\Table\ApplicationvalidationstepsTable&\Cake\ORM\Association\HasMany $Applicationvalidationsteps
- *
  * @method \App\Model\Entity\Validationsequence newEmptyEntity()
  * @method \App\Model\Entity\Validationsequence newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Validationsequence> newEntities(array $data, array $options = [])
@@ -28,7 +26,6 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Validationsequence>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationsequence> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Validationsequence>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationsequence>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Validationsequence>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationsequence> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class ValidationsequencesTable extends Table

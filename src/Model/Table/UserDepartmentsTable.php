@@ -1,9 +1,9 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -14,7 +14,6 @@ use Cake\Validation\Validator;
  *
  * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
  * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\BelongsTo $Departments
- *
  * @method \App\Model\Entity\UserDepartment newEmptyEntity()
  * @method \App\Model\Entity\UserDepartment newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\UserDepartment> newEntities(array $data, array $options = [])
@@ -28,7 +27,6 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\UserDepartment>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\UserDepartment> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\UserDepartment>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\UserDepartment>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\UserDepartment>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\UserDepartment> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class UserDepartmentsTable extends Table
@@ -94,7 +92,6 @@ class UserDepartmentsTable extends Table
         return $rules;
     }
 
-
     /**
      * Custom finder : Récupère la requête des lignes de départements associées à un utilisateur donné.
      * Utilisation : ->find('departmentsOf', user: $userEntity)
@@ -103,7 +100,7 @@ class UserDepartmentsTable extends Table
      * @param \App\Model\Entity\User $user L'entité de l'opérateur.
      * @return \Cake\ORM\Query\SelectQuery
      */
-    public function findDepartmentsOf(SelectQuery $query, \App\Model\Entity\User $user): SelectQuery
+    public function findDepartmentsOf(SelectQuery $query, User $user): SelectQuery
     {
         return $query->select(['UserDepartments.department_id'])
             ->where(['UserDepartments.user_id' => $user->id]);

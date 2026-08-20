@@ -1,8 +1,9 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Log;
+
+use Cake\Log\Log;
 
 /**
  * Trait EmailLoggerTrait
@@ -30,6 +31,6 @@ trait EmailLoggerTrait
         // qui n'incluent pas le LogTrait natif de CakePHP (comme le Mailer).
         // L'antislash (\) initial est crucial : il force PHP à chercher la façade Log
         // dans le noyau de CakePHP, ignorant le namespace courant (App\Log).
-        \Cake\Log\Log::write($level, $message, ['scope' => ['email']]);
+        Log::write($level, $message, ['scope' => ['email']]);
     }
 }

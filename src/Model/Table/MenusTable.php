@@ -1,12 +1,9 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
-use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
@@ -15,7 +12,6 @@ use Cake\Validation\Validator;
  * @property \App\Model\Table\MenusTable&\Cake\ORM\Association\BelongsTo $ParentMenus
  * @property \App\Model\Table\MenusTable&\Cake\ORM\Association\HasMany $ChildMenus
  * @property \App\Model\Table\RoleMenusTable&\Cake\ORM\Association\HasMany $RoleMenus
- *
  * @method \App\Model\Entity\Menu newEmptyEntity()
  * @method \App\Model\Entity\Menu newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Menu> newEntities(array $data, array $options = [])
@@ -29,7 +25,6 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Menu> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Menu>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Menu> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TreeBehavior
  */
 class MenusTable extends AppTable

@@ -1,24 +1,22 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Model\Entity;
 
-use Authorization\AuthorizationServiceInterface;
-use Authorization\Policy\ResultInterface;
-use Authentication\PasswordHasher\DefaultPasswordHasher;
+use ArrayAccess;
 use Authentication\IdentityInterface as AuthenticationIdentity;
+use Authentication\PasswordHasher\DefaultPasswordHasher;
+use Authorization\AuthorizationServiceInterface;
 use Authorization\IdentityInterface as AuthorizationIdentity;
+use Authorization\Policy\ResultInterface;
 
 /**
  * Class User
+ *
  * @package App\Model\Entity
  */
 class User extends AppEntity implements AuthenticationIdentity, AuthorizationIdentity
 {
-
-
-
     /**
      * Liste des IDs de rôles (ex: Staff, RH) autorisés à créer d'autres utilisateurs
      * en dehors des Super Administrateurs.
@@ -33,7 +31,7 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
     // AJOUTEZ CECI POUR SÉCURISER L'API :
     protected array $_hidden = [
         'password',
-        'token'
+        'token',
     ];
 
     public function getIdentifier(): int|string|null
@@ -56,7 +54,7 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
         return $this->authorization->applyScope($this, $action, $resource, ...$optionalArgs);
     }
 
-    public function getOriginalData(): \ArrayAccess|array
+    public function getOriginalData(): ArrayAccess|array
     {
         return $this;
     }

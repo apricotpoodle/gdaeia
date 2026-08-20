@@ -1,10 +1,11 @@
 <?php
+declare(strict_types=1);
 
 namespace App\View\Helper;
 
-use Cake\View\Helper;
 use Cake\ORM\TableRegistry;
-use PhpParser\Node\Stmt\TryCatch;
+use Cake\View\Helper;
+use Throwable;
 
 /**
  * @class TabulatorHelper
@@ -34,7 +35,7 @@ class TabulatorHelper extends Helper
         // 4. Évaluation dynamique du droit de création (action 'add' de la Policy)
         try {
             $canCreate = $identity ? $identity->can('add', $emptyEntity) : false;
-        } catch (\Throwable $th) {
+        } catch (Throwable $th) {
             // throw $th;
             $canCreate = false;
         }
@@ -44,7 +45,7 @@ class TabulatorHelper extends Helper
             '<div id="%s" data-controller="%s" data-can-create="%s"></div>',
             h($htmlId),
             h(strtolower($controllerName)),
-            $canCreate ? 'true' : 'false'
+            $canCreate ? 'true' : 'false',
         );
     }
 }

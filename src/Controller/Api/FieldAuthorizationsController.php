@@ -1,13 +1,15 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
+use App\Service\Security\FieldAuthorizationService;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
+use Cake\ORM\TableRegistry;
 
 /**
  * Class FieldAuthorizationsController (API)
@@ -61,7 +63,7 @@ class FieldAuthorizationsController extends AppController
         $paginatedData = $this->paginate($query, [
             'limit' => (int)($queryParams['size'] ?? 20),
             'page'  => (int)($queryParams['page'] ?? 1),
-            'sortableFields' => []
+            'sortableFields' => [],
         ]);
 
         // 5. Injection des droits de grille (cellules / lignes)
@@ -84,12 +86,12 @@ class FieldAuthorizationsController extends AppController
         $this->request->allowMethod(['get']);
         $this->Authorization->skipAuthorization();
 
-        $service = new \App\Service\Security\FieldAuthorizationService();
+        $service = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
 
         $schema = $service->getFieldSchema($identity, 'FieldAuthorizations');
 
-        $rolesTable = \Cake\ORM\TableRegistry::getTableLocator()->get('Roles');
+        $rolesTable = TableRegistry::getTableLocator()->get('Roles');
         $roles = $rolesTable->find('list', keyField: 'id', valueField: 'name')->toArray();
 
         $this->set(compact('schema', 'roles'));
@@ -108,7 +110,7 @@ class FieldAuthorizationsController extends AppController
 
         $fieldAuthorization = $this->FieldAuthorizations->newEmptyEntity();
 
-        $authService = new \App\Service\Security\FieldAuthorizationService();
+        $authService = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
 
         // 2. Filtration des données soumises selon le schéma de rôle
@@ -135,7 +137,7 @@ class FieldAuthorizationsController extends AppController
         $fieldAuthorization = $this->FieldAuthorizations->get($id);
         $this->Authorization->authorize($fieldAuthorization, 'edit');
 
-        $authService = new \App\Service\Security\FieldAuthorizationService();
+        $authService = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
 
         $schema = $authService->getFieldSchema($identity, 'FieldAuthorizations');
@@ -154,10 +156,10 @@ class FieldAuthorizationsController extends AppController
     /**
      * Gestion centralisée des erreurs de validation
      */
-    private function handleValidationError(\Cake\Datasource\EntityInterface $entity): Response
+    private function handleValidationError(EntityInterface $entity): Response
     {
         $errors = $entity->getErrors();
-        $message = __("Le formulaire contient des données invalides.");
+        $message = __('Le formulaire contient des données invalides.');
 
         if (!empty($errors)) {
             $firstError = current(reset($errors));

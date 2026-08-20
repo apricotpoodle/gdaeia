@@ -3,11 +3,14 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 use Search\Manager;
+use Search\Model\Filter\Callback;
 
 /**
  * Applicationforms Model
@@ -26,7 +29,6 @@ use Search\Manager;
  * @property \App\Model\Table\CurrentvalidationrolesTable&\Cake\ORM\Association\HasMany $Currentvalidationroles
  * @property \App\Model\Table\ValidationVisasTable&\Cake\ORM\Association\HasMany $ValidationVisas
  * @property \App\Model\Table\ValidationsTable&\Cake\ORM\Association\HasMany $Validations
- *
  * @method \App\Model\Entity\Applicationform newEmptyEntity()
  * @method \App\Model\Entity\Applicationform newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Applicationform> newEntities(array $data, array $options = [])
@@ -40,7 +42,6 @@ use Search\Manager;
  * @method iterable<\App\Model\Entity\Applicationform>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationform> saveManyOrFail(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Applicationform>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationform>|false deleteMany(iterable $entities, array $options = [])
  * @method iterable<\App\Model\Entity\Applicationform>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationform> deleteManyOrFail(iterable $entities, array $options = [])
- *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class ApplicationformsTable extends Table
@@ -116,6 +117,12 @@ class ApplicationformsTable extends Table
         $this->hasMany('Validations', [
             'foreignKey' => 'applicationform_id',
         ]);
+        $this->hasMany('Comments', [
+            'foreignKey' => 'foreign_key',
+            'conditions' => ['Comments.model' => 'Applicationforms'],
+            'cascadeCallbacks' => true,
+            'dependent' => true,
+        ]);
     }
 
     /**
@@ -132,7 +139,7 @@ class ApplicationformsTable extends Table
 
         // 🚀 FILTRE CALLBACK FULLTEXT PERFORMANCE (MATCH AGAINST IN BOOLEAN MODE)
         $searchManager->callback('q', [
-            'callback' => function (SelectQuery $query, array $args, \Search\Model\Filter\Callback $filter) {
+            'callback' => function (SelectQuery $query, array $args, Callback $filter) {
                 $searchValue = trim((string)($args['q'] ?? ''));
                 if ($searchValue === '') {
                     return true;
@@ -258,6 +265,14 @@ class ApplicationformsTable extends Table
             ->dateTime('deleted')
             ->allowEmptyDateTime('deleted');
 
+        $validator
+            ->nonNegativeInteger('collaborator_id')
+            ->allowEmptyString('collaborator_id');
+
+        $validator
+            ->dateTime('archived')
+            ->allowEmptyDateTime('archived');
+
         return $validator;
     }
 
@@ -295,7 +310,7 @@ class ApplicationformsTable extends Table
      * @param \App\Model\Entity\User $user L'opérateur courant.
      * @return \Cake\ORM\Query\SelectQuery
      */
-    public function findVisibleTo(SelectQuery $query, \App\Model\Entity\User $user): SelectQuery
+    public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
         // 1. Le Super Admin a une vision globale (pas de filtre)
         if ($user->get('issuperuser')) {
@@ -304,16 +319,15 @@ class ApplicationformsTable extends Table
 
         // 2. Récupération du périmètre des départements de l'utilisateur
         // On s'appuie sur la table de liaison UserDepartments
-        $userDepartmentsTable = \Cake\ORM\TableRegistry::getTableLocator()->get('UserDepartments');
+        $userDepartmentsTable = TableRegistry::getTableLocator()->get('UserDepartments');
         $myDepartmentIds = $userDepartmentsTable->find('departmentsOf', user: $user);
 
         // 3. Application du filtre strict (Créateur OU Appartient à mon département)
         return $query->where([
             'OR' => [
                 'Applicationforms.user_id' => $user->id,
-                'Applicationforms.department_id IN' => $myDepartmentIds
-            ]
+                'Applicationforms.department_id IN' => $myDepartmentIds,
+            ],
         ]);
     }
-
 }

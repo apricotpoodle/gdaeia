@@ -1,14 +1,14 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Controller;
 
 use App\Log\EmailLoggerTrait;
 use App\Mailer\UserMailer;
+use Cake\Event\EventInterface;
 use Cake\Http\Response;
-
-use function Cake\Error\dd;
+use DateTime;
+use Exception;
 
 /**
  * Class UsersController (Web)
@@ -30,9 +30,8 @@ class UsersController extends AppController
      * @param \Cake\Event\EventInterface<\Cake\Controller\Controller> $event An Event instance
      * @return void
      * @link https://book.cakephp.org/5/en/controllers.html#request-life-cycle-callbacks
-     * @phpcsSuppress SlevomatCodingStandard.TypeHints.ReturnTypeHint.MissingNativeTypeHint
      */
-    public function beforeFilter(\Cake\Event\EventInterface $event): void
+    public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
 
@@ -45,7 +44,7 @@ class UsersController extends AppController
     /**
      * Méthode Login
      *
-     * @return void|Response
+     * @return \Cake\Http\Response|void
      */
     public function login(): ?Response
     {
@@ -56,6 +55,7 @@ class UsersController extends AppController
             // On consomme l'URL interceptée (ex: si l'utilisateur a cliqué sur un vieux lien)
             // Sinon, direction par défaut vers la table de gestion des utilisateurs
             $target = $this->Authentication->getLoginRedirect() ?? '/users/index';
+
             return $this->Authentication->redirectAfterLogin($target);
         }
 
@@ -69,7 +69,7 @@ class UsersController extends AppController
     /**
      * Méthode Logout
      *
-     * @return Response
+     * @return \Cake\Http\Response
      */
     public function logout(): Response
     {
@@ -100,7 +100,7 @@ class UsersController extends AppController
      * @return \Cake\Http\Response|null Redirection ou payload JSON.
      * @throws \Cake\Datasource\Exception\RecordNotFoundException Si l'enregistrement n'existe pas.
      */
-    public function delete($id = null)
+    public function delete(?string $id = null)
     {
         // 1. Sécurité : Interdit le protocole GET pour éviter les suppressions accidentelles via URL
         $this->request->allowMethod(['post', 'delete']);
@@ -110,7 +110,7 @@ class UsersController extends AppController
         try {
             // Exemple de règle métier arbitraire : Interdiction de supprimer un super utilisateur
             if ($user->issuperuser) {
-                throw new \Exception(__("Action interdite : Impossible de supprimer un compte de niveau Super Administrateur."));
+                throw new Exception(__('Action interdite : Impossible de supprimer un compte de niveau Super Administrateur.'));
             }
 
             // 2. Exécution de la suppression via l'ORM CakePHP
@@ -119,9 +119,9 @@ class UsersController extends AppController
                 $message = __("L'utilisateur {0} a été supprimé avec succès de la base de données.", $user->email);
                 $success = true;
             } else {
-                throw new \Exception(__("L'ORM a refusé la suppression de l'enregistrement. Veuillez vérifier les dépendances relationnelles."));
+                throw new Exception(__("L'ORM a refusé la suppression de l'enregistrement. Veuillez vérifier les dépendances relationnelles."));
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Capture de l'erreur (règle métier, contrainte de clé étrangère SQL, etc.)
             $message = $e->getMessage();
         }
@@ -133,7 +133,7 @@ class UsersController extends AppController
                 ->withStatus($success ? 200 : 400) // Code 400 lève l'exception dans le catch de fetch()
                 ->withStringBody(json_encode([
                     'success' => $success,
-                    'message' => $message // Ce message sera lu directement par FlashManager.error() ou .success()
+                    'message' => $message, // Ce message sera lu directement par FlashManager.error() ou .success()
                 ]));
         }
 
@@ -165,7 +165,7 @@ class UsersController extends AppController
                 $token = bin2hex(random_bytes(32));
 
                 $user->set('token', $token);
-                $user->set('token_expires', new \DateTime('+1 hour'));
+                $user->set('token_expires', new DateTime('+1 hour'));
 
                 if ($this->Users->save($user)) {
                     $this->traceEmail("Lien de récupération généré pour {$email} : /users/reset-password/{$token}");
@@ -178,6 +178,7 @@ class UsersController extends AppController
 
             // Message de sécurité générique anti-énumération
             $this->Flash->success(__('Si cette adresse existe dans notre système, un email de réinitialisation vous a été envoyé.'));
+
             return $this->redirect(['action' => 'login']);
         }
 
@@ -197,6 +198,7 @@ class UsersController extends AppController
 
         if (empty($token)) {
             $this->Flash->error(__('Jeton de récupération invalide ou manquant.'));
+
             return $this->redirect(['action' => 'login']);
         }
 
@@ -205,12 +207,13 @@ class UsersController extends AppController
         $user = $this->Users->find()
             ->where([
                 'token' => $token,
-                'token_expires >' => new \DateTime()
+                'token_expires >' => new DateTime(),
             ])
             ->first();
 
         if ($user === null) {
             $this->Flash->error(__('Ce lien de récupération a expiré ou est invalide.'));
+
             return $this->redirect(['action' => 'login']);
         }
 
@@ -224,12 +227,14 @@ class UsersController extends AppController
 
             if ($this->Users->save($user)) {
                 $this->Flash->success(__('Votre mot de passe a été modifié avec succès. Veuillez vous connecter.'));
+
                 return $this->redirect(['action' => 'login']);
             }
             $this->Flash->error(__('Impossible de mettre à jour le mot de passe. Veuillez réessayer.'));
         }
 
         $this->set(compact('token'));
+
         return null;
     }
 
@@ -270,7 +275,6 @@ class UsersController extends AppController
 
         // 💡 Utilisation de la méthode native isImpersonating()
         if ($this->Authentication->isImpersonating()) {
-
             // Restaure la session d'origine instantanément
             $this->Authentication->stopImpersonating();
 

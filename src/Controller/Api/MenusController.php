@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Controller\Api;
@@ -7,6 +6,7 @@ namespace App\Controller\Api;
 use App\Controller\AppController;
 use Cake\Event\EventInterface;
 use Cake\ORM\TableRegistry;
+use Throwable;
 
 /**
  * @class MenusController
@@ -94,7 +94,7 @@ class MenusController extends AppController
 
                 /** @var \App\Model\Entity\User $userWithRole */
                 $userWithRole = $userTable->get($user->get('id'), [
-                    'contain' => ['Roles']
+                    'contain' => ['Roles'],
                 ]);
 
                 $userData = [
@@ -103,7 +103,7 @@ class MenusController extends AppController
                     'issuperuser' => (bool)$userWithRole->get('issuperuser'),
                     'is_impersonated' => $this->Authentication->isImpersonating(),
                 ];
-            } catch (\Throwable $th) {
+            } catch (Throwable $th) {
                 $userData = [
                     'email' => $user->get('email'),
                     'role_name' => 'Utilisateur',

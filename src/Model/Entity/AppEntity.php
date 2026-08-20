@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Model\Entity;
@@ -8,6 +7,7 @@ use Cake\ORM\Entity;
 
 /**
  * Class AppEntity
+ *
  * @package App\Model\Entity
  */
 abstract class AppEntity extends Entity

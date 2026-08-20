@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
-use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -13,7 +12,6 @@ use Cake\Validation\Validator;
  *
  * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\BelongsTo $Applicationforms
  * @property \App\Model\Table\ValidationstatusesTable&\Cake\ORM\Association\BelongsTo $Validationstatuses
- *
  * @method \App\Model\Entity\Applicationformstatus newEmptyEntity()
  * @method \App\Model\Entity\Applicationformstatus newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Applicationformstatus> newEntities(array $data, array $options = [])

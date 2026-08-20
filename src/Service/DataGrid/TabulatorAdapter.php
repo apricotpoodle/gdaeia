@@ -1,15 +1,13 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Service\DataGrid;
 
-use Authorization\AuthorizationServiceInterface;
+use Cake\Database\Expression\QueryExpression;
+use Cake\Datasource\Paging\PaginatedInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query\SelectQuery;
-use Cake\Datasource\Paging\PaginatedInterface;
 use Cake\Utility\Inflector;
-use Cake\Database\Expression\QueryExpression;
 
 /**
  * Class TabulatorAdapter
@@ -143,6 +141,7 @@ class TabulatorAdapter
 
         [$relation, $column] = explode('.', $field, 2);
         $relationAlias = Inflector::camelize(Inflector::pluralize($relation));
+
         return $relationAlias . '.' . $column;
     }
 

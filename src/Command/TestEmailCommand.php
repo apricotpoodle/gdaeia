@@ -51,18 +51,20 @@ class TestEmailCommand extends Command
             'email' => $email,
             'firstname' => 'John',
             'lastname' => 'Doe',
-            'token' => 'TEST-TOKEN-123456789'
+            'token' => 'TEST-TOKEN-123456789',
         ]);
 
         $mailer = new UserMailer();
-        
+
         // Utilisation de la méthode sécurisée de notre AppMailer
         if ($mailer->safeSend('forgotPassword', [$dummyUser])) {
             $io->success('Succès : Le courriel a été accepté par le relais SMTP.');
+
             return static::CODE_SUCCESS;
         }
 
         $io->error('Échec : Le relais SMTP a rejeté l\'envoi. Consultez logs/email.log.');
+
         return static::CODE_ERROR;
     }
 }
