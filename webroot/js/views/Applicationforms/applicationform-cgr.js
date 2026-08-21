@@ -1,10 +1,54 @@
+/**
+ * @file applicationform-cgr.js
+ * @description Génération dynamique des sélecteurs CGR, auto-sélection des options uniques
+ * et gestion visuelle dynamique (nettoyage des indicateurs une fois le CGR complet).
+ *
+ * @author Équipe de Développement
+ * @version 1.2.0
+ */
+
 document.addEventListener('DOMContentLoaded', function () {
-    const departmentSelect = document.getElementById('department-id');
+    const departmentSelect = document.getElementById('department-id') || document.getElementById('department-id-input');
     const cgrContainer = document.getElementById('cgr-components-container');
     const cgrFinalInput = document.getElementById('cgr-final-input');
 
     if (!departmentSelect || !cgrContainer || !cgrFinalInput) return;
 
+    /**
+     * Met à jour le style visuel de TOUS les sous-sélecteurs CGR.
+     * Si le code CGR complet est assemblé, les sélecteurs restent neutres pour ne pas surcharger l'IHM.
+     * S'il est incomplet, les sélecteurs déjà renseignés sont mis en avant.
+     */
+    function refreshAllSelectStyles() {
+        const selects = cgrContainer.querySelectorAll('.cgr-segment-select');
+        const isCgrComplete = cgrFinalInput.value && cgrFinalInput.value.trim() !== '';
+
+        selects.forEach(select => {
+            // Nettoyage systématique des classes de couleur
+            select.classList.remove(
+                'border-success', 'bg-success-subtle', 'text-success-emphasis', 'fw-semibold',
+                'border-secondary-subtle', 'bg-light'
+            );
+
+            if (isCgrComplete) {
+                // 💡 CODE COMPLET / AFFICHAGE INITIAL : Style neutre pour les sélecteurs
+                select.classList.add('border-secondary-subtle', 'bg-light');
+            } else if (select.value) {
+                // 💡 SAISIE EN COURS : Mise en avant de l'élément déjà choisi
+                select.classList.add('border-success', 'bg-success-subtle', 'text-success-emphasis', 'fw-semibold');
+            } else {
+                // 💡 SAISIE EN COURS : Élément en attente de choix
+                select.classList.add('border-secondary-subtle', 'bg-light');
+            }
+        });
+    }
+
+    /**
+     * Interroge l'API CGR pour le département donné et construit les éléments <select>.
+     *
+     * @param {string} departmentId Identifiant du département.
+     * @param {string} [initialValue=''] Code CGR préexistant (ex: "S01-T02").
+     */
     function fetchAndBuildCgr(departmentId, initialValue = '') {
         if (!departmentId) {
             cgrContainer.innerHTML = '';
@@ -18,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(data => {
             cgrContainer.innerHTML = '';
 
-            // Si stratégie libre ou sans schéma : saisie directe
+            // Si aucune règle CGR pour ce département
             if (!data.schema || data.schema.length === 0) {
                 cgrFinalInput.readOnly = false;
                 return;
@@ -27,7 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
             cgrFinalInput.readOnly = true;
             const currentParts = initialValue ? initialValue.split('-') : [];
 
-            // Parcours de chaque type requis par la stratégie du département
+            // Construction de chaque sous-sélecteur du schéma
             data.schema.forEach((segmentType, index) => {
                 const select = document.createElement('select');
                 select.className = 'form-select form-select-sm cgr-segment-select';
@@ -38,7 +82,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 defaultOption.textContent = `-- ${segmentType} --`;
                 select.appendChild(defaultOption);
 
-                // Recherche insensible à la casse dans les clés de data.options
                 const cleanType = String(segmentType).trim().toUpperCase();
                 const matchedKey = Object.keys(data.options || {}).find(k => k.trim().toUpperCase() === cleanType);
                 const availableOptions = matchedKey ? data.options[matchedKey] : [];
@@ -49,45 +92,72 @@ document.addEventListener('DOMContentLoaded', function () {
                     emptyOpt.textContent = `(Aucun ${segmentType} paramétré)`;
                     select.appendChild(emptyOpt);
                 } else {
+                    let hasPreselection = false;
+
                     availableOptions.forEach(opt => {
                         const option = document.createElement('option');
                         option.value = opt.code;
                         option.textContent = opt.label;
-                        
-                        if (currentParts[index] === opt.code) {
+
+                        // Restauration de la valeur initiale enregistrée
+                        if (currentParts[index] && currentParts[index] === opt.code) {
                             option.selected = true;
+                            hasPreselection = true;
                         }
                         select.appendChild(option);
                     });
+
+                    // Auto-sélection si une seule option est disponible
+                    if (!hasPreselection && availableOptions.length === 1) {
+                        select.value = availableOptions[0].code;
+                    }
                 }
 
-                select.addEventListener('change', updateFinalCgrValue);
+                // Écouteur de modification du sélecteur
+                select.addEventListener('change', function () {
+                    updateFinalCgrValue();
+                });
+
                 cgrContainer.appendChild(select);
             });
 
+            // Assemblage de la valeur initiale et mise à jour des styles
             updateFinalCgrValue();
         })
-        .catch(err => console.error('Erreur chargement CGR:', err));
+        .catch(err => console.error('Erreur lors du chargement du schéma CGR :', err));
     }
 
+    /**
+     * Recalcule la valeur assemblée globale du Code CGR
+     * et rafraîchit l'IHM de tous les sélecteurs.
+     */
     function updateFinalCgrValue() {
         const selects = cgrContainer.querySelectorAll('.cgr-segment-select');
         if (selects.length === 0) return;
 
         const values = Array.from(selects).map(s => s.value).filter(Boolean);
 
-        // Si tous les sous-choix sont faits, fabrication de la chaîne finale (ex: "S01-T02")
         if (values.length === selects.length) {
+            // Assemblage complet (ex: "S01-T02")
             cgrFinalInput.value = values.join('-');
         } else {
-            cgrFinalInput.value = ''; // Incomplet
+            // Incomplet
+            cgrFinalInput.value = '';
         }
+
+        // Mise à jour de l'apparence des sous-sélecteurs CGR
+        refreshAllSelectStyles();
+
+        // Notification d'événement vers applicationform-treeselect.js pour basculer la bannière visuelle
+        cgrFinalInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
+    // Écouteur de changement de département
     departmentSelect.addEventListener('change', function () {
         fetchAndBuildCgr(this.value);
     });
 
+    // Initialisation au chargement de la page
     if (departmentSelect.value) {
         fetchAndBuildCgr(departmentSelect.value, cgrFinalInput.value);
     }

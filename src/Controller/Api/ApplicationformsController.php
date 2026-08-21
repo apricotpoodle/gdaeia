@@ -61,10 +61,7 @@ class ApplicationformsController extends AppController
         $usersTable = TableRegistry::getTableLocator()->get('Users');
 
         // Application systématique du finder 'visibleTo' avec l'utilisateur courant (ADR 0041)
-        $departments = $departmentsTable
-            ->find('visibleTo', user: $currentUser)
-            ->find('list', keyField: 'id', valueField: 'name')
-            ->toArray();
+        $departments = $departmentsTable->findTreeSelectFormat($currentUser);
 
         $contracttypes = $contracttypesTable
             ->find('visibleTo', user: $currentUser)
@@ -161,7 +158,7 @@ class ApplicationformsController extends AppController
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode(['success' => true, 'id' => $applicationform->id]));
         }
-        
+
         /** @var \Cake\Datasource\EntityInterface $applicationform */
         return $this->handleValidationError($applicationform);
     }
@@ -195,7 +192,7 @@ class ApplicationformsController extends AppController
 
     /**
      * Gestion centralisée des erreurs de validation
-     * 
+     *
      * @param \Cake\Datasource\EntityInterface $entity
      * @return \Cake\Http\Response
      */
@@ -277,5 +274,5 @@ class ApplicationformsController extends AppController
         $this->set($config);
         $this->viewBuilder()->setOption('serialize', array_keys($config));
     }
-    
+
 }

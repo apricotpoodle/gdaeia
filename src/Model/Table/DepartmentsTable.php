@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Table;
@@ -168,5 +169,62 @@ class DepartmentsTable extends AppTable
         return $query->where([
             'Departments.id IN' => $myDepartmentIds,
         ]);
+    }
+
+    /**
+     * Custom finder : Récupère la structure hiérarchique imbriquée (threaded)
+     * des départements filtrés selon le périmètre de visibilité de l'opérateur.
+     *
+     * Utilisation : ->find('treeThreadedVisibleTo', user: $currentUser)
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query La requête ORM.
+     * @param \App\Model\Entity\User $user L'opérateur connecté.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findTreeThreadedVisibleTo(SelectQuery $query, User $user): SelectQuery
+    {
+        return $this->find('visibleTo', user: $user)
+            ->find('threaded')
+            ->orderBy(['Departments.lft' => 'ASC']);
+    }
+
+    /**
+     * Récupère l'arbre des départements autorisés et le formate pour TreeselectJS.
+     *
+     * @param \App\Model\Entity\User $user L'utilisateur connecté.
+     * @return array Structure [{value, name, children}, ...]
+     */
+    public function findTreeSelectFormat(User $user): array
+    {
+        $nodes = $this->find('treeThreadedVisibleTo', user: $user)->all();
+
+        return $this->formatForTreeSelect($nodes);
+    }
+
+    /**
+     * Formate récursivement la collection d'entités en tableau compatible TreeselectJS.
+     *
+     * @param iterable $nodes
+     * @return array
+     */
+    protected function formatForTreeSelect(iterable $nodes): array
+    {
+        $result = [];
+        foreach ($nodes as $node) {
+            $item = [
+                'value' => (string)$node->id,
+                'name' => (string)$node->name,
+            ];
+
+            // Vérification défensive de la présence d'enfants
+            $children = $node->get('children');
+            if (!empty($children) && (is_array($children) || $children instanceof \Traversable)) {
+                $item['children'] = $this->formatForTreeSelect($children);
+            }
+
+            $result[] = $item;
+        }
+
+        return $result;
     }
 }
