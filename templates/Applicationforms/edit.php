@@ -85,47 +85,15 @@ $this->Html->script('views/Applicationforms/applicationform-comments', ['block' 
 
         <!-- ZONE 3 : RÉMUNÉRATION & TEMPS DE TRAVAIL -->
         <?php if ($identity->can('viewZoneRemuneration', $applicationform)): ?>
-            <?php $canEditRemuneration = $identity->can('editZoneRemuneration', $applicationform); ?>
             <div class="col-12 col-lg-6">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-header bg-light fw-bold text-uppercase fs-7 text-secondary">
-                        <i class="fa-solid fa-euro-sign me-1"></i> <?= __('3. Temps de travail & Rémunération') ?>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <?= $this->Form->control('professionalcategory_id', [
-                                    'label' => __('Catégorie professionnelle'),
-                                    'class' => 'form-select',
-                                    'disabled' => !$canEditRemuneration,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?= $this->Form->control('worktime_id', [
-                                    'label' => __('Temps de travail'),
-                                    'class' => 'form-select',
-                                    'disabled' => !$canEditRemuneration,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?= $this->Form->control('grossremuneration', [
-                                    'label' => __('Rémunération Brute'),
-                                    'type' => 'number',
-                                    'step' => '0.01',
-                                    'class' => 'form-control',
-                                    'disabled' => !$canEditRemuneration,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?= $this->Form->control('period_id', [
-                                    'label' => __('Périodicité'),
-                                    'class' => 'form-select',
-                                    'disabled' => !$canEditRemuneration,
-                                ]) ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <?= $this->element('Applicationforms/zone_remuneration', [
+                    'applicationform' => $applicationform,
+                    'professionalcategories' => $professionalcategories ?? [],
+                    'worktimes' => $worktimes ?? [],
+                    'periods' => $periods ?? [],
+                    'fieldSchema' => $fieldSchema ?? [],
+                    'canEditRemuneration' => $identity->can('editZoneRemuneration', $applicationform),
+                ]) ?>
             </div>
         <?php endif; ?>
 
