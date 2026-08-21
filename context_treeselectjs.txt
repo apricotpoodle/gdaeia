@@ -1,0 +1,5642 @@
+Directory structure:
+└── treeselectjs/
+    ├── README.md
+    ├── biome.json
+    ├── CHANGELOG.md
+    ├── cypress.config.ts
+    ├── jest.config.ts
+    ├── LICENSE
+    ├── package.json
+    ├── tsconfig.app.json
+    ├── tsconfig.cypress.json
+    ├── tsconfig.jest.json
+    ├── tsconfig.json
+    ├── vite.config.mjs
+    ├── app/
+    │   ├── app.css
+    │   ├── app.js
+    │   ├── index.html
+    │   ├── todo.js
+    │   ├── examples/
+    │   │   ├── default.js
+    │   │   ├── disabled.js
+    │   │   ├── icons.js
+    │   │   ├── independentNodes.js
+    │   │   ├── singleSelect.js
+    │   │   └── slot.js
+    │   └── render/
+    │       ├── renderExampleSection.js
+    │       └── setupCodeCopyButtons.js
+    ├── demo/
+    │   ├── index.css
+    │   ├── index.html
+    │   └── index.js
+    └── src/
+        ├── treeselectjs.css
+        ├── treeselectjs.ts
+        ├── treeselectTypes.ts
+        ├── vite-env.d.ts
+        ├── helpers/
+        │   ├── classHelper.ts
+        │   ├── constants.ts
+        │   └── svgIcons.ts
+        ├── input/
+        │   ├── index.ts
+        │   ├── input.css
+        │   └── inputTypes.ts
+        └── list/
+            ├── index.ts
+            ├── list.css
+            ├── listTypes.ts
+            └── helpers/
+                ├── domHelper.ts
+                ├── listCheckStateHelper.ts
+                ├── listOptionsHelper.ts
+                └── listVisibilityStateHelper.ts
+
+
+Files Content:
+
+================================================
+FILE: packages/treeselectjs/README.md
+================================================
+# Treeselect JS component
+
+treeselectjs is a vanilla JavaScript and TypeScript tree select component for nested options, searchable dropdowns, checkboxes, and multi-select inputs.
+
+Framework wrappers are available for React and Vue:
+
+- React tree select wrapper - https://www.npmjs.com/package/react-treeselectjs
+- Vue 3 tree select wrapper - https://www.npmjs.com/package/vue-treeselectjs
+- Full key support (ArrowUp, ArrowDown, Space, ArrowLeft, ArrowRight, Enter)
+- Screen sensitive direction
+- Typescript support
+
+Build data:
+- treeselectjs.mjs  42.39 kB │ gzip: 10.07 kB
+- treeselectjs.umd.js  35.63 kB │ gzip: 9.17 kB
+- treeselectjs.css  8.43 kB │ gzip: 1.56 kB
+
+**Live Demo:** https://dipson88.github.io/treeselectjs/
+
+![Example img](https://github.com/dipson88/treeselectjs/blob/main/assets/treeselectjs.png?raw=true)
+
+### Support
+You can buy me a coffee if you want to support my work. Thank you!
+
+<a href="https://www.buymeacoffee.com/dipson88" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
+### Getting Started
+```bash
+npm install --save treeselectjs
+```
+Import treeselectjs (ES)
+```js
+import Treeselect from 'treeselectjs'
+
+@import 'treeselectjs/dist/treeselectjs.css' // Styles
+```
+
+Import treeselectjs (UMD)
+```html
+<script src="https://cdn.jsdelivr.net/npm/treeselectjs/dist/treeselectjs.umd.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs/dist/treeselectjs.css" />
+...
+<script>
+  ...
+  const treeselect = new Treeselect({ ...props })
+  ...
+</script>
+```
+
+Example
+```js
+import Treeselect from 'treeselectjs'
+
+const options = [
+  {
+    name: 'England',
+    value: 1,
+    children: [
+      {
+        name: 'London',
+        value: 2,
+        children: [
+          {
+            name: 'Chelsea',
+            value: 3,
+            children: []
+          },
+          {
+            name: 'West End',
+            value: 4,
+            children: []
+          }
+        ]
+      },
+      {
+        name: 'Brighton',
+        value: 5,
+        children: []
+      }
+    ]
+  },
+  {
+    name: 'France',
+    value: 6,
+    children: [
+      {
+        name: 'Paris',
+        value: 7,
+        children: []
+      },
+      {
+        name: 'Lyon',
+        value: 8,
+        children: []
+      }
+    ]
+  }
+]
+
+// Use slot if you need
+const slot = document.createElement('div')
+slot.innerHTML='<a class="treeselect-demo__slot" href="">Click!</a>'
+
+const domElement = document.querySelector('.treeselect-demo')
+const treeselect = new Treeselect({
+  parentHtmlContainer: domElement,
+  value: [4, 7, 8],
+  options: options,
+  listSlotHtmlComponent: slot
+})
+
+treeselect.srcElement.addEventListener('input', (e) => {
+  console.log('Selected value:', e.detail)
+})
+
+slot.addEventListener('click', (e) => {
+  e.preventDefault()
+  alert('Slot click!')
+})
+```
+
+### Props
+
+#### Core props
+Name  | Type (default) | Description
+------------- | ------------- | -------------
+**parentHtmlContainer**  | HTMLElement (required!) | It should be an HTML element (e.g. a div); it will be used as the list container.
+**value**  | Array[String \| Number] ([]) | An array of `value` from `options` prop. This value will be selected on load of the treeselect. You can call `updateValue` to update prop or set value `treeselect.value` and call `mount`. The `value` changes if you check/uncheck checkboxes or remove tags from the input.
+**options**  | Array[Object] ([]) | It is an array of objects ```{name: String, value: String \| Number, disabled?: Boolean, htmlAttr?: object, isGroupSelectable?: boolean, children: [] }```, where children are the same array of objects. Do not use duplicated `value` field. But you can use duplicated names. [Read more](#option-description).
+**disabled** | Boolean (false) | List will be disabled.
+**id** | String ('') | id attribute for the accessibility.
+**ariaLabel** | String ('') | ariaLabel attribute for the accessibility.
+**isSingleSelect** | Boolean (false) | Converts multi-select to the single value select. Checkboxes will be removed. You should pass only one id instead of array of values. Also you can set **showTags** to false. It helps to show treeselect as a dropdown.
+**isGroupedValue** | Boolean (false) | Return groups if they selected instead of separate ids. Treeselect returns only leaves ids by default.
+**isIndependentNodes** | Boolean (false) | All nodes in treeselect work as an independent entity. Check/uncheck action ignore children/parent updates workflow. Disabled nodes ignore children/parent workflow as well.
+**rtl** | Boolean (false) | RTL mode.
+**isBoostedRendering** | Boolean (false) | ***Experimental*** - Improves list rendering performance by using visibility-based optimizations and IntersectionObserver. Useful for efficiently rendering large lists.
+
+#### List settings props
+Name  | Type (default) | Description
+------------- | ------------- | -------------
+**disabledBranchNode** | Boolean (false) | It is impossible to select groups. You can select only leaves.
+**openLevel**  | Number (0) | All groups will be opened to this level.
+**appendToBody**  | Boolean (false) | List will be appended to the body instead of the input container.
+**alwaysOpen**  | Boolean (false) | List will be always opened. You can use it for comfortable style changing. If you want to use it as an opened list, turn `staticList` to `true`.
+**showCount** | Boolean (false) | Shows count of children near the group's name.
+**staticList** | Boolean (false) | Add the list as a static DOM element. List doesn't overlap content. This prop will be ignored if you use `appendToBody`.
+**emptyText** | String ('No results found...') | An empty list text.
+**listSlotHtmlComponent** | HTMLElement (null) | It should be an HTML element; it will be appended to the end of the list.
+**direction** | String (auto) | A force direction for the list. Supported values: `auto`, `top`, `bottom`.
+**expandSelected** | Boolean (false) | All groups which have checked values will be expanded on the init.
+**saveScrollPosition** | Boolean (true) | The list saves the last scroll position before close. If you open the list your scroll will be on the previous position. If you set the value to `false` - the scroll will have position 0 and the first item will be focused every time.
+**listClassName** | String ('') | A class name for list. Useful to change styles for `appendToBody` mode.
+
+#### Input settings props
+Name  | Type (default) | Description
+------------- | ------------- | -------------
+**showTags**  | Boolean (true) | Selected values look like tags. The false value shows results as '{count} elements selected'. You can change text if you use `tagsCountText` prop. For one selected element, you will see a name of this element.
+**tagsCountText**  | String ('elements selected') | Shown when `showTags` is false; inserted after the count: `'{count} {tagsCountText}'`.
+**tagsSortFn** | `(a: TagsSortItem, b: TagsSortItem) => number` \| `null` (null) | Defines the sorting order for tags in the input field.<br>`TagsSortItem` - `{ value: ValueOptionType, name: string }`.
+**clearable**  | Boolean (true) | Clear icon is available.
+**searchable**  | Boolean (true) | Search is available.
+**placeholder**  | String ('Search...') | Placeholder text.
+**grouped** | Boolean (true) | Show groups in the input and group leafs if all group selected.
+
+#### Callback props
+Check [Emits](#Emits) section for more info.
+
+Name  | Type (default) | Description
+------------- | ------------- | -------------
+**inputCallback** | (value) => void (undefined) | Callback method for `input` if you don't want to use eventListener.
+**openCallback** | (value) => void (undefined) | Callback method for `open` if you don't want to use eventListener.
+**closeCallback** | (value) => void (undefined) | Callback method for `close` if you don't want to use eventListener.
+**nameChangeCallback** | (name) => void (undefined) | Callback method for `name-change` if you don't want to use eventListener.
+**searchCallback** | (value) => void (undefined) | Callback method for `search` if you don't want to use eventListener.
+**openCloseGroupCallback** | (groupId: ValueOptionType, isClosed: boolean) => void (undefined) | Callback method for `open-close-group` if you don't want to use eventListener.
+
+#### Additional props
+Name  | Type (default) | Description
+------------- | ------------- | -------------
+**iconElements** | Object({ arrowUp, ... }) | Object contains all svg icons. You can use HTMLElement or a String to reset values from the default Object. Object: ```iconElements: { arrowUp, arrowDown, arrowRight, attention, clear, cross, check, partialCheck }```. After reset of icon you have to update styles if it is necessary, use `alwaysOpen` prop for more comfortable work with styles changes.
+
+---
+
+### Option description
+This is the description of one option in the [`options`](#core-props) prop:
+Name  | Type | Description
+------------- | ------------- | -------------
+**value** | String \| Number (required!) | It is a value of the node. **It should be unique!**
+**name** | String (required!) | It is the name of the node. **Can be duplicated.**
+**disabled** | Boolean (optional) | The node will be disabled. It is an optional field, you can skip it if no need to work with disabled values.
+**htmlAttr** | Object (optional) | The object of the HTML attributes, the value of the object should be a String type. These attributes will be merged into the node HTML tag.
+**isGroupSelectable** | Boolean (optional - true) | Determines whether groups are selectable. This behavior is similar to the disabledBranchNode prop but applies specifically to groups. It does not affect regular (non-group) items.
+**children** | {name: String, value: String, disabled?: Boolean, htmlAttr?: object, children: [] }[] | Children are the same array of objects.
+
+---
+
+### Emits
+Name  | Return Type | Description
+------------- | ------------- | -------------
+**input**  | Array[String \| Number] | Returns selected values, action is triggered on change the list value. Add `eventListener` or use `inputCallback` prop to get value.
+**open**  | Array[String \| Number] | Returns selected values, action is triggered on opening the list. Add `eventListener` or use `openCallback` prop to get value.
+**close**  | Array[String \| Number] | Returns selected values, action is triggered on closing the list. Add `eventListener` or use `closeCallback` prop to get value.
+**name-change**  | String | Returns selected name inside the input, action is triggered on on change the list. Add `eventListener` or use `nameChangeCallback` prop to get name.
+**search**  | String | Returns entered search value, action is triggered on change search value during the typing. Add `eventListener` or use `searchCallback` prop to get value. You can try create something like autocomplete with help of this event.
+**open-close-group**  | { groupId: [String \| Number], isClosed: Boolean } | Returns groupId and closed/open status of this group, action is triggered on open/close group in the list. Add `eventListener` or use `openCloseGroupCallback` prop to get value.
+
+---
+
+### Methods
+Name  | Params | Description
+------------- | ------------- | -------------
+**updateValue**  | Array[String \| Number] | Update selected values.
+**mount**  | None | Helps to remount and update settings. Change settings that you need (treeselect.appendToBody = true), then call mount().
+**destroy**  | None | Deletes elements from the DOM. Call mount() to add treeselect to the DOM with previously saved internal data. If you need to recreate treeselect with default params - call ```new Treeselect(options)```.
+**focus**  | None | Focuses treeselect input without open/close state changes.
+**toggleOpenClose**  | None | Open or close treeselect list and focus treeselect input.
+
+### Customizing colors
+
+The component uses CSS custom properties (variables) for colors. Variables are defined on `:root`. **Override them on `:root`** (or `body`) so they apply to both the input and the dropdown list—especially when using **appendToBody**, since the list is then rendered outside the `.treeselect` container.
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `--treeselectjs-border-color` | `#d7dde4` | Border color of input and list |
+| `--treeselectjs-bg` | `#ffffff` | Background of the input |
+| `--treeselectjs-border-focus` | `#101010` | Border color when focused |
+| `--treeselectjs-tag-bg` | `#d7dde4` | Background of selected tags |
+| `--treeselectjs-tag-bg-hover` | `#c5c7cb` | Tag background on hover |
+| `--treeselectjs-tag-remove-hover` | `#eb4c42` | Remove (×) icon color on hover |
+| `--treeselectjs-icon` | `#c5c7cb` | Arrow and clear icons |
+| `--treeselectjs-icon-hover` | `#838790` | Icons on hover |
+| `--treeselectjs-item-counter` | `#838790` | Group item count text |
+| `--treeselectjs-item-focus-bg` | `#f0ffff` | List item background when focused |
+| `--treeselectjs-item-selected-bg` | `#e9f1f1` | List item background when selected |
+| `--treeselectjs-item-disabled-text` | `#c5cbca` | Disabled item text color |
+| `--treeselectjs-checkbox-bg` | `#ffffff` | Checkbox background |
+| `--treeselectjs-checkbox-border-color` | `#d7dde4` | Checkbox border color |
+| `--treeselectjs-checkbox-checked-bg` | `#52c67e` | Checkbox fill when checked |
+| `--treeselectjs-checkbox-checked-icon` | `#ffffff` | Checkmark color |
+
+Example:
+
+```css
+body {
+  --treeselectjs-border-color: #444;
+  --treeselectjs-bg: #1e1e1e;
+  --treeselectjs-border-focus: #6cb6ff;
+  --treeselectjs-tag-bg: #333;
+  --treeselectjs-tag-bg-hover: #444;
+  --treeselectjs-item-focus-bg: #2a2a2a;
+  --treeselectjs-item-selected-bg: #2d3a3a;
+  --treeselectjs-checkbox-checked-bg: #52c67e;
+  /* override other variables as needed */
+}
+```
+
+---
+
+### Notes
+1) If you want to change the padding of the element you can use CSS selector. I've added **'group'** and **'level'** attributes, but you have to use **!important**.
+2) If you want to update props, set props to the entity of the class and then call **mount()** method.
+3) Use **updateValue()** method to update only the value.
+4) If you need to delete List from the DOM when you don't need treeselect anymore - call **destroy()**.
+5) Do not use **duplicated** values for the options. You will see an error with duplicated values. But you can use duplicated names.
+6) **Value** prop inside the **options** prop should be a **String** or **Number**.
+7) If you use **isSingleSelect** prop, you should pass only a single **value** without an array.
+8) If you use **isSingleSelect** prop, you can set **showTags** to false. It helps to show treeselect as a dropdown. Also you can disable selecting of group's nodes with help of **disabledBranchNode**.
+9) If you use a large list of options and see a problem with performance, try to use **isBoostedRendering** prop.
+
+### License
+MIT
+
+
+
+================================================
+FILE: packages/treeselectjs/biome.json
+================================================
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.8/schema.json",
+  "root": false,
+  "extends": "//",
+  "files": {
+    "includes": ["**", "!demo/static", "!dist", "!**/*.yml", "!README.md"]
+  },
+  "formatter": {
+    "enabled": true,
+    "lineWidth": 120,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf"
+  },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded"
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended",
+      "correctness": {
+        "useParseIntRadix": "off"
+      },
+      "style": {
+        "noDescendingSpecificity": "off"
+      }
+    }
+  }
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/CHANGELOG.md
+================================================
+# treeselectjs
+
+## 1.0.1
+
+### Patch Changes
+
+- Improve npm package descriptions, keywords, and README introductions for tree select, React, and Vue search discovery.
+
+## 1.0.0
+
+First stable release.
+
+### Major Changes
+
+- First stable 1.0.0 release. The API is unchanged from `0.14.2` — this marks the core package, along with its React (`react-treeselectjs`) and Vue (`vue-treeselectjs`) wrapper packages, as stable following the monorepo migration.
+
+### Patch Changes
+
+- Fixed the UMD build exposing `window.treeselectjs` instead of `window.Treeselect`, which broke the documented `new Treeselect(...)` usage from a plain `<script>` tag.
+
+## 1.0.0-beta.1
+
+### Patch Changes
+
+- Fix UMD build exposing `window.treeselectjs` instead of `window.Treeselect`, which broke the documented `new Treeselect(...)` usage from a plain `<script>` tag.
+
+## 1.0.0-beta.0
+
+### Major Changes
+
+- Release 1.0.0
+
+## 0.14.2
+
+### Patch Changes
+
+- **Monorepo**: Project moved to a monorepo structure.
+- **Documentation**: README updated for the new setup and usage.
+
+## 0.14.2-beta.0
+
+### Patch Changes
+
+- Beta test monorepo release.
+- Update Readme.
+
+
+
+================================================
+FILE: packages/treeselectjs/cypress.config.ts
+================================================
+import { defineConfig } from 'cypress'
+
+export default defineConfig({
+  allowCypressEnv: false,
+  e2e: {
+    downloadsFolder: '__tests__/cypress/downloads',
+    fileServerFolder: '__tests__/cypress/fixtures',
+    screenshotsFolder: '__tests__/cypress/screenshots',
+    specPattern: '__tests__/cypress/**/*.cy.ts',
+    supportFile: '__tests__/cypress/support/e2e.ts',
+    supportFolder: '__tests__/cypress/support',
+    videosFolder: '__tests__/cypress/videos',
+  },
+})
+
+
+
+================================================
+FILE: packages/treeselectjs/jest.config.ts
+================================================
+export default {
+  preset: 'ts-jest',
+  testEnvironment: 'jest-environment-jsdom',
+  transform: {
+    '^.+\\.ts?$': 'ts-jest',
+  },
+  moduleFileExtensions: ['ts', 'js'],
+  modulePathIgnorePatterns: ['<rootDir>/__tests__/jest/helpers'],
+  moduleNameMapper: {
+    '\\.(css|less|scss|sass)$': 'identity-obj-proxy',
+  },
+  testMatch: ['**/__tests__/**/*.test.ts'],
+  setupFilesAfterEnv: ['<rootDir>/__tests__/jest/setup.ts'],
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/LICENSE
+================================================
+MIT License
+
+Copyright (c) 2026 Dzmitry Zhuraukou
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+
+
+================================================
+FILE: packages/treeselectjs/package.json
+================================================
+{
+  "name": "treeselectjs",
+  "version": "1.0.1",
+  "description": "Vanilla JavaScript and TypeScript tree select component with nested options, search, checkboxes, and multi-select support",
+  "main": "./dist/treeselectjs.umd.js",
+  "module": "./dist/treeselectjs.mjs",
+  "types": "./dist/treeselectjs.d.ts",
+  "exports": {
+    ".": {
+      "import": {
+        "types": "./dist/treeselectjs.d.ts",
+        "default": "./dist/treeselectjs.mjs"
+      },
+      "require": {
+        "types": "./dist/treeselectjs.d.ts",
+        "default": "./dist/treeselectjs.umd.js"
+      }
+    },
+    "./dist/treeselectjs.css": {
+      "import": "./dist/treeselectjs.css",
+      "require": "./dist/treeselectjs.css"
+    }
+  },
+  "scripts": {
+    "dev": "vite --port 5173",
+    "dev:ci": "vite --port 5173 --host 127.0.0.1",
+    "build": "tsc && vite build",
+    "typecheck": "tsc --project tsconfig.app.json --noEmit && tsc --project tsconfig.jest.json --noEmit && tsc --project tsconfig.cypress.json --noEmit",
+    "format": "biome format --write",
+    "lint": "biome lint",
+    "lint:fix": "biome lint --write",
+    "check": "biome check --write",
+    "jest:watch": "jest --watch",
+    "jest:run": "jest",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "test": "pnpm typecheck && pnpm jest:run && pnpm cypress:run"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dipson88/treeselectjs.git",
+    "directory": "packages/treeselectjs"
+  },
+  "keywords": [
+    "treeselectjs",
+    "treeselect",
+    "tree-select",
+    "tree select",
+    "tree",
+    "select",
+    "dropdown",
+    "multiselect",
+    "multi-select",
+    "multiple-select",
+    "nested-options",
+    "hierarchical",
+    "hierarchy",
+    "groupselect",
+    "component",
+    "ui",
+    "vanilla-js",
+    "javascript",
+    "typescript",
+    "ts"
+  ],
+  "author": "Dzmitry Zhuraukou",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dipson88/treeselectjs/issues"
+  },
+  "homepage": "https://github.com/dipson88/treeselectjs/tree/main/packages/treeselectjs#readme",
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.8",
+    "@microsoft/api-extractor": "^7.58.12",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^26.2.0",
+    "cypress": "^15.20.1",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "resize-observer-polyfill": "^1.5.1",
+    "ts-jest": "^29.4.12",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3",
+    "vite": "^8.2.1",
+    "vite-plugin-dts": "^5.0.3"
+  },
+  "files": [
+    "dist"
+  ]
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/tsconfig.app.json
+================================================
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/tsconfig.cypress.json
+================================================
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "isolatedModules": false,
+    "types": ["cypress"]
+  },
+  "include": ["__tests__/cypress/**/*.ts", "__tests__/testHelpers/**/*.ts"]
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/tsconfig.jest.json
+================================================
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "isolatedModules": false,
+    "types": ["jest", "node"]
+  },
+  "include": [
+    "__tests__/jest/**/*.test.ts",
+    "__tests__/jest/**/*.spec.ts",
+    "__tests__/testHelpers/**/*.ts",
+    "__tests__/jest/**/*.ts"
+  ]
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/tsconfig.json
+================================================
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "lib": ["ESNext", "DOM"],
+    "moduleResolution": "bundler",
+    "strict": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "skipLibCheck": true
+  },
+  "exclude": ["node_modules"],
+  "files": [],
+  "references": [
+    { "path": "./tsconfig.app.json" },
+    { "path": "./tsconfig.jest.json" },
+    { "path": "./tsconfig.cypress.json" }
+  ]
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/vite.config.mjs
+================================================
+import { resolve } from 'node:path'
+import { defineConfig } from 'vite'
+import dts from 'vite-plugin-dts'
+
+export default defineConfig({
+  build: {
+    copyPublicDir: false,
+    lib: {
+      entry: resolve(import.meta.dirname, 'src/treeselectjs.ts'),
+      name: 'Treeselect',
+      fileName: 'treeselectjs',
+    },
+    rollupOptions: {
+      output: {
+        assetFileNames: (assetInfo) => {
+          if (assetInfo.names.includes('style.css')) {
+            return 'treeselectjs.css'
+          }
+
+          return assetInfo.names[0]
+        },
+      },
+    },
+  },
+  server: {
+    open: './app/index.html',
+  },
+  plugins: [
+    dts({
+      insertTypesEntry: true,
+      bundleTypes: true,
+      tsconfigPath: './tsconfig.app.json',
+    }),
+  ],
+})
+
+
+
+================================================
+FILE: packages/treeselectjs/app/app.css
+================================================
+* {
+  box-sizing: border-box;
+}
+
+:root {
+  color: #1d2433;
+  background-color: #edf2f6;
+  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+.treeselect-demo-slot__slot {
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+a.treeselect-demo-slot__slot {
+  color: #0f766e;
+  font-weight: 600;
+}
+
+body {
+  min-width: 320px;
+  font-family: inherit;
+  color: #1d2433;
+  background: linear-gradient(180deg, rgba(186, 219, 213, 0.78) 0, rgba(237, 242, 246, 0) 280px), #edf2f6;
+  margin: 0;
+}
+
+.loaded .root {
+  opacity: 1;
+}
+
+.root {
+  opacity: 0;
+  transition: opacity 0.3s;
+  padding: 24px 20px 56px;
+}
+
+.site-header {
+  width: min(1120px, 100%);
+  margin: 0 auto 38px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 10px 12px;
+  border: 1px solid rgba(119, 135, 155, 0.28);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.88);
+  box-shadow: 0 16px 38px rgba(31, 41, 55, 0.1);
+  backdrop-filter: blur(16px);
+}
+
+.site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.site-brand__mark {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: #ffffff;
+  background: #0f766e;
+  box-shadow: inset 0 -10px 16px rgba(15, 23, 42, 0.16);
+}
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.site-nav__link {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 13px;
+  border-radius: 8px;
+  color: #475569;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    background-color 0.18s ease,
+    color 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.site-nav__link:hover,
+.site-nav__link:focus-visible {
+  color: #0f766e;
+  background-color: #e6f4f1;
+  box-shadow: inset 0 0 0 1px rgba(15, 118, 110, 0.14);
+  outline: none;
+}
+
+.site-nav__link--coffee {
+  padding: 0 8px;
+}
+
+.site-nav__coffee-image {
+  width: auto;
+  height: 24px;
+  display: block;
+}
+
+.section {
+  min-height: 445px;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 30px;
+  border: 1px solid rgba(119, 135, 155, 0.28);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.92);
+  box-shadow: 0 18px 45px rgba(31, 41, 55, 0.09);
+}
+
+.section__separator {
+  width: min(1120px, calc(100% - 40px));
+  margin: 26px auto;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(15, 118, 110, 0.36), transparent);
+}
+
+.root__title {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 38px;
+  color: #101828;
+  font-size: 58px;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.section__title {
+  text-align: center;
+  margin: 0 0 28px;
+  color: #162033;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.section__data {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.section__select {
+  width: 50%;
+  max-width: 400px;
+}
+
+.section__props {
+  position: relative;
+  padding: 0;
+  width: 50%;
+  max-width: 430px;
+  border: 1px solid #cbd5e1;
+  font-family: Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre;
+  max-height: 400px;
+  overflow: auto;
+  margin: 0;
+  color: #314158;
+  background-color: #eef3f8;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.58);
+}
+
+.section__copy {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(119, 135, 155, 0.32);
+  border-radius: 8px;
+  color: #64748b;
+  background: rgba(248, 250, 252, 0.92);
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.section__copy:hover,
+.section__copy:focus-visible {
+  color: #0f766e;
+  border-color: rgba(15, 118, 110, 0.36);
+  background: #e6f4f1;
+  outline: none;
+}
+
+.section__copy--copied {
+  color: #ffffff;
+  border-color: #0f766e;
+  background: #0f766e;
+}
+
+.section__copy--error {
+  color: #ffffff;
+  border-color: #b42318;
+  background: #b42318;
+}
+
+.section__copy-icon {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.section__props .hljs {
+  display: block;
+  box-sizing: border-box;
+  width: max-content;
+  min-width: 100%;
+  padding: 0 2px 0 10px;
+  background: transparent;
+  overflow-x: visible;
+  white-space: pre;
+}
+
+@media screen and (max-width: 850px) {
+  .root {
+    padding: 16px 14px 42px;
+  }
+
+  .site-header {
+    align-items: flex-start;
+    margin-bottom: 30px;
+    flex-direction: column;
+  }
+
+  .site-nav {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .root__title {
+    margin-bottom: 30px;
+    font-size: 36px;
+  }
+
+  .section {
+    padding: 24px 16px;
+  }
+
+  .section__data {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .section__select {
+    width: 100%;
+  }
+
+  .section__props {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/app/app.js
+================================================
+import '../src/treeselectjs.css'
+import Treeselect from '../src/treeselectjs'
+
+import { runDefaultExample } from './examples/default.js'
+import { runSlotExample } from './examples/slot.js'
+import { runDisabledExample } from './examples/disabled.js'
+import { runSingleSelectExample } from './examples/singleSelect.js'
+import { runIndependentNodesExample } from './examples/independentNodes.js'
+import { runIconsExample } from './examples/icons.js'
+import { setupCodeCopyButtons } from './render/setupCodeCopyButtons.js'
+
+const runApp = (Treeselect) => {
+  runDefaultExample(Treeselect)
+  runSlotExample(Treeselect)
+  runDisabledExample(Treeselect)
+  runSingleSelectExample(Treeselect)
+  runIndependentNodesExample(Treeselect)
+  runIconsExample(Treeselect)
+
+  globalThis.hljs?.highlightAll()
+  setupCodeCopyButtons()
+
+  document.body.classList.add('loaded')
+}
+
+runApp(Treeselect)
+
+
+
+================================================
+FILE: packages/treeselectjs/app/index.html
+================================================
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="../public/tree.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.2/build/styles/atom-one-light.min.css" />
+    <link rel="stylesheet" href="./app.css" />
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.2/build/highlight.min.js"></script>
+    <script type="module" src="./app.js"></script>
+    <title>Treeselect JS App</title>
+    <meta
+      name="description"
+      content="Treeselect JS component. A multi-select js component with nested options. Full key support (ArrowUp, ArrowDown, Space, ArrowLeft, ArrowRight, Enter). Screen sensitive direction. Typescript support."
+    />
+    <base href="." />
+  </head>
+  <body>
+    <main class="root">
+      <header class="site-header">
+        <a class="site-brand" href="./" aria-label="Treeselect JS home">
+          <span class="site-brand__mark">T</span>
+          <span>Treeselect JS</span>
+        </a>
+        <nav class="site-nav" aria-label="Project links">
+          <a class="site-nav__link" href="https://github.com/dipson88/treeselectjs/tree/main/packages/treeselectjs#readme" target="_blank" rel="noreferrer">Docs</a>
+          <a class="site-nav__link" href="https://github.com/dipson88/treeselectjs" target="_blank" rel="noreferrer">GitHub</a>
+          <a class="site-nav__link" href="https://www.npmjs.com/package/treeselectjs" target="_blank" rel="noreferrer">npm</a>
+          <a class="site-nav__link site-nav__link--coffee" href="https://www.buymeacoffee.com/dipson88" target="_blank" rel="noreferrer" aria-label="Buy me a coffee">
+            <img class="site-nav__coffee-image" src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="" />
+          </a>
+        </nav>
+      </header>
+
+      <h1 class="root__title">Treeselect JS Demo</h1>
+
+      <!-- Default section -->
+      <section id="default-section" class="section">
+        <p class="section__title">Treeselect with default props</p>
+      </section>
+      <div class="section__separator"></div>
+
+      <!-- Slot section -->
+      <section id="slot-section" class="section">
+        <p class="section__title">Treeselect with slot</p>
+      </section>
+      <div class="section__separator"></div>
+
+      <!-- Disabled section -->
+      <section id="disabled-section" class="section">
+        <p class="section__title">Treeselect with disabled</p>
+      </section>
+      <div class="section__separator"></div>
+
+      <!-- Single select section -->
+      <section id="single-select-section" class="section">
+        <p class="section__title">Treeselect with single select prop</p>
+      </section>
+      <div class="section__separator"></div>
+
+      <!-- Independent Nodes section -->
+      <section id="independent-nodes-section" class="section">
+        <p class="section__title">Treeselect with independent nodes prop</p>
+      </section>
+      <div class="section__separator"></div>
+
+      <!-- Example with icons (workaround) -->
+      <section id="with-icons-section" class="section" style="max-width: 1980px; margin: 0 auto">
+        <p class="section__title">Treeselect with icons</p>
+      </section>
+    </main>
+  </body>
+</html>
+
+
+
+================================================
+FILE: packages/treeselectjs/app/todo.js
+================================================
+// IMPROVEMENTS (need to review)
+// !We need to review focus/blur system, because it is too complicated.
+// Slot is not selected by key navigation. if we use appendToBody mode. It is related to the new focus/blur approach.
+// list scroll overlaps border
+// updateDisabled methods to avoid a remount
+// create update function for the list to avoid a remount
+// disable change focused element on fast scroll appendToBody
+// Should we add a list direction if we use staticList prop?
+
+// FEATURES (TODO)
+// opportunity to add empty groups without children
+// select input text with mouse (now it is unselectable) (done - experimental)
+// Add "+ Count elements" additional text if tags are hidden
+
+// REQUESTS
+// Investigate an ability to add a diff names but the same values, and check them.
+
+// PERFORMANCE UPDATES TODO (List)
+// 1. Do we need uncheck all checkboxes if group is partial checked or otherwise we need to check all checkboxes if group is partial checked?
+// 2. Do we need to call disabled nodes and uncheck them? in adjustTreeItemOptions
+// 3. Do we need this functionality with isAllDisabled because we uncheck everything in the start and then we can't check disabled node? in updateFlattedOptionStateWithChildren
+
+
+
+================================================
+FILE: packages/treeselectjs/app/examples/default.js
+================================================
+import { renderExampleSection } from '../render/renderExampleSection.js'
+
+const options = [
+  {
+    name: 'England',
+    value: 1,
+    children: [
+      {
+        name: 'London',
+        value: 2,
+        children: [
+          {
+            name: 'Chelsea',
+            value: 3,
+            children: [],
+          },
+          {
+            name: 'West End',
+            value: 4,
+            children: [],
+          },
+        ],
+      },
+      {
+        name: 'Brighton',
+        value: 5,
+        children: [],
+      },
+    ],
+  },
+  {
+    name: 'France',
+    value: 6,
+    children: [
+      {
+        name: 'Paris',
+        value: 7,
+        children: [],
+      },
+      {
+        name: 'Lyon',
+        value: 8,
+        children: [],
+      },
+    ],
+  },
+]
+
+const value = [4, 7, 8]
+
+const treeselectId = 'treeselect-demo-default'
+
+export const runDefaultExample = (Treeselect) => {
+  renderExampleSection({ sectionId: 'default-section', value, options, treeselectId })
+
+  const domElement = document.getElementById(treeselectId)
+  const treeselect = new Treeselect({
+    parentHtmlContainer: domElement,
+    value,
+    options,
+  })
+
+  treeselect.srcElement.addEventListener('input', (e) => {
+    console.log('default: Selected value ', e.detail)
+  })
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/app/examples/disabled.js
+================================================
+import { renderExampleSection } from '../render/renderExampleSection.js'
+
+const options = [
+  {
+    name: 'England',
+    value: 1,
+    children: [
+      {
+        name: 'London',
+        value: 2,
+        children: [
+          {
+            name: 'Chelsea',
+            value: 3,
+            children: [],
+            disabled: true,
+          },
+          {
+            name: 'West End',
+            value: 4,
+            children: [],
+          },
+        ],
+      },
+      {
+        name: 'Brighton',
+        value: 5,
+        children: [],
+      },
+    ],
+  },
+  {
+    name: 'France',
+    value: 6,
+    disabled: true,
+    children: [
+      {
+        name: 'Paris',
+        value: 7,
+        children: [],
+      },
+      {
+        name: 'Lyon',
+        value: 8,
+        children: [],
+      },
+    ],
+  },
+]
+
+const value = []
+
+const treeselectId = 'treeselect-demo-disabled'
+
+export const runDisabledExample = (Treeselect) => {
+  renderExampleSection({ sectionId: 'disabled-section', options, value, treeselectId })
+
+  const domElement = document.getElementById(treeselectId)
+  const treeselect = new Treeselect({
+    parentHtmlContainer: domElement,
+    value,
+    options,
+  })
+
+  treeselect.srcElement.addEventListener('input', (e) => {
+    console.log('disabled: Selected value ', e.detail)
+  })
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/app/examples/icons.js
+================================================
+import { renderExampleSection } from '../render/renderExampleSection.js'
+
+const codeSnipped = `
+const icons = {
+  check: 'ico-check',
+  shield: 'ico-shield'
+}
+
+const options = [
+  {
+    name: 'England',
+    value: 1,
+    htmlAttr: { ico: icons.check },
+    children: [
+      {
+        name: 'London',
+        value: 2,
+        children: [
+          {
+            name: 'Chelsea',
+            value: 3,
+            children: []
+          },
+          {
+            name: 'West End',
+            value: 4,
+            children: [],
+            htmlAttr: { ico: icons.check }
+          }
+        ]
+      },
+      {
+        name: 'Brighton',
+        value: 5,
+        children: []
+      }
+    ]
+  },
+  {
+    name: 'France',
+    value: 6,
+    htmlAttr: { ico: icons.shield },
+    children: [
+      {
+        name: 'Paris',
+        value: 7,
+        children: [],
+        htmlAttr: { ico: icons.shield }
+      },
+      {
+        name: 'Lyon',
+        value: 8,
+        children: []
+      }
+    ]
+  }
+]
+
+const svgCheck = '&#60;svg style="position: absolute;top:0;left: 2px;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" height="20px" width="20px" version="1.1" id="Capa_1" viewBox="0 0 229.5 229.5" xml:space="preserve"&#62;
+  &#60;path d="M214.419,32.12c-0.412-2.959-2.541-5.393-5.419-6.193L116.76,0.275c-1.315-0.366-2.704-0.366-4.02,0L20.5,25.927  c-2.878,0.8-5.007,3.233-5.419,6.193c-0.535,3.847-12.74,94.743,18.565,139.961c31.268,45.164,77.395,56.738,79.343,57.209  c0.579,0.14,1.169,0.209,1.761,0.209s1.182-0.07,1.761-0.209c1.949-0.471,48.076-12.045,79.343-57.209  C227.159,126.864,214.954,35.968,214.419,32.12z M174.233,85.186l-62.917,62.917c-1.464,1.464-3.384,2.197-5.303,2.197  s-3.839-0.732-5.303-2.197l-38.901-38.901c-1.407-1.406-2.197-3.314-2.197-5.303s0.791-3.897,2.197-5.303l7.724-7.724  c2.929-2.928,7.678-2.929,10.606,0l25.874,25.874l49.89-49.891c1.406-1.407,3.314-2.197,5.303-2.197s3.897,0.79,5.303,2.197  l7.724,7.724C177.162,77.508,177.162,82.257,174.233,85.186z"/&#62;
+  &#60;/svg>'
+
+const svgShield = '&#60;svg style="position: absolute;top:0;left: 2px;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" height="20px" width="20px" version="1.1" id="Capa_1" viewBox="0 0 229.5 229.5" xml:space="preserve"&#62;
+  &#60;path d="M214.419,32.12c-0.412-2.959-2.541-5.393-5.419-6.193l-92.24-25.652c-1.314-0.366-2.704-0.366-4.019,0l-92.24,25.652  c-2.879,0.8-5.008,3.233-5.419,6.193c-0.535,3.847-12.74,94.744,18.565,139.961c31.268,45.165,77.395,56.739,79.343,57.209  c0.579,0.14,1.169,0.209,1.761,0.209s1.182-0.07,1.761-0.209c1.949-0.471,48.076-12.045,79.343-57.209  C227.159,126.864,214.954,35.967,214.419,32.12z M182.383,162.719c-27.12,39.174-67.744,48.986-67.744,48.986V114.75H30.918  c-4.861-36.388,0.334-73.765,0.334-73.765l83.386-23.19v96.955h83.721C195.996,132.443,191.256,149.903,182.383,162.719z"/&#62;
+  &#60;/svg&#62;'
+
+const treeselectId = 'treeselect-demo-icons'
+
+export const runIconsExample = (Treeselect) => {
+  let isIconsWereInserted = false
+
+  const domElement = document.getElementById(treeselectId)
+  const treeselect = new Treeselect({
+    parentHtmlContainer: domElement,
+    value: [1, 4, 7, 8],
+    options: options,
+    openLevel: 3,
+    openCallback: () => {
+      // We need to insert icons on open, only first time to avoid duplicates
+      if (isIconsWereInserted) {
+        return
+      }
+
+      isIconsWereInserted = true
+
+      Array.from(domElement.querySelectorAll('[ico]')).forEach((item) => {
+        const ico = item.getAttribute('ico')
+        const countOfChildNodes = item.childNodes.length
+        let iconToInsert = null
+
+        if (ico === icons.check) {
+          iconToInsert = svgCheck
+        }
+
+        if (ico === icons.shield) {
+          iconToInsert = svgShield
+        }
+
+        if (iconToInsert) {
+          const iconElement = document.createElement('div')
+          iconElement.setAttribute('style', 'height: 20px; width: 25px; position: relative;')
+          iconElement.innerHTML = iconToInsert
+          item.insertBefore(iconElement, item.childNodes[countOfChildNodes - 1])
+        }
+      })
+    }
+  })
+
+  treeselect.srcElement.addEventListener('input', (e) => {
+    console.log('independentNodes: Selected value ', e.detail)
+  })
+}
+`
+
+const icons = {
+  check: 'ico-check',
+  shield: 'ico-shield',
+}
+
+const options = [
+  {
+    name: 'England',
+    value: 1,
+    htmlAttr: { ico: icons.check },
+    children: [
+      {
+        name: 'London',
+        value: 2,
+        children: [
+          {
+            name: 'Chelsea',
+            value: 3,
+            children: [],
+          },
+          {
+            name: 'West End',
+            value: 4,
+            children: [],
+            htmlAttr: { ico: icons.check },
+          },
+        ],
+      },
+      {
+        name: 'Brighton',
+        value: 5,
+        children: [],
+      },
+    ],
+  },
+  {
+    name: 'France',
+    value: 6,
+    htmlAttr: { ico: icons.shield },
+    children: [
+      {
+        name: 'Paris',
+        value: 7,
+        children: [],
+        htmlAttr: { ico: icons.shield },
+      },
+      {
+        name: 'Lyon',
+        value: 8,
+        children: [],
+      },
+    ],
+  },
+]
+
+const svgCheck = `<svg style="position: absolute;top:0;left: 2px;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" height="20px" width="20px" version="1.1" id="Capa_1" viewBox="0 0 229.5 229.5" xml:space="preserve">
+  <path d="M214.419,32.12c-0.412-2.959-2.541-5.393-5.419-6.193L116.76,0.275c-1.315-0.366-2.704-0.366-4.02,0L20.5,25.927  c-2.878,0.8-5.007,3.233-5.419,6.193c-0.535,3.847-12.74,94.743,18.565,139.961c31.268,45.164,77.395,56.738,79.343,57.209  c0.579,0.14,1.169,0.209,1.761,0.209s1.182-0.07,1.761-0.209c1.949-0.471,48.076-12.045,79.343-57.209  C227.159,126.864,214.954,35.968,214.419,32.12z M174.233,85.186l-62.917,62.917c-1.464,1.464-3.384,2.197-5.303,2.197  s-3.839-0.732-5.303-2.197l-38.901-38.901c-1.407-1.406-2.197-3.314-2.197-5.303s0.791-3.897,2.197-5.303l7.724-7.724  c2.929-2.928,7.678-2.929,10.606,0l25.874,25.874l49.89-49.891c1.406-1.407,3.314-2.197,5.303-2.197s3.897,0.79,5.303,2.197  l7.724,7.724C177.162,77.508,177.162,82.257,174.233,85.186z"/>
+  </svg>`
+const svgShield = `<svg style="position: absolute;top:0;left: 2px;" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="#000000" height="20px" width="20px" version="1.1" id="Capa_1" viewBox="0 0 229.5 229.5" xml:space="preserve">
+  <path d="M214.419,32.12c-0.412-2.959-2.541-5.393-5.419-6.193l-92.24-25.652c-1.314-0.366-2.704-0.366-4.019,0l-92.24,25.652  c-2.879,0.8-5.008,3.233-5.419,6.193c-0.535,3.847-12.74,94.744,18.565,139.961c31.268,45.165,77.395,56.739,79.343,57.209  c0.579,0.14,1.169,0.209,1.761,0.209s1.182-0.07,1.761-0.209c1.949-0.471,48.076-12.045,79.343-57.209  C227.159,126.864,214.954,35.967,214.419,32.12z M182.383,162.719c-27.12,39.174-67.744,48.986-67.744,48.986V114.75H30.918  c-4.861-36.388,0.334-73.765,0.334-73.765l83.386-23.19v96.955h83.721C195.996,132.443,191.256,149.903,182.383,162.719z"/>
+  </svg>`
+
+const treeselectId = 'treeselect-demo-icons'
+
+export const runIconsExample = (Treeselect) => {
+  renderExampleSection({ sectionId: 'with-icons-section', codeSnipped, treeselectId })
+
+  let isIconsWereInserted = false
+
+  const domElement = document.getElementById(treeselectId)
+  const treeselect = new Treeselect({
+    parentHtmlContainer: domElement,
+    value: [1, 4, 7, 8],
+    options: options,
+    openLevel: 3,
+    openCallback: () => {
+      // We need to insert icons on open, only first time to avoid duplicates
+      if (isIconsWereInserted) {
+        return
+      }
+
+      isIconsWereInserted = true
+
+      Array.from(domElement.querySelectorAll('[ico]')).forEach((item) => {
+        const ico = item.getAttribute('ico')
+        const countOfChildNodes = item.childNodes.length
+        let iconToInsert = null
+
+        if (ico === icons.check) {
+          iconToInsert = svgCheck
+        }
+
+        if (ico === icons.shield) {
+          iconToInsert = svgShield
+        }
+
+        if (iconToInsert) {
+          const iconElement = document.createElement('div')
+          iconElement.setAttribute('style', 'height: 20px; width: 25px; position: relative;')
+          iconElement.innerHTML = iconToInsert
+          item.insertBefore(iconElement, item.childNodes[countOfChildNodes - 1])
+        }
+      })
+    },
+  })
+
+  treeselect.srcElement.addEventListener('input', (e) => {
+    console.log('independentNodes: Selected value ', e.detail)
+  })
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/app/examples/independentNodes.js
+================================================
+import { renderExampleSection } from '../render/renderExampleSection.js'
+
+const options = [
+  {
+    name: 'England',
+    value: 1,
+    children: [
+      {
+        name: 'London',
+        value: 2,
+        children: [
+          {
+            name: 'Chelsea',
+            value: 3,
+            children: [],
+          },
+          {
+            name: 'West End',
+            value: 4,
+            children: [],
+          },
+        ],
+      },
+      {
+        name: 'Brighton',
+        value: 5,
+        children: [],
+      },
+    ],
+  },
+  {
+    name: 'France',
+    value: 6,
+    children: [
+      {
+        name: 'Paris',
+        value: 7,
+        children: [],
+      },
+      {
+        name: 'Lyon',
+        value: 8,
+        children: [],
+      },
+    ],
+  },
+]
+
+const value = [1, 4, 7, 8]
+
+const treeselectId = 'treeselect-demo-independent-nodes'
+
+export const runIndependentNodesExample = (Treeselect) => {
+  renderExampleSection({ sectionId: 'independent-nodes-section', options, value, treeselectId })
+
+  const domElement = document.getElementById(treeselectId)
+  const treeselect = new Treeselect({
+    parentHtmlContainer: domElement,
+    value,
+    options,
+    isIndependentNodes: true,
+  })
+
+  treeselect.srcElement.addEventListener('input', (e) => {
+    console.log('independentNodes: Selected value ', e.detail)
+  })
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/app/examples/singleSelect.js
+================================================
+import { renderExampleSection } from '../render/renderExampleSection.js'
+
+const options = [
+  {
+    name: 'England',
+    value: 1,
+    children: [
+      {
+        name: 'London',
+        value: 2,
+        children: [
+          {
+            name: 'Chelsea',
+            value: 3,
+            children: [],
+          },
+          {
+            name: 'West End',
+            value: 4,
+            children: [],
+          },
+        ],
+      },
+      {
+        name: 'Brighton',
+        value: 5,
+        children: [],
+      },
+    ],
+  },
+  {
+    name: 'France',
+    value: 6,
+    children: [
+      {
+        name: 'Paris',
+        value: 7,
+        children: [],
+      },
+      {
+        name: 'Lyon',
+        value: 8,
+        children: [],
+      },
+    ],
+  },
+]
+
+const value = 4
+
+const treeselectId = 'treeselect-demo-single-select'
+
+export const runSingleSelectExample = (Treeselect) => {
+  renderExampleSection({ sectionId: 'single-select-section', options, value, treeselectId })
+
+  const domElement = document.getElementById(treeselectId)
+  const treeselect = new Treeselect({
+    parentHtmlContainer: domElement,
+    value,
+    options,
+    isSingleSelect: true,
+    showTags: false,
+  })
+
+  treeselect.srcElement.addEventListener('input', (e) => {
+    console.log('singleSelect: Selected value ', e.detail)
+  })
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/app/examples/slot.js
+================================================
+import { renderExampleSection } from '../render/renderExampleSection.js'
+
+const options = [
+  {
+    name: 'England',
+    value: 1,
+    children: [
+      {
+        name: 'London',
+        value: 2,
+        children: [
+          {
+            name: 'Chelsea',
+            value: 3,
+            children: [],
+          },
+          {
+            name: 'West End',
+            value: 4,
+            children: [],
+          },
+        ],
+      },
+      {
+        name: 'Brighton',
+        value: 5,
+        children: [],
+      },
+    ],
+  },
+]
+
+const value = []
+
+const treeselectId = 'treeselect-demo-slot'
+
+export const runSlotExample = (Treeselect) => {
+  renderExampleSection({ sectionId: 'slot-section', options, value, treeselectId })
+
+  const slot = document.createElement('div')
+  slot.innerHTML = '<a class="treeselect-demo-slot__slot" href="">Click!</a>'
+
+  const domElement = document.getElementById(treeselectId)
+  const treeselect = new Treeselect({
+    parentHtmlContainer: domElement,
+    value,
+    options,
+    listSlotHtmlComponent: slot,
+  })
+
+  treeselect.srcElement.addEventListener('input', (e) => {
+    console.log('slot: Selected value', e.detail)
+  })
+
+  slot.addEventListener('click', (e) => {
+    e.preventDefault()
+    alert('Slot click!')
+  })
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/app/render/renderExampleSection.js
+================================================
+const renderCodeBlock = (code, style = '') => {
+  const copyButton = `<button class="section__copy" type="button" aria-label="Copy code"><svg class="section__copy-icon" aria-hidden="true" viewBox="0 0 24 24"><rect x="9" y="9" width="10" height="10" rx="2"></rect><path d="M5 15V7a2 2 0 0 1 2-2h8"></path></svg></button>`
+
+  return `<pre class="section__props"${style}>${copyButton}<code class="language-javascript" data-language="javascript">${code}</code></pre>`
+}
+
+export const renderExampleSection = ({ sectionId, value, options, treeselectId, codeSnipped }) => {
+  const section = document.getElementById(sectionId)
+  const div = document.createElement('div')
+  div.classList.add('section__data')
+
+  if (codeSnipped) {
+    const code = codeSnipped.trim()
+
+    div.innerHTML = `
+      <div id=${treeselectId} class="section__select"></div>
+      ${renderCodeBlock(code, ' style="width: 100%; max-width: 100%"')}
+    `
+  } else {
+    const code = `parentHtmlContainer: document.querySelector(className),
+value: ${JSON.stringify(value, null, 0).replace(/,/g, ', ')},
+options: ${JSON.stringify(options, null, 2)}`
+
+    div.innerHTML = `
+      <div id=${treeselectId} class="section__select"></div>
+      ${renderCodeBlock(code)}
+    `
+  }
+
+  section.appendChild(div)
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/app/render/setupCodeCopyButtons.js
+================================================
+const setCopyState = (button, state) => {
+  const previousTimeoutId = Number(button.dataset.timeoutId)
+
+  if (previousTimeoutId) {
+    window.clearTimeout(previousTimeoutId)
+  }
+
+  button.classList.remove('section__copy--copied', 'section__copy--error')
+
+  if (state) {
+    button.classList.add(`section__copy--${state}`)
+    button.setAttribute('aria-label', state === 'copied' ? 'Code copied' : 'Copy failed')
+  }
+
+  button.dataset.timeoutId = String(
+    window.setTimeout(() => {
+      button.classList.remove('section__copy--copied', 'section__copy--error')
+      button.setAttribute('aria-label', 'Copy code')
+    }, 1200),
+  )
+}
+
+export const setupCodeCopyButtons = () => {
+  document.querySelectorAll('.section__copy').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const code = button.parentElement?.querySelector('code')?.textContent
+
+      if (!code) {
+        setCopyState(button, 'error')
+        return
+      }
+
+      try {
+        await navigator.clipboard.writeText(code)
+        setCopyState(button, 'copied')
+      } catch {
+        setCopyState(button, 'error')
+      }
+    })
+  })
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/demo/index.css
+================================================
+@import "../app/app.css";
+
+
+
+================================================
+FILE: packages/treeselectjs/demo/index.html
+================================================
+<!doctype html>
+<!-- IT IS A DEMO INDEX.HTML FOR GIT PAGES -->
+<!-- THE APP INDEX.HTML LOCATED IN /app/index.html -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="./public/tree.png" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/treeselectjs/dist/treeselectjs.umd.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/treeselectjs/dist/treeselectjs.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.2/build/styles/atom-one-light.min.css" />
+    <link rel="stylesheet" href="./index.css" />
+    <script src="https://cdn.jsdelivr.net/gh/highlightjs/cdn-release@11.11.2/build/highlight.min.js"></script>
+    <script type="module" src="./index.js"></script>
+    <title>Treeselect JS Demo</title>
+    <meta
+      name="description"
+      content="Treeselect JS component. A multi-select js component with nested options. Full key support (ArrowUp, ArrowDown, Space, ArrowLeft, ArrowRight, Enter). Screen sensitive direction. Typescript support."
+    />
+    <base href="." />
+  </head>
+  <body>
+    <main class="root">
+      <header class="site-header">
+        <a class="site-brand" href="./" aria-label="Treeselect JS home">
+          <span class="site-brand__mark">T</span>
+          <span>Treeselect JS</span>
+        </a>
+        <nav class="site-nav" aria-label="Project links">
+          <a class="site-nav__link" href="https://github.com/dipson88/treeselectjs/tree/main/packages/treeselectjs#readme" target="_blank" rel="noreferrer">Docs</a>
+          <a class="site-nav__link" href="https://github.com/dipson88/treeselectjs" target="_blank" rel="noreferrer">GitHub</a>
+          <a class="site-nav__link" href="https://www.npmjs.com/package/treeselectjs" target="_blank" rel="noreferrer">npm</a>
+          <a class="site-nav__link site-nav__link--coffee" href="https://www.buymeacoffee.com/dipson88" target="_blank" rel="noreferrer" aria-label="Buy me a coffee">
+            <img class="site-nav__coffee-image" src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="" />
+          </a>
+        </nav>
+      </header>
+
+      <h1 class="root__title">Treeselect JS Demo</h1>
+
+      <!-- Default section -->
+      <section id="default-section" class="section">
+        <p class="section__title">Treeselect with default props</p>
+      </section>
+      <div class="section__separator"></div>
+
+      <!-- Slot section -->
+      <section id="slot-section" class="section">
+        <p class="section__title">Treeselect with slot</p>
+      </section>
+      <div class="section__separator"></div>
+
+      <!-- Disabled section -->
+      <section id="disabled-section" class="section">
+        <p class="section__title">Treeselect with disabled</p>
+      </section>
+      <div class="section__separator"></div>
+
+      <!-- Single select section -->
+      <section id="single-select-section" class="section">
+        <p class="section__title">Treeselect with single select prop</p>
+      </section>
+      <div class="section__separator"></div>
+
+      <!-- Independent Nodes section -->
+      <section id="independent-nodes-section" class="section">
+        <p class="section__title">Treeselect with independent nodes prop</p>
+      </section>
+      <div class="section__separator"></div>
+
+      <!-- Example with icons (workaround) -->
+      <section id="with-icons-section" class="section" style="max-width: 1980px; margin: 0 auto">
+        <p class="section__title">Treeselect with icons</p>
+      </section>
+    </main>
+  </body>
+</html>
+
+
+
+================================================
+FILE: packages/treeselectjs/demo/index.js
+================================================
+import { runDefaultExample } from '../app/examples/default.js'
+import { runSlotExample } from '../app/examples/slot.js'
+import { runDisabledExample } from '../app/examples/disabled.js'
+import { runSingleSelectExample } from '../app/examples/singleSelect.js'
+import { runIndependentNodesExample } from '../app/examples/independentNodes.js'
+import { runIconsExample } from '../app/examples/icons.js'
+import { setupCodeCopyButtons } from '../app/render/setupCodeCopyButtons.js'
+
+// Treeselect is available via the link in the index.html file (treeselectjs.umd.js)
+const Treeselect = globalThis.Treeselect
+
+if (!Treeselect) {
+  throw new Error('Treeselect is not available. Make sure you have included the script in the index.html file')
+}
+
+const runApp = (Treeselect) => {
+  runDefaultExample(Treeselect)
+  runSlotExample(Treeselect)
+  runDisabledExample(Treeselect)
+  runSingleSelectExample(Treeselect)
+  runIndependentNodesExample(Treeselect)
+  runIconsExample(Treeselect)
+
+  globalThis.hljs?.highlightAll()
+  setupCodeCopyButtons()
+
+  document.body.classList.add('loaded')
+}
+
+runApp(Treeselect)
+
+
+
+================================================
+FILE: packages/treeselectjs/src/treeselectjs.css
+================================================
+@import "./input/input.css";
+@import "./list/list.css";
+
+:root {
+  /* Color variables – override these to customize the component */
+  --treeselectjs-border-color: #d7dde4;
+  --treeselectjs-bg: #ffffff;
+  --treeselectjs-border-focus: #101010;
+  --treeselectjs-tag-bg: #d7dde4;
+  --treeselectjs-tag-bg-hover: #c5c7cb;
+  --treeselectjs-tag-remove-hover: #eb4c42;
+  --treeselectjs-icon: #c5c7cb;
+  --treeselectjs-icon-hover: #838790;
+  --treeselectjs-item-counter: #838790;
+  --treeselectjs-item-focus-bg: #f0ffff;
+  --treeselectjs-item-selected-bg: #e9f1f1;
+  --treeselectjs-item-disabled-text: #c5cbca;
+  --treeselectjs-checkbox-bg: #ffffff;
+  --treeselectjs-checkbox-border-color: #d7dde4;
+  --treeselectjs-checkbox-checked-bg: #52c67e;
+  --treeselectjs-checkbox-checked-icon: #ffffff;
+}
+
+.treeselect {
+  width: 100%;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.treeselect--disabled {
+  pointer-events: none;
+}
+
+.treeselect-list {
+  position: absolute;
+  left: 0;
+  border-radius: 4px;
+  box-sizing: border-box;
+  z-index: 1000;
+}
+
+.treeselect .treeselect-list {
+  position: absolute;
+}
+
+.treeselect .treeselect-list--static {
+  position: static;
+}
+
+.treeselect-input--focused {
+  border-color: var(--treeselectjs-border-focus);
+}
+
+.treeselect-input--opened.treeselect-input--top {
+  border-top-color: transparent;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.treeselect-input--opened.treeselect-input--bottom {
+  border-bottom-color: transparent;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.treeselect-list--focused {
+  border-color: var(--treeselectjs-border-focus);
+}
+
+.treeselect-list--top,
+.treeselect-list--top-to-body {
+  border-bottom-color: var(--treeselectjs-border-color);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.treeselect-list--bottom,
+.treeselect-list--bottom-to-body {
+  border-top-color: var(--treeselectjs-border-color);
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.treeselect-list--top {
+  left: 0;
+  bottom: 100%;
+}
+
+.treeselect-list--bottom {
+  left: 0;
+  top: 100%;
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/treeselectjs.ts
+================================================
+import './treeselectjs.css'
+import type { ITreeselectInput } from './input/inputTypes'
+import type { ITreeselectList } from './list/listTypes'
+import { TreeselectInput } from './input/index'
+import { TreeselectList } from './list/index'
+import {
+  DEFAULT_EMPTY_TEXT,
+  DEFAULT_PLACEHOLDER,
+  DEFAULT_TAGS_COUNT_TEXT,
+  SEARCH_DEBOUNCE_MS,
+} from './helpers/constants'
+import { removeClass, setClass } from './helpers/classHelper'
+import type {
+  ITreeselect,
+  ITreeselectParams,
+  OptionType,
+  ValueOptionType,
+  InnerOptionType,
+  IconsType,
+  SelectedNodesType,
+  DirectionType,
+  TagsSortFnType,
+  TagsSortItem,
+  ValueType,
+  ValueInputType,
+} from './treeselectTypes'
+import { getDefaultIcons } from './helpers/svgIcons'
+
+export type {
+  ValueType,
+  ValueInputType,
+  OptionType,
+  DirectionType,
+  IconsType,
+  ITreeselectParams,
+  TagsSortFnType,
+  TagsSortItem,
+}
+
+const validateProps = ({
+  parentHtmlContainer,
+  staticList,
+  appendToBody,
+  isSingleSelect,
+  value,
+  direction,
+}: Partial<ITreeselectParams>) => {
+  if (!parentHtmlContainer) {
+    console.error('Validation: parentHtmlContainer prop is required!')
+  }
+
+  if (staticList && appendToBody) {
+    console.error('Validation: You should set staticList to false if you use appendToBody!')
+  }
+
+  if (isSingleSelect && Array.isArray(value)) {
+    console.error('Validation: if you use isSingleSelect prop, you should pass a single value!')
+  }
+
+  if (!isSingleSelect && !Array.isArray(value)) {
+    console.error('Validation: you should pass an array as a value!')
+  }
+
+  if (direction && direction !== 'auto' && direction !== 'bottom' && direction !== 'top') {
+    console.error('Validation: you should pass (auto | top | bottom | undefined) as a value for the direction prop!')
+  }
+}
+
+const getOnlyIds = (nodes: InnerOptionType[]) => nodes.map((node) => node.id)
+
+const getDefaultValue = (value: ValueInputType) => {
+  if (value === null || value === undefined) {
+    return []
+  }
+
+  return Array.isArray(value) ? value : [value]
+}
+
+const getResultValue = (value: ValueOptionType[], isSingleSelect: boolean): ValueType => {
+  if (isSingleSelect) {
+    const [firstItem] = value
+
+    return firstItem ?? null
+  }
+
+  return value
+}
+
+/**
+ * Tree-select component: hierarchical options, single/multi select, tags, search.
+ * Create with `new Treeselect(params)` then call `mount()` to render.
+ * @see ITreeselectParams for constructor options
+ */
+export default class Treeselect implements ITreeselect {
+  // Props
+  parentHtmlContainer: HTMLElement
+  /** Current value: single id (single select), array of ids (multi), or null. */
+  value: ValueType
+  options: OptionType[]
+  openLevel: number
+  appendToBody: boolean
+  alwaysOpen: boolean
+  showTags: boolean
+  tagsCountText: string
+  tagsSortFn: TagsSortFnType
+  clearable: boolean
+  searchable: boolean
+  placeholder: string
+  grouped: boolean
+  isGroupedValue: boolean
+  listSlotHtmlComponent: HTMLElement | null
+  disabled: boolean
+  emptyText: string
+  staticList: boolean
+  id: string
+  ariaLabel: string
+  isSingleSelect: boolean
+  showCount: boolean
+  disabledBranchNode: boolean
+  direction: DirectionType
+  expandSelected: boolean
+  saveScrollPosition: boolean
+  isIndependentNodes: boolean
+  rtl: boolean
+  listClassName: string
+  isBoostedRendering: boolean
+  iconElements: IconsType
+  inputCallback: ((value: ValueType) => void) | undefined
+  openCallback: ((value: ValueType) => void) | undefined
+  closeCallback: ((value: ValueType) => void) | undefined
+  nameChangeCallback: ((name: string) => void) | undefined
+  searchCallback: ((value: string) => void) | undefined
+  openCloseGroupCallback: ((groupId: ValueOptionType, isClosed: boolean) => void) | undefined
+
+  // InnerState
+  ungroupedValue: ValueOptionType[]
+  groupedValue: ValueOptionType[]
+  allValue: ValueOptionType[]
+  /** True when the dropdown list is open. */
+  isListOpened: boolean
+  /** Selected option label (single select). */
+  selectedName: string
+  /** Root DOM element of the treeselect (null after destroy). */
+  srcElement: HTMLElement | null
+
+  // Components
+  #treeselectList: ITreeselectList | null = null
+  #treeselectInput: ITreeselectInput | null = null
+
+  // Resize props
+  #containerResizer: ResizeObserver | null = null
+
+  // List position scroll
+  #scrollPosition: number = 0
+
+  // Timer for search text
+  #searchTimer: number = 0
+
+  // Outside listeners
+  #scrollEvent: EventListenerOrEventListenerObject | null = null
+  #resizeEvent: EventListenerOrEventListenerObject | null = null
+  #focusEvent: EventListenerOrEventListenerObject | null = null
+  #blurEvent: EventListenerOrEventListenerObject | null = null
+
+  /**
+   * @param params - Configuration and callbacks; only parentHtmlContainer is required
+   */
+  constructor({
+    parentHtmlContainer,
+    value,
+    options,
+    openLevel,
+    appendToBody,
+    alwaysOpen,
+    showTags,
+    tagsCountText,
+    tagsSortFn,
+    clearable,
+    searchable,
+    placeholder,
+    grouped,
+    isGroupedValue,
+    listSlotHtmlComponent,
+    disabled,
+    emptyText,
+    staticList,
+    id,
+    ariaLabel,
+    isSingleSelect,
+    showCount,
+    disabledBranchNode,
+    direction,
+    expandSelected,
+    saveScrollPosition,
+    isIndependentNodes,
+    rtl,
+    listClassName,
+    isBoostedRendering,
+    iconElements,
+    inputCallback,
+    openCallback,
+    closeCallback,
+    nameChangeCallback,
+    searchCallback,
+    openCloseGroupCallback,
+  }: ITreeselectParams) {
+    validateProps({
+      parentHtmlContainer,
+      value,
+      staticList,
+      appendToBody,
+      isSingleSelect,
+    })
+
+    this.parentHtmlContainer = parentHtmlContainer
+    this.value = []
+    this.options = options ?? []
+    this.openLevel = openLevel ?? 0
+    this.appendToBody = appendToBody ?? false
+    this.alwaysOpen = !!(alwaysOpen && !disabled)
+    this.showTags = showTags ?? true
+    this.tagsCountText = tagsCountText ?? DEFAULT_TAGS_COUNT_TEXT
+    this.tagsSortFn = tagsSortFn ?? null
+    this.clearable = clearable ?? true
+    this.searchable = searchable ?? true
+    this.placeholder = placeholder ?? DEFAULT_PLACEHOLDER
+    this.grouped = grouped ?? true
+    this.isGroupedValue = isGroupedValue ?? false
+    this.listSlotHtmlComponent = listSlotHtmlComponent ?? null
+    this.disabled = disabled ?? false
+    this.emptyText = emptyText ?? DEFAULT_EMPTY_TEXT
+    this.staticList = !!(staticList && !this.appendToBody)
+    this.id = id ?? ''
+    this.ariaLabel = ariaLabel ?? ''
+    this.isSingleSelect = isSingleSelect ?? false
+    this.showCount = showCount ?? false
+    this.disabledBranchNode = disabledBranchNode ?? false
+    this.direction = direction ?? 'auto'
+    this.expandSelected = expandSelected ?? false
+    this.saveScrollPosition = saveScrollPosition ?? true
+    this.isIndependentNodes = isIndependentNodes ?? false
+    this.rtl = rtl ?? false
+    this.listClassName = listClassName ?? ''
+    this.isBoostedRendering = isBoostedRendering ?? false
+    this.iconElements = getDefaultIcons(iconElements)
+    this.inputCallback = inputCallback
+    this.openCallback = openCallback
+    this.closeCallback = closeCallback
+    this.nameChangeCallback = nameChangeCallback
+    this.searchCallback = searchCallback
+    this.openCloseGroupCallback = openCloseGroupCallback
+
+    this.ungroupedValue = []
+    this.groupedValue = []
+    this.allValue = []
+    this.isListOpened = false
+    this.selectedName = ''
+    this.srcElement = null
+
+    this.#initMount(value)
+  }
+
+  /** Renders the treeselect into parentHtmlContainer. Call after constructor or to re-mount. */
+  mount() {
+    // We need to revalidate props if user call mount method
+    // because user can change props after init
+    validateProps({
+      parentHtmlContainer: this.parentHtmlContainer,
+      value: this.value,
+      staticList: this.staticList,
+      appendToBody: this.appendToBody,
+      isSingleSelect: this.isSingleSelect,
+    })
+    // We need to re-merge icons if icons were changed
+    // And user call mount method
+    this.iconElements = getDefaultIcons(this.iconElements)
+    this.#initMount(this.value)
+  }
+
+  #initMount(initValue?: ValueInputType) {
+    this.destroy()
+
+    const { container, list, input } = this.#createTreeselect()
+
+    this.srcElement = container
+    this.#treeselectList = list
+    this.#treeselectInput = input
+
+    this.#scrollEvent = this.scrollWindowHandler.bind(this)
+    this.#resizeEvent = this.scrollWindowHandler.bind(this)
+    this.#focusEvent = this.focusWindowHandler.bind(this)
+    this.#blurEvent = this.blurWindowHandler.bind(this)
+
+    if (this.alwaysOpen) {
+      this.#treeselectInput?.openClose()
+    }
+
+    if (this.disabled) {
+      setClass(this.srcElement, 'treeselect--disabled')
+    } else {
+      removeClass(this.srcElement, 'treeselect--disabled')
+    }
+
+    this.updateValue(initValue ?? this.value)
+  }
+
+  /** Sets the current value (single id, array of ids, or null). Updates UI and callbacks. */
+  updateValue(newValue: ValueInputType) {
+    const value = getDefaultValue(newValue)
+    const list = this.#treeselectList
+
+    if (list) {
+      list.updateValue(value)
+      this.#setInputValueByListNodes(list?.selectedNodes)
+    }
+  }
+
+  /** Removes the component from DOM and clears listeners. Call before removing the container. */
+  destroy() {
+    if (this.srcElement) {
+      this.#closeList()
+      this.srcElement.innerHTML = ''
+      this.srcElement = null
+      this.#removeOutsideListeners(true)
+      this.#treeselectList?.destroy()
+      clearTimeout(this.#searchTimer)
+    }
+  }
+
+  /** Moves focus to the treeselect input. */
+  focus() {
+    if (this.#treeselectInput) {
+      this.#treeselectInput.focus()
+    }
+  }
+
+  /** Opens the list if closed, closes if open. */
+  toggleOpenClose() {
+    if (this.#treeselectInput) {
+      this.#treeselectInput.openClose()
+      this.#treeselectInput.focus()
+    }
+  }
+
+  #updateInnerValues({
+    groupedNodes,
+    nodes,
+    allNodes,
+  }: {
+    groupedNodes?: InnerOptionType[]
+    nodes?: InnerOptionType[]
+    allNodes?: InnerOptionType[]
+  }) {
+    this.ungroupedValue = nodes ? getOnlyIds(nodes) : []
+    this.groupedValue = groupedNodes ? getOnlyIds(groupedNodes) : []
+    this.allValue = allNodes ? getOnlyIds(allNodes) : []
+    let typedValue = []
+
+    if (this.isIndependentNodes || this.isSingleSelect) {
+      typedValue = this.allValue
+    } else if (this.isGroupedValue) {
+      typedValue = this.groupedValue
+    } else {
+      typedValue = this.ungroupedValue
+    }
+
+    this.value = getResultValue(typedValue, this.isSingleSelect)
+  }
+
+  #createTreeselect() {
+    const container = this.parentHtmlContainer
+    container.classList.add('treeselect')
+
+    const list = new TreeselectList({
+      value: [], // updateValue method calls in initMount method to set actual value
+      options: this.options,
+      openLevel: this.openLevel,
+      listSlotHtmlComponent: this.listSlotHtmlComponent,
+      tagsSortFn: this.tagsSortFn,
+      emptyText: this.emptyText,
+      isSingleSelect: this.isSingleSelect,
+      showCount: this.showCount,
+      disabledBranchNode: this.disabledBranchNode,
+      expandSelected: this.expandSelected,
+      isIndependentNodes: this.isIndependentNodes,
+      rtl: this.rtl,
+      listClassName: this.listClassName,
+      isBoostedRendering: this.isBoostedRendering,
+      iconElements: this.iconElements,
+      inputCallback: (value) => this.#listInputListener(value),
+      arrowClickCallback: (groupId, isClosed) => this.#listArrowClickListener(groupId, isClosed),
+      mouseupCallback: () => this.#treeselectInput?.focus(),
+    })
+
+    const input = new TreeselectInput({
+      value: [], // updateValue method calls in initMount method to set actual value
+      showTags: this.showTags,
+      tagsCountText: this.tagsCountText,
+      clearable: this.clearable,
+      isAlwaysOpened: this.alwaysOpen,
+      searchable: this.searchable,
+      placeholder: this.placeholder,
+      disabled: this.disabled,
+      isSingleSelect: this.isSingleSelect,
+      id: this.id,
+      ariaLabel: this.ariaLabel,
+      iconElements: this.iconElements,
+      inputCallback: (value) => this.#inputInputListener(value),
+      searchCallback: (value) => this.#inputSearchListener(value),
+      openCallback: () => this.#openList(),
+      closeCallback: () => this.#closeList(),
+      keydownCallback: (e) => this.#inputKeydownListener(e),
+      focusCallback: () => this.#inputFocusListener(),
+      nameChangeCallback: (name) => this.#inputNameChangeListener(name),
+    })
+
+    if (this.rtl) {
+      container.setAttribute('dir', 'rtl')
+      list.srcElement.setAttribute('dir', 'rtl')
+    }
+
+    if (this.appendToBody) {
+      this.#containerResizer = new ResizeObserver(() => this.updateListPosition())
+    }
+
+    container.append(input.srcElement)
+
+    return { container, list, input }
+  }
+
+  #inputInputListener(value: InnerOptionType[]) {
+    const inputIds = getOnlyIds(value)
+    this.#treeselectList?.updateValue(inputIds)
+    const selectedNodes = this.#treeselectList?.selectedNodes ?? {}
+    this.#updateInnerValues(selectedNodes)
+    this.#emitInput()
+  }
+
+  #inputKeydownListener(e: KeyboardEvent) {
+    if (this.isListOpened) {
+      this.#treeselectList?.callKeyAction(e)
+    }
+  }
+
+  #inputSearchListener(value: string) {
+    if (this.#searchTimer) {
+      clearTimeout(this.#searchTimer)
+    }
+
+    this.#searchTimer = window.setTimeout(() => {
+      this.#treeselectList?.updateSearchValue(value)
+      this.updateListPosition()
+    }, SEARCH_DEBOUNCE_MS)
+
+    this.#emitSearch(value)
+  }
+
+  #inputFocusListener() {
+    this.#updateFocusClasses(true)
+
+    if (this.#focusEvent && this.#blurEvent) {
+      document.addEventListener('mousedown', this.#focusEvent, true)
+      document.addEventListener('focus', this.#focusEvent, true)
+      window.addEventListener('blur', this.#blurEvent, { capture: false })
+    }
+  }
+
+  #setInputValueByListNodes(selectedNodes?: SelectedNodesType) {
+    if (!selectedNodes) {
+      return
+    }
+
+    let inputNewValue = []
+
+    if (this.isIndependentNodes || this.isSingleSelect) {
+      inputNewValue = selectedNodes.allNodes
+    } else if (this.grouped) {
+      inputNewValue = selectedNodes.groupedNodes
+    } else {
+      inputNewValue = selectedNodes.nodes
+    }
+
+    this.#treeselectInput?.updateValue(inputNewValue)
+    this.#updateInnerValues(selectedNodes)
+  }
+
+  #listInputListener(value: SelectedNodesType) {
+    this.#setInputValueByListNodes(value)
+
+    if (this.isSingleSelect && !this.alwaysOpen) {
+      this.#treeselectInput?.openClose()
+      this.#treeselectInput?.clearSearch()
+    }
+
+    this.#treeselectInput?.focus()
+    this.#emitInput()
+  }
+
+  #listArrowClickListener(groupId: ValueOptionType, isClosed: boolean) {
+    this.#treeselectInput?.focus()
+    this.updateListPosition()
+    this.#emitOpenCloseGroup(groupId, isClosed)
+  }
+
+  #inputNameChangeListener(name: string) {
+    const isNewName = this.selectedName !== name
+
+    if (isNewName) {
+      this.selectedName = name
+      this.#emitNameChange()
+    }
+  }
+
+  #openList() {
+    this.isListOpened = true
+
+    if (this.#scrollEvent && this.#resizeEvent) {
+      window.addEventListener('scroll', this.#scrollEvent, true)
+      window.addEventListener('resize', this.#resizeEvent)
+    }
+
+    if (!this.#treeselectList || !this.srcElement) {
+      return
+    }
+
+    if (this.appendToBody) {
+      document.body.appendChild(this.#treeselectList.srcElement)
+      this.#containerResizer?.observe(this.srcElement)
+    } else {
+      this.srcElement.appendChild(this.#treeselectList.srcElement)
+    }
+
+    this.updateListPosition()
+    this.#updateOpenCloseClasses(true)
+    this.#updateScrollPosition()
+
+    this.#emitOpen()
+  }
+
+  #closeList() {
+    if (this.alwaysOpen) {
+      return
+    }
+
+    this.isListOpened = false
+
+    if (this.#scrollEvent && this.#resizeEvent) {
+      window.removeEventListener('scroll', this.#scrollEvent, true)
+      window.removeEventListener('resize', this.#resizeEvent)
+    }
+
+    if (!this.#treeselectList || !this.srcElement) {
+      return
+    }
+
+    const isElementExist = this.appendToBody
+      ? document.body.contains(this.#treeselectList.srcElement)
+      : this.srcElement.contains(this.#treeselectList.srcElement)
+
+    if (!isElementExist) {
+      return
+    }
+
+    this.#scrollPosition = this.#treeselectList.srcElement.scrollTop
+
+    if (this.appendToBody) {
+      document.body.removeChild(this.#treeselectList.srcElement)
+      this.#containerResizer?.disconnect()
+    } else {
+      this.srcElement.removeChild(this.#treeselectList.srcElement)
+    }
+
+    this.#updateOpenCloseClasses(false)
+    this.#emitClose()
+  }
+
+  #updateDirectionClasses(isTop: boolean, appendToBody: boolean) {
+    if (!this.#treeselectList || !this.#treeselectInput) {
+      return
+    }
+
+    const topClass = appendToBody ? 'treeselect-list--top-to-body' : 'treeselect-list--top'
+    const bottomClass = appendToBody ? 'treeselect-list--bottom-to-body' : 'treeselect-list--bottom'
+
+    if (isTop) {
+      setClass(this.#treeselectList.srcElement, topClass)
+      removeClass(this.#treeselectList.srcElement, bottomClass)
+      setClass(this.#treeselectInput.srcElement, 'treeselect-input--top')
+      removeClass(this.#treeselectInput.srcElement, 'treeselect-input--bottom')
+    } else {
+      removeClass(this.#treeselectList.srcElement, topClass)
+      setClass(this.#treeselectList.srcElement, bottomClass)
+      removeClass(this.#treeselectInput.srcElement, 'treeselect-input--top')
+      setClass(this.#treeselectInput.srcElement, 'treeselect-input--bottom')
+    }
+  }
+
+  #updateFocusClasses(isFocus: boolean) {
+    if (!this.#treeselectInput || !this.#treeselectList) {
+      return
+    }
+
+    if (isFocus) {
+      setClass(this.#treeselectInput.srcElement, 'treeselect-input--focused')
+      setClass(this.#treeselectList.srcElement, 'treeselect-list--focused')
+    } else {
+      removeClass(this.#treeselectInput.srcElement, 'treeselect-input--focused')
+      removeClass(this.#treeselectList.srcElement, 'treeselect-list--focused')
+    }
+  }
+
+  #updateOpenCloseClasses(isOpen: boolean) {
+    if (isOpen) {
+      setClass(this.#treeselectInput?.srcElement, 'treeselect-input--opened')
+    } else {
+      removeClass(this.#treeselectInput?.srcElement, 'treeselect-input--opened')
+    }
+
+    if (this.staticList) {
+      setClass(this.#treeselectList?.srcElement, 'treeselect-list--static')
+    } else {
+      removeClass(this.#treeselectList?.srcElement, 'treeselect-list--static')
+    }
+  }
+
+  #removeOutsideListeners(isDestroy: boolean) {
+    if (!this.#scrollEvent || !this.#resizeEvent || !this.#focusEvent || !this.#blurEvent) {
+      return
+    }
+
+    if (!this.alwaysOpen || isDestroy) {
+      window.removeEventListener('scroll', this.#scrollEvent, true)
+      window.removeEventListener('resize', this.#resizeEvent)
+    }
+
+    document.removeEventListener('mousedown', this.#focusEvent, true)
+    document.removeEventListener('focus', this.#focusEvent, true)
+    window.removeEventListener('blur', this.#blurEvent, { capture: false })
+  }
+
+  #updateScrollPosition() {
+    const isLastFocusedElementExist = this.#treeselectList?.isLastFocusedElementExist()
+
+    if (this.saveScrollPosition && isLastFocusedElementExist) {
+      this.#treeselectList?.srcElement.scroll(0, this.#scrollPosition)
+    } else {
+      this.#treeselectList?.focusFirstListElement()
+    }
+  }
+
+  // Outside Listeners
+  scrollWindowHandler() {
+    this.updateListPosition()
+  }
+
+  focusWindowHandler(e: Event) {
+    let target = e.target as HTMLElement
+
+    if (target?.shadowRoot && e.composedPath().length > 0) {
+      target = e.composedPath()[0] as HTMLElement
+    }
+
+    const isInsideClick = this.srcElement?.contains(target) || this.#treeselectList?.srcElement.contains(target)
+
+    if (!isInsideClick) {
+      this.blurWindowHandler()
+    }
+  }
+
+  blurWindowHandler() {
+    this.#treeselectInput?.blur()
+    this.#removeOutsideListeners(false)
+    this.#updateFocusClasses(false)
+  }
+
+  // Update direction of the list. Support appendToBody and standard mode with absolute
+  updateListPosition() {
+    const container = this.srcElement
+    const list = this.#treeselectList?.srcElement as HTMLElement
+
+    if (!container || !list) {
+      return
+    }
+
+    if (this.staticList) {
+      list.setAttribute('direction', 'bottom')
+      this.#updateDirectionClasses(false, this.appendToBody)
+      return
+    }
+
+    const { height: listHeight } = list.getBoundingClientRect()
+    const {
+      x: containerX,
+      y: containerY,
+      height: containerHeight,
+      width: containerWidth,
+    } = container.getBoundingClientRect()
+    const windowHeight = window.innerHeight
+
+    const spaceTop = containerY
+    const spaceBottom = windowHeight - containerY - containerHeight
+    let isTopDirection = spaceTop > spaceBottom && spaceTop >= listHeight && spaceBottom < listHeight
+
+    if (this.direction !== 'auto') {
+      isTopDirection = this.direction === 'top'
+    }
+
+    if (this.appendToBody) {
+      // We need to set zero position to the list because it helps calculate transform more easier
+      if (list.style.top !== '0px' || list.style.left !== '0px') {
+        list.style.top = '0px'
+        list.style.left = '0px'
+      }
+
+      const translateX = containerX + window.scrollX
+      const translateY = isTopDirection
+        ? containerY + window.scrollY - listHeight
+        : containerY + window.scrollY + containerHeight
+
+      list.style.transform = `translate(${translateX}px,${translateY}px)`
+      list.style.width = `${containerWidth}px`
+    }
+
+    const attributeToAdd = isTopDirection ? 'top' : 'bottom'
+    const currentAttr = list.getAttribute('direction')
+
+    if (currentAttr !== attributeToAdd) {
+      list.setAttribute('direction', attributeToAdd)
+      this.#updateDirectionClasses(isTopDirection, this.appendToBody)
+    }
+  }
+
+  // Emits
+  #emitInput() {
+    this.srcElement?.dispatchEvent(new CustomEvent('input', { detail: this.value }))
+
+    if (this.inputCallback) {
+      this.inputCallback(this.value)
+    }
+  }
+
+  #emitNameChange() {
+    this.srcElement?.dispatchEvent(new CustomEvent('name-change', { detail: this.selectedName }))
+
+    if (this.nameChangeCallback) {
+      this.nameChangeCallback(this.selectedName)
+    }
+  }
+
+  #emitOpen() {
+    if (this.alwaysOpen) return
+
+    this.srcElement?.dispatchEvent(new CustomEvent('open', { detail: this.value }))
+
+    if (this.openCallback) {
+      this.openCallback(this.value)
+    }
+  }
+
+  #emitClose() {
+    if (this.alwaysOpen) return
+
+    this.srcElement?.dispatchEvent(new CustomEvent('close', { detail: this.value }))
+
+    if (this.closeCallback) {
+      this.closeCallback(this.value)
+    }
+  }
+
+  #emitSearch(value: string) {
+    const valueToEmit = value?.trim() ?? ''
+
+    this.srcElement?.dispatchEvent(new CustomEvent('search', { detail: valueToEmit }))
+
+    if (this.searchCallback) {
+      this.searchCallback(valueToEmit)
+    }
+  }
+
+  #emitOpenCloseGroup(groupId: ValueOptionType, isClosed: boolean) {
+    this.srcElement?.dispatchEvent(new CustomEvent('open-close-group', { detail: { groupId, isClosed } }))
+
+    if (this.openCloseGroupCallback) {
+      this.openCloseGroupCallback(groupId, isClosed)
+    }
+  }
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/treeselectTypes.ts
+================================================
+/** Id/value of a single option (string or number). */
+export type ValueOptionType = string | number
+
+/** Current value: array of ids (multi), single id (single), or null. */
+export type ValueType = ValueOptionType[] | ValueOptionType | null
+
+/** Initial value accepted by constructor (can be undefined). */
+export type ValueInputType = ValueOptionType[] | ValueOptionType | null | undefined
+
+/**
+ * Tree option node. Used in `options` and can be nested via `children`.
+ */
+export type OptionType = {
+  /** Unique option id (string or number). */
+  value: ValueOptionType
+  /** Display name. */
+  name: string
+  /** If true, option is disabled and not selectable. */
+  disabled?: boolean
+  /** If true (group only), the group row can be selected. */
+  isGroupSelectable?: boolean
+  /** Optional HTML attributes applied to the option row (string values only). */
+  htmlAttr?: Record<string, string>
+  /** Child options (nested tree). */
+  children: OptionType[]
+}
+
+/** Position of the dropdown list relative to the input: auto, top, or bottom. */
+export type DirectionType = 'auto' | 'top' | 'bottom'
+
+/** Item passed to tags sort function. */
+export type TagsSortItem = { value: ValueOptionType; name: string }
+
+/** Custom sort for tags. Return negative/zero/positive like Array.sort. Use null for default order. */
+export type TagsSortFnType = ((itemA: TagsSortItem, itemB: TagsSortItem) => number) | null
+
+export interface ITreeselect {
+  parentHtmlContainer: HTMLElement
+  value: ValueType
+  options: OptionType[]
+  openLevel: number
+  appendToBody: boolean
+  alwaysOpen: boolean
+  showTags: boolean
+  tagsCountText: string
+  tagsSortFn: TagsSortFnType
+  clearable: boolean
+  searchable: boolean
+  placeholder: string
+  grouped: boolean
+  isGroupedValue: boolean
+  listSlotHtmlComponent: HTMLElement | null
+  disabled: boolean
+  emptyText: string
+  staticList: boolean
+  id: string
+  ariaLabel: string
+  isSingleSelect: boolean
+  showCount: boolean
+  disabledBranchNode: boolean
+  direction: DirectionType
+  expandSelected: boolean
+  saveScrollPosition: boolean
+  isIndependentNodes: boolean
+  rtl: boolean
+  iconElements: IconsType
+  ungroupedValue: ValueOptionType[]
+  groupedValue: ValueOptionType[]
+  isListOpened: boolean
+  selectedName: string
+  srcElement: HTMLElement | null
+  inputCallback: ((value: ValueType) => void) | undefined
+  openCallback: ((value: ValueType) => void) | undefined
+  closeCallback: ((value: ValueType) => void) | undefined
+  nameChangeCallback: ((name: string) => void) | undefined
+  searchCallback: ((value: string) => void) | undefined
+  openCloseGroupCallback: ((groupId: ValueOptionType, isClosed: boolean) => void) | undefined
+  mount: () => void
+  updateValue: (newValue: ValueInputType) => void
+  destroy: () => void
+  focus: () => void
+  toggleOpenClose: () => void
+}
+
+/**
+ * Options passed to the Treeselect constructor.
+ * All properties except `parentHtmlContainer` are optional.
+ */
+export interface ITreeselectParams {
+  /** HTML element (e.g. div) that will be replaced by the treeselect container (required). */
+  parentHtmlContainer: HTMLElement
+  /** Array of `value` from options to select on load. Use updateValue or set treeselect.value and call mount to update. Changes when checkboxes/tags change. */
+  value?: ValueInputType
+  /** Array of option objects { name, value, disabled?, htmlAttr?, isGroupSelectable?, children }. No duplicated values; names may duplicate. See Option description. */
+  options?: OptionType[]
+  /** All groups will be opened to this level (0 = all collapsed). */
+  openLevel?: number
+  /** List will be appended to the body instead of the input container. */
+  appendToBody?: boolean
+  /** List is always opened. Use for styling; for a fixed open list set staticList to true. */
+  alwaysOpen?: boolean
+  /** Selected values appear as tags. If false, shows '{count} elements selected' (use tagsCountText). Single selection shows the element name. */
+  showTags?: boolean
+  /** Text shown after count when showTags is false: '{count} {tagsCountText}'. */
+  tagsCountText?: string
+  /** Defines sort order for tags in the input. TagsSortItem: { value, name }. Use null for default order. */
+  tagsSortFn?: TagsSortFnType
+  /** Clear icon is available when value is set. */
+  clearable?: boolean
+  /** Search/filter input is available. */
+  searchable?: boolean
+  /** Placeholder text for the search input. */
+  placeholder?: string
+  /** Show groups in the input and group leaves when the whole group is selected. */
+  grouped?: boolean
+  /** Return selected groups instead of leaf ids only. By default only leaf ids are returned. */
+  isGroupedValue?: boolean
+  /** HTML element appended to the end of the list (e.g. custom footer/slot). */
+  listSlotHtmlComponent?: HTMLElement | null
+  /** List/control is disabled. */
+  disabled?: boolean
+  /** Text shown when the list is empty (e.g. no results). */
+  emptyText?: string
+  /** List is a static DOM element (no overlay). Ignored if appendToBody is true. */
+  staticList?: boolean
+  /** id attribute for the main input (accessibility). */
+  id?: string
+  /** aria-label attribute for the search input (accessibility). */
+  ariaLabel?: string
+  /** Single-value select: one option only, no checkboxes. Pass one id; showTags: false shows treeselect as dropdown. */
+  isSingleSelect?: boolean
+  /** Show count of children next to the group name. */
+  showCount?: boolean
+  /** Groups cannot be selected; only leaves can be selected. */
+  disabledBranchNode?: boolean
+  /** Force list direction. Supported: 'auto', 'top', 'bottom'. */
+  direction?: DirectionType
+  /** Groups that contain checked values are expanded on init/open. */
+  expandSelected?: boolean
+  /** Restore list scroll position when reopened. If false, scroll resets to 0 and first item is focused. */
+  saveScrollPosition?: boolean
+  /** Nodes are independent: check/uncheck does not update children/parent. Disabled nodes also ignore parent/child workflow. */
+  isIndependentNodes?: boolean
+  /** RTL mode. */
+  rtl?: boolean
+  /** Class name(s) for the list container. Useful for styling when using appendToBody. */
+  listClassName?: string
+  /** Experimental: improves list performance for large trees (visibility + IntersectionObserver). */
+  isBoostedRendering?: boolean
+  /** Object of SVG icons (arrowUp, arrowDown, arrowRight, attention, clear, cross, check, partialCheck). Use HTMLElement or string. Update styles after reset; use alwaysOpen for easier styling. */
+  iconElements?: Partial<IconsType>
+  /** Callback for input (selected value) instead of eventListener. */
+  inputCallback?: (value: ValueType) => void
+  /** Callback for open instead of eventListener. */
+  openCallback?: (value: ValueType) => void
+  /** Callback for close instead of eventListener. */
+  closeCallback?: (value: ValueType) => void
+  /** Callback for name-change (selected name in input) instead of eventListener. */
+  nameChangeCallback?: (name: string) => void
+  /** Callback for search (typed value) instead of eventListener. */
+  searchCallback?: (value: string) => void
+  /** Callback for open-close-group (groupId, isClosed) instead of eventListener. */
+  openCloseGroupCallback?: (groupId: ValueOptionType, isClosed: boolean) => void
+}
+
+export type InnerOptionType = {
+  id: ValueOptionType
+  name: string
+}
+
+/**
+ * Icon set for arrows, checkboxes, clear, etc.
+ * Each value is an SVG string or an HTMLElement.
+ */
+export type IconsType = {
+  arrowUp: string | HTMLElement
+  arrowDown: string | HTMLElement
+  arrowRight: string | HTMLElement
+  attention: string | HTMLElement
+  clear: string | HTMLElement
+  cross: string | HTMLElement
+  check: string | HTMLElement
+  partialCheck: string | HTMLElement
+}
+
+export type SelectedNodesType = {
+  nodes: InnerOptionType[]
+  groupedNodes: InnerOptionType[]
+  allNodes: InnerOptionType[]
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/vite-env.d.ts
+================================================
+/// <reference types="vite/client" />
+
+
+
+================================================
+FILE: packages/treeselectjs/src/helpers/classHelper.ts
+================================================
+/**
+ * Adds one or more class names to an element. No-op if element is null/undefined.
+ */
+export function setClass(element: Element | null | undefined, ...classNames: string[]): void {
+  if (!element) {
+    return
+  }
+
+  element.classList.add(...classNames)
+}
+
+/**
+ * Removes one or more class names from an element. No-op if element is null/undefined.
+ */
+export function removeClass(element: Element | null | undefined, ...classNames: string[]): void {
+  if (!element) {
+    return
+  }
+
+  element.classList.remove(...classNames)
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/helpers/constants.ts
+================================================
+/** Default text when no options match search */
+export const DEFAULT_EMPTY_TEXT = 'No results found...'
+
+/** Default placeholder for search input */
+export const DEFAULT_PLACEHOLDER = 'Search...'
+
+/** Default text for tags count (e.g. "5 elements selected") */
+export const DEFAULT_TAGS_COUNT_TEXT = 'elements selected'
+
+/** Debounce delay (ms) for search input */
+export const SEARCH_DEBOUNCE_MS = 350
+
+/** Default padding (px) for list items */
+export const DEFAULT_ITEM_PADDING = 20
+
+/** Padding (px) for zero-level items when no groups */
+export const ZERO_LEVEL_ITEM_PADDING = 5
+
+
+
+================================================
+FILE: packages/treeselectjs/src/helpers/svgIcons.ts
+================================================
+import type { IconsType } from '../treeselectTypes'
+
+export const icons: IconsType = {
+  arrowUp:
+    '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 25 25" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 15l-6-6-6 6"/></svg>',
+  arrowDown:
+    '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 25 25" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>',
+  arrowRight:
+    '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 25 25" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>',
+  attention:
+    '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 25 25" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+  clear:
+    '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 25 25" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+  cross:
+    '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 25 25" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>',
+  check:
+    '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 25 25" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+  partialCheck:
+    '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 25 25" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
+}
+
+export const appendIconToElement = (icon: string | HTMLElement, element: HTMLElement) => {
+  element.innerHTML = ''
+
+  if (typeof icon === 'string') {
+    element.innerHTML = icon
+  } else {
+    const insertedIcon = icon.cloneNode(true)
+    element.appendChild(insertedIcon)
+  }
+}
+
+export const getDefaultIcons = (iconsFromProps?: Partial<IconsType>) => {
+  const newIcons = iconsFromProps ? { ...iconsFromProps } : {}
+
+  Object.keys(icons).forEach((key) => {
+    const iconValue = newIcons[key as keyof IconsType]
+
+    if (!iconValue) {
+      newIcons[key as keyof IconsType] = icons[key as keyof IconsType]
+    }
+  })
+
+  return newIcons as IconsType
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/input/index.ts
+================================================
+import type { ValueOptionType, InnerOptionType, IconsType } from '../treeselectTypes'
+import type { ITreeselectInputParams, ITreeselectInput } from './inputTypes'
+import { removeClass, setClass } from '../helpers/classHelper'
+import { appendIconToElement } from '../helpers/svgIcons'
+
+const getTagsSelectedName = (value: InnerOptionType[]) => {
+  return value.reduce((acc, { name }, index) => {
+    acc += name
+
+    if (index < value.length - 1) {
+      acc += ', '
+    }
+
+    return acc
+  }, '')
+}
+
+export class TreeselectInput implements ITreeselectInput {
+  // Props
+  value: InnerOptionType[]
+  showTags: boolean
+  tagsCountText: string
+  clearable: boolean
+  isAlwaysOpened: boolean
+  searchable: boolean
+  placeholder: string
+  disabled: boolean
+  isSingleSelect: boolean
+  id: string
+  ariaLabel: string
+  iconElements: IconsType
+
+  // InnerState
+  isOpened: boolean
+  searchText: string
+  srcElement: HTMLElement | Element
+
+  // PrivateInnerState
+  #htmlTagsSection: HTMLDivElement
+  #htmlEditControl: HTMLInputElement
+  #htmlOperators: HTMLDivElement
+  #htmlArrow: HTMLElement | null
+
+  // Callbacks
+  inputCallback: (value: InnerOptionType[]) => void
+  searchCallback: (value: string) => void
+  openCallback: () => void
+  closeCallback: () => void
+  keydownCallback: (e: KeyboardEvent) => void
+  focusCallback: () => void
+  nameChangeCallback: (name: string) => void
+
+  constructor({
+    value,
+    showTags,
+    tagsCountText,
+    clearable,
+    isAlwaysOpened,
+    searchable,
+    placeholder,
+    disabled,
+    isSingleSelect,
+    id,
+    ariaLabel,
+    iconElements,
+    inputCallback,
+    searchCallback,
+    openCallback,
+    closeCallback,
+    keydownCallback,
+    focusCallback,
+    nameChangeCallback,
+  }: ITreeselectInputParams) {
+    this.value = value
+    this.showTags = showTags
+    this.tagsCountText = tagsCountText
+    this.searchable = searchable
+    this.placeholder = placeholder
+    this.clearable = clearable
+    this.isAlwaysOpened = isAlwaysOpened
+    this.disabled = disabled
+    this.isSingleSelect = isSingleSelect
+    this.id = id
+    this.ariaLabel = ariaLabel
+    this.iconElements = iconElements
+
+    this.isOpened = false
+    this.searchText = ''
+
+    this.#htmlTagsSection = this.#createTagsSection()
+    this.#htmlEditControl = this.#createControl()
+    this.#htmlOperators = this.#createOperators()
+    this.#htmlArrow = null
+
+    this.inputCallback = inputCallback
+    this.searchCallback = searchCallback
+    this.openCallback = openCallback
+    this.closeCallback = closeCallback
+    this.keydownCallback = keydownCallback
+    this.focusCallback = focusCallback
+    this.nameChangeCallback = nameChangeCallback
+
+    this.srcElement = this.#createTreeselectInput({
+      htmlTagsSection: this.#htmlTagsSection,
+      htmlEditControl: this.#htmlEditControl,
+      htmlOperators: this.#htmlOperators,
+    })
+
+    this.#updateDOM()
+  }
+
+  // Public methods
+  focus() {
+    // We need focus after all updates.
+    // We move focus after stack calls.
+    setTimeout(() => this.#htmlEditControl.focus(), 0)
+  }
+
+  blur() {
+    if (this.isOpened) {
+      this.#updateOpenClose()
+    }
+
+    this.clearSearch()
+    this.#htmlEditControl.blur()
+  }
+
+  updateValue(newValue: InnerOptionType[]) {
+    this.value = newValue
+    this.#updateTags()
+    this.#updateEditControl()
+  }
+
+  removeItem(id: ValueOptionType) {
+    this.value = this.value.filter((v) => v.id !== id)
+    this.#emitInput()
+    this.#updateTags()
+    this.#updateEditControl()
+  }
+
+  clear() {
+    this.value = []
+    this.#emitInput()
+    this.#updateTags()
+    this.clearSearch()
+  }
+
+  openClose() {
+    this.#updateOpenClose()
+  }
+
+  clearSearch() {
+    this.searchText = ''
+    this.searchCallback('')
+    this.#updateEditControl()
+  }
+
+  // Private methods
+  #updateDOM() {
+    this.#updateTags()
+    this.#updateEditControl()
+    this.#updateOperators()
+  }
+
+  #updateTags() {
+    this.#htmlTagsSection.innerHTML = ''
+
+    if (this.showTags) {
+      this.#htmlTagsSection.append(...this.#createTags())
+      const selectedName = getTagsSelectedName(this.value)
+      this.nameChangeCallback(selectedName)
+    } else {
+      const countElement = this.#createCountElement()
+      this.#htmlTagsSection.appendChild(countElement)
+      this.nameChangeCallback(countElement.innerText)
+    }
+
+    // We need to add htmlEditControl because we clear all data inside the tags list
+    this.#htmlTagsSection.appendChild(this.#htmlEditControl)
+  }
+
+  #updateOperators() {
+    const elements = []
+    this.#htmlOperators.innerHTML = ''
+
+    if (this.clearable) {
+      elements.push(this.#createClearButton())
+    }
+
+    if (!this.isAlwaysOpened) {
+      elements.push(this.#createInputArrow(this.isOpened))
+    }
+
+    if (elements.length) {
+      this.#htmlOperators.append(...elements)
+    }
+  }
+
+  #updateArrowDirection() {
+    if (!this.isAlwaysOpened && this.#htmlArrow) {
+      const icon = this.isOpened ? this.iconElements.arrowUp : this.iconElements.arrowDown
+      appendIconToElement(icon, this.#htmlArrow)
+    }
+  }
+
+  #updateEditControl() {
+    if (this.value?.length) {
+      this.#htmlEditControl.removeAttribute('placeholder')
+      removeClass(this.srcElement, 'treeselect-input--value-not-selected')
+    } else {
+      this.#htmlEditControl.setAttribute('placeholder', this.placeholder)
+      setClass(this.srcElement, 'treeselect-input--value-not-selected')
+    }
+
+    if (!this.searchable) {
+      setClass(this.srcElement, 'treeselect-input--unsearchable')
+    } else {
+      removeClass(this.srcElement, 'treeselect-input--unsearchable')
+    }
+
+    if (this.isSingleSelect) {
+      setClass(this.srcElement, 'treeselect-input--is-single-select')
+    } else {
+      removeClass(this.srcElement, 'treeselect-input--is-single-select')
+    }
+
+    this.#htmlEditControl.value = this.searchText
+  }
+
+  #updateOpenClose() {
+    this.isOpened = !this.isOpened
+    this.#updateArrowDirection()
+
+    if (!this.isOpened) {
+      this.closeCallback()
+    } else {
+      this.openCallback()
+    }
+  }
+
+  #createTreeselectInput({
+    htmlTagsSection,
+    htmlEditControl,
+    htmlOperators,
+  }: {
+    htmlTagsSection: HTMLElement
+    htmlEditControl: HTMLElement
+    htmlOperators: HTMLElement
+  }) {
+    const container = document.createElement('div')
+    container.classList.add('treeselect-input')
+    container.setAttribute('tabindex', '-1')
+
+    container.addEventListener('mousedown', (e) => this.#containerMousedown(e))
+    container.addEventListener('focus', () => this.focusCallback(), true)
+
+    // We added htmlEditControl at the end of tags list
+    htmlTagsSection.appendChild(htmlEditControl)
+    container.append(htmlTagsSection, htmlOperators)
+
+    return container
+  }
+
+  #containerMousedown(e: Event) {
+    // TODO experimental for text selection
+    // e.preventDefault()
+    e.stopPropagation()
+
+    if (!this.isOpened) {
+      this.#updateOpenClose()
+    }
+
+    this.focus()
+  }
+
+  #createTagsSection() {
+    const tagsSection = document.createElement('div')
+    tagsSection.classList.add('treeselect-input__tags')
+
+    return tagsSection
+  }
+
+  #createTags() {
+    return this.value.map((value) => {
+      const element = document.createElement('div')
+      element.classList.add('treeselect-input__tags-element')
+      element.setAttribute('tabindex', '-1')
+      element.setAttribute('tag-id', value.id.toString())
+      element.setAttribute('title', value.name)
+
+      const name = this.#createTagName(value.name)
+      const cross = this.#createTagCross()
+
+      element.addEventListener('mousedown', (e) => this.#tagsMousedown(e, value.id))
+
+      element.append(name, cross)
+
+      return element
+    })
+  }
+
+  #tagsMousedown(e: Event, id: ValueOptionType) {
+    // Two methods help to prevent mousedown on main container
+    e.preventDefault()
+    e.stopPropagation()
+    this.removeItem(id)
+    this.focus()
+  }
+
+  #createTagName(name: string) {
+    const elementTag = document.createElement('span')
+    elementTag.classList.add('treeselect-input__tags-name')
+    elementTag.textContent = name
+
+    return elementTag
+  }
+
+  #createTagCross() {
+    const elementCross = document.createElement('span')
+    elementCross.classList.add('treeselect-input__tags-cross')
+    appendIconToElement(this.iconElements.cross, elementCross)
+
+    return elementCross
+  }
+
+  #createCountElement() {
+    const countEl = document.createElement('span')
+    countEl.classList.add('treeselect-input__tags-count')
+
+    if (!this.value.length) {
+      countEl.textContent = ''
+      countEl.setAttribute('title', '')
+
+      return countEl
+    }
+
+    const count = this.value.length === 1 ? this.value[0].name : `${this.value.length} ${this.tagsCountText}`
+    countEl.textContent = count
+    countEl.setAttribute('title', count)
+
+    return countEl
+  }
+
+  #createControl() {
+    const input = document.createElement('input')
+    input.classList.add('treeselect-input__edit')
+
+    if (this.id) {
+      input.setAttribute('id', this.id)
+    }
+
+    if (!this.searchable || this.disabled) {
+      input.setAttribute('readonly', 'readonly')
+    }
+
+    if (this.disabled) {
+      input.setAttribute('tabindex', '-1')
+    }
+
+    if (this.ariaLabel.length) {
+      input.setAttribute('aria-label', this.ariaLabel)
+    }
+
+    input.addEventListener('keydown', (e) => this.#controlKeydown(e))
+    input.addEventListener('input', (e) => this.#controlInput(e, input))
+
+    return input
+  }
+
+  #controlKeydown(e: KeyboardEvent) {
+    e.stopPropagation()
+    const key = e.key
+
+    if (key === 'Backspace' && !this.searchText.length && this.value.length && !this.showTags) {
+      this.clear()
+    }
+
+    if (key === 'Backspace' && !this.searchText.length && this.value.length) {
+      this.removeItem(this.value[this.value.length - 1].id)
+    }
+
+    if (e.code === 'Space' && (!this.searchText || !this.searchable)) {
+      this.#updateOpenClose()
+    }
+
+    // We need to prevent enter to avoid unexpected behavior inside forms.
+    // Enter action is handled inside the keydownCallback method.
+    // ArrowDown and ArrowUp were prevented to avoid cursor jumping during list navigation.
+    if (key === 'Enter' || key === 'ArrowDown' || key === 'ArrowUp') {
+      e.preventDefault()
+    }
+
+    this.keydownCallback(e)
+
+    // We don't need focus during the page navigation.
+    if (key !== 'Tab') {
+      this.focus()
+    }
+  }
+
+  #controlInput(e: Event, input: HTMLInputElement) {
+    e.stopPropagation()
+    const oldValue = this.searchText
+    const newValue = input.value.trim()
+
+    // If try to enter only spaces
+    if (oldValue.length === 0 && newValue.length === 0) {
+      input.value = ''
+
+      return
+    }
+
+    if (this.searchable) {
+      const searchValue = (e.target as HTMLInputElement).value
+      this.searchCallback(searchValue)
+
+      if (!this.isOpened) {
+        this.#updateOpenClose()
+      }
+    } else {
+      input.value = ''
+    }
+
+    this.searchText = input.value
+  }
+
+  #createOperators() {
+    const operators = document.createElement('div')
+    operators.classList.add('treeselect-input__operators')
+
+    return operators
+  }
+
+  #createClearButton() {
+    const clear = document.createElement('span')
+    clear.classList.add('treeselect-input__clear')
+    clear.setAttribute('tabindex', '-1')
+    appendIconToElement(this.iconElements.clear, clear)
+
+    clear.addEventListener('mousedown', (e) => this.#clearButtonMousedown(e))
+
+    return clear
+  }
+
+  #clearButtonMousedown(e: Event) {
+    e.preventDefault()
+    e.stopPropagation()
+
+    if (this.searchText.length || this.value.length) {
+      this.clear()
+    }
+
+    this.focus()
+  }
+
+  #createInputArrow(isOpen: boolean) {
+    this.#htmlArrow = document.createElement('span')
+    this.#htmlArrow.classList.add('treeselect-input__arrow')
+    const icon = isOpen ? this.iconElements.arrowUp : this.iconElements.arrowDown
+    appendIconToElement(icon, this.#htmlArrow)
+
+    this.#htmlArrow.addEventListener('mousedown', (e) => this.#inputArrowMousedown(e))
+
+    return this.#htmlArrow
+  }
+
+  #inputArrowMousedown(e: Event) {
+    // Two methods help to prevent mousedown on main container
+    e.stopPropagation()
+    e.preventDefault()
+    this.focus()
+    this.#updateOpenClose()
+  }
+
+  // Emits
+  #emitInput() {
+    this.inputCallback(this.value)
+  }
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/input/input.css
+================================================
+.treeselect-input {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--treeselectjs-border-color);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 2px 4px;
+  padding-right: 40px;
+  position: relative;
+  min-height: 37px;
+  background-color: var(--treeselectjs-bg);
+  cursor: text;
+}
+
+.treeselect-input--unsearchable {
+  cursor: default;
+}
+
+.treeselect-input--unsearchable .treeselect-input__edit {
+  caret-color: transparent;
+  cursor: default;
+}
+
+.treeselect-input--unsearchable .treeselect-input__edit:focus {
+  position: absolute;
+  z-index: -1;
+  left: 0;
+  min-width: 0;
+  width: 0;
+}
+
+.treeselect-input--value-not-selected .treeselect-input__edit,
+.treeselect-input--value-not-selected.treeselect-input--unsearchable .treeselect-input__edit:focus {
+  z-index: auto;
+  position: static;
+  width: 100%;
+  max-width: 100%;
+}
+
+.treeselect-input--value-not-selected .treeselect-input__tags {
+  gap: 0;
+}
+
+/* rtl */
+[dir="rtl"] .treeselect-input {
+  padding-right: 4px;
+  padding-left: 40px;
+}
+
+[dir="rtl"] .treeselect-input__operators {
+  right: unset;
+  left: 2px;
+}
+/* rtl end */
+
+.treeselect-input__tags {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.treeselect-input__tags-element {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--treeselectjs-tag-bg);
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 2px;
+  font-size: 14px;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.treeselect-input__tags-element:hover {
+  background-color: var(--treeselectjs-tag-bg-hover);
+}
+
+.treeselect-input__tags-element:hover .treeselect-input__tags-cross svg {
+  stroke: var(--treeselectjs-tag-remove-hover);
+}
+
+.treeselect-input__tags-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.treeselect-input__tags-cross {
+  display: flex;
+  margin-left: 2px;
+}
+
+.treeselect-input__tags-cross svg {
+  width: 12px;
+  height: 12px;
+}
+
+.treeselect-input__tags-count {
+  font-size: 14px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.treeselect-input__edit {
+  background-color: var(--treeselectjs-bg);
+  flex: 1;
+  border: none;
+  font-size: 14px;
+  text-overflow: ellipsis;
+
+  width: 100%;
+  max-width: calc(100% - 45px);
+  padding: 0;
+
+  /* Hide input for user */
+  position: absolute;
+  z-index: -1;
+  min-width: 0;
+}
+
+.treeselect-input__edit:focus {
+  outline: none;
+  min-width: 30px;
+  max-width: 100%;
+
+  /* Show input for user */
+  z-index: auto;
+  position: static;
+}
+
+.treeselect-input__operators {
+  display: flex;
+  max-width: 40px;
+  position: absolute;
+  right: 2px;
+}
+
+.treeselect-input__clear {
+  display: flex;
+  cursor: pointer;
+}
+
+.treeselect-input__clear svg {
+  stroke: var(--treeselectjs-icon);
+  width: 17px;
+  min-width: 17px;
+  height: 20px;
+}
+
+.treeselect-input__clear:hover svg {
+  stroke: var(--treeselectjs-icon-hover);
+}
+
+.treeselect-input__arrow {
+  display: flex;
+  cursor: pointer;
+}
+
+.treeselect-input__arrow svg {
+  stroke: var(--treeselectjs-icon);
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+}
+
+.treeselect-input__arrow:hover svg {
+  stroke: var(--treeselectjs-icon-hover);
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/input/inputTypes.ts
+================================================
+import type { InnerOptionType, IconsType, ValueOptionType } from '../treeselectTypes'
+
+export interface ITreeselectInputParams {
+  value: InnerOptionType[]
+  showTags: boolean
+  tagsCountText: string
+  clearable: boolean
+  isAlwaysOpened: boolean
+  searchable: boolean
+  placeholder: string
+  disabled: boolean
+  isSingleSelect: boolean
+  id: string
+  ariaLabel: string
+  iconElements: IconsType
+  inputCallback: (value: InnerOptionType[]) => void
+  searchCallback: (value: string) => void
+  openCallback: () => void
+  closeCallback: () => void
+  keydownCallback: (e: KeyboardEvent) => void
+  focusCallback: () => void
+  nameChangeCallback: (name: string) => void
+}
+
+export interface ITreeselectInput extends ITreeselectInputParams {
+  isOpened: boolean
+  searchText: string
+  srcElement: HTMLElement | Element
+  focus: () => void
+  blur: () => void
+  updateValue: (newValue: InnerOptionType[]) => void
+  removeItem: (id: ValueOptionType) => void
+  clear: () => void
+  openClose: () => void
+  clearSearch: () => void
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/list/index.ts
+================================================
+import type { IconsType, OptionType, SelectedNodesType, TagsSortFnType, ValueOptionType } from '../treeselectTypes'
+import { DEFAULT_EMPTY_TEXT } from '../helpers/constants'
+import { removeClass, setClass } from '../helpers/classHelper'
+import { appendIconToElement } from '../helpers/svgIcons'
+import type {
+  BeforeSearchStateMap,
+  ITreeselectList,
+  ITreeselectListParams,
+  OptionsTreeMap,
+  TreeItem,
+} from './listTypes'
+import { getOptionsTreeMap, getTreeItemOptionByInputId, getCheckedOptions } from './helpers/listOptionsHelper'
+import { updateOptionByCheckState, updateOptionsByValue } from './helpers/listCheckStateHelper'
+import {
+  createIntersectionScrollObserver,
+  expandSelectedItems,
+  hideShowChildrenOptions,
+  updateBeforeSearchStateMap,
+  updateOptionsMapBySearchState,
+  updateVisibleBySearchTreeItemOptions,
+} from './helpers/listVisibilityStateHelper'
+import { updateDOM, setAttributesFromHtmlAttr } from './helpers/domHelper'
+
+const updateListValue = ({
+  newValue,
+  optionsTreeMap,
+  isSingleSelect,
+  expandSelected,
+  isFirstValueUpdate,
+  isIndependentNodes,
+}: {
+  newValue: ValueOptionType[]
+  optionsTreeMap: OptionsTreeMap
+  isSingleSelect: boolean
+  expandSelected: boolean
+  isFirstValueUpdate: boolean
+  isIndependentNodes: boolean
+}) => {
+  updateOptionsByValue({
+    newValue,
+    optionsTreeMap,
+    isSingleSelect,
+    isIndependentNodes,
+  })
+
+  if (isFirstValueUpdate && expandSelected) {
+    expandSelectedItems(optionsTreeMap, isSingleSelect)
+  }
+}
+
+export class TreeselectList implements ITreeselectList {
+  // Props
+  options: OptionType[]
+  value: ValueOptionType[]
+  openLevel: number
+  listSlotHtmlComponent: HTMLElement | null
+  tagsSortFn: TagsSortFnType
+  emptyText: string
+  isSingleSelect: boolean
+  showCount: boolean
+  disabledBranchNode: boolean
+  expandSelected: boolean
+  isIndependentNodes: boolean
+  rtl: boolean
+  listClassName: string
+  isBoostedRendering: boolean
+  iconElements: IconsType
+
+  // InnerState
+  searchText: string
+  intersectionItemsObserver: IntersectionObserver | null
+  selectedNodes: SelectedNodesType
+  optionsTreeMap: OptionsTreeMap
+  beforeSearchStateMap: BeforeSearchStateMap
+  emptyListHtmlElement: HTMLElement | null
+  srcElement: HTMLElement
+
+  // Callbacks
+  inputCallback: (value: SelectedNodesType) => void
+  arrowClickCallback: (groupId: ValueOptionType, isClosed: boolean) => void
+  mouseupCallback: () => void
+
+  // PrivateInnerState
+  #lastFocusedItem: HTMLElement | null = null
+  #isMouseActionsAvailable = true
+  #previousSingleSelectedValue: ValueOptionType[] = []
+  #isFirstValueUpdate: boolean = true
+
+  constructor({
+    options,
+    value,
+    openLevel,
+    listSlotHtmlComponent,
+    tagsSortFn,
+    emptyText,
+    isSingleSelect,
+    iconElements,
+    showCount,
+    disabledBranchNode,
+    expandSelected,
+    isIndependentNodes,
+    rtl,
+    listClassName,
+    isBoostedRendering,
+    inputCallback,
+    arrowClickCallback,
+    mouseupCallback,
+  }: ITreeselectListParams) {
+    this.options = options
+    this.value = value
+    this.openLevel = openLevel ?? 0
+    this.listSlotHtmlComponent = listSlotHtmlComponent ?? null
+    this.tagsSortFn = tagsSortFn ?? null
+    this.emptyText = emptyText ?? DEFAULT_EMPTY_TEXT
+    this.isSingleSelect = isSingleSelect ?? false
+    this.showCount = showCount ?? false
+    this.disabledBranchNode = disabledBranchNode ?? false
+    this.expandSelected = expandSelected ?? false
+    this.isIndependentNodes = isIndependentNodes ?? false
+    this.rtl = rtl ?? false
+    this.listClassName = listClassName ?? ''
+    this.isBoostedRendering = isBoostedRendering
+    this.iconElements = iconElements
+
+    this.searchText = ''
+    this.intersectionItemsObserver = null
+    this.selectedNodes = { nodes: [], groupedNodes: [], allNodes: [] }
+    this.optionsTreeMap = getOptionsTreeMap({
+      options: this.options,
+      openLevel: this.openLevel,
+      isIndependentNodes: this.isIndependentNodes,
+    })
+    this.beforeSearchStateMap = new Map()
+    this.emptyListHtmlElement = null
+    this.srcElement = this.#createSrcElement()
+
+    this.inputCallback = inputCallback
+    this.arrowClickCallback = arrowClickCallback
+    this.mouseupCallback = mouseupCallback
+  }
+
+  // Public methods
+  updateValue(value: ValueOptionType[]) {
+    this.value = value
+    this.#previousSingleSelectedValue = this.isSingleSelect ? this.value : []
+    updateListValue({
+      newValue: value,
+      optionsTreeMap: this.optionsTreeMap,
+      isSingleSelect: this.isSingleSelect,
+      expandSelected: this.expandSelected,
+      isFirstValueUpdate: this.#isFirstValueUpdate,
+      isIndependentNodes: this.isIndependentNodes,
+    })
+    this.#updateListDOM()
+    this.#isFirstValueUpdate = false
+    this.#updateSelectedNodes()
+  }
+
+  updateSearchValue(searchText: string) {
+    if (searchText === this.searchText) {
+      return
+    }
+
+    const isStartOfSearching = this.searchText === '' && searchText !== ''
+    this.searchText = searchText
+
+    if (isStartOfSearching) {
+      // This loop need to save a isClose state before searching
+      updateBeforeSearchStateMap({
+        beforeSearchStateMap: this.beforeSearchStateMap,
+        optionsTreeMap: this.optionsTreeMap,
+      })
+    }
+
+    if (this.searchText === '') {
+      // This loop need to restore a isClose state after searching
+      updateOptionsMapBySearchState({
+        beforeSearchStateMap: this.beforeSearchStateMap,
+        optionsTreeMap: this.optionsTreeMap,
+      })
+    }
+
+    if (this.searchText) {
+      updateVisibleBySearchTreeItemOptions(this.optionsTreeMap, searchText)
+    }
+
+    this.#updateListDOM()
+    this.focusFirstListElement()
+  }
+
+  callKeyAction(e: KeyboardEvent) {
+    this.#isMouseActionsAvailable = false
+    const itemFocused = this.srcElement.querySelector('.treeselect-list__item--focused') as HTMLElement | null
+    const isHidden = itemFocused?.classList.contains('treeselect-list__item--hidden')
+
+    if (isHidden) {
+      return
+    }
+
+    const key = e.key
+
+    if (key === 'Enter' && itemFocused) {
+      itemFocused.dispatchEvent(new Event('mousedown'))
+    }
+
+    if (key === 'ArrowLeft' || key === 'ArrowRight') {
+      this.#keyActionsLeftRight(itemFocused, e)
+    }
+
+    if (key === 'ArrowDown' || key === 'ArrowUp') {
+      this.#keyActionsDownUp(itemFocused, key)
+    }
+  }
+
+  focusFirstListElement() {
+    const focusedClass = 'treeselect-list__item--focused'
+    const itemFocused = this.srcElement.querySelector(`.${focusedClass}`)
+    const allItems = this.#getAllVisibleHtmlItems()
+
+    if (!allItems.length) {
+      return
+    }
+
+    if (itemFocused) {
+      removeClass(itemFocused, focusedClass)
+    }
+
+    const [firstItem] = allItems
+    setClass(firstItem, focusedClass)
+  }
+
+  isLastFocusedElementExist() {
+    return !!this.#lastFocusedItem
+  }
+
+  destroy() {
+    if (this.intersectionItemsObserver) {
+      this.intersectionItemsObserver.disconnect()
+    }
+  }
+
+  // Private methods
+  #updateListDOM() {
+    updateDOM({
+      optionsTreeMap: this.optionsTreeMap,
+      emptyListHtmlElement: this.emptyListHtmlElement,
+      iconElements: this.iconElements,
+      previousSingleSelectedValue: this.#previousSingleSelectedValue,
+      rtl: this.rtl,
+    })
+  }
+
+  #keyActionsLeftRight(itemFocused: HTMLElement | null, e: KeyboardEvent) {
+    if (!itemFocused) {
+      return
+    }
+
+    const key = e.key
+    const checkbox = itemFocused.querySelector('.treeselect-list__item-checkbox') ?? null
+    const inputId = checkbox?.getAttribute('input-id') ?? null
+    const option = getTreeItemOptionByInputId(inputId, this.optionsTreeMap) ?? null
+    const arrow = option?.arrowItemHtmlElement ?? null
+
+    if (option === null || arrow === null) {
+      return
+    }
+
+    if (key === 'ArrowLeft' && !option.isClosed && option.isGroup) {
+      arrow.dispatchEvent(new Event('mousedown'))
+      // We use preventDefault to avoid cursor jumping during opening/closing group
+      e.preventDefault()
+    }
+
+    if (key === 'ArrowRight' && option.isClosed && option.isGroup) {
+      arrow.dispatchEvent(new Event('mousedown'))
+      // We use preventDefault to avoid cursor jumping during opening/closing group
+      e.preventDefault()
+    }
+  }
+
+  #keyActionsDownUp(itemFocused: HTMLElement | null, key: string) {
+    const allItems = this.#getAllVisibleHtmlItems()
+
+    if (!allItems.length) {
+      return
+    }
+
+    const focusedClassName = 'treeselect-list__item--focused'
+
+    if (!itemFocused) {
+      const [firstNode] = allItems
+      setClass(firstNode, focusedClassName)
+    } else {
+      const focusedItemIndex = allItems.findIndex((el) => el.classList.contains(focusedClassName))
+      const focusedNode = allItems[focusedItemIndex]
+      removeClass(focusedNode, focusedClassName)
+
+      const nextNodeIndex = key === 'ArrowDown' ? focusedItemIndex + 1 : focusedItemIndex - 1
+      const defaultNodeIndex = key === 'ArrowDown' ? 0 : allItems.length - 1
+      const isDefaultIndex = !allItems[nextNodeIndex]
+      const nextNodeToFocus = allItems[nextNodeIndex] ?? allItems[defaultNodeIndex]
+      setClass(nextNodeToFocus, focusedClassName)
+
+      const listCoord = this.srcElement.getBoundingClientRect()
+      const nextCoord = nextNodeToFocus.getBoundingClientRect()
+
+      if (isDefaultIndex && key === 'ArrowDown') {
+        this.srcElement.scroll(0, 0)
+
+        return
+      }
+
+      if (isDefaultIndex && key === 'ArrowUp') {
+        this.srcElement.scroll(0, this.srcElement.scrollHeight)
+
+        return
+      }
+
+      const slotHeight = this.listSlotHtmlComponent?.clientHeight ?? 0
+
+      if (listCoord.y + listCoord.height < nextCoord.y + nextCoord.height + slotHeight) {
+        this.srcElement.scroll(0, this.srcElement.scrollTop + nextCoord.height)
+
+        return
+      }
+
+      if (listCoord.y > nextCoord.y) {
+        this.srcElement.scroll(0, this.srcElement.scrollTop - nextCoord.height)
+
+        return
+      }
+    }
+  }
+
+  #createSrcElement() {
+    const list = this.#createList()
+    const listTreeItems = this.#getListHTML(this.options)
+    list.append(...listTreeItems)
+
+    const emptyList = this.#createEmptyList()
+    list.append(emptyList)
+
+    const slot = this.#createSlot()
+
+    if (slot) {
+      list.append(slot)
+    }
+
+    return list
+  }
+
+  #createList() {
+    const list = document.createElement('div')
+    list.classList.add('treeselect-list')
+
+    if (this.listClassName.length > 0) {
+      const listClassNames = this.listClassName.split(' ')
+      list.classList.add(...listClassNames)
+    }
+
+    if (this.isSingleSelect) {
+      list.classList.add('treeselect-list--single-select')
+    }
+
+    if (this.disabledBranchNode) {
+      list.classList.add('treeselect-list--disabled-branch-node')
+    }
+
+    list.addEventListener('mouseout', (e) => this.#listMouseout(e))
+    list.addEventListener('mousemove', () => this.#listMouseMove())
+    list.addEventListener('mouseup', () => this.mouseupCallback(), true)
+
+    if (this.isBoostedRendering) {
+      this.intersectionItemsObserver = createIntersectionScrollObserver(list)
+    }
+
+    return list
+  }
+
+  #listMouseout(e: Event) {
+    e.stopPropagation()
+
+    if (this.#lastFocusedItem && this.#isMouseActionsAvailable) {
+      setClass(this.#lastFocusedItem, 'treeselect-list__item--focused')
+    }
+  }
+
+  #listMouseMove() {
+    this.#isMouseActionsAvailable = true
+  }
+
+  #getListHTML(options: OptionType[]) {
+    return options.reduce((acc, option) => {
+      if (option.children?.length) {
+        const groupContainer = this.#createGroupContainer(option)
+        const innerGroupsAndElements = this.#getListHTML(option.children)
+
+        groupContainer.append(...innerGroupsAndElements)
+        acc.push(groupContainer)
+
+        return acc
+      }
+
+      const itemGroupElement = this.#createGroupItem(option, false)
+      acc.push(itemGroupElement)
+
+      return acc
+    }, [] as HTMLElement[])
+  }
+
+  #createSlot() {
+    if (!this.listSlotHtmlComponent) {
+      return null
+    }
+
+    const slot = document.createElement('div')
+    slot.classList.add('treeselect-list__slot')
+    slot.appendChild(this.listSlotHtmlComponent)
+
+    return slot
+  }
+
+  #createEmptyList() {
+    const emptyList = document.createElement('div')
+    emptyList.classList.add('treeselect-list__empty')
+    emptyList.setAttribute('title', this.emptyText)
+
+    const icon = document.createElement('span')
+    icon.classList.add('treeselect-list__empty-icon')
+    appendIconToElement(this.iconElements.attention, icon)
+
+    const text = document.createElement('span')
+    text.classList.add('treeselect-list__empty-text')
+    text.textContent = this.emptyText
+
+    emptyList.append(icon, text)
+
+    // Add emptyList to cache
+    this.emptyListHtmlElement = emptyList
+
+    return emptyList
+  }
+
+  #createGroupContainer(option: OptionType) {
+    const groupContainerElement = document.createElement('div')
+    groupContainerElement.setAttribute('group-container-id', option.value.toString())
+    groupContainerElement.classList.add('treeselect-list__group-container')
+
+    const groupItemElement = this.#createGroupItem(option, true)
+    groupContainerElement.appendChild(groupItemElement)
+
+    return groupContainerElement
+  }
+
+  #createGroupItem(option: OptionType, isGroup: boolean) {
+    const itemElement = this.#createItemElement(option)
+
+    if (isGroup) {
+      const arrow = this.#createArrow(option)
+      itemElement.appendChild(arrow)
+      itemElement.classList.add('treeselect-list__item--group')
+    }
+
+    const checkbox = this.#createCheckbox(option)
+    const label = this.#createCheckboxLabel(option, isGroup)
+    itemElement.append(checkbox, label)
+
+    return itemElement
+  }
+
+  #createItemElement(option: OptionType) {
+    const itemElement = document.createElement('div')
+    itemElement.setAttribute('tabindex', '-1')
+    itemElement.setAttribute('title', option.name)
+    setAttributesFromHtmlAttr(itemElement, option.htmlAttr)
+    itemElement.classList.add('treeselect-list__item')
+
+    itemElement.addEventListener('mouseover', () => this.#itemElementMouseover(itemElement), true)
+    itemElement.addEventListener('mouseout', () => this.#itemElementMouseout(itemElement), true)
+    itemElement.addEventListener('mousedown', (e) => this.#itemElementMousedown(e, option))
+
+    // Set observer for scroll visibility
+    if (this.intersectionItemsObserver) {
+      this.intersectionItemsObserver.observe(itemElement)
+    }
+
+    // Add htmlItem to the optionsTreeMap
+    const treeOption = this.optionsTreeMap.get(option.value)
+    if (treeOption) {
+      treeOption.itemHtmlElement = itemElement
+    }
+
+    return itemElement
+  }
+
+  #itemElementMouseover(itemElement: HTMLDivElement) {
+    if (this.#isMouseActionsAvailable) {
+      this.#groupMouseAction(true, itemElement)
+    }
+  }
+
+  #itemElementMouseout(itemElement: HTMLDivElement) {
+    if (this.#isMouseActionsAvailable) {
+      this.#groupMouseAction(false, itemElement)
+      this.#lastFocusedItem = itemElement
+    }
+  }
+
+  #itemElementMousedown(e: Event, option: OptionType) {
+    e.preventDefault()
+    e.stopPropagation()
+    const treeOption = this.optionsTreeMap.get(option.value) ?? null
+
+    if (treeOption?.disabled) {
+      return
+    }
+
+    const checkbox = treeOption?.checkboxHtmlElement
+
+    if (checkbox) {
+      checkbox.checked = !checkbox.checked
+      this.#checkboxClickEvent(checkbox, option)
+    }
+  }
+
+  #createArrow(option: OptionType) {
+    const arrow = document.createElement('span')
+    arrow.setAttribute('tabindex', '-1')
+    arrow.classList.add('treeselect-list__item-icon')
+    appendIconToElement(this.iconElements.arrowDown, arrow)
+
+    arrow.addEventListener('mousedown', (e) => this.#arrowMousedown(e, option))
+
+    // Add arrow to the optionsTreeMap
+    const treeOption = this.optionsTreeMap.get(option.value)
+    if (treeOption) {
+      treeOption.arrowItemHtmlElement = arrow
+    }
+
+    return arrow
+  }
+
+  #arrowMousedown(e: Event, option: OptionType) {
+    e.preventDefault()
+    e.stopPropagation()
+    this.#arrowClickEvent(option)
+  }
+
+  #createCheckbox(option: OptionType) {
+    const checkboxContainer = document.createElement('div')
+    checkboxContainer.classList.add('treeselect-list__item-checkbox-container')
+    const ico = document.createElement('span')
+    ico.classList.add('treeselect-list__item-checkbox-icon')
+    ico.innerHTML = ''
+
+    const checkbox = document.createElement('input')
+    checkbox.setAttribute('tabindex', '-1')
+    checkbox.setAttribute('type', `checkbox`)
+    checkbox.setAttribute('input-id', option.value.toString())
+    checkbox.classList.add('treeselect-list__item-checkbox')
+
+    checkboxContainer.append(ico, checkbox)
+
+    // Add checkbox to the optionsTreeMap
+    const treeOption = this.optionsTreeMap.get(option.value)
+    if (treeOption) {
+      treeOption.checkboxHtmlElement = checkbox
+      treeOption.checkboxIconHtmlElement = ico
+    }
+
+    return checkboxContainer
+  }
+
+  #createCheckboxLabel(option: OptionType, isGroup: boolean) {
+    const label = document.createElement('label')
+    label.textContent = option.name
+    label.classList.add('treeselect-list__item-label')
+
+    if (isGroup && this.showCount) {
+      const counter = this.#createCounter(option)
+      label.appendChild(counter)
+    }
+
+    return label
+  }
+
+  #createCounter(option: OptionType) {
+    const counter = document.createElement('span')
+    const children = this.optionsTreeMap.get(option.value)?.children ?? []
+    counter.textContent = `(${children.length})`
+    counter.classList.add('treeselect-list__item-label-counter')
+
+    return counter
+  }
+
+  #getAllVisibleHtmlItems() {
+    const allItems: HTMLElement[] = []
+    this.optionsTreeMap.forEach((option) => {
+      if (!option.hidden && option.itemHtmlElement) {
+        allItems.push(option.itemHtmlElement)
+      }
+    })
+
+    return allItems
+  }
+
+  // Actions
+  #checkboxClickEvent(target: HTMLInputElement, option: OptionType) {
+    const treeOption = this.optionsTreeMap.get(option.value) ?? null
+
+    if (treeOption === null) {
+      return
+    }
+
+    const isGroupSelectable = treeOption.isGroupSelectable ?? true
+
+    if (treeOption.isGroup && (this.disabledBranchNode || !isGroupSelectable)) {
+      // We need to close/open disabled group on mousedown
+      const arrow = treeOption.arrowItemHtmlElement
+      arrow?.dispatchEvent(new Event('mousedown'))
+
+      return
+    }
+
+    if (this.isSingleSelect) {
+      const [previousValue] = this.#previousSingleSelectedValue
+
+      // Prevent emit the same value.
+      if (treeOption.id === previousValue) {
+        return
+      }
+
+      this.#previousSingleSelectedValue = [treeOption.id]
+      updateOptionsByValue({
+        newValue: [treeOption.id],
+        optionsTreeMap: this.optionsTreeMap,
+        isSingleSelect: this.isSingleSelect,
+        isIndependentNodes: this.isIndependentNodes,
+      })
+    } else {
+      treeOption.checked = target.checked
+      const resultChecked = updateOptionByCheckState({
+        option: treeOption,
+        optionsTreeMap: this.optionsTreeMap,
+        isIndependentNodes: this.isIndependentNodes,
+      })
+      target.checked = resultChecked
+    }
+
+    this.#updateListDOM()
+    this.#emitInput()
+  }
+
+  #arrowClickEvent(option: OptionType) {
+    const treeOption = this.optionsTreeMap.get(option.value) ?? null
+
+    if (treeOption !== null) {
+      treeOption.isClosed = !treeOption.isClosed
+      hideShowChildrenOptions(this.optionsTreeMap, treeOption)
+      this.#updateListDOM()
+      this.arrowClickCallback(treeOption.id, treeOption.isClosed)
+    }
+  }
+
+  #groupMouseAction(isMouseOver: boolean, itemElement: HTMLElement) {
+    const focusedClassName = 'treeselect-list__item--focused'
+
+    if (isMouseOver) {
+      const itemsFocused = Array.from(this.srcElement.querySelectorAll(`.${focusedClassName}`))
+
+      if (itemsFocused.length) {
+        itemsFocused.forEach((el) => {
+          removeClass(el, focusedClassName)
+        })
+      }
+
+      setClass(itemElement, focusedClassName)
+    } else {
+      removeClass(itemElement, focusedClassName)
+    }
+  }
+
+  #sortNodes(nodes: TreeItem[]) {
+    const sortFn = this.tagsSortFn ?? null
+    return sortFn === null
+      ? nodes
+      : [...nodes].sort((a, b) => sortFn({ value: a.id, name: a.name }, { value: b.id, name: b.name }))
+  }
+
+  #updateSelectedNodes() {
+    const { ungroupedNodes, groupedNodes, allNodes } = getCheckedOptions(this.optionsTreeMap)
+
+    this.selectedNodes = {
+      nodes: this.#sortNodes(ungroupedNodes),
+      groupedNodes: this.#sortNodes(groupedNodes),
+      allNodes: this.#sortNodes(allNodes),
+    }
+  }
+
+  // Emits
+  #emitInput() {
+    this.#updateSelectedNodes()
+    this.inputCallback(this.selectedNodes)
+    this.value = this.selectedNodes.nodes.map((node) => node.id)
+  }
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/list/list.css
+================================================
+.treeselect-list {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--treeselectjs-border-color);
+  overflow-y: auto;
+  background-color: var(--treeselectjs-bg);
+  max-height: 300px;
+}
+
+.treeselect-list__group-container {
+  box-sizing: border-box;
+}
+
+.treeselect-list__item {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  cursor: pointer;
+  height: 30px;
+}
+
+.treeselect-list__item:focus {
+  outline: none;
+}
+
+.treeselect-list__item--focused,
+.treeselect-list__item--focused.treeselect-list__item--checked {
+  background-color: var(--treeselectjs-item-focus-bg);
+}
+
+.treeselect-list__item--hidden {
+  display: none;
+}
+
+.treeselect-list__item--scroll-not-visible {
+  visibility: hidden;
+}
+
+.treeselect-list__item-icon {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  height: 20px;
+  width: 20px;
+  min-width: 20px;
+}
+
+.treeselect-list__item-icon svg {
+  pointer-events: none;
+  width: 100%;
+  height: 100%;
+  stroke: var(--treeselectjs-icon);
+}
+
+.treeselect-list__item-icon * {
+  pointer-events: none;
+}
+
+.treeselect-list__item-icon:hover svg {
+  stroke: var(--treeselectjs-icon-hover);
+}
+
+.treeselect-list__item-checkbox-container {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border: 1px solid var(--treeselectjs-checkbox-border-color);
+  border-radius: 3px;
+  position: relative;
+  background-color: var(--treeselectjs-checkbox-bg);
+  pointer-events: none;
+  box-sizing: border-box;
+}
+
+.treeselect-list__item-checkbox-container svg {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+}
+
+.treeselect-list__item-checkbox {
+  margin: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  position: absolute;
+  z-index: -1;
+}
+
+.treeselect-list__item-checkbox-icon {
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+  text-align: left;
+}
+
+.treeselect-list__item-label {
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+  white-space: nowrap;
+  font-size: 14px;
+  padding-left: 5px;
+  pointer-events: none;
+  text-align: left;
+}
+
+.treeselect-list__item-label-counter {
+  margin-left: 3px;
+  color: var(--treeselectjs-item-counter);
+  font-size: 13px;
+}
+
+.treeselect-list__empty {
+  display: flex;
+  align-items: center;
+  height: 30px;
+  padding-left: 4px;
+}
+
+.treeselect-list__empty--hidden {
+  display: none;
+}
+
+.treeselect-list__empty-icon {
+  display: flex;
+  align-items: center;
+}
+
+.treeselect-list__empty-text {
+  font-size: 14px;
+  padding-left: 5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: keep-all;
+  white-space: nowrap;
+}
+
+.treeselect-list__slot {
+  position: sticky;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  bottom: 0;
+  background-color: var(--treeselectjs-bg);
+}
+
+/* single-select styles */
+.treeselect-list.treeselect-list--single-select .treeselect-list__item-checkbox-container {
+  display: none;
+}
+
+/* disabled-branch-node styles */
+.treeselect-list.treeselect-list--disabled-branch-node
+  .treeselect-list__item--group
+  .treeselect-list__item-checkbox-container {
+  display: none;
+}
+
+.treeselect-list__item--non-selectable-group .treeselect-list__item-checkbox-container {
+  display: none;
+}
+
+/* checked styles */
+.treeselect-list__item--checked {
+  background-color: var(--treeselectjs-item-selected-bg);
+}
+
+.treeselect-list.treeselect-list--single-select .treeselect-list__item--checked {
+  background-color: transparent;
+}
+
+.treeselect-list.treeselect-list--single-select .treeselect-list__item--single-selected {
+  background-color: var(--treeselectjs-item-selected-bg);
+}
+
+.treeselect-list__item .treeselect-list__item-checkbox-container svg {
+  stroke: transparent;
+}
+
+.treeselect-list__item--checked .treeselect-list__item-checkbox-container svg,
+.treeselect-list__item--partial-checked .treeselect-list__item-checkbox-container svg {
+  stroke: var(--treeselectjs-checkbox-checked-icon);
+}
+
+.treeselect-list__item--checked .treeselect-list__item-checkbox-container,
+.treeselect-list__item--partial-checked .treeselect-list__item-checkbox-container {
+  background-color: var(--treeselectjs-checkbox-checked-bg);
+}
+
+.treeselect-list__item--disabled .treeselect-list__item-checkbox-container {
+  background-color: var(--treeselectjs-item-selected-bg);
+}
+
+.treeselect-list__item--disabled .treeselect-list__item-label {
+  color: var(--treeselectjs-item-disabled-text);
+}
+
+/* rtl */
+[dir="rtl"] .treeselect-list__item-checkbox-icon {
+  text-align: right;
+}
+
+[dir="rtl"] .treeselect-list__item-label {
+  text-align: right;
+  padding-right: 5px;
+  padding-left: unset;
+}
+
+[dir="rtl"] .treeselect-list__item--closed .treeselect-list__item-icon {
+  transform: rotate(180deg);
+}
+
+[dir="rtl"] .treeselect-list__empty {
+  padding-right: 4px;
+  padding-left: unset;
+}
+
+[dir="rtl"] .treeselect-list__empty-text {
+  padding-right: 5px;
+  padding-left: unset;
+}
+/* rtl end */
+
+
+
+================================================
+FILE: packages/treeselectjs/src/list/listTypes.ts
+================================================
+import type { ValueOptionType, OptionType, IconsType, SelectedNodesType, TagsSortFnType } from '../treeselectTypes'
+
+export interface TreeItem {
+  id: string | number
+  name: string
+  childOf: string | number
+  isGroup: boolean
+  checked: boolean
+  isPartialChecked: boolean
+  level: number
+  isClosed: boolean
+  hidden: boolean
+  disabled: boolean
+  isGroupSelectable: boolean
+  children: ValueOptionType[]
+  checkboxHtmlElement: HTMLInputElement | null
+  itemHtmlElement: HTMLElement | null
+  arrowItemHtmlElement: HTMLElement | null
+  checkboxIconHtmlElement: HTMLElement | null
+}
+
+export type OptionsTreeMap = Map<string | number, TreeItem>
+
+export type BeforeSearchStateMap = Map<string | number, Pick<TreeItem, 'hidden' | 'isClosed'>>
+
+export interface ITreeselectListParams {
+  options: OptionType[]
+  value: ValueOptionType[]
+  openLevel: number
+  listSlotHtmlComponent: HTMLElement | null
+  tagsSortFn: TagsSortFnType
+  emptyText: string
+  isSingleSelect: boolean
+  showCount: boolean
+  disabledBranchNode: boolean
+  expandSelected: boolean
+  isIndependentNodes: boolean
+  rtl: boolean
+  listClassName: string
+  isBoostedRendering: boolean
+  iconElements: IconsType
+  inputCallback: (value: SelectedNodesType) => void
+  arrowClickCallback: (groupId: ValueOptionType, isClosed: boolean) => void
+  mouseupCallback: () => void
+}
+
+export interface ITreeselectList extends ITreeselectListParams {
+  searchText: string
+  selectedNodes: SelectedNodesType
+  srcElement: HTMLElement
+  emptyListHtmlElement: HTMLElement | null
+  optionsTreeMap: OptionsTreeMap
+  beforeSearchStateMap: BeforeSearchStateMap
+  intersectionItemsObserver: IntersectionObserver | null
+  updateValue: (value: ValueOptionType[]) => void
+  updateSearchValue: (searchText: string) => void
+  callKeyAction: (e: KeyboardEvent) => void
+  focusFirstListElement: () => void
+  isLastFocusedElementExist: () => boolean
+  destroy: () => void
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/list/helpers/domHelper.ts
+================================================
+import type { ValueOptionType, IconsType } from '../../treeselectTypes'
+import type { OptionsTreeMap, TreeItem } from '../listTypes'
+import { DEFAULT_ITEM_PADDING, ZERO_LEVEL_ITEM_PADDING } from '../../helpers/constants'
+import { appendIconToElement } from '../../helpers/svgIcons'
+
+export const updateDOM = ({
+  optionsTreeMap,
+  emptyListHtmlElement,
+  iconElements,
+  previousSingleSelectedValue,
+  rtl,
+}: {
+  optionsTreeMap: OptionsTreeMap
+  emptyListHtmlElement: HTMLElement | null
+  iconElements: IconsType
+  previousSingleSelectedValue: ValueOptionType[]
+  rtl: boolean
+}) => {
+  optionsTreeMap.forEach((option) => {
+    const input = option.checkboxHtmlElement
+
+    if (input) {
+      input.checked = option.checked
+    }
+
+    updateCheckedClass({ option, previousSingleSelectedValue })
+    updatePartialCheckedClass(option)
+    updateDisabledCheckedClass(option)
+    updateClosedClass({ option, iconElements })
+    updateHiddenClass(option)
+    updateLeftPaddingItems({ option, optionsTreeMap, rtl })
+    updateCheckboxClass({ option, iconElements })
+    updateGroupSelectableClass(option)
+  })
+
+  updateEmptyListClass({ optionsTreeMap, emptyListHtmlElement })
+}
+
+const updateLeftPaddingItems = ({
+  option,
+  optionsTreeMap,
+  rtl,
+}: {
+  option: TreeItem
+  optionsTreeMap: OptionsTreeMap
+  rtl: boolean
+}) => {
+  const isZeroLevel = option.level === 0
+  let padding = '0'
+
+  if (isZeroLevel) {
+    let isGroupsExistOnLevel = false
+
+    for (const [_, item] of optionsTreeMap) {
+      if (item.isGroup && item.level === option.level) {
+        isGroupsExistOnLevel = true
+        break
+      }
+    }
+
+    const itemPadding =
+      !option.isGroup && isGroupsExistOnLevel ? `${DEFAULT_ITEM_PADDING}px` : `${ZERO_LEVEL_ITEM_PADDING}px`
+    padding = option.isGroup ? '0' : itemPadding
+  } else {
+    padding = option.isGroup
+      ? `${option.level * DEFAULT_ITEM_PADDING}px`
+      : `${option.level * DEFAULT_ITEM_PADDING + DEFAULT_ITEM_PADDING}px`
+  }
+
+  const listItem = option.itemHtmlElement
+
+  if (listItem) {
+    if (rtl) {
+      listItem.style.paddingRight = padding
+    } else {
+      listItem.style.paddingLeft = padding
+    }
+
+    // We can use css selectors to reset params with !important
+    listItem.setAttribute('level', option.level.toString())
+    listItem.setAttribute('group', option.isGroup.toString())
+  }
+}
+
+const updateEmptyListClass = ({
+  optionsTreeMap,
+  emptyListHtmlElement,
+}: {
+  optionsTreeMap: OptionsTreeMap
+  emptyListHtmlElement: HTMLElement | null
+}) => {
+  let isNotEmpty = false
+
+  for (const [_, option] of optionsTreeMap) {
+    if (!option.hidden) {
+      isNotEmpty = true
+      break
+    }
+  }
+
+  emptyListHtmlElement?.classList.toggle('treeselect-list__empty--hidden', isNotEmpty)
+}
+
+export const setAttributesFromHtmlAttr = (itemElement: HTMLDivElement, htmlAttr?: Record<string, string>) => {
+  if (!htmlAttr) {
+    return
+  }
+
+  Object.keys(htmlAttr).forEach((key) => {
+    const value = htmlAttr[key as keyof Record<string, string>]
+
+    if (typeof value === 'string') {
+      itemElement.setAttribute(key, value)
+    }
+  })
+}
+
+const updateCheckedClass = ({
+  option,
+  previousSingleSelectedValue,
+}: {
+  option: TreeItem
+  previousSingleSelectedValue: ValueOptionType[]
+}) => {
+  const listItem = option.itemHtmlElement
+  listItem?.classList.toggle('treeselect-list__item--checked', option.checked)
+  const isCheckSingleSelected =
+    Array.isArray(previousSingleSelectedValue) && previousSingleSelectedValue[0] === option.id && !option.disabled
+  listItem?.classList.toggle('treeselect-list__item--single-selected', isCheckSingleSelected)
+}
+
+const updatePartialCheckedClass = (option: TreeItem) => {
+  const listItem = option.itemHtmlElement
+  listItem?.classList.toggle('treeselect-list__item--partial-checked', option.isPartialChecked)
+}
+
+const updateDisabledCheckedClass = (option: TreeItem) => {
+  const listItem = option.itemHtmlElement
+  listItem?.classList.toggle('treeselect-list__item--disabled', option.disabled)
+}
+
+const updateClosedClass = ({ option, iconElements }: { option: TreeItem; iconElements: IconsType }) => {
+  const arrowIcon = option.arrowItemHtmlElement
+
+  if (option.isGroup && arrowIcon) {
+    const iconInnerElement = option.isClosed ? iconElements.arrowRight : iconElements.arrowDown
+    appendIconToElement(iconInnerElement, arrowIcon)
+
+    const listItem = option.itemHtmlElement
+    listItem?.classList.toggle('treeselect-list__item--closed', option.isClosed)
+  }
+}
+
+const updateHiddenClass = (option: TreeItem) => {
+  const listItem = option.itemHtmlElement
+  listItem?.classList.toggle('treeselect-list__item--hidden', option.hidden)
+}
+
+const updateCheckboxClass = ({ option, iconElements }: { option: TreeItem; iconElements: IconsType }) => {
+  const icon = option.checkboxIconHtmlElement
+
+  if (icon) {
+    if (option.checked) {
+      appendIconToElement(iconElements.check, icon)
+    } else if (option.isPartialChecked) {
+      appendIconToElement(iconElements.partialCheck, icon)
+    } else {
+      icon.innerHTML = ''
+    }
+  }
+}
+
+const updateGroupSelectableClass = (option: TreeItem) => {
+  const listItem = option.itemHtmlElement
+  listItem?.classList.toggle('treeselect-list__item--non-selectable-group', !option.isGroupSelectable)
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/list/helpers/listCheckStateHelper.ts
+================================================
+import type { ValueOptionType } from '../../treeselectTypes'
+import type { TreeItem, OptionsTreeMap } from '../listTypes'
+import { getDirectChildrenOptions } from './listOptionsHelper'
+
+export const updateOptionsByValue = ({
+  newValue,
+  optionsTreeMap,
+  isSingleSelect,
+  isIndependentNodes,
+}: {
+  newValue: ValueOptionType[]
+  optionsTreeMap: OptionsTreeMap
+  isSingleSelect: boolean
+  isIndependentNodes: boolean
+}) => {
+  uncheckedAllTreeItemOptions(optionsTreeMap)
+  const optionsToCheck = newValue
+    .map((id) => optionsTreeMap.get(id) ?? null)
+    .filter((option) => option !== null && !option.disabled) as TreeItem[]
+  const [firstItem] = optionsToCheck
+
+  if (isSingleSelect && optionsToCheck.length && firstItem) {
+    firstItem.checked = true
+    return
+  }
+
+  optionsToCheck.forEach((option) => {
+    option.checked = true
+    const resultChecked = updateOptionByCheckState({
+      option,
+      optionsTreeMap,
+      isIndependentNodes,
+    })
+    option.checked = resultChecked
+  })
+}
+
+export const updateOptionByCheckState = ({
+  option: { id, checked },
+  optionsTreeMap,
+  isIndependentNodes,
+}: {
+  option: Pick<TreeItem, 'id' | 'checked'>
+  optionsTreeMap: OptionsTreeMap
+  isIndependentNodes: boolean
+}) => {
+  const currentOption = optionsTreeMap.get(id) ?? null
+
+  if (currentOption === null) {
+    return false
+  }
+
+  if (isIndependentNodes) {
+    currentOption.checked = !currentOption.disabled && checked
+
+    return currentOption.checked
+  }
+
+  const resultCheckedState = updateTreeItemOptionStateWithChildren({
+    checked,
+    currentOption,
+    optionsTreeMap,
+  })
+  updateParentTreeItemOptions({
+    childOption: currentOption,
+    optionsTreeMap,
+  })
+
+  return resultCheckedState
+}
+
+const updateTreeItemOptionStateWithChildren = ({
+  checked,
+  currentOption,
+  optionsTreeMap,
+}: {
+  checked: boolean
+  currentOption: TreeItem
+  optionsTreeMap: OptionsTreeMap
+}) => {
+  if (!currentOption.isGroup) {
+    currentOption.checked = !currentOption.disabled && checked
+    currentOption.isPartialChecked = false
+
+    return currentOption.checked
+  }
+
+  const childrenOptions = getDirectChildrenOptions({ id: currentOption.id, optionsTreeMap })
+  const falseOrDisabledOrPartial = !checked || currentOption.disabled || currentOption.isPartialChecked
+
+  if (falseOrDisabledOrPartial) {
+    currentOption.checked = false
+    currentOption.isPartialChecked = false
+    checkUncheckAllChildren({
+      option: currentOption,
+      children: childrenOptions,
+      optionsTreeMap,
+    })
+
+    return currentOption.checked
+  }
+
+  const canWeCheckAllChildren = !isSomeChildrenDisabled({
+    children: childrenOptions,
+    optionsTreeMap,
+  })
+
+  if (canWeCheckAllChildren) {
+    currentOption.checked = true
+    currentOption.isPartialChecked = false
+    checkUncheckAllChildren({
+      option: currentOption,
+      children: childrenOptions,
+      optionsTreeMap,
+    })
+
+    return currentOption.checked
+  }
+
+  const isAllDisabled = isAllDirectChildrenDisabled(childrenOptions)
+
+  if (isAllDisabled) {
+    currentOption.checked = false
+    currentOption.isPartialChecked = false
+    currentOption.disabled = true
+
+    return currentOption.checked
+  }
+
+  currentOption.checked = false
+  currentOption.isPartialChecked = true
+
+  childrenOptions.forEach((options) => {
+    updateTreeItemOptionStateWithChildren({
+      checked,
+      currentOption: options,
+      optionsTreeMap,
+    })
+  })
+
+  return currentOption.checked
+}
+
+const updateParentTreeItemOptions = ({
+  childOption,
+  optionsTreeMap,
+}: {
+  childOption: TreeItem
+  optionsTreeMap: OptionsTreeMap
+}) => {
+  const parentOption = optionsTreeMap.get(childOption.childOf) ?? null
+
+  if (parentOption === null) {
+    return
+  }
+
+  updateParentOption({ parentOption, optionsTreeMap })
+  updateParentTreeItemOptions({
+    childOption: parentOption,
+    optionsTreeMap,
+  })
+}
+
+const updateParentOption = ({
+  parentOption,
+  optionsTreeMap,
+}: {
+  parentOption: TreeItem
+  optionsTreeMap: OptionsTreeMap
+}) => {
+  const children = getDirectChildrenOptions({ id: parentOption.id, optionsTreeMap })
+  const isAllDisabled = isAllDirectChildrenDisabled(children)
+
+  if (isAllDisabled) {
+    parentOption.checked = false
+    parentOption.isPartialChecked = false
+    parentOption.disabled = true
+
+    return
+  }
+
+  const isAllChecked = isAllDirectChildrenChecked(children)
+
+  if (isAllChecked) {
+    parentOption.checked = true
+    parentOption.isPartialChecked = false
+
+    return
+  }
+
+  const isSomeCheckedOrPartial = isSomeDirectChildrenCheckedOrPartial(children)
+
+  if (isSomeCheckedOrPartial) {
+    parentOption.checked = false
+    parentOption.isPartialChecked = true
+
+    return
+  }
+
+  parentOption.checked = false
+  parentOption.isPartialChecked = false
+}
+
+const checkUncheckAllChildren = ({
+  option: { checked, disabled },
+  children,
+  optionsTreeMap,
+}: {
+  option: Pick<TreeItem, 'checked' | 'disabled'>
+  children: TreeItem[]
+  optionsTreeMap: OptionsTreeMap
+}) => {
+  children.forEach((option) => {
+    option.disabled = disabled || option.disabled
+    option.checked = checked && !option.disabled
+    option.isPartialChecked = false
+
+    const subChildren = getDirectChildrenOptions({ id: option.id, optionsTreeMap })
+    checkUncheckAllChildren({
+      option: { checked, disabled },
+      children: subChildren,
+      optionsTreeMap,
+    })
+  })
+}
+
+const isSomeChildrenDisabled = ({
+  children,
+  optionsTreeMap,
+}: {
+  children: TreeItem[]
+  optionsTreeMap: OptionsTreeMap
+}): boolean => {
+  const isSomeDisabled = children.some((option) => option.disabled)
+
+  if (isSomeDisabled) {
+    return true
+  }
+
+  return children.some((option) => {
+    if (!option.isGroup) {
+      return false
+    }
+
+    const subChildren = getDirectChildrenOptions({ id: option.id, optionsTreeMap })
+
+    return isSomeChildrenDisabled({ children: subChildren, optionsTreeMap })
+  })
+}
+
+const isAllDirectChildrenDisabled = (children: TreeItem[]) => {
+  return children.every((option) => !!option.disabled)
+}
+
+const isAllDirectChildrenChecked = (children: TreeItem[]) => {
+  return children.every((option) => option.checked)
+}
+
+const isSomeDirectChildrenCheckedOrPartial = (children: TreeItem[]) => {
+  return children.some((option) => option.checked || option.isPartialChecked)
+}
+
+const uncheckedAllTreeItemOptions = (optionsTreeMap: OptionsTreeMap) => {
+  optionsTreeMap.forEach((option) => {
+    option.checked = false
+    option.isPartialChecked = false
+  })
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/list/helpers/listOptionsHelper.ts
+================================================
+import type { OptionType, ValueOptionType } from '../../treeselectTypes'
+import type { TreeItem, OptionsTreeMap } from '../listTypes'
+import { updateOptionByCheckState } from './listCheckStateHelper'
+
+export const getOptionsTreeMap = ({
+  options,
+  openLevel,
+  isIndependentNodes,
+}: {
+  options: OptionType[]
+  openLevel: number
+  isIndependentNodes: boolean
+}) => {
+  const defaultParams = { level: 0, groupId: '' }
+  const optionsTreeMap: OptionsTreeMap = new Map()
+
+  getTreeOptions({
+    optionsTreeMap,
+    options,
+    openLevel,
+    groupId: defaultParams.groupId,
+    level: defaultParams.level,
+  })
+
+  adjustTreeItemOptions({ optionsTreeMap, isIndependentNodes })
+
+  return optionsTreeMap
+}
+
+const getTreeOptions = ({
+  optionsTreeMap,
+  options,
+  openLevel,
+  groupId,
+  level,
+}: {
+  optionsTreeMap: OptionsTreeMap
+  options: OptionType[]
+  openLevel: number
+  groupId: ValueOptionType
+  level: number
+}) => {
+  options.forEach((option) => {
+    const isGroup = (option.children?.length ?? 0) > 0
+    const isClosed = level >= openLevel && isGroup
+    const hidden = level > openLevel
+
+    const children = option.children?.map((child) => child.value) ?? []
+    const optionId = option.value
+
+    if (optionsTreeMap.has(optionId)) {
+      console.error(
+        `Validation: You have duplicated option value: ${optionId}! You should use unique values. Duplicates will lead to unexpected behavior.`,
+      )
+    }
+
+    optionsTreeMap.set(optionId, {
+      id: optionId,
+      name: option.name,
+      childOf: groupId,
+      isGroup,
+      checked: false,
+      isPartialChecked: false,
+      level,
+      isClosed,
+      hidden,
+      disabled: option.disabled ?? false,
+      isGroupSelectable: !isGroup || (option.isGroupSelectable ?? true),
+      children,
+      // Html elements will be added during their creation
+      checkboxHtmlElement: null,
+      itemHtmlElement: null,
+      arrowItemHtmlElement: null,
+      checkboxIconHtmlElement: null,
+    })
+
+    if (isGroup) {
+      getTreeOptions({
+        optionsTreeMap,
+        options: option.children,
+        openLevel,
+        groupId: optionId,
+        level: level + 1,
+      })
+    }
+  })
+}
+
+export const getTreeItemOptionByInputId = (inputId: string | null, optionsTreeMap: OptionsTreeMap) => {
+  if (inputId === null) {
+    return null
+  }
+
+  return optionsTreeMap.get(inputId) ?? optionsTreeMap.get(parseInt(inputId)) ?? null
+}
+
+export const getDirectChildrenOptions = ({
+  id,
+  optionsTreeMap,
+}: {
+  id: ValueOptionType
+  optionsTreeMap: OptionsTreeMap
+}) => {
+  const option = optionsTreeMap.get(id) ?? null
+
+  if (option === null) {
+    return []
+  }
+
+  return option.children.reduce<TreeItem[]>((acc, curr) => {
+    const child = optionsTreeMap.get(curr) ?? null
+
+    if (child !== null) {
+      acc.push(child)
+    }
+
+    return acc
+  }, [])
+}
+
+export const getCheckedOptions = (optionsTreeMap: OptionsTreeMap) => {
+  const ungroupedNodes: TreeItem[] = []
+  const allGroupedNodes: TreeItem[] = []
+  const allNodes: TreeItem[] = []
+
+  optionsTreeMap.forEach((option) => {
+    if (!option.checked) {
+      return
+    }
+
+    allNodes.push(option)
+
+    if (option.isGroup) {
+      allGroupedNodes.push(option)
+    } else {
+      ungroupedNodes.push(option)
+    }
+  })
+
+  const groupedNodes = allNodes.filter((node) => !allGroupedNodes.some(({ id }) => id === node.childOf))
+
+  return { ungroupedNodes, groupedNodes, allNodes }
+}
+
+const adjustTreeItemOptions = ({
+  optionsTreeMap,
+  isIndependentNodes,
+}: {
+  optionsTreeMap: OptionsTreeMap
+  isIndependentNodes: boolean
+}) => {
+  // Disabled update
+  const disabledNodes: TreeItem[] = []
+
+  optionsTreeMap.forEach((option) => {
+    if (option.disabled) {
+      disabledNodes.push(option)
+    }
+  })
+
+  disabledNodes.forEach(({ id }) => {
+    updateOptionByCheckState({
+      option: { id, checked: false },
+      optionsTreeMap,
+      isIndependentNodes,
+    })
+  })
+}
+
+
+
+================================================
+FILE: packages/treeselectjs/src/list/helpers/listVisibilityStateHelper.ts
+================================================
+import type { ValueOptionType } from '../../treeselectTypes'
+import type { TreeItem, OptionsTreeMap, BeforeSearchStateMap } from '../listTypes'
+import { getDirectChildrenOptions } from './listOptionsHelper'
+
+export const hideShowChildrenOptions = (
+  optionsTreeMap: OptionsTreeMap,
+  { id, isClosed }: Pick<TreeItem, 'id' | 'isClosed'>,
+) => {
+  const allChildrenOptions = getDirectChildrenOptions({ id, optionsTreeMap })
+
+  allChildrenOptions.forEach((option) => {
+    option.hidden = isClosed ?? false
+
+    if (option.isGroup && !option.isClosed) {
+      hideShowChildrenOptions(optionsTreeMap, { id: option.id, isClosed })
+    }
+  })
+}
+
+export const expandSelectedItems = (optionsTreeMap: OptionsTreeMap, isSingleSelect: boolean) => {
+  if (isSingleSelect) {
+    expandSingleSelect(optionsTreeMap)
+    return
+  }
+
+  optionsTreeMap.forEach((option) => {
+    if (option.checked) {
+      expandAllParents(option.childOf, optionsTreeMap)
+    }
+
+    if (option.isGroup && !option.disabled && (option.checked || option.isPartialChecked)) {
+      option.isClosed = false
+      hideShowChildrenOptions(optionsTreeMap, option)
+    }
+  })
+}
+
+const expandSingleSelect = (optionsTreeMap: OptionsTreeMap) => {
+  let checkedOption: TreeItem | null = null
+  for (const [_, option] of optionsTreeMap) {
+    if (option.checked && !option.disabled) {
+      checkedOption = option
+      break
+    }
+  }
+
+  if (!checkedOption) {
+    return
+  }
+
+  if (checkedOption.isGroup) {
+    checkedOption.isClosed = false
+    hideShowChildrenOptions(optionsTreeMap, checkedOption)
+  }
+
+  expandAllParents(checkedOption.childOf, optionsTreeMap)
+}
+
+const expandAllParents = (childOf: ValueOptionType, optionsTreeMap: OptionsTreeMap) => {
+  const parentNode = optionsTreeMap.get(childOf) ?? null
+
+  if (parentNode) {
+    parentNode.isClosed = false
+    hideShowChildrenOptions(optionsTreeMap, parentNode)
+    expandAllParents(parentNode.childOf, optionsTreeMap)
+  }
+}
+
+export const updateVisibleBySearchTreeItemOptions = (optionsTreeMap: OptionsTreeMap, searchText: string) => {
+  optionsTreeMap.forEach((option) => {
+    const isSearched = option.name.toLowerCase().includes(searchText.toLowerCase())
+
+    if (isSearched) {
+      if (option.isGroup) {
+        option.isClosed = true
+      }
+
+      if (option.childOf) {
+        openShowAllParents(option.childOf, optionsTreeMap)
+      }
+    }
+
+    option.hidden = !isSearched
+  })
+}
+
+const openShowAllParents = (childOf: ValueOptionType, optionsTreeMap: OptionsTreeMap) => {
+  const parentNode = optionsTreeMap.get(childOf) ?? null
+
+  if (parentNode) {
+    parentNode.hidden = false
+    parentNode.isClosed = false
+    openShowAllParents(parentNode.childOf, optionsTreeMap)
+  }
+}
+
+export const updateOptionsMapBySearchState = ({
+  optionsTreeMap,
+  beforeSearchStateMap,
+}: {
+  optionsTreeMap: OptionsTreeMap
+  beforeSearchStateMap: BeforeSearchStateMap
+}) => {
+  optionsTreeMap.forEach((option) => {
+    const beforeSearchState = beforeSearchStateMap.get(option.id)
+
+    if (beforeSearchState) {
+      option.hidden = beforeSearchState.hidden
+      option.isClosed = beforeSearchState.isClosed
+    }
+  })
+
+  beforeSearchStateMap.clear()
+}
+
+export const updateBeforeSearchStateMap = ({
+  optionsTreeMap,
+  beforeSearchStateMap,
+}: {
+  optionsTreeMap: OptionsTreeMap
+  beforeSearchStateMap: BeforeSearchStateMap
+}) => {
+  beforeSearchStateMap.clear()
+
+  optionsTreeMap.forEach((option) => {
+    beforeSearchStateMap.set(option.id, {
+      hidden: option.hidden,
+      isClosed: option.isClosed,
+    })
+  })
+}
+
+export const createIntersectionScrollObserver = (srcElementList: HTMLElement) =>
+  new IntersectionObserver(
+    (entries) => {
+      entries.forEach((entry) => {
+        entry.target.classList.toggle('treeselect-list__item--scroll-not-visible', !entry.isIntersecting)
+      })
+    },
+    { root: srcElementList, threshold: 0.5 },
+  )
