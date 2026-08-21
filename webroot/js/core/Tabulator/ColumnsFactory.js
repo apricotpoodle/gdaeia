@@ -97,7 +97,7 @@ export class ColumnsFactory {
             .setLiveFilter(false)
             .setHeaderFilter(ColumnFilters.dateRangeEditor)
             // Indique à Tabulator qu'une chaîne vide "" signifie "filtre inactif"
-            .setHeaderFilterEmptyCheck(function (value) {
+            .setHeaderFilterEmptyCheck(function(value) {
                 return value === "" || value === null || value === undefined;
             })
             .setFormatter((cell) => {
@@ -110,4 +110,31 @@ export class ColumnsFactory {
             .setOptions(overrides)
             .build();
     }
+
+    /**
+     * Génère une colonne monétaire alignée à droite (ex: Rémunération).
+     *
+     * @static
+     * @param {string} field - Champ de l'entité JSON.
+     * @param {string} title - Libellé de l'en-tête.
+     * @param {Object} [overrides={}] - Options complémentaires
+     * @returns {Object}
+     */
+    static currency(field, title, overrides = {}) {
+        return new ColumnBuilder(field, title)
+            .setSorter("number")
+            .setHozAlign("right")
+            .setHeaderFilter("number")
+            .setFormatter((cell) => {
+                const value = cell.getValue();
+                if (value === null || value === undefined || value === "") return "-";
+                return new Intl.NumberFormat('fr-FR', {
+                    style: 'currency',
+                    currency: 'EUR'
+                }).format(value);
+            })
+            .setOptions(overrides)
+            .build();
+    }
+
 }

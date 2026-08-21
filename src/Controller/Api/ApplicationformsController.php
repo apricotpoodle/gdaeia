@@ -244,11 +244,19 @@ class ApplicationformsController extends AppController
         $query = $adapter->adaptRequest($this->request, $query);
 
         // 3. Pagination native
-        $paginatedData = $this->paginate($query, [
-            'limit' => (int)($queryParams['size'] ?? 40), // Valeur conseillée pour le scroll progressif (ADR 0039)
-            'page'  => (int)($queryParams['page'] ?? 1),
-            'sortableFields' => [],
-        ]);
+        try {
+            $paginatedData = $this->paginate($query, [
+                'limit' => (int)($queryParams['size'] ?? 40), // Valeur conseillée pour le scroll progressif (ADR 0039)
+                'page'  => (int)($queryParams['page'] ?? 1),
+            ]);
+        } catch (\Cake\Http\Exception\NotFoundException $e) {
+            // Si la page demandée dépasse le total, on force le retour à la page 1
+            $this->request = $this->request->withQueryParams(array_merge($queryParams, ['page' => 1]));
+            $paginatedData = $this->paginate($query, [
+                'limit' => (int)($queryParams['size'] ?? 40),
+                'page'  => 1,
+            ]);
+        }
 
         // 4. Droits dynamiques de la grille
         $rightsFormatter = $this->createGridRightsFormatter();

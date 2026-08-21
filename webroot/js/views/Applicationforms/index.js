@@ -7,6 +7,7 @@
 import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js';
 import { globalTabulatorObserver } from '../../core/Tabulator/TabulatorObserver.js';
 import { FlashManager } from '../../core/FlashManager.js';
+import { getApplicationformColumns } from './applicationform-columns.js';
 
 const tableSelector = "#applicationforms-table";
 
