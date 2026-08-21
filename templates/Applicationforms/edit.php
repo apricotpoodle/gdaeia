@@ -57,6 +57,18 @@ $this->Html->script('views/Applicationforms/applicationform-comments', ['block' 
     <!-- Formulaire Principal -->
     <?= $this->Form->create($applicationform, ['id' => 'applicationform-main-form', 'class' => 'needs-validation']) ?>
 
+    <!-- Actions en haut de page -->
+    <div class="mt-4 mb-5 text-end">
+        <?= $this->Form->button(
+            '<i class="fa-solid fa-floppy-disk me-1"></i> ' . __('Enregistrer les modifications'),
+            [
+                'type' => 'submit',
+                'class' => 'btn btn-primary px-4',
+                'escapeTitle' => false,
+            ]
+        ) ?>
+    </div>
+
     <div class="row g-4">
 
         <!-- ZONE 1 : ADMINISTRATION -->
@@ -99,54 +111,19 @@ $this->Html->script('views/Applicationforms/applicationform-comments', ['block' 
 
         <!-- ZONE 4 : RÉSERVÉS RH / ADMIN -->
         <?php if ($identity->can('viewZoneReserves', $applicationform)): ?>
-            <?php $canEditReserves = $identity->can('editZoneReserves', $applicationform); ?>
             <div class="col-12 col-lg-6">
-                <div class="card h-100 shadow-sm border-0 border-start border-4 border-warning">
-                    <div class="card-header bg-light fw-bold text-uppercase fs-7 text-warning-emphasis">
-                        <i class="fa-solid fa-lock me-1"></i> <?= __('4. Champs Réservés Administration/RH') ?>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <?= $this->Form->control('budgetfeature_id', [
-                                    'label' => __('Caractéristique budgétaire'),
-                                    'class' => 'form-select',
-                                    'disabled' => !$canEditReserves,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?= $this->Form->control('yesno_id', [
-                                    'label' => __('Inscrit au budget'),
-                                    'class' => 'form-select',
-                                    'disabled' => !$canEditReserves,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-12">
-                                <?= $this->Form->control('qualification', [
-                                    'label' => __('Qualification retenue'),
-                                    'class' => 'form-control',
-                                    'disabled' => !$canEditReserves,
-                                ]) ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <?= $this->element('Applicationforms/zone_reserves', [
+                    'applicationform' => $applicationform,
+                    'budgetfeatures' => $budgetfeatures ?? [],
+                    'yesnos' => $yesnos ?? [],
+                    'fieldSchema' => $fieldSchema ?? [],
+                    'canEditReserves' => $identity->can('editZoneReserves', $applicationform),
+                ]) ?>
             </div>
         <?php endif; ?>
 
     </div>
 
-    <!-- Actions bas de page -->
-    <div class="mt-4 mb-5 text-end">
-        <?= $this->Form->button(
-            '<i class="fa-solid fa-floppy-disk me-1"></i> ' . __('Enregistrer les modifications'),
-            [
-                'type' => 'submit',
-                'class' => 'btn btn-primary px-4',
-                'escapeTitle' => false,
-            ]
-        ) ?>
-    </div>
     <?= $this->Form->end() ?>
 </div>
 
