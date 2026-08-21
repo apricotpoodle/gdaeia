@@ -12,11 +12,10 @@ $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
     <!-- Barre d'entête & Actions -->
     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
         <h2>
-            <i class="bi bi-file-earmark-text bg-primary text-white p-2 rounded me-2"></i>
             <i class="bi bi-file-earmark-text bg-primary text-white p-2 rounded me-2"><?=  h($applicationform->id) ?></i>
             <?= h($applicationform->jobtitle ?? __('Nouvelle Demande')) ?>
         </h2>
-        
+
         <div class="btn-toolbar gap-2">
             <!-- Zone Commentaires : Bouton de déclenchement du volet latéral -->
             <?php if ($identity->can('viewZoneCommentaires', $applicationform)): ?>
@@ -34,7 +33,7 @@ $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
 
     <!-- Formulaire Principal -->
     <?= $this->Form->create($applicationform, ['id' => 'applicationform-main-form', 'class' => 'needs-validation']) ?>
-    
+
     <div class="row g-4">
 
         <!-- ZONE 1 : ADMINISTRATION -->
@@ -59,7 +58,7 @@ $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
                             <!-- Zone d'injection dynamique des composants CGR -->
                             <div class="col-md-6">
                                 <?= $this->Form->label('cgr', __('Code CGR')) ?>
-                                
+
                                 <!-- Conteneur généré en JS (plusieurs selects selon la stratégie) -->
                                 <div id="cgr-components-container" class="d-flex gap-2 mb-2"></div>
 
