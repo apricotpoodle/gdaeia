@@ -1,22 +1,37 @@
 <?php
 /**
+ * Vue : Édition d'une demande de recrutement (Applicationforms)
+ *
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Applicationform $applicationform
  * @var \Authorization\IdentityInterface $identity
+ * @var array<int, string> $departments
+ * @var array<int, string> $contracttypes
+ * @var array<int, string> $hiringreasons
+ * @var array<int, string> $professionalcategories
+ * @var array<int, string> $worktimes
+ * @var array<int, string> $periods
+ * @var array<int, string> $budgetfeatures
+ * @var array<int, string> $yesnos
+ * @var array<int, string> $collaborators
+ * @var array<string, string> $fieldSchema
  */
 
 $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
 
-// Inclusion des assets locaux (CSS et JS de TreeselectJS)
+// Inclusion des assets CSS et JS requis
 $this->Html->css('vendor/treeselect/treeselectjs', ['block' => true]);
 $this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
+$this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => true]);
+$this->Html->script('views/Applicationforms/applicationform-treeselect', ['block' => true]);
+$this->Html->script('views/Applicationforms/applicationform-comments', ['block' => true]);
 ?>
 
 <div class="container-fluid mt-3">
     <!-- Barre d'entête & Actions -->
     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
         <h2>
-            <i class="bi bi-file-earmark-text bg-primary text-white p-2 rounded me-2"><?= h($applicationform->id) ?></i>
+            <span class="badge bg-primary me-2">#<?= h($applicationform->id) ?></span>
             <?= h($applicationform->jobtitle ?? __('Nouvelle Demande')) ?>
         </h2>
 
@@ -24,14 +39,18 @@ $this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
             <!-- Zone Commentaires : Bouton de déclenchement du volet latéral -->
             <?php if ($identity->can('viewZoneCommentaires', $applicationform)): ?>
                 <button class="btn btn-outline-primary position-relative" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasComments" aria-controls="offcanvasComments">
-                    <i class="bi bi-chat-left-text me-1"></i> <?= __('Commentaires') ?>
+                    <i class="fa-regular fa-comments me-1"></i> <?= __('Commentaires') ?>
                     <span id="comment-badge-count" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
                         0
                     </span>
                 </button>
             <?php endif; ?>
 
-            <?= $this->Html->link(__('Retour à la liste'), ['action' => 'index'], ['class' => 'btn btn-outline-secondary']) ?>
+            <?= $this->Html->link(
+                '<i class="fa-solid fa-arrow-left me-1"></i> ' . __('Retour à la liste'),
+                ['action' => 'index'],
+                ['class' => 'btn btn-outline-secondary', 'escape' => false]
+            ) ?>
         </div>
     </div>
 
@@ -46,7 +65,7 @@ $this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
             <div class="col-12 col-lg-6">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-header bg-light fw-bold text-uppercase fs-7 text-secondary">
-                        <i class="bi bi-shield-lock me-1"></i> <?= __('1. Informations Admin') ?>
+                        <i class="fa-solid fa-shield-halved me-1"></i> <?= __('1. Informations Admin') ?>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
@@ -111,66 +130,25 @@ $this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
             </div>
         <?php endif; ?>
 
-        <!-- ZONE 2 : CONTRAT -->
+        <!-- ZONE 2 : CARACTÉRISTIQUES DU CONTRAT -->
         <?php if ($identity->can('viewZoneContrat', $applicationform)): ?>
-            <?php $canEditContrat = $identity->can('editZoneContrat', $applicationform); ?>
             <div class="col-12 col-lg-6">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-header bg-light fw-bold text-uppercase fs-7 text-secondary">
-                        <i class="bi bi-file-earmark-text me-1"></i> <?= __('2. Caractéristiques du Contrat') ?>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-                            <div class="col-md-6">
-                                <?= $this->Form->control('contracttype_id', [
-                                    'label' => __('Type de contrat'),
-                                    'class' => 'form-select',
-                                    'disabled' => !$canEditContrat,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?= $this->Form->control('hiringreason_id', [
-                                    'label' => __('Motif de recrutement'),
-                                    'class' => 'form-select',
-                                    'disabled' => !$canEditContrat,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-12">
-                                <?= $this->Form->control('reasonforreplacement', [
-                                    'label' => __('Précisions motif / Remplacement'),
-                                    'class' => 'form-control',
-                                    'disabled' => !$canEditContrat,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?= $this->Form->control('begin_at', [
-                                    'label' => __('Date de début'),
-                                    'type' => 'date',
-                                    'class' => 'form-control',
-                                    'disabled' => !$canEditContrat,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?= $this->Form->control('end_at', [
-                                    'label' => __('Date de fin'),
-                                    'type' => 'date',
-                                    'class' => 'form-control',
-                                    'disabled' => !$canEditContrat,
-                                ]) ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <?= $this->element('Applicationforms/zone_contract', [
+                    'applicationform' => $applicationform,
+                    'contracttypes' => $contracttypes ?? [],
+                    'hiringreasons' => $hiringreasons ?? [],
+                    'fieldSchema' => $fieldSchema ?? [],
+                ]) ?>
             </div>
         <?php endif; ?>
 
-        <!-- ZONE 3 : RÉMUNÉRATION -->
+        <!-- ZONE 3 : RÉMUNÉRATION & TEMPS DE TRAVAIL -->
         <?php if ($identity->can('viewZoneRemuneration', $applicationform)): ?>
             <?php $canEditRemuneration = $identity->can('editZoneRemuneration', $applicationform); ?>
             <div class="col-12 col-lg-6">
                 <div class="card h-100 shadow-sm border-0">
                     <div class="card-header bg-light fw-bold text-uppercase fs-7 text-secondary">
-                        <i class="bi bi-currency-euro me-1"></i> <?= __('3. Temps de travail & Rémunération') ?>
+                        <i class="fa-solid fa-euro-sign me-1"></i> <?= __('3. Temps de travail & Rémunération') ?>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
@@ -216,7 +194,7 @@ $this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
             <div class="col-12 col-lg-6">
                 <div class="card h-100 shadow-sm border-0 border-start border-4 border-warning">
                     <div class="card-header bg-light fw-bold text-uppercase fs-7 text-warning-emphasis">
-                        <i class="bi bi-lock me-1"></i> <?= __('4. Champs Réservés Administration/RH') ?>
+                        <i class="fa-solid fa-lock me-1"></i> <?= __('4. Champs Réservés Administration/RH') ?>
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
@@ -249,8 +227,16 @@ $this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
 
     </div>
 
+    <!-- Actions bas de page -->
     <div class="mt-4 mb-5 text-end">
-        <?= $this->Form->button(__('Enregistrer les modifications'), ['class' => 'btn btn-primary px-4']) ?>
+        <?= $this->Form->button(
+            '<i class="fa-solid fa-floppy-disk me-1"></i> ' . __('Enregistrer les modifications'),
+            [
+                'type' => 'submit',
+                'class' => 'btn btn-primary px-4',
+                'escapeTitle' => false,
+            ]
+        ) ?>
     </div>
     <?= $this->Form->end() ?>
 </div>
@@ -260,7 +246,7 @@ $this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
     <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="offcanvasComments" aria-labelledby="offcanvasCommentsLabel" style="width: 450px;">
         <div class="offcanvas-header bg-primary text-white">
             <h5 class="offcanvas-title" id="offcanvasCommentsLabel">
-                <i class="bi bi-chat-square-dots me-2"></i><?= __('Fil de discussion') ?>
+                <i class="fa-solid fa-comments me-2"></i><?= __('Fil de discussion') ?>
             </h5>
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
         </div>
@@ -287,7 +273,7 @@ $this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
                                 <option value="HIRING_REASON"><?= __('Motif') ?></option>
                             </select>
                             <button type="submit" class="btn btn-sm btn-primary">
-                                <i class="bi bi-send me-1"></i><?= __('Publier') ?>
+                                <i class="fa-solid fa-paper-plane me-1"></i><?= __('Publier') ?>
                             </button>
                         </div>
                     </form>
@@ -296,8 +282,3 @@ $this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
         </div>
     </div>
 <?php endif; ?>
-
-<!-- Chargement des scripts JS applicatifs -->
-<?= $this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => true]) ?>
-<?= $this->Html->script('views/Applicationforms/applicationform-treeselect', ['block' => true]) ?>
-<?= $this->Html->script('views/Applicationforms/applicationform-comments', ['block' => true]) ?>
