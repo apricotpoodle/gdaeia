@@ -1,94 +1,125 @@
 <?php
 /**
- * Vue de création d'une Demande de Recrutement
+ * Vue : Saisie / Création d'une demande de recrutement (Applicationforms)
+ *
  * @var \App\View\AppView $this
+ * @var \App\Model\Entity\Applicationform $applicationform
+ * @var \Authorization\IdentityInterface $identity
+ * @var array<int, string> $departments
+ * @var array<int, string> $contracttypes
+ * @var array<int, string> $hiringreasons
+ * @var array<int, string> $professionalcategories
+ * @var array<int, string> $worktimes
+ * @var array<int, string> $periods
+ * @var array<int, string> $budgetfeatures
+ * @var array<int, string> $yesnos
+ * @var array<int, string> $collaborators
+ * @var array<string, string> $fieldSchema
  */
 
-$this->Html->script('views/Applicationforms/create.js', ['type' => 'module', 'block' => true]);
+$this->assign('title', __('Nouvelle demande de recrutement'));
+
+// Configuration du fil d'Ariane via BreadcrumbsHelper (DRY)
+$this->Breadcrumbs->add(__('Demandes de recrutement'), ['action' => 'index']);
+$this->Breadcrumbs->add(__('Nouvelle demande'));
+
+// Inclusion des assets CSS et JS requis
+$this->Html->css('vendor/treeselect/treeselectjs', ['block' => true]);
+$this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
+$this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => true]);
+$this->Html->script('views/Applicationforms/applicationform-treeselect', ['block' => true]);
 ?>
 
-<div class="applicationforms add content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><?= __('Nouvelle Demande de Recrutement') ?></h3>
-        <a href="<?= $this->Url->build(['action' => 'index']) ?>" class="btn btn-outline-secondary btn-sm">
-            <i class="fas fa-arrow-left me-1"></i> <?= __('Retour à la liste') ?>
-        </a>
+<div class="container-fluid mt-3">
+    <!-- Barre d'entête & Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+        <h2>
+            <i class="fa-solid fa-file-circle-plus text-primary me-2"></i>
+            <?= __('Créer une nouvelle demande de recrutement') ?>
+        </h2>
+
+        <div class="btn-toolbar gap-2">
+            <?= $this->Html->link(
+                '<i class="fa-solid fa-arrow-left me-1"></i> ' . __('Retour à la liste'),
+                ['action' => 'index'],
+                ['class' => 'btn btn-outline-secondary', 'escape' => false]
+            ) ?>
+        </div>
     </div>
 
-    <form id="applicationform-create-form" class="card shadow-sm p-4">
-        <div class="row g-3">
-            <div class="col-md-6 form-group-wrapper">
-                <label for="jobtitle" class="form-label fw-bold"><?= __('Intitulé du poste') ?></label>
-                <input type="text" name="jobtitle" id="jobtitle" class="form-control" required />
-            </div>
+    <!-- Formulaire Principal -->
+    <?= $this->Form->create($applicationform, ['id' => 'applicationform-main-form', 'class' => 'needs-validation']) ?>
 
-            <div class="col-md-6 form-group-wrapper">
-                <label for="department-id" class="form-label fw-bold"><?= __('Département') ?></label>
-                <select name="department_id" id="department-id" class="form-select" required>
-                    <option value=""><?= __('-- Sélectionner --') ?></option>
-                </select>
-            </div>
+    <div class="row g-4">
 
-            <div class="col-md-6 form-group-wrapper">
-                <label for="contracttype-id" class="form-label fw-bold"><?= __('Type de contrat') ?></label>
-                <select name="contracttype_id" id="contracttype-id" class="form-select" required>
-                    <option value=""><?= __('-- Sélectionner --') ?></option>
-                </select>
+        <!-- ZONE 1 : ADMINISTRATION -->
+        <?php if ($identity->can('viewZoneAdmin', $applicationform)): ?>
+            <div class="col-12 col-lg-6">
+                <?= $this->element('Applicationforms/zone_admin', [
+                    'applicationform' => $applicationform,
+                    'collaborators' => $collaborators ?? [],
+                    'fieldSchema' => $fieldSchema ?? [],
+                    'canEditAdmin' => $identity->can('editZoneAdmin', $applicationform),
+                ]) ?>
             </div>
+        <?php endif; ?>
 
-            <div class="col-md-6 form-group-wrapper">
-                <label for="hiringreason-id" class="form-label fw-bold"><?= __('Motif de recrutement') ?></label>
-                <select name="hiringreason_id" id="hiringreason-id" class="form-select" required>
-                    <option value=""><?= __('-- Sélectionner --') ?></option>
-                </select>
+        <!-- ZONE 2 : CARACTÉRISTIQUES DU CONTRAT -->
+        <?php if ($identity->can('viewZoneContrat', $applicationform)): ?>
+            <div class="col-12 col-lg-6">
+                <?= $this->element('Applicationforms/zone_contract', [
+                    'applicationform' => $applicationform,
+                    'contracttypes' => $contracttypes ?? [],
+                    'hiringreasons' => $hiringreasons ?? [],
+                    'fieldSchema' => $fieldSchema ?? [],
+                ]) ?>
             </div>
+        <?php endif; ?>
 
-            <div class="col-md-6 form-group-wrapper">
-                <label for="professionalcategory-id" class="form-label fw-bold"><?= __('Catégorie professionnelle') ?></label>
-                <select name="professionalcategory_id" id="professionalcategory-id" class="form-select" required>
-                    <option value=""><?= __('-- Sélectionner --') ?></option>
-                </select>
+        <!-- ZONE 3 : RÉMUNÉRATION & TEMPS DE TRAVAIL -->
+        <?php if ($identity->can('viewZoneRemuneration', $applicationform)): ?>
+            <div class="col-12 col-lg-6">
+                <?= $this->element('Applicationforms/zone_remuneration', [
+                    'applicationform' => $applicationform,
+                    'professionalcategories' => $professionalcategories ?? [],
+                    'worktimes' => $worktimes ?? [],
+                    'periods' => $periods ?? [],
+                    'fieldSchema' => $fieldSchema ?? [],
+                    'canEditRemuneration' => $identity->can('editZoneRemuneration', $applicationform),
+                ]) ?>
             </div>
+        <?php endif; ?>
 
-            <div class="col-md-6 form-group-wrapper">
-                <label for="worktime-id" class="form-label fw-bold"><?= __('Temps de travail') ?></label>
-                <select name="worktime_id" id="worktime-id" class="form-select" required>
-                    <option value=""><?= __('-- Sélectionner --') ?></option>
-                </select>
+        <!-- ZONE 4 : RÉSERVÉS RH / ADMIN -->
+        <?php if ($identity->can('viewZoneReserves', $applicationform)): ?>
+            <div class="col-12 col-lg-6">
+                <?= $this->element('Applicationforms/zone_reserves', [
+                    'applicationform' => $applicationform,
+                    'budgetfeatures' => $budgetfeatures ?? [],
+                    'yesnos' => $yesnos ?? [],
+                    'fieldSchema' => $fieldSchema ?? [],
+                    'canEditReserves' => $identity->can('editZoneReserves', $applicationform),
+                ]) ?>
             </div>
+        <?php endif; ?>
 
-            <div class="col-md-4 form-group-wrapper">
-                <label for="period-id" class="form-label fw-bold"><?= __('Période') ?></label>
-                <select name="period_id" id="period-id" class="form-select" required>
-                    <option value=""><?= __('-- Sélectionner --') ?></option>
-                </select>
-            </div>
+    </div>
 
-            <div class="col-md-4 form-group-wrapper">
-                <label for="budgetfeature-id" class="form-label fw-bold"><?= __('Élément budgétaire') ?></label>
-                <select name="budgetfeature_id" id="budgetfeature-id" class="form-select" required>
-                    <option value=""><?= __('-- Sélectionner --') ?></option>
-                </select>
-            </div>
-
-            <div class="col-md-4 form-group-wrapper">
-                <label for="yesno-id" class="form-label fw-bold"><?= __('Prévu au budget') ?></label>
-                <select name="yesno_id" id="yesno-id" class="form-select" required>
-                    <option value=""><?= __('-- Sélectionner --') ?></option>
-                </select>
-            </div>
-
-            <div class="col-12 form-group-wrapper">
-                <label for="reasonforreplacement" class="form-label"><?= __('Précisions / Remplacement') ?></label>
-                <textarea name="reasonforreplacement" id="reasonforreplacement" class="form-control" rows="3"></textarea>
-            </div>
-        </div>
-
-        <div class="d-flex justify-content-end gap-2 mt-4">
-            <a href="<?= $this->Url->build(['action' => 'index']) ?>" class="btn btn-light"><?= __('Annuler') ?></a>
-            <button type="submit" class="btn btn-success">
-                <i class="fas fa-save me-1"></i> <?= __('Enregistrer la demande') ?>
-            </button>
-        </div>
-    </form>
+    <!-- Actions bas de page -->
+    <div class="mt-4 mb-5 text-end">
+        <?= $this->Html->link(
+            '<i class="fa-solid fa-xmark me-1"></i> ' . __('Annuler'),
+            ['action' => 'index'],
+            ['class' => 'btn btn-secondary me-2', 'escape' => false]
+        ) ?>
+        <?= $this->Form->button(
+            '<i class="fa-solid fa-paper-plane me-1"></i> ' . __('Créer la demande'),
+            [
+                'type' => 'submit',
+                'class' => 'btn btn-primary px-4',
+                'escapeTitle' => false,
+            ]
+        ) ?>
+    </div>
+    <?= $this->Form->end() ?>
 </div>
