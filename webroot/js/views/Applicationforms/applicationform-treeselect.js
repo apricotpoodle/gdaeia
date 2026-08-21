@@ -1,7 +1,7 @@
 /**
  * @file applicationform-treeselect.js
- * @description Gestionnaire du sélecteur hiérarchique de département (TreeselectJS)
- * avec bascule automatique des états d'avertissement CGR (Rouge / Bleu / Neutre).
+ * @description Gestionnaire TreeselectJS avec distinction fine de l'obligation du département
+ * et de l'état indicatif facultatif du Code CGR (Bleu Info).
  */
 
 document.addEventListener('DOMContentLoaded', async function () {
@@ -17,68 +17,101 @@ document.addEventListener('DOMContentLoaded', async function () {
     const originalCgrValue = cgrInput ? cgrInput.value.trim() : '';
     let currentDepartmentId = originalDepartmentId;
 
-    // --- CRÉATION DE L'ÉLÉMENT D'INFORMATION / AVERTISSEMENT ---
-    let warningFeedback = document.getElementById('cgr-warning-feedback');
-    if (!warningFeedback && cgrInput && cgrInput.parentNode) {
-        warningFeedback = document.createElement('div');
-        warningFeedback.id = 'cgr-warning-feedback';
-        warningFeedback.className = 'form-text d-none mt-1 fw-bold';
-        cgrInput.parentNode.appendChild(warningFeedback);
+    // --- MESSAGES D'AVERTISSEMENT ET D'INFORMATION ---
+    let cgrWarningFeedback = document.getElementById('cgr-warning-feedback');
+    if (!cgrWarningFeedback && cgrInput && cgrInput.parentNode) {
+        cgrWarningFeedback = document.createElement('div');
+        cgrWarningFeedback.id = 'cgr-warning-feedback';
+        cgrWarningFeedback.className = 'form-text d-none mt-1 fw-bold';
+        cgrInput.parentNode.appendChild(cgrWarningFeedback);
+    }
+
+    let deptWarningFeedback = document.getElementById('dept-warning-feedback');
+    if (!deptWarningFeedback && container.parentNode) {
+        deptWarningFeedback = document.createElement('div');
+        deptWarningFeedback.id = 'dept-warning-feedback';
+        deptWarningFeedback.className = 'form-text text-danger d-none mt-1 fw-bold';
+        deptWarningFeedback.innerHTML = '<i class="bi bi-exclamation-circle-fill me-1"></i> La sélection d\'un département est obligatoire.';
+        container.parentNode.appendChild(deptWarningFeedback);
     }
 
     /**
-     * Gestion à 3 états du retour visuel CGR :
-     * - 'danger' (Rouge) : Département modifié -> Nécessite reconfiguration.
-     * - 'info'   (Bleu)  : Département d'origine ou réinitialisé, code CGR incomplet/vide.
-     * - 'neutral'(Normal): Code CGR présent et complet.
+     * Valide l'état du département dans TreeselectJS (Obligatoire).
+     *
+     * @param {string} deptId
+     */
+    const validateDepartmentState = (deptId) => {
+        const inputControl = container.querySelector('.treeselect-input');
+        if (!deptId) {
+            if (inputControl) {
+                inputControl.classList.add('border-danger', 'bg-danger-subtle');
+            }
+            if (deptWarningFeedback) deptWarningFeedback.classList.remove('d-none');
+        } else {
+            if (inputControl) {
+                inputControl.classList.remove('border-danger', 'bg-danger-subtle');
+            }
+            if (deptWarningFeedback) deptWarningFeedback.classList.add('d-none');
+        }
+    };
+
+    /**
+     * Gestion fine du retour visuel CGR à 3 états :
+     * - 'danger' (Rouge) : Modification avec réinitialisation d'un CGR précédemment renseigné.
+     * - 'info'   (Bleu)  : Département renseigné, mais CGR vide (invite facultative).
+     * - 'neutral'(Normal): Département vide OU CGR complet et assemblé.
      *
      * @param {'danger'|'info'|'neutral'} state
      */
-    const applyVisualFeedback = (state) => {
+    const applyCgrVisualFeedback = (state) => {
         if (!cgrInput) return;
 
-        // Nettoyage des classes de couleur
-        cgrInput.classList.remove('bg-light', 'bg-danger-subtle', 'text-danger', 'border-danger', 'bg-info-subtle', 'text-info-emphasis', 'border-info', 'fw-bold');
+        cgrInput.classList.remove(
+            'bg-light',
+            'bg-danger-subtle', 'text-danger', 'border-danger',
+            'bg-info-subtle', 'text-info-emphasis', 'border-info',
+            'fw-bold'
+        );
 
         if (state === 'danger') {
-            // ROUGE : Changement de département
             cgrInput.classList.add('bg-danger-subtle', 'text-danger', 'border-danger', 'fw-bold');
-            if (warningFeedback) {
-                warningFeedback.className = 'form-text text-danger mt-1 fw-bold';
-                warningFeedback.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> Attention : Le changement de département a réinitialisé le code CGR.';
+            if (cgrWarningFeedback) {
+                cgrWarningFeedback.className = 'form-text text-danger mt-1 fw-bold';
+                cgrWarningFeedback.innerHTML = '<i class="bi bi-exclamation-triangle-fill me-1"></i> Attention : Le changement de département a réinitialisé le code CGR.';
             }
         } else if (state === 'info') {
-            // BLEU : Département sélectionné mais code CGR incomplet ou vide
+            // BLEU INFO : Saisie CGR facultative
             cgrInput.classList.add('bg-info-subtle', 'text-info-emphasis', 'border-info', 'fw-bold');
-            if (warningFeedback) {
-                warningFeedback.className = 'form-text text-info-emphasis mt-1 fw-bold';
-                warningFeedback.innerHTML = '<i class="bi bi-info-circle-fill me-1"></i> Information : Le code CGR est vide. Vous pouvez en sélectionner un nouveau ou laisser vide.';
+            if (cgrWarningFeedback) {
+                cgrWarningFeedback.className = 'form-text text-info-emphasis mt-1 fw-bold';
+                cgrWarningFeedback.innerHTML = '<i class="bi bi-info-circle-fill me-1"></i> Vous pouvez facultativement sélectionner un code CGR ci-dessus.';
             }
         } else {
-            // NEUTRE : Code CGR saisi et complet
+            // NEUTRE
             cgrInput.classList.add('bg-light');
-            if (warningFeedback) {
-                warningFeedback.className = 'form-text d-none mt-1 fw-bold';
+            if (cgrWarningFeedback) {
+                cgrWarningFeedback.className = 'form-text d-none mt-1 fw-bold';
             }
         }
     };
 
-    // 💡 ÉCOUTEUR SUR LE CHAMP CGR FINAL :
-    // Réagit dès que applicationform-cgr.js met à jour la valeur globale
+    // ÉCOUTEUR SUR LE CHAMP CGR FINAL (reçoit les événements de applicationform-cgr.js)
     if (cgrInput) {
         cgrInput.addEventListener('input', function () {
-            if (this.value && this.value.trim() !== '') {
-                // Dès que le code CGR est reconstruit et complet, passage au style NEUTRE (normal)
-                applyVisualFeedback('neutral');
-            } else if (currentDepartmentId !== originalDepartmentId) {
-                // Si le département n'est plus celui d'origine et le CGR est vide
-                applyVisualFeedback('danger');
-            } else if (!originalCgrValue) {
-                // Si le département d'origine n'avait déjà pas de CGR
-                applyVisualFeedback('neutral');
+            if (!currentDepartmentId) {
+                // Département vide -> CGR Neutre
+                applyCgrVisualFeedback('neutral');
+            } else if (this.value && this.value.trim() !== '') {
+                // CGR complet -> CGR Neutre
+                applyCgrVisualFeedback('neutral');
+            } else if (currentDepartmentId === originalDepartmentId && !originalCgrValue) {
+                // CGR initialement vide -> Bleu Info facultatif
+                applyCgrVisualFeedback('info');
+            } else if (currentDepartmentId !== originalDepartmentId && !this.value) {
+                // Changement sans CGR reconstruit -> Rester Bleu Info ou Danger
+                applyCgrVisualFeedback(cgrInput.dataset.hadPreviousValue === 'true' ? 'danger' : 'info');
             } else {
-                // Si on est sur le département d'origine mais avec CGR vidé
-                applyVisualFeedback('info');
+                applyCgrVisualFeedback('info');
             }
         });
     }
@@ -104,6 +137,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             disabled: hiddenInput.disabled,
         });
 
+        // Contrôle visuel du département au montage initial
+        validateDepartmentState(originalDepartmentId);
+
+        // Si département renseigné mais sans CGR au départ -> Bleu Info facultatif
+        if (originalDepartmentId && !originalCgrValue) {
+            applyCgrVisualFeedback('info');
+        }
+
         // RACCOURCIS CLAVIER (Alt + Flèche Bas / Espace)
         container.addEventListener('keydown', (e) => {
             const isAltArrowDown = e.altKey && e.key === 'ArrowDown';
@@ -127,7 +168,7 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         };
 
-        // ÉCOUTEUR PRINCIPAL TREESELECT
+        // ÉCOUTEUR PRINCIPAL TREESELECTJS
         treeselect.srcElement.addEventListener('input', (e) => {
             const rawVal = e.detail;
             const selectedDepartmentId = rawVal !== null && rawVal !== undefined ? String(rawVal).trim() : '';
@@ -136,28 +177,42 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
 
+            const hadActiveCgrValue = cgrInput && cgrInput.value.trim() !== '';
+            if (cgrInput) {
+                cgrInput.dataset.hadPreviousValue = hadActiveCgrValue ? 'true' : 'false';
+            }
+
             currentDepartmentId = selectedDepartmentId;
 
-            // SCÉNARIO A : Retour au département d'origine
+            // 1. Validation du Département obligatoire
+            validateDepartmentState(selectedDepartmentId);
+
+            // 2. Si le Département devient vide
+            if (!selectedDepartmentId) {
+                if (cgrInput) cgrInput.value = '';
+                applyCgrVisualFeedback('neutral');
+                notifyCgrScript('');
+                return;
+            }
+
+            // 3. Retour au Département d'origine
             if (selectedDepartmentId === originalDepartmentId) {
-                if (cgrInput) {
-                    if (!originalCgrValue) {
-                        cgrInput.value = '';
-                        applyVisualFeedback('neutral');
-                    } else {
-                        cgrInput.value = '';
-                        applyVisualFeedback('info');
-                    }
-                }
+                if (cgrInput) cgrInput.value = '';
+                applyCgrVisualFeedback(originalCgrValue ? 'info' : 'info');
                 notifyCgrScript(selectedDepartmentId);
                 return;
             }
 
-            // SCÉNARIO B : Changement vers un nouveau département ou effacement
-            if (cgrInput) {
-                cgrInput.value = '';
+            // 4. Nouveau Département sélectionné
+            if (cgrInput) cgrInput.value = '';
+
+            // Si un CGR actif a été effacé par ce changement -> Rouge Danger, sinon Bleu Info facultatif
+            if (hadActiveCgrValue) {
+                applyCgrVisualFeedback('danger');
+            } else {
+                applyCgrVisualFeedback('info');
             }
-            applyVisualFeedback('danger'); // Passage au ROUGE
+
             notifyCgrScript(selectedDepartmentId);
         });
 
