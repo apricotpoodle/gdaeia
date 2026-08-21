@@ -87,7 +87,13 @@ class ApplicationformsController extends AppController
         }
 
         // 4. Chargement des listes pour le rendu du formulaire
-        $departments = $this->Applicationforms->Departments->find('list')->toArray();
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+
+        // Récupération des départements autorisés sous forme d'arbre
+        // $departments = $this->Applicationforms->Departments
+        //     ->find('treeVisibleTo', user: $currentUser)
+        //     ->toArray();
         $contracttypes = $this->Applicationforms->Contracttypes->find('list')->toArray();
         $hiringreasons = $this->Applicationforms->Hiringreasons->find('list')->toArray();
         $professionalcategories = $this->Applicationforms->Professionalcategories->find('list')->toArray();
@@ -99,7 +105,7 @@ class ApplicationformsController extends AppController
 
         $this->set(compact(
             'applicationform',
-            'departments',
+            // 'departments',
             'contracttypes',
             'hiringreasons',
             'professionalcategories',

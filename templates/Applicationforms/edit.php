@@ -6,13 +6,17 @@
  */
 
 $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
+
+// Inclusion des assets locaux (CSS et JS de TreeselectJS)
+$this->Html->css('vendor/treeselect/treeselectjs', ['block' => true]);
+$this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
 ?>
 
 <div class="container-fluid mt-3">
     <!-- Barre d'entête & Actions -->
     <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
         <h2>
-            <i class="bi bi-file-earmark-text bg-primary text-white p-2 rounded me-2"><?=  h($applicationform->id) ?></i>
+            <i class="bi bi-file-earmark-text bg-primary text-white p-2 rounded me-2"><?= h($applicationform->id) ?></i>
             <?= h($applicationform->jobtitle ?? __('Nouvelle Demande')) ?>
         </h2>
 
@@ -46,13 +50,19 @@ $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
                     </div>
                     <div class="card-body">
                         <div class="row g-3">
+
+                            <!-- Sélecteur de Département via TreeselectJS -->
                             <div class="col-md-6">
-                                <?= $this->Form->control('department_id', [
-                                    'label' => __('Département'),
-                                    'class' => 'form-select',
+                                <?= $this->Form->label('department_id', __('Département'), ['class' => 'form-label font-weight-bold']) ?>
+
+                                <!-- Champ caché liant la sélection à l'ORM CakePHP -->
+                                <?= $this->Form->hidden('department_id', [
                                     'id' => 'department-id',
                                     'disabled' => !$canEditAdmin,
                                 ]) ?>
+
+                                <!-- Conteneur IHM du Treeselect -->
+                                <div id="department-tree-select"></div>
                             </div>
 
                             <!-- Zone d'injection dynamique des composants CGR -->
@@ -68,11 +78,10 @@ $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
                                     'id' => 'cgr-final-input',
                                     'class' => 'form-control bg-light',
                                     'readonly' => true,
-                                    'disabled' => !$canEditAdmin, // désactivé uniquement si pas les droits sur la zone Admin
+                                    'disabled' => !$canEditAdmin,
                                     'label' => false,
                                 ]) ?>
                             </div>
-
 
                             <div class="col-md-12">
                                 <?= $this->Form->control('jobtitle', [
@@ -287,5 +296,8 @@ $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
         </div>
     </div>
 <?php endif; ?>
-<?= $this->Html->script('views/Applicationforms/applicationform-comments', ['block' => true]) ?>
+
+<!-- Chargement des scripts JS applicatifs -->
 <?= $this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => true]) ?>
+<?= $this->Html->script('views/Applicationforms/applicationform-treeselect', ['block' => true]) ?>
+<?= $this->Html->script('views/Applicationforms/applicationform-comments', ['block' => true]) ?>
