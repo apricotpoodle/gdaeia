@@ -61,72 +61,13 @@ $this->Html->script('views/Applicationforms/applicationform-comments', ['block' 
 
         <!-- ZONE 1 : ADMINISTRATION -->
         <?php if ($identity->can('viewZoneAdmin', $applicationform)): ?>
-            <?php $canEditAdmin = $identity->can('editZoneAdmin', $applicationform); ?>
             <div class="col-12 col-lg-6">
-                <div class="card h-100 shadow-sm border-0">
-                    <div class="card-header bg-light fw-bold text-uppercase fs-7 text-secondary">
-                        <i class="fa-solid fa-shield-halved me-1"></i> <?= __('1. Informations Admin') ?>
-                    </div>
-                    <div class="card-body">
-                        <div class="row g-3">
-
-                            <!-- Sélecteur de Département via TreeselectJS -->
-                            <div class="col-md-6">
-                                <?= $this->Form->label('department_id', __('Département'), ['class' => 'form-label font-weight-bold']) ?>
-
-                                <!-- Champ caché liant la sélection à l'ORM CakePHP -->
-                                <?= $this->Form->hidden('department_id', [
-                                    'id' => 'department-id',
-                                    'disabled' => !$canEditAdmin,
-                                ]) ?>
-
-                                <!-- Conteneur IHM du Treeselect -->
-                                <div id="department-tree-select"></div>
-                            </div>
-
-                            <!-- Zone d'injection dynamique des composants CGR -->
-                            <div class="col-md-6">
-                                <?= $this->Form->label('cgr', __('Code CGR')) ?>
-
-                                <!-- Conteneur généré en JS (plusieurs selects selon la stratégie) -->
-                                <div id="cgr-components-container" class="d-flex gap-2 mb-2"></div>
-
-                                <!-- Champ réel persistant en base -->
-                                <?= $this->Form->control('cgr', [
-                                    'type' => 'text',
-                                    'id' => 'cgr-final-input',
-                                    'class' => 'form-control bg-light',
-                                    'readonly' => true,
-                                    'disabled' => !$canEditAdmin,
-                                    'label' => false,
-                                ]) ?>
-                            </div>
-
-                            <div class="col-md-12">
-                                <?= $this->Form->control('jobtitle', [
-                                    'label' => __('Intitulé du poste'),
-                                    'class' => 'form-control',
-                                    'disabled' => !$canEditAdmin,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?= $this->Form->control('applicantname', [
-                                    'label' => __('Nom du candidat pressenti'),
-                                    'class' => 'form-control',
-                                    'disabled' => !$canEditAdmin,
-                                ]) ?>
-                            </div>
-                            <div class="col-md-6">
-                                <?= $this->Form->control('collaborator_id', [
-                                    'label' => __('Collaborateur concerné'),
-                                    'class' => 'form-select',
-                                    'empty' => __('-- Sélectionner --'),
-                                    'disabled' => !$canEditAdmin,
-                                ]) ?>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <?= $this->element('Applicationforms/zone_admin', [
+                    'applicationform' => $applicationform,
+                    'collaborators' => $collaborators ?? [],
+                    'fieldSchema' => $fieldSchema ?? [],
+                    'canEditAdmin' => $identity->can('editZoneAdmin', $applicationform),
+                ]) ?>
             </div>
         <?php endif; ?>
 
