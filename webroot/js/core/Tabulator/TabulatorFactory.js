@@ -4,7 +4,9 @@
 // ==============================================================================
 
 import { TabulatorBuilder } from './TabulatorBuilder.js';
-import { ColumnsFactory } from './ColumnsFactory.js';
+import { ColumnsFactory } from './ColumnsFactory.js'; // inutile à terme car définitions des colonnes déléguée *-columns.js
+import { getApplicationformColumns } from '../../views/Applicationforms/applicationform-columns.js';
+
 
 /**
  * @class TabulatorFactory
@@ -32,6 +34,9 @@ export class TabulatorFactory {
             ;
     }
 
+    static createBaseGrid(selector) {
+        return this._createBaseGrid(selector);
+    }
     /**
      * SOCLE COMMUN (DRY)
      * Définit le standard UX/UI de l'entreprise pour une grille de données avec colonne Actions.
@@ -43,6 +48,10 @@ export class TabulatorFactory {
         return this._createBaseGrid(selector)
             .setWithActions()
             ;
+    }
+
+    static createActionGrid(selector) {
+        return this._createActionGrid(selector);
     }
 
     /**
@@ -118,14 +127,7 @@ export class TabulatorFactory {
             .setLayout("fitDataFill")
             .setController('applicationforms')
             .setHeight("calc(100vh - 180px)")
-            .setColumns([
-                ColumnsFactory.id({ visible: true }),
-                ColumnsFactory.text("jobtitle", "Intitulé du poste"),
-                ColumnsFactory.text("department.name", "Département"),
-                ColumnsFactory.text("user.firstname", "Demandeur"),
-                ColumnsFactory.text("contracttype.name", "Type de contrat"),
-                ColumnsFactory.dateRange("created", "Créée le")
-            ])
+            .setColumns(getApplicationformColumns())
             .setWithActions(['view', 'edit', 'delete'])
             .build();
     }

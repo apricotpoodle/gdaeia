@@ -1,4 +1,5 @@
 /**
+ * file :: webroot/js/core/Tabulator/TabulatorBuilder.js
  * @class TabulatorBuilder
  * @description Implémentation du patron de conception "Builder" (Monteur).
  * Classe technique agnostique dont l'unique responsabilité est d'accumuler
