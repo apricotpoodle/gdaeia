@@ -50,13 +50,63 @@ class ApplicationformsController extends AppController
 
     /**
      * Action Add (GET /applicationforms/add)
+     *
+     * @return \Cake\Http\Response|null
      */
-    public function add(): void
+    public function add(): ?Response
     {
         $applicationform = $this->Applicationforms->newEmptyEntity();
         $this->Authorization->authorize($applicationform, 'add');
 
-        $this->set(compact('applicationform'));
+        if ($this->request->is('post')) {
+            $applicationform = $this->Applicationforms->patchEntity($applicationform, $this->request->getData());
+
+            // Attribution de l'utilisateur créateur
+            $identity = $this->request->getAttribute('identity');
+            /** @var \App\Model\Entity\User $currentUser */
+            $currentUser = $identity->getOriginalData();
+            $applicationform->user_id = $currentUser->id;
+
+            if ($this->Applicationforms->save($applicationform)) {
+                $this->Flash->success(__('La demande de recrutement a été créée avec succès.'));
+
+                return $this->redirect(['action' => 'index']);
+            }
+            $this->Flash->error(__('Impossible de créer la demande. Veuillez vérifier les erreurs du formulaire.'));
+        }
+
+        // Récupération des données de référence et de sécurité (ADR 0042 / 0046)
+        $authService = new \App\Service\Security\FieldAuthorizationService();
+        $identity = $this->request->getAttribute('identity');
+        $fieldSchema = $authService->getFieldSchema($identity, 'Applicationforms');
+
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $identity->getOriginalData();
+
+        // Listes de références filtrées par le périmètre (visibleTo)
+        $contracttypes = $this->Applicationforms->Contracttypes->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $hiringreasons = $this->Applicationforms->Hiringreasons->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $professionalcategories = $this->Applicationforms->Professionalcategories->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $worktimes = $this->Applicationforms->Worktimes->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $periods = $this->Applicationforms->Periods->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $budgetfeatures = $this->Applicationforms->Budgetfeatures->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $yesnos = $this->Applicationforms->Yesnos->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $collaborators = $this->Applicationforms->Users->find('visibleTo', user: $currentUser)->find('list', keyField: 'id', valueField: 'email')->toArray();
+
+        $this->set(compact(
+            'applicationform',
+            'fieldSchema',
+            'contracttypes',
+            'hiringreasons',
+            'professionalcategories',
+            'worktimes',
+            'periods',
+            'budgetfeatures',
+            'yesnos',
+            'collaborators'
+        ));
+
+        return null;
     }
 
     /**
