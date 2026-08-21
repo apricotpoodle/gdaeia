@@ -57,18 +57,6 @@ $this->Html->script('views/Applicationforms/applicationform-comments', ['block' 
     <!-- Formulaire Principal -->
     <?= $this->Form->create($applicationform, ['id' => 'applicationform-main-form', 'class' => 'needs-validation']) ?>
 
-    <!-- Actions en haut de page -->
-    <div class="mt-4 mb-5 text-end">
-        <?= $this->Form->button(
-            '<i class="fa-solid fa-floppy-disk me-1"></i> ' . __('Enregistrer les modifications'),
-            [
-                'type' => 'submit',
-                'class' => 'btn btn-primary px-4',
-                'escapeTitle' => false,
-            ]
-        ) ?>
-    </div>
-
     <div class="row g-4">
 
         <!-- ZONE 1 : ADMINISTRATION -->
@@ -124,47 +112,22 @@ $this->Html->script('views/Applicationforms/applicationform-comments', ['block' 
 
     </div>
 
+    <!-- Actions bas de page -->
+    <div class="mt-4 mb-5 text-end">
+        <?= $this->Form->button(
+            '<i class="fa-solid fa-floppy-disk me-1"></i> ' . __('Enregistrer les modifications'),
+            [
+                'type' => 'submit',
+                'class' => 'btn btn-primary px-4',
+                'escapeTitle' => false,
+            ]
+        ) ?>
+    </div>
     <?= $this->Form->end() ?>
 </div>
 
 <!-- ZONE 5 : COMMENTAIRES (Volet Latéral Offcanvas) -->
-<?php if ($identity->can('viewZoneCommentaires', $applicationform)): ?>
-    <div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="offcanvasComments" aria-labelledby="offcanvasCommentsLabel" style="width: 450px;">
-        <div class="offcanvas-header bg-primary text-white">
-            <h5 class="offcanvas-title" id="offcanvasCommentsLabel">
-                <i class="fa-solid fa-comments me-2"></i><?= __('Fil de discussion') ?>
-            </h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body d-flex flex-column p-0">
-            <!-- Zone dynamique des messages -->
-            <div id="comments-container" class="flex-grow-1 p-3 overflow-auto">
-                <div class="text-center text-muted py-4" id="comments-loading">
-                    <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
-                    <?= __('Chargement des commentaires...') ?>
-                </div>
-            </div>
-
-            <!-- Formulaire d'ajout rapide -->
-            <?php if ($identity->can('editZoneCommentaires', $applicationform)): ?>
-                <div class="p-3 bg-light border-top">
-                    <form id="add-comment-form">
-                        <div class="mb-2">
-                            <textarea id="comment-content" class="form-control" rows="2" placeholder="<?= __('Écrire un commentaire...') ?>" required></textarea>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <select id="comment-type" class="form-select form-select-sm w-auto">
-                                <option value="GENERAL"><?= __('Général') ?></option>
-                                <option value="OBSERVATION"><?= __('Observation') ?></option>
-                                <option value="HIRING_REASON"><?= __('Motif') ?></option>
-                            </select>
-                            <button type="submit" class="btn btn-sm btn-primary">
-                                <i class="fa-solid fa-paper-plane me-1"></i><?= __('Publier') ?>
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            <?php endif; ?>
-        </div>
-    </div>
-<?php endif; ?>
+<?= $this->element('Applicationforms/zone_comments', [
+    'applicationform' => $applicationform,
+    'identity' => $identity,
+]) ?>
