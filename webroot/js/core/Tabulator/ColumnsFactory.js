@@ -100,14 +100,24 @@ export class ColumnsFactory {
             .setHeaderFilterEmptyCheck(function(value) {
                 return value === "" || value === null || value === undefined;
             })
-            .setFormatter((cell) => {
-                const value = cell.getValue();
-                if (!value) return "-";
-                return new Date(value).toLocaleDateString('fr-FR', {
-                    year: 'numeric', month: '2-digit', day: '2-digit'
-                });
-            })
-            .setOptions(overrides)
+            .setFormatter(
+                (cell) => {
+                    const value = cell.getValue();
+                    if (!value) return "-";
+                    return new Date(value).toLocaleDateString(
+                        'fr-FR',
+                        {
+                            year: 'numeric', month: '2-digit', day: '2-digit'
+                        }
+                    );
+                }
+            )
+            .setOptions(
+                {
+                    width: 100, // Largeur optimisée ultra-compacte par défaut
+                    ...overrides
+                }
+            )
             .build();
     }
 

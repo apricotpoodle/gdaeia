@@ -1,128 +1,94 @@
-// ==========================================
+// ==============================================================================
 // Fichier : webroot/js/core/Tabulator/ColumnFilters.js
-// ==========================================
+// Rôle : Éditeurs et filtres personnalisés pour les en-têtes Tabulator
+// ==============================================================================
 
+/**
+ * @file ColumnFilters.js
+ * @description Filtres d'en-tête personnalisés pour les grilles Tabulator.
+ */
 export class ColumnFilters {
+
     /**
-     * Éditeur de filtre personnalisé pour les plages de dates (Date Range).
-     * Inclut : Boutons RAZ, Titres personnalisables, et Prévention des dates incompatibles.
+     * Éditeur de plage de dates adaptatif avec police ultra-compacte et support du reset.
+     *
+     * @static
+     * @param {Object} cell - Composant cellule de Tabulator.
+     * @param {Function} onRendered - Callback exécuté après le rendu du DOM.
+     * @param {Function} success - Callback déclenchant le filtre ({ start, end }).
+     * @param {Function} cancel - Callback d'annulation.
+     * @param {Object} editorParams - Paramètres d'édition optionnels.
+     * @returns {HTMLElement}
      */
     static dateRangeEditor(cell, onRendered, success, cancel, editorParams) {
         const container = document.createElement("div");
-        container.className = "d-flex flex-column p-1";
-        container.style.minWidth = "180px";
+        container.className = "d-flex gap-1 w-100 p-1 align-items-center justify-content-between";
 
-        const titleStart = editorParams.titleStart || "Date de début de période";
-        const titleEnd = editorParams.titleEnd || "Date de fin de période";
+        // Champ Date Début
+        const inputStart = document.createElement("input");
+        inputStart.type = "date";
+        inputStart.className = "form-control form-control-sm p-0 text-center border-secondary-subtle";
+        inputStart.style.fontSize = "0.60rem";
+        inputStart.style.height = "22px";
+        inputStart.title = "Date de début (laisser vide pour réinitialiser)";
 
-        // --- Champ Début ---
-        const startGroup = document.createElement("div");
-        startGroup.className = "input-group input-group-sm mb-1";
+        // Champ Date Fin
+        const inputEnd = document.createElement("input");
+        inputEnd.type = "date";
+        inputEnd.className = "form-control form-control-sm p-0 text-center border-secondary-subtle";
+        inputEnd.style.fontSize = "0.60rem";
+        inputEnd.style.height = "22px";
+        inputEnd.title = "Date de fin (laisser vide pour réinitialiser)";
 
-        const startInput = document.createElement("input");
-        startInput.type = "date";
-        startInput.className = "form-control shadow-none";
-        startInput.title = titleStart;
+        container.appendChild(inputStart);
+        container.appendChild(inputEnd);
 
-        const startClearBtn = document.createElement("button");
-        startClearBtn.className = "btn btn-outline-secondary";
-        startClearBtn.type = "button";
-        startClearBtn.innerHTML = "&times;";
-        startClearBtn.title = "Effacer la " + titleStart.toLowerCase();
-
-        startGroup.appendChild(startInput);
-        startGroup.appendChild(startClearBtn);
-
-        // --- Champ Fin ---
-        const endGroup = document.createElement("div");
-        endGroup.className = "input-group input-group-sm";
-
-        const endInput = document.createElement("input");
-        endInput.type = "date";
-        endInput.className = "form-control shadow-none";
-        endInput.title = titleEnd;
-
-        const endClearBtn = document.createElement("button");
-        endClearBtn.className = "btn btn-outline-secondary";
-        endClearBtn.type = "button";
-        endClearBtn.innerHTML = "&times;";
-        endClearBtn.title = "Effacer la " + titleEnd.toLowerCase();
-
-        endGroup.appendChild(endInput);
-        endGroup.appendChild(endClearBtn);
-
-        container.appendChild(startGroup);
-        container.appendChild(endGroup);
-
-        // Initialisation des valeurs existantes
-        const currentVal = cell.getValue();
-        if (currentVal && typeof currentVal === "object") {
-            startInput.value = currentVal.start || "";
-            endInput.value = currentVal.end || "";
-        }
-
-        // Moteur de validation et de mise à jour
-        function updateFilter() {
-            let start = startInput.value;
-            let end = endInput.value;
-
-            // 1. GESTION DES DATES INCOMPATIBLES (Auto-correction)
-            if (start && end && start > end) {
-                endInput.value = start;
-                end = start;
-
-                // Feedback visuel prolongé (2 secondes)
-                endInput.classList.add("is-invalid");
-                setTimeout(() => {
-                    endInput.classList.remove("is-invalid");
-                }, 2000);
-            }
-
-            // 2. RESTRICTION DES CALENDRIERS (Attributs HTML stricts)
-            // Utiliser setAttribute force le calendrier natif à se redessiner
-            if (start) {
-                endInput.setAttribute("min", start);
+        // Adaptation dynamique selon la largeur de la colonne (ResizeObserver)
+        const updateLayout = (width) => {
+            const breakpoint = editorParams?.responsiveBreakpoint || 120;
+            if (width < breakpoint) {
+                // Mode Étroit : Empilement vertical
+                container.classList.remove("flex-row");
+                container.classList.add("flex-column");
+                inputStart.style.width = "100%";
+                inputEnd.style.width = "100%";
             } else {
-                endInput.removeAttribute("min");
+                // Mode Large : Côte à côte
+                container.classList.remove("flex-column");
+                container.classList.add("flex-row");
+                inputStart.style.width = "48%";
+                inputEnd.style.width = "48%";
             }
+        };
 
-            if (end) {
-                startInput.setAttribute("max", end);
-            } else {
-                startInput.removeAttribute("max");
+        const resizeObserver = new ResizeObserver((entries) => {
+            for (let entry of entries) {
+                updateLayout(entry.contentRect.width);
             }
+        });
 
-            // 3. SOUMISSION
-            if (!start && !end) {
+        onRendered(() => {
+            resizeObserver.observe(container);
+            updateLayout(container.clientWidth);
+        });
+
+        // Propagation de la valeur et gestion du reset
+        const onChange = () => {
+            const startVal = inputStart.value || null;
+            const endVal = inputEnd.value || null;
+
+            if (!startVal && !endVal) {
                 success("");
             } else {
-                success({ start: start, end: end });
+                success({ start: startVal, end: endVal });
             }
-        }
+        };
 
-        // Initialisation immédiate des contraintes si le filtre était déjà rempli
-        updateFilter();
+        inputStart.addEventListener("change", onChange);
+        inputEnd.addEventListener("change", onChange);
 
-        // Écouteurs d'événements : 'input' réagit instantanément même à la frappe clavier
-        startInput.addEventListener("input", updateFilter);
-        startInput.addEventListener("change", updateFilter);
-
-        endInput.addEventListener("input", updateFilter);
-        endInput.addEventListener("change", updateFilter);
-
-        startClearBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            startInput.value = "";
-            updateFilter();
-        });
-
-        endClearBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            endInput.value = "";
-            updateFilter();
-        });
-
-        container.addEventListener("click", (e) => e.stopPropagation());
+        inputStart.addEventListener("keydown", (e) => { if (e.key === "Escape") cancel(); });
+        inputEnd.addEventListener("keydown", (e) => { if (e.key === "Escape") cancel(); });
 
         return container;
     }
