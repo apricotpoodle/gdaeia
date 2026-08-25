@@ -47,6 +47,8 @@ class ApplicationformsController extends AppController
             'Comments' => ['Users'],
         ]);
 
+        $this->Authorization->authorize($applicationform, 'view');
+
         // 💡 Récupération de l'arborescence complète via le TreeBehavior
         $departmentPath = [];
         if ($applicationform->department_id) {
@@ -55,8 +57,6 @@ class ApplicationformsController extends AppController
                 ->all()
                 ->toArray();
         }
-
-        $this->Authorization->authorize($applicationform, 'view');
 
         $this->set(compact('applicationform', 'departmentPath'));
     }
@@ -157,14 +157,19 @@ class ApplicationformsController extends AppController
         // $departments = $this->Applicationforms->Departments
         //     ->find('treeVisibleTo', user: $currentUser)
         //     ->toArray();
-        $contracttypes = $this->Applicationforms->Contracttypes->find('list')->toArray();
-        $hiringreasons = $this->Applicationforms->Hiringreasons->find('list')->toArray();
-        $professionalcategories = $this->Applicationforms->Professionalcategories->find('list')->toArray();
-        $worktimes = $this->Applicationforms->Worktimes->find('list')->toArray();
-        $periods = $this->Applicationforms->Periods->find('list')->toArray();
-        $budgetfeatures = $this->Applicationforms->Budgetfeatures->find('list')->toArray();
-        $yesnos = $this->Applicationforms->Yesnos->find('list')->toArray();
-        $collaborators = $this->Applicationforms->Users->find('list', keyField: 'id', valueField: 'display_name')->toArray();
+        $contracttypes = $this->Applicationforms->Contracttypes->find('list', user: $currentUser)->toArray();
+        $hiringreasons = $this->Applicationforms->Hiringreasons->find('visibleTo', user: $currentUser)->toArray();
+        $professionalcategories = $this->Applicationforms->Professionalcategories->find('visibleTo', user: $currentUser)->toArray();
+        $worktimes = $this->Applicationforms->Worktimes->find('visibleTo', user: $currentUser)->toArray();
+        $periods = $this->Applicationforms->Periods->find('visibleTo', user: $currentUser)->toArray();
+        $budgetfeatures = $this->Applicationforms->Budgetfeatures->find('visibleTo', user: $currentUser)->toArray();
+        $yesnos = $this->Applicationforms->Yesnos->find('visibleTo', user: $currentUser)->toArray();
+
+        // 💡 FILTRAGE STRICT DES COLLABORATEURS SELON LE PÉRIMÈTRE UTILISATEUR
+        $collaborators = $this->Applicationforms->Users
+            ->find('visibleTo', user: $currentUser)
+            ->find('list', keyField: 'id', valueField: 'display_name')
+            ->toArray();
 
         $this->set(compact(
             'applicationform',
