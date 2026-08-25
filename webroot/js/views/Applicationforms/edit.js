@@ -32,6 +32,7 @@ class ApplicationformEditForm {
                 this.hydrateSelect('period-id', payload.periods || {});
                 this.hydrateSelect('budgetfeature-id', payload.budgetfeatures || {});
                 this.hydrateSelect('yesno-id', payload.yesnos || {});
+                this.hydrateSelect('collaborator-id', payload.collaborators || {});
                 this.applyFieldAuthorizations();
             })
             .catch(err => console.error("Erreur lors du chargement des référentiels :", err));

@@ -20,7 +20,12 @@ export function getApplicationformColumns() {
         ColumnsFactory.text("contracttype.code", "Contrat", { width: 110 }),
 
         // 5. CGR
-        ColumnsFactory.text("cgr", "CGR", { width: 130 }),
+        ColumnsFactory.text("cgr", "CGR", {
+            width: undefined, // Supprime la largeur fixe arbitraire
+            widthFit: "fitData",
+            widthGrow: 0,
+            widthShrink: 0
+             }),
 
         // 6. Date de début
         ColumnsFactory.dateRange("begin_at", "Début"),
