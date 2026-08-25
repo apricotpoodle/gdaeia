@@ -8,7 +8,7 @@ import { ColumnsFactory } from '../../core/Tabulator/ColumnsFactory.js';
 export function getApplicationformColumns() {
     return [
         // 1. ID
-        ColumnsFactory.id({ visible: true, width: 70 }),
+        ColumnsFactory.id({ visible: true, width: 50 }),
 
         // 2. Département (code court)
         ColumnsFactory.text("department.code", "Département", { width: 120 }),
@@ -35,13 +35,13 @@ export function getApplicationformColumns() {
         ColumnsFactory.text("cgr", "CGR", { width: 130 }),
 
         // 6. Date de début
-        ColumnsFactory.dateRange("begin_at", "Début", { width: 200 }),
+        ColumnsFactory.dateRange("begin_at", "Début"),
 
         // 7. Date de fin
-        ColumnsFactory.dateRange("end_at", "Fin", { width: 200 }),
+        ColumnsFactory.dateRange("end_at", "Fin"),
 
         // 8. Rémunération Brute
-        ColumnsFactory.currency("grossremuneration", "Rémunération", { width: 140 }),
+        ColumnsFactory.currency("grossremuneration", "Rémunération", { width: 100 }),
 
         // 9. Périodicité
         ColumnsFactory.text("period.name", "Période", { width: 100 })
