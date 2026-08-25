@@ -82,7 +82,19 @@ class DepartmentsTable extends AppTable
         $this->hasMany('Applicationforms', [
             'foreignKey' => 'department_id',
         ]);
+
+        /**
+         * 💡 Association avec l'utilisateur responsable/chef de service
+         * Clé étrangère : current_manager_id -> Table Users
+         * Alias propriété : manager ($department->manager)
+         */
+        $this->belongsTo('Managers', [
+            'className' => 'Users',
+            'foreignKey' => 'current_manager_id',
+            'propertyName' => 'manager',
+        ]);
     }
+
 
     /**
      * Default validation rules.

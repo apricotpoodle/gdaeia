@@ -28,6 +28,7 @@ $this->Html->css('vendor/treeselect/treeselectjs', ['block' => true]);
 $this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-treeselect', ['block' => true]);
+$this->Html->script('views/Applicationforms/applicationform-candidate', ['block' => true]);
 ?>
 
 <div class="container-fluid mt-3">

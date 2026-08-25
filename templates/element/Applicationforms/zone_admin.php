@@ -1,6 +1,8 @@
 <?php
+
 /**
- * Element : Zone Informations Administration
+ * @file zone_admin.php
+ * @description Élément représentant la Zone 1 (Administration) du formulaire.
  *
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Applicationform $applicationform
@@ -9,107 +11,47 @@
  * @var bool $canEditAdmin
  */
 
-// Traitement des autorisations au niveau des champs (Field-Level ACL)
-$isEditable = function (string $field) use ($fieldSchema, $canEditAdmin): bool {
-    if (!$canEditAdmin) {
-        return false;
-    }
-
-    return ($fieldSchema[$field] ?? 'EDIT') === 'EDIT';
-};
+// Chargement du script de gestion dynamique du candidat
+$this->Html->script('views/Applicationforms/applicationform-candidate', ['block' => true]);
 ?>
 
-<div class="card h-100 shadow-sm border-0">
-    <div class="card-header bg-light fw-bold text-uppercase fs-7 text-secondary">
-        <i class="fa-solid fa-shield-halved me-1"></i> <?= __('1. Informations Admin') ?>
+<div class="card shadow-sm border-0 mb-3">
+    <div class="card-header bg-light py-2">
+        <h6 class="card-title mb-0 text-primary fw-bold">
+            <i class="fa-solid fa-user-gear me-2"></i><?= __('Zone 1 : Administration & Candidat') ?>
+        </h6>
     </div>
     <div class="card-body">
         <div class="row g-3">
 
-            <!-- Sélecteur de Département via TreeselectJS -->
-            <div class="col-md-6">
-                <label for="department-id" class="form-label fw-bold">
-                    <i class="fa-solid fa-sitemap text-secondary me-1"></i>
-                    <?= __('Département') ?> <span class="text-danger">*</span>
-                </label>
-
-                <!-- Champ caché liant la sélection à l'ORM CakePHP -->
-                <?= $this->Form->hidden('department_id', [
-                    'id' => 'department-id',
-                    'disabled' => !$isEditable('department_id'),
-                ]) ?>
-
-                <!-- Conteneur IHM du Treeselect -->
-                <div id="department-tree-select"></div>
-            </div>
-
-            <!-- Zone d'injection dynamique des composants CGR -->
-            <div class="col-md-6">
-                <label for="cgr-final-input" class="form-label fw-bold">
-                    <i class="fa-solid fa-layer-group text-secondary me-1"></i>
-                    <?= __('Code CGR') ?>
-                </label>
-
-                <!-- Conteneur généré en JS (plusieurs selects selon la stratégie) -->
-                <div id="cgr-components-container" class="d-flex gap-2 mb-2"></div>
-
-                <!-- Champ réel persistant en base -->
-                <?= $this->Form->control('cgr', [
-                    'type' => 'text',
-                    'id' => 'cgr-final-input',
-                    'class' => 'form-control bg-light',
-                    'readonly' => true,
-                    'disabled' => !$isEditable('cgr'),
-                    'label' => false,
-                ]) ?>
-            </div>
-
-            <!-- Intitulé du poste -->
-            <div class="col-md-12">
-                <label for="jobtitle" class="form-label fw-bold">
-                    <i class="fa-solid fa-briefcase text-secondary me-1"></i>
-                    <?= __('Intitulé du poste') ?> <span class="text-danger">*</span>
-                </label>
-                <?= $this->Form->control('jobtitle', [
-                    'type' => 'text',
-                    'label' => false,
-                    'class' => 'form-control',
-                    'id' => 'jobtitle',
-                    'disabled' => !$isEditable('jobtitle'),
-                    'required' => true,
-                ]) ?>
-            </div>
-
-            <!-- Nom du candidat pressenti -->
-            <div class="col-md-6">
-                <label for="applicantname" class="form-label fw-bold">
-                    <i class="fa-solid fa-user-tag text-secondary me-1"></i>
-                    <?= __('Nom du candidat pressenti') ?>
-                </label>
-                <?= $this->Form->control('applicantname', [
-                    'type' => 'text',
-                    'label' => false,
-                    'class' => 'form-control',
-                    'id' => 'applicantname',
-                    'disabled' => !$isEditable('applicantname'),
-                ]) ?>
-            </div>
-
-            <!-- Collaborateur concerné (Candidat interne) -->
-            <div class="col-md-6">
-                <label for="collaborator-id" class="form-label fw-bold">
-                    <i class="fa-solid fa-user-gear text-secondary me-1"></i>
-                    <?= __('Collaborateur concerné (Candidat interne)') ?>
-                </label>
+            <!-- Sélecteur Collaborateur Interne -->
+            <div class="col-md-6 collaborator-select-wrapper">
                 <?= $this->Form->control('collaborator_id', [
-                    'type' => 'select',
-                    'options' => $collaborators,
-                    'empty' => __('-- Sélectionner --'),
-                    'label' => false,
-                    'class' => 'form-select',
                     'id' => 'collaborator-id',
-                    'disabled' => !$isEditable('collaborator_id'),
+                    'label' => ['text' => __('Collaborateur interne pressenti'), 'class' => 'form-label fs-7 fw-medium'],
+                    'options' => $collaborators ?? [],
+                    'empty' => __('--- Candidat externe / Saisie libre ---'),
+                    'class' => 'form-select form-select-sm',
+                    'disabled' => !$canEditAdmin
                 ]) ?>
+            </div>
+
+            <!-- Champ Texte Candidat Externe / Nom du poste -->
+            <div class="col-md-6">
+                <?= $this->Form->control('applicantname', [
+                    'id' => 'applicantname',
+                    'label' => ['text' => __('Intitulé / Nom du candidat'), 'class' => 'form-label fs-7 fw-medium'],
+                    'class' => 'form-control form-control-sm',
+                    'placeholder' => __('Saisir le nom du candidat...'),
+                    'disabled' => !$canEditAdmin
+                ]) ?>
+            </div>
+
+            <!-- Sélection du Département -->
+            <div class="col-md-12">
+                <label class="form-label fs-7 fw-medium"><?= __('Département') ?></label>
+                <div id="department-tree-select"></div>
+                <?= $this->Form->hidden('department_id', ['id' => 'department-id']) ?>
             </div>
 
         </div>

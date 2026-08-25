@@ -13,6 +13,16 @@ use Authorization\Policy\ResultInterface;
 /**
  * Class User
  *
+ * @property int $id
+ * @property string|null $firstname
+ * @property string|null $lastname
+ * @property string $email
+ * @property string|null $username
+ * @property \Cake\I18n\DateTime|null $created
+ * @property \Cake\I18n\DateTime|null $modified
+ *
+ * @property-read string $full_name  Nom complet (Prénom Nom)
+ * @property-read string $display_name  Nom d'affichage par défaut avec fallback
  * @package App\Model\Entity
  */
 class User extends AppEntity implements AuthenticationIdentity, AuthorizationIdentity
@@ -33,6 +43,53 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
         'password',
         'token',
     ];
+
+    /**
+     * Liste des champs virtuels à exposer automatiquement lors de la conversion en tableau / JSON.
+     *
+     * @var array<int, string>
+     */
+    protected array $_virtual = [
+        'full_name',
+        'display_name',
+    ];
+
+    /**
+     * Accesseur virtuel : Nom complet (Prénom + Nom)
+     * Exemple : "Jean Dupont"
+     *
+     * @return string
+     */
+    protected function _getFullName(): string
+    {
+        $firstname = trim($this->firstname ?? '');
+        $lastname = trim($this->lastname ?? '');
+
+        $name = trim($firstname . ' ' . $lastname);
+
+        return $name;
+    }
+
+    /**
+     * Accesseur virtuel : Nom d'affichage intelligent (Display Name)
+     * Utilise le nom complet si disponible, sinon le nom d'utilisateur, sinon l'adresse email.
+     *
+     * @return string
+     */
+    protected function _getDisplayName(): string
+    {
+        $fullName = $this->full_name;
+
+        if (!empty($fullName)) {
+            return $fullName;
+        }
+
+        if (!empty($this->username)) {
+            return trim($this->username);
+        }
+
+        return $this->email ?? '';
+    }
 
     public function getIdentifier(): int|string|null
     {
