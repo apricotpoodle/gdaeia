@@ -32,7 +32,10 @@ class ApplicationformsController extends AppController
     public function view(string $id): void
     {
         $applicationform = $this->Applicationforms->get($id, contain: [
-            'Departments',
+            'Departments' => [
+                'ParentDepartments', // 👈 Pour le fil d'Ariane
+                'Managers',          // 👈 Pour le chef de service
+            ],
             'Users',
             'Contracttypes',
             'Hiringreasons',
@@ -43,9 +46,19 @@ class ApplicationformsController extends AppController
             'Yesnos',
             'Comments' => ['Users'],
         ]);
+
+        // 💡 Récupération de l'arborescence complète via le TreeBehavior
+        $departmentPath = [];
+        if ($applicationform->department_id) {
+            $departmentPath = $this->fetchTable('Departments')
+                ->find('path', for: $applicationform->department_id)
+                ->all()
+                ->toArray();
+        }
+
         $this->Authorization->authorize($applicationform, 'view');
 
-        $this->set(compact('applicationform'));
+        $this->set(compact('applicationform', 'departmentPath'));
     }
 
     /**
@@ -91,7 +104,7 @@ class ApplicationformsController extends AppController
         $periods = $this->Applicationforms->Periods->find('visibleTo', user: $currentUser)->find('list')->toArray();
         $budgetfeatures = $this->Applicationforms->Budgetfeatures->find('visibleTo', user: $currentUser)->find('list')->toArray();
         $yesnos = $this->Applicationforms->Yesnos->find('visibleTo', user: $currentUser)->find('list')->toArray();
-        $collaborators = $this->Applicationforms->Users->find('visibleTo', user: $currentUser)->find('list', keyField: 'id', valueField: 'email')->toArray();
+        $collaborators = $this->Applicationforms->Users->find('visibleTo', user: $currentUser)->find('list', keyField: 'id', valueField: 'display_name')->toArray();
 
         $this->set(compact(
             'applicationform',
@@ -151,7 +164,7 @@ class ApplicationformsController extends AppController
         $periods = $this->Applicationforms->Periods->find('list')->toArray();
         $budgetfeatures = $this->Applicationforms->Budgetfeatures->find('list')->toArray();
         $yesnos = $this->Applicationforms->Yesnos->find('list')->toArray();
-        $collaborators = $this->Applicationforms->Users->find('list', keyField: 'id', valueField: 'email')->toArray();
+        $collaborators = $this->Applicationforms->Users->find('list', keyField: 'id', valueField: 'display_name')->toArray();
 
         $this->set(compact(
             'applicationform',

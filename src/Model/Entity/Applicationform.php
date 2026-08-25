@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Model\Entity;
@@ -46,42 +47,44 @@ namespace App\Model\Entity;
  * @property \App\Model\Entity\ValidationVisa[] $validation_visas
  * @property \App\Model\Entity\Validation[] $validations
  * @property \App\Model\Entity\Comment[] $comments
+ *
+ * @property-read string $candidate_name Nom du candidat ou collaborateur pressenti
  */
 class Applicationform extends AppEntity
 {
-/**
- * Cartographie des zones d'IHM
- */
-public const ZONE_ADMIN        = 'admin';
-public const ZONE_CONTRAT      = 'contrat';
-public const ZONE_REMUNERATION = 'remuneration';
-public const ZONE_RESERVES     = 'reserves';
-public const ZONE_COMMENTAIRES = 'commentaires';
+    /**
+     * Cartographie des zones d'IHM
+     */
+    public const ZONE_ADMIN        = 'admin';
+    public const ZONE_CONTRAT      = 'contrat';
+    public const ZONE_REMUNERATION = 'remuneration';
+    public const ZONE_RESERVES     = 'reserves';
+    public const ZONE_COMMENTAIRES = 'commentaires';
 
-/**
- * Liste exhaustive des zones de l'IHM
- */
-public const UI_ZONES = [
-    self::ZONE_ADMIN,
-    self::ZONE_CONTRAT,
-    self::ZONE_REMUNERATION,
-    self::ZONE_RESERVES,
-    self::ZONE_COMMENTAIRES,
-];
+    /**
+     * Liste exhaustive des zones de l'IHM
+     */
+    public const UI_ZONES = [
+        self::ZONE_ADMIN,
+        self::ZONE_CONTRAT,
+        self::ZONE_REMUNERATION,
+        self::ZONE_RESERVES,
+        self::ZONE_COMMENTAIRES,
+    ];
 
-public const ALLOWED_ROLES_FOR_EDIT   = [self::ROLE_ADMIN];
-public const ALLOWED_ROLES_FOR_ZONE_RESERVES  = [self::ROLE_ADMIN, self::ROLE_4_VALIDEUR_CG];
+    public const ALLOWED_ROLES_FOR_EDIT   = [self::ROLE_ADMIN];
+    public const ALLOWED_ROLES_FOR_ZONE_RESERVES  = [self::ROLE_ADMIN, self::ROLE_4_VALIDEUR_CG];
 
-/**
- * Fields that can be mass assigned using newEntity() or patchEntity().
- *
- * Note that when '*' is set to true, this allows all unspecified fields to
- * be mass assigned. For security purposes, it is advised to set '*' to false
- * (or remove it), and explicitly make individual fields accessible as needed.
- *
- * @var array<string, bool>
- */
-protected array $_accessible = [
+    /**
+     * Fields that can be mass assigned using newEntity() or patchEntity().
+     *
+     * Note that when '*' is set to true, this allows all unspecified fields to
+     * be mass assigned. For security purposes, it is advised to set '*' to false
+     * (or remove it), and explicitly make individual fields accessible as needed.
+     *
+     * @var array<string, bool>
+     */
+    protected array $_accessible = [
         'department_id' => true,
         'user_id' => true,
         'cgr' => true,
@@ -121,4 +124,40 @@ protected array $_accessible = [
         'archived' => true,
         'comments' => true,
     ];
+
+    /**
+     * Liste des propriétés virtuelles exposées
+     */
+    protected array $_virtual = [
+        'candidate_name',
+    ];
+
+    /**
+     * Accesseur virtuel : Nom du candidat / collaborateur pressenti
+     * Ordre de priorité :
+     * 1. Saisie manuelle (applicantname)
+     * 2. Collaborateur interne sélectionné (collaborator->display_name ou email)
+     * 3. Fallback neutre ('-')
+     *
+     * @return string
+     */
+    protected function _getCandidateName(): string
+    {
+        // 1. Si une saisie texte spécifique a été faite
+        $applicantName = trim($this->applicantname ?? '');
+        if ($applicantName !== '') {
+            return $applicantName;
+        }
+
+        // 2. Si un collaborateur interne est lié via collaborator_id
+        if (isset($this->collaborator)) {
+            $collabName = $this->collaborator->display_name ?? $this->collaborator->full_name ?? $this->collaborator->email ?? '';
+            if (trim($collabName) !== '') {
+                return trim($collabName);
+            }
+        }
+
+        // 3. Fallback neutre (Meilleure pratique industrielle)
+        return '-';
+    }
 }

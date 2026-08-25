@@ -14,19 +14,7 @@ export function getApplicationformColumns() {
         ColumnsFactory.text("department.code", "Département", { width: 120 }),
 
         // 3. Personne / Collaborateur
-        ColumnsFactory.text("applicantname", "Personne / Collaborateur", {
-            formatter: (cell) => {
-                const data = cell.getRow().getData();
-                if (data.applicantname) {
-                    return data.applicantname;
-                }
-                if (data.user && data.user.email) {
-                    return data.user.email;
-                }
-                return "-";
-            },
-            width: 150
-        }),
+        ColumnsFactory.text("candidate_name", "Personne / Collaborateur", {width: 150}),
 
         // 4. Type de contrat
         ColumnsFactory.text("contracttype.code", "Contrat", { width: 110 }),
