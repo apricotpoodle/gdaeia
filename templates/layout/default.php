@@ -43,6 +43,7 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
     <?= $this->Html->script('app') ?>
     <?= $this->Html->script('vendor/luxon/luxon.min.js') ?>
     <?= $this->Html->script('vendor/tabulator/tabulator.min.js') ?>
+    <?= $this->Html->script('views/Users/user-departments-tree.js', ['type' => 'module', 'block' => 'scriptBottom']) ?>
 
     <!-- Infrastructure Tabulator (ADR ES6 Modules) -->
     <!-- Ajout indispensable de 'type' => 'module' -->
@@ -88,6 +89,7 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
     </footer>
 
     <?= $this->Html->script('core/Navigation/MenuManager.js', ['type' => 'module', 'block' => 'scriptBottom']) ?>
+    <?= $this->fetch('script') ?>
     <?= $this->fetch('scriptBottom') ?>
 </body>
 

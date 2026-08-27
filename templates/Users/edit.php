@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 /**
- * @file templates/Users/add.php
+ * @file templates/Users/edit.php
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\User $user
  * @var array $roles
@@ -11,9 +11,9 @@ declare(strict_types=1);
  * @var array $selectedDepartmentIds
  */
 
-$this->assign('title', __('Ajouter un Utilisateur'));
+$this->assign('title', __('Éditer l\'Utilisateur #{0}', $user->id));
 
-// Chargement du CSS et du JS vendor Treeselect
+// 🚀 CHARGEMENT DES ASSETS TREESELECTJS ET DU SCRIPT DE VUE
 $this->Html->css('vendor/treeselect/treeselectjs.css', ['block' => true]);
 $this->Html->script('vendor/treeselect/treeselectjs.umd.js', ['block' => 'scriptBottom']);
 $this->Html->script('views/Users/user-departments-tree.js', ['block' => 'scriptBottom']);
@@ -24,7 +24,7 @@ $this->Html->script('views/Users/user-departments-tree.js', ['block' => 'scriptB
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h3 class="card-title mb-0">
-                    <i class="fa-solid fa-user-plus me-2"></i>
+                    <i class="fa-solid fa-user-pen me-2"></i>
                     <?= h($this->fetch('title')) ?>
                 </h3>
                 <div>
@@ -97,20 +97,6 @@ $this->Html->script('views/Users/user-departments-tree.js', ['block' => 'scriptB
                             </div>
                         <?php endif; ?>
                     </div>
-
-                    <?php if (($fieldSchema['password'] ?? 'EDIT') !== 'HIDE'): ?>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <?= $this->Form->control('password', [
-                                    'label' => __('Mot de passe'),
-                                    'type' => 'password',
-                                    'class' => 'form-control',
-                                    'required' => true,
-                                    'autocomplete' => 'new-password',
-                                ]) ?>
-                            </div>
-                        </div>
-                    <?php endif; ?>
                 </fieldset>
 
                 <fieldset class="mt-4">

@@ -4,7 +4,10 @@ declare(strict_types=1);
 namespace App\Policy;
 
 use App\Model\Entity\User;
+use Authentication\Authenticator\AuthenticatorInterface;
+use Authentication\Identity;
 use Authorization\IdentityInterface;
+use Cake\Routing\Router;
 
 /**
  * Users policy
@@ -65,6 +68,37 @@ class UserPolicy
     }
 
     /**
+     * Vérifie si l'utilisateur courant est déjà dans un état d'impersonation.
+     * Inspecte l'instance d'identité de manière totalement étanche (sans dépendre de la Request/Session).
+     *
+     * @param \Authorization\IdentityInterface $identity
+     * @return bool
+     */
+    private function isAlreadyImpersonating(IdentityInterface $identity): bool
+    {
+        /** @var Authentication $originalData */
+        $originalData = $identity->getOriginalData();
+
+        // 1. Détection via l'objet Authentication\Identity (si le décorateur contient l'attribut d'impersonation)
+        if ($originalData instanceof Identity && method_exists($originalData, 'isImpersonating')) {
+            /** @var Authentication $originalData */
+            return $originalData->isImpersonating();
+        }
+
+        // 2. Détection via attribut/propriété d'impersonation stockée dans l'identité
+        if ($identity->offsetExists('impersonator') || $identity->offsetExists('_impersonator')) {
+            return true;
+        }
+
+        // 3. Inspection défensive du tableau de données sous-jacent de l'objet Identity
+        if ($originalData instanceof User && isset($originalData['_impersonator'])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Check if $user can imperonate Users
      *
      * @param \Authorization\IdentityInterface $identity The user.
@@ -79,7 +113,12 @@ class UserPolicy
             return false; // Par sécurité, on bloque si ce n'est pas un User valide
         }
 
-        return (bool)$user->get('issuperuser') && !(bool)$target->get('issuperuser');
+        // 1. VERROU STRICT : Si l'utilisateur est DÉJÀ en mode impersonate, interdiction d'enchaîner
+        if ($this->isAlreadyImpersonating($identity)) {
+            return false; // Interdit d'usurper en cascade s'il y a déjà une session d'usurpation active !
+        }
+        // 2. Condition standard : Seul un Super Admin peut usurper un utilisateur non Super Admin
+        return (bool)$user->get('issuperuser') && $user->get('id') != $target->get('id');
     }
 
     /**
@@ -96,7 +135,9 @@ class UserPolicy
             return false; // Par sécurité, on bloque si ce n'est pas un User valide
         }
 
-        return (bool)$user->get('issuperuser') || $user->get('id') === $target->get('id');
+        return (bool)$user->get('issuperuser')
+            || $user->get('id') === $target->get('id')
+            || $user->hasRole($user::ALLOWED_ROLES_FOR_EDIT);
     }
 
     /**
@@ -113,7 +154,11 @@ class UserPolicy
             return false;
         }
 
-        return (bool)$user->get('issuperuser') && $user->get('id') !== $target->get('id');
+        return
+            $user->get('id') !== $target->get('id') && (
+                (bool)$user->get('issuperuser')
+                || $user->hasRole($user::ALLOWED_ROLES_FOR_DELETE)
+            );
     }
 
     /**
@@ -125,7 +170,13 @@ class UserPolicy
      */
     public function canView(IdentityInterface $identity, User $target): bool
     {
-        return true;
+        $user = $this->getValidUser($identity);
+        if (!$user) {
+            return false;
+        }
+
+        return (bool)$user->get('issuperuser') || $user->get('id') == $target->get('id')
+            || $user->hasRole($user::ALLOWED_ROLES_FOR_VIEW);
     }
 
     /**

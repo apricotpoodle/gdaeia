@@ -79,7 +79,7 @@ export class TabulatorFactory {
                 ColumnsFactory.text("role.name", "Rôle"),
                 // ColumnsFactory.text("username", "Identifiant", { frozen: true }),
                 ColumnsFactory.text("email", "Adresse Email"),
-                ColumnsFactory.boolean("issuperuser", "Administrateur"),
+                ColumnsFactory.boolean("issuperuser", "Admin."),
                 // ColumnsFactory.dateRange("created", "Date d'inscription"),
                 // ColumnsFactory.dateRange("modified", "Dernière modification")
             ])

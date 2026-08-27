@@ -75,6 +75,7 @@ export class ColumnsFactory {
                 values: { "true": "Oui", "false": "Non", "": "Tous" }
             })
             .setOptions({
+                width: 70,
                 widthGrow: 0,  // Un Id n'a pas besoin de s'étirer.
                 ...overrides
             })

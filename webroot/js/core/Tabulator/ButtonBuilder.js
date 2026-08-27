@@ -3,9 +3,9 @@
  * Implémentation du patron "Builder" (Monteur) pour les boutons HTML.
  * Élimine la concaténation manuelle de chaînes de caractères HTML.
  */
-class ButtonBuilder {
+export class ButtonBuilder {
     constructor() {
-        this.classes = ['btn', 'shadow-sm'];
+        this.classes = ['btn', 'btn-sm', 'shadow-sm', 'me-1', 'btn-action'];
         this.attributes = { type: 'button' };
         this.iconHtml = '';
         this.textStr = '';
@@ -16,38 +16,100 @@ class ButtonBuilder {
         return this;
     }
 
+    /**
+     * Définit le variant de couleur Bootstrap (info, primary, danger, etc.)
+     * @param {string} color
+     * @returns {ButtonBuilder}
+     */
     setColor(color) {
-        this.classes.push(`btn-${color}`);
+        if (color) {
+            this.classes.push(`btn-${color}`);
+        }
         return this;
     }
 
+    /**
+     * Remplace totalement les classes CSS par défaut (ex: pour un item de dropdown)
+     * @param {string[]} classesArray
+     * @returns {ButtonBuilder}
+     */
+    setClasses(classesArray) {
+        if (Array.isArray(classesArray)) {
+            this.classes = [...classesArray];
+        }
+        return this;
+    }
+
+    /**
+     * Ajoute une classe CSS complémentaire si besoin
+     * @param {string} className
+     * @returns {ButtonBuilder}
+     */
     addClass(className) {
-        this.classes.push(className);
+        if (className && !this.classes.includes(className)) {
+            this.classes.push(className);
+        }
         return this;
     }
 
+    /**
+     * Dénomination directe pour data-action
+     * @param {string} actionName
+     * @returns {ButtonBuilder}
+     */
     setAction(actionName) {
         this.attributes['data-action'] = actionName;
         return this;
     }
 
+    /**
+     * Ajoute n'importe quel attribut data-* (ex: target -> data-target, is-event -> data-is-event)
+     * @param {string} key
+     * @param {string} value
+     * @returns {ButtonBuilder}
+     */
+    setData(key, value) {
+        this.attributes[`data-${key}`] = value;
+        return this;
+    }
+
+    /**
+     * Définit le survol / l'accessibilité
+     * @param {string} title
+     * @returns {ButtonBuilder}
+     */
     setTitle(title) {
         this.attributes['title'] = title;
         return this;
     }
 
+    /**
+     * Injection de l'icône FontAwesome avec espacement fixe fa-fw
+     * @param {string} iconClass
+     * @returns {ButtonBuilder}
+     */
     setIcon(iconClass) {
-        this.iconHtml = `<i class="${iconClass}"></i>`;
+        if (iconClass) {
+            this.iconHtml = `<i class="${iconClass}"></i>`;
+        }
         return this;
     }
 
+    /**
+     * Définit le texte du bouton
+     * @param {string} text
+     * @returns {ButtonBuilder}
+     */
     setText(text) {
         this.textStr = text;
         return this;
     }
 
+    /**
+     * Génère la balise <button> finale
+     * @returns {string}
+     */
     build() {
-        // Construction des attributs HTML (ex: data-action="edit" title="Modifier")
         const attrs = Object.entries(this.attributes)
             .map(([key, value]) => `${key}="${value}"`)
             .join(' ');
@@ -57,4 +119,6 @@ class ButtonBuilder {
 
         return `<button class="${classList}" ${attrs}>${innerContent}</button>`;
     }
+
 }
+
