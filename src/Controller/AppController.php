@@ -19,6 +19,7 @@ namespace App\Controller;
 
 use Cake\Controller\Controller;
 use Cake\Datasource\EntityInterface;
+use Cake\Event\EventInterface;
 
 /**
  * Application Controller
@@ -52,6 +53,27 @@ class AppController extends Controller
          * see https://book.cakephp.org/5/en/controllers/components/form-protection.html
          */
         //$this->loadComponent('FormProtection');
+    }
+
+    /**
+     * Callback avant le rendu de la vue.
+     * Injecte les flags globaux (comme le mode Impersonate) pour TOUTES les vues HTML.
+     *
+     * @param \Cake\Event\EventInterface $event
+     * @return void
+     */
+    public function beforeRender(EventInterface $event): void
+    {
+        parent::beforeRender($event);
+
+        // Détection propre et sécurisée via le composant Authentication du contrôleur
+        $isImpersonating = false;
+        if ($this->components()->has('Authentication')) {
+            $isImpersonating = $this->Authentication->isImpersonating();
+        }
+
+        // Transmet la variable à absolument toutes les vues PHP
+        $this->set('isImpersonating', $isImpersonating);
     }
 
     /**

@@ -6,6 +6,7 @@ namespace App\Controller\Api;
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
@@ -14,7 +15,6 @@ use Cake\ORM\TableRegistry;
  * Class UsersController (API)
  *
  * Contrôleur dédié à l'exposition des données Utilisateurs au format JSON.
- * Gère exclusivement les flux de données (Data Fetching) pour le front-end.
  *
  * @package App\Controller\Api
  * @property \App\Model\Table\UsersTable $Users
@@ -22,50 +22,135 @@ use Cake\ORM\TableRegistry;
 class UsersController extends AppController
 {
     /**
-     * Initialisation du contrôleur.
-     * Charge le composant RequestHandler pour activer le rendu JSON natif.
-     *
      * @return void
      */
     public function initialize(): void
     {
         parent::initialize();
-
-        // CakePHP 5 : On force explicitement l'utilisation de la vue JSON
-        // pour toutes les actions de ce contrôleur API.
         $this->viewBuilder()->setClassName('Json');
     }
 
     /**
-     * Correction de l'interception précoce :
-     * On s'assure que l'autorisation est gérée ou contournée proprement avant la sérialisation
+     * @param \Cake\Event\EventInterface $event
+     * @return void
      */
-    public function beforeFilter(EventInterface $event)
+    public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
+        $this->Authorization->skipAuthorization(['getFormSchema']);
+    }
 
-        // Option Sécurisée : Si l'utilisateur est authentifié globalement,
-        // on l'autorise à consommer l'API index sans re-vérification de Policy ici
-        $this->Authorization->skipAuthorization(['index']);
+    /**
+     * Endpoint : GET /api/users/get-form-schema.json
+     * Fournit les permissions sur les champs, les rôles, et l'arborescence des départements autorisés.
+     *
+     * @return void
+     */
+    public function getFormSchema(): void
+    {
+        $this->request->allowMethod(['get']);
+
+        $service = new FieldAuthorizationService();
+        $identity = $this->request->getAttribute('identity');
+
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $identity->getOriginalData();
+
+        // Schéma ACL des champs
+        $schema = $service->getFieldSchema($identity, 'Users');
+
+        // Liste des rôles
+        $rolesTable = TableRegistry::getTableLocator()->get('Roles');
+        $roles = $rolesTable->find('list', keyField: 'id', valueField: 'name')
+            ->orderBy(['Roles.name' => 'ASC'])
+            ->toArray();
+
+        // Arborescence filtrée par périmètre opérateur
+        $departmentsTable = TableRegistry::getTableLocator()->get('Departments');
+        $departments = $departmentsTable->findTreeSelectFormat($currentUser);
+
+        $this->set(compact('schema', 'roles', 'departments'));
+        $this->viewBuilder()->setOption('serialize', ['schema', 'roles', 'departments']);
+    }
+
+    /**
+     * Endpoint : POST /api/users/add.json
+     * Traite l'ajout d'un utilisateur et gère l'association de ses départements.
+     *
+     * @return \Cake\Http\Response|null
+     */
+    public function add(): ?Response
+    {
+        $this->request->allowMethod(['post']);
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+
+        $user = $this->Users->newEmptyEntity();
+
+        $authService = new FieldAuthorizationService();
+        $identity = $this->request->getAttribute('identity');
+
+        $schema = $authService->getFieldSchema($identity, 'Users');
+
+        // Autoriser la présence de l'association user_departments dans le filtre ACL
+        $schema['user_departments'] = 'EDIT';
+
+        $rawParams = $this->request->getData();
+        $filteredData = $authService->filterRequestData($rawParams, $schema);
+
+        // Intégration et association ORM des départements
+        $user = $this->Users->patchEntity($user, $filteredData, [
+            'associated' => ['UserDepartments'],
+        ]);
+
+        if ($this->Users->save($user)) {
+            return $this->response->withType('application/json')
+                ->withStringBody(json_encode(['success' => true, 'id' => $user->id]));
+        }
+
+        return $this->handleValidationError($user);
+    }
+
+    /**
+     * Endpoint : PUT/PATCH /api/users/edit/{id}.json
+     *
+     * @param string $id
+     * @return \Cake\Http\Response|null
+     */
+    public function edit(string $id): ?Response
+    {
+        $this->request->allowMethod(['post', 'put', 'patch']);
+
+        $user = $this->Users->get($id, contain: ['UserDepartments']);
+        $this->Authorization->authorize($user, 'edit');
+
+        $authService = new FieldAuthorizationService();
+        $identity = $this->request->getAttribute('identity');
+
+        $schema = $authService->getFieldSchema($identity, 'Users');
+        $schema['user_departments'] = 'EDIT';
+
+        $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
+
+        $user = $this->Users->patchEntity($user, $filteredData, [
+            'associated' => ['UserDepartments'],
+        ]);
+
+        if ($this->Users->save($user)) {
+            return $this->response->withType('application/json')
+                ->withStringBody(json_encode(['success' => true]));
+        }
+
+        return $this->handleValidationError($user);
     }
 
     /**
      * Méthode Index (GET /api/users.json)
      *
-     * Récupère la liste paginée des utilisateurs en appliquant les tris et filtres
-     * demandés par le composant front-end Tabulator, tout en injectant dynamiquement
-     * les droits d'accès visuels (grid_rights) de manière centralisée et DRY.
-     *
      * @return void
      */
     public function index(): void
     {
-        // Sécurité : On n'accepte que les requêtes en lecture
         $this->request->allowMethod(['get']);
-
-        // =====================================================================
-        // 1. VERROU DE SÉCURITÉ : Validation stricte via la UserPolicy::canIndex()
-        // =====================================================================
         $this->Authorization->authorize($this->Users->newEmptyEntity(), 'index');
 
         $adapter = new TabulatorAdapter();
@@ -74,102 +159,46 @@ class UsersController extends AppController
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
 
-        // =====================================================================
-        // 2. PRÉPARATION & SÉGRÉGATION DES DONNÉES (La "Vision" de l'opérateur)
-        // L'ORM se charge d'appliquer les règles métiers complexes via le Finder.
-        // =====================================================================
         $query = $this->Users->find('visibleTo', user: $currentUser)
-            ->contain(['Roles']);
+            ->contain(['Roles', 'UserDepartments' => ['Departments']]);
 
-        // 3. Traduction des tris et filtres Tabulator vers la requête SQL
         $query = $adapter->adaptRequest($this->request, $query);
 
-        // 4. Exécution de la requête avec la pagination native de CakePHP
-        $paginatedData = $this->paginate($query, [
-            'limit' => (int)($queryParams['size'] ?? 20),
-            'page'  => (int)($queryParams['page'] ?? 1),
-            // SÉCURITÉ : On interdit au Paginator CakePHP de trier via l'URL,
-            // car le TabulatorAdapter a déjà appliqué les tris sur l'objet $query.
-            'sortableFields' => [],
-        ]);
-
-        // =====================================================================
-        // 5. FABRIQUE DE DROITS DRY (Méthode définie dans AppController)
-        // =====================================================================
-        $rightsFormatter = $this->createGridRightsFormatter(
-            // Actions métiers spécifiques s'ajoutant au CRUD de base (view, edit, delete)
-            ['impersonate'],
-            // Callback pour piloter la visibilité dynamique des cellules/colonnes
-            function ($entity, $authorization) {
-                return [
-                    'email'       => true,
-                    // Seul un profil ayant le droit d'exécuter la suppression (Admin)
-                    // verra/pilotera l'interrupteur Super Utilisateur dans sa ligne
-                    'issuperuser' => $authorization->can($entity, 'delete'),
-                ];
-            },
-        );
-
-        // 6. Formatage de la structure de réponse par l'adaptateur agnostique
+        try {
+            $paginatedData = $this->paginate($query, [
+                'limit' => (int)($queryParams['size'] ?? 40),
+                'page'  => (int)($queryParams['page'] ?? 1),
+            ]);
+        } catch (\Cake\Http\Exception\NotFoundException $e) {
+            $this->request = $this->request->withQueryParams(array_merge($queryParams, ['page' => 1]));
+            $paginatedData = $this->paginate($query, [
+                'limit' => (int)($queryParams['size'] ?? 40),
+                'page'  => 1,
+            ]);
+        }
+        // 2. Détermination dynamique des actions supplémentaires selon le mode d'impersonation
+        $extraActions = [];
+        if (!$this->Authentication->isImpersonating()) {
+            $extraActions[] = 'impersonate';
+        }
+        $rightsFormatter = $this->createGridRightsFormatter($extraActions);
         $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);
 
-        // 7. Rendu final sérialisé en JSON conforme CakePHP 5
         $this->set($output);
         $this->viewBuilder()->setOption('serialize', array_keys($output));
     }
 
     /**
-     * Endpoint : GET /api/users/get-form-schema.json
-     * Distribue le dictionnaire des droits sur les champs pour l'opérateur courant.
+     * Gestion des erreurs de validation
+     *
+     * @param \Cake\Datasource\EntityInterface $entity
+     * @return \Cake\Http\Response
      */
-    public function getFormSchema(): void
+    private function handleValidationError(EntityInterface $entity): Response
     {
-        $this->request->allowMethod(['get']);
-        $this->Authorization->skipAuthorization(); // L'action est ouverte aux connectés, le filtrage est dynamique
-
-        $service = new FieldAuthorizationService();
-        $identity = $this->request->getAttribute('identity');
-
-        $schema = $service->getFieldSchema($identity, 'Users');
-
-        // Récupération optionnelle des listes pour hydrater les selects du formulaire (Roles)
-        $rolesTable = TableRegistry::getTableLocator()->get('Roles');
-        $roles = $rolesTable->find('list', keyField: 'id', valueField: 'name')->toArray();
-
-        $this->set(compact('schema', 'roles'));
-        $this->viewBuilder()->setOption('serialize', ['schema', 'roles']);
-    }
-
-    /**
-     * Endpoint : POST /api/users/add.json
-     * Exécute la création d'un utilisateur après filtrage des champs.
-     */
-    public function add(): ?Response
-    {
-        $this->request->allowMethod(['post']);
-
-        // 1. Droit global de création (UserPolicy::canAdd)
-        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
-
-        $user = $this->Users->newEmptyEntity();
-
-        $authService = new FieldAuthorizationService();
-        $identity = $this->request->getAttribute('identity');
-
-        // 2. Protection double-sécurité : On filtre les données reçues contre le schéma de rôles
-        $schema = $authService->getFieldSchema($identity, 'Users');
-        $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
-
-        $user = $this->Users->patchEntity($user, $filteredData);
-
-        if ($this->Users->save($user)) {
-            return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => true]));
-        }
-
-        // Collecte des erreurs de validation de l'ORM si échec
-        $errors = $user->getErrors();
+        $errors = $entity->getErrors();
         $message = __('Le formulaire contient des données invalides.');
+
         if (!empty($errors)) {
             $firstError = current(reset($errors));
             $message = (string)$firstError;

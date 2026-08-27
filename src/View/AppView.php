@@ -18,6 +18,7 @@ namespace App\View;
 
 use Cake\View\View;
 
+
 /**
  * Application View
  *
@@ -40,9 +41,14 @@ class AppView extends View
     public function initialize(): void
     {
         parent::initialize();
-        // Chargement global du Helper d'infrastructure
+        // 💡 Résolution automatique par CakePHP du Helper d'autorisation
+        // $this->loadHelper('Identity', [
+        //     'className' => 'Authorization.Identity',
+        // ]);        // // 1. Chargement du Helper d'Autorisation (Fournit $this->Identity dans les templates)
+        // $this->addHelper('Authorization.Identity');
+        // 2. Chargement global du Helper d'infrastructure
         $this->loadHelper('Tabulator');
-        // Rend l'objet $identity automatiquement accessible dans toutes les vues (.php)
+        // 3. Injection de l'objet $identity dans toutes les vues (.php)
         $identity = $this->getRequest()->getAttribute('identity');
         $this->set('identity', $identity);
 

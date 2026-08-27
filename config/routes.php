@@ -82,6 +82,10 @@ return function (RouteBuilder $routes): void {
     // Routes pour l'API (Rendu JSON)
     $routes->prefix('Api', function (\Cake\Routing\RouteBuilder $builder) {
         $builder->setExtensions(['json']);
+
+        // Routes spécifiques pour l'API Users
+        $builder->connect('/users/get-form-schema', ['controller' => 'Users', 'action' => 'getFormSchema', '_ext' => 'json']);
+
         $builder->resources('Users'); // Crée automatiquement les routes RESTful (GET /api/users)
         $builder->resources('FieldAuthorizations');
         $builder->resources('Applicationforms');

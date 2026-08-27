@@ -32,10 +32,14 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
      * en dehors des Super Administrateurs.
      */
     public const ALLOWED_ROLES_FOR_CREATE = [self::ROLE_ADMIN];
+    public const ALLOWED_ROLES_FOR_EDIT   = [self::ROLE_ADMIN];
+    public const ALLOWED_ROLES_FOR_VIEW   = [self::ROLE_ADMIN];
+    public const ALLOWED_ROLES_FOR_DELETE = [self::ROLE_ADMIN];
 
     protected array $_accessible = [
         '*' => true,
         'id' => false,
+        'user_departments' => true,
     ];
 
     // AJOUTEZ CECI POUR SÉCURISER L'API :
@@ -68,6 +72,25 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
         $name = trim($firstname . ' ' . $lastname);
 
         return $name;
+    }
+
+    /**
+     * Vérifie si l'utilisateur possède un rôle spécifique ou s'il appartient à un ensemble de rôles autorisés.
+     *
+     * @param int|int[] $roleAllowed ID de rôle unique ou tableau d'IDs de rôles autorisés.
+     * @return bool Vrai si l'utilisateur possède l'un des rôles spécifiés.
+     */
+    public function hasRole(int|array $roleAllowed): bool
+    {
+        if (!isset($this->role_id)) {
+            return false;
+        }
+
+        if (is_array($roleAllowed)) {
+            return in_array($this->role_id, $roleAllowed, true);
+        }
+
+        return $this->role_id === $roleAllowed;
     }
 
     /**
