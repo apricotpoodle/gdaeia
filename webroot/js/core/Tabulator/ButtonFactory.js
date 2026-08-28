@@ -26,7 +26,9 @@ export class ButtonFactory {
         edit: { icon: 'fas fa-edit', color: 'primary', title: 'Modifier l\'enregistrement', target: '_self', isEvent: true },
         delete: { icon: 'fas fa-trash', color: 'danger', title: 'Supprimer l\'enregistrement', isEvent: true },
         viewpdf: { icon: 'fas fa-file-pdf', color: 'warning', title: 'Ouvrir le document PDF', target: '_blank' },
-        impersonate: { icon: 'fas fa-user-secret', color: 'secondary', title: 'Incarner la session utilisateur', target: '_self' }
+        impersonate: { icon: 'fas fa-user-secret', color: 'secondary', title: 'Incarner la session utilisateur', target: '_self' },
+        moveUp: { icon: 'fas fa-arrow-up', color: 'secondary', title: 'Monter', isEvent: true },
+        moveDown: { icon: 'fas fa-arrow-down', color: 'secondary', title: 'Descendre', isEvent: true }
     };
 
     /**
@@ -36,7 +38,7 @@ export class ButtonFactory {
      * @param {Object} [rowPermissions={}] L'objet des permissions pour la ligne courante
      * @returns {string} Le balisage HTML du bouton ou une chaîne vide
      */
-    static getCellButton(key, rowPermissions = {}) {
+    static getCellButton(key, rowPermissions = {}, recordId = null) {
         const config = this.#configs[key];
         if (!config) return '';
 
@@ -55,14 +57,20 @@ export class ButtonFactory {
             return '';
         }
 
-        return new ButtonBuilder()
+        const builder = new ButtonBuilder()
             .setColor(config.color)
             .setAction(key)
             .setData('target', config.target || '_self')
             .setData('is-event', config.isEvent ? 'true' : 'false')
             .setTitle(config.title)
-            .setIcon(`${config.icon} fa-fw`)
-            .build();
+            .setIcon(`${config.icon} fa-fw`);
+
+        // Injecte l'ID s'il est fourni
+        if (recordId !== null && recordId !== undefined) {
+            builder.setData('id', String(recordId));
+        }
+
+        return builder.build();
     }
 
     /**

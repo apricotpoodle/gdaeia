@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller\Api;
@@ -39,6 +40,61 @@ class MenusController extends AppController
     {
         parent::beforeFilter($event);
         $this->Authorization->skipAuthorization(['index']);
+    }
+
+    /**
+     * Endpoint dédié à la grille Tabulator pour le CRUD des Menus.
+     * Accessible via GET /api/menus/grid.json
+     *
+     * @return void
+     */
+    public function grid(): void
+    {
+        $this->request->allowMethod(['get']);
+        // Verrou de sécurité calqué sur la Policy des Menus
+        $this->Authorization->authorize($this->Menus->newEmptyEntity(), 'index');
+
+        // 1. Récupération de l'arbre via le TreeBehavior de CakePHP
+        $menus = $this->Menus->find('threaded')
+            ->orderBy(['lft' => 'ASC'])
+            ->all();
+
+        // 2. Instanciation de notre usine à droits (DRY)
+        $rightsFormatter = $this->createGridRightsFormatter(['moveUp', 'moveDown']);
+
+        // 3. Application récursive des droits pour la vue en arbre de Tabulator
+        $data = $this->formatMenuTreeWithRights($menus, $rightsFormatter);
+
+        $this->set([
+            'data' => $data,
+        ]);
+        $this->viewBuilder()->setOption('serialize', ['data']);
+    }
+
+    /**
+     * Parcourt l'arborescence pour injecter dynamiquement 'grid_rights'
+     * et s'assurer que chaque nœud porte son ID.
+     *
+     * @param iterable $menus
+     * @param callable $rightsFormatter
+     * @return array
+     */
+    private function formatMenuTreeWithRights(iterable $menus, callable $rightsFormatter): array
+    {
+        $result = [];
+        foreach ($menus as $menu) {
+            // Application des droits dynamiques
+            $menu->grid_rights = $rightsFormatter($menu);
+
+            // Traitement récursif des enfants (TreeBehavior 'children')
+            if (!empty($menu->children)) {
+                $menu->children = $this->formatMenuTreeWithRights($menu->children, $rightsFormatter);
+            }
+
+            $result[] = $menu;
+        }
+
+        return $result;
     }
 
     /**
