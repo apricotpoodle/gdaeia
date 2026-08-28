@@ -6,7 +6,7 @@
 import { TabulatorBuilder } from './TabulatorBuilder.js';
 import { ColumnsFactory } from './ColumnsFactory.js'; // inutile à terme car définitions des colonnes déléguée *-columns.js
 import { getApplicationformColumns } from '../../views/Applicationforms/applicationform-columns.js';
-
+import { getMenusColumns } from '../../views/Menus/menus-columns.js';
 
 /**
  * @class TabulatorFactory
@@ -131,4 +131,34 @@ export class TabulatorFactory {
             .setWithActions(['view', 'edit', 'delete'])
             .build();
     }
+
+    /**
+         * Fabrique dédiée à la configuration de l'arbre des Menus (MENUS).
+         * @static
+         * @param {string} [selector="#menus-grid"] - Le sélecteur CSS cible.
+         * @returns {Tabulator} L'instance finale de la grille Tabulator.
+         */
+    static createMenusGrid(selector = "#menus-grid") {
+        return this._createActionGrid(selector)
+            .setAjaxSource('/api/menus/grid.json')
+            .setController('menus')
+            .setHeight('calc(100vh - 180px)')
+            .disablePagination()
+            .addOptions({
+                pagination: false,
+                progressiveLoad: false,
+                persistence: false, // Bloque la propagation de l'option aux colonnes
+                dataTree: true,
+                dataTreeStartExpanded: true,
+                dataTreeChildField: "children",
+                layout: "fitColumns",
+                ajaxResponse: function(url, params, response) {
+                    return response.data;
+                }
+            })
+            .setColumns(getMenusColumns())
+            .setWithActions(['edit', 'delete', 'moveUp', 'moveDown'])
+            .build();
+    }
+
 }

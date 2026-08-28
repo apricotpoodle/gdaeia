@@ -3,6 +3,9 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use ArrayObject;
+use Cake\Datasource\EntityInterface;
+use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 
@@ -56,6 +59,23 @@ class MenusTable extends AppTable
         $this->hasMany('RoleMenus', [
             'foreignKey' => 'menu_id',
         ]);
+    }
+
+    /**
+     * Reconstruit automatiquement les index lft/rght de l'arbre intervallaire après chaque modification
+     * afin de prévenir la corruption du B-Tree.
+     *
+     * @param \Cake\Event\EventInterface $event
+     * @param \Cake\ORM\EntityInterface $entity
+     * @param \ArrayObject $options
+     * @return void
+     */
+    public function afterSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
+    {
+        // On ne reconstruit l'arbre que si le parent ou la position a été altéré
+        if ($entity->isNew() || $entity->isDirty('parent_id') || $entity->isDirty('lft') || $entity->isDirty('rght')) {
+            $this->recover();
+        }
     }
 
     /**
