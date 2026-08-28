@@ -31,27 +31,29 @@ export class ButtonFactory {
 
     /**
      * Génère le balisage HTML d'un bouton d'action en prenant en compte ses permissions.
+     *
+     * @param {string} key L'identifiant de l'action
+     * @param {Object} [rowPermissions={}] L'objet des permissions pour la ligne courante
+     * @returns {string} Le balisage HTML du bouton ou une chaîne vide
      */
     static getCellButton(key, rowPermissions = {}) {
         const config = this.#configs[key];
         if (!config) return '';
 
-
-        // 💡 VERROU DE SÉCURITÉ OPT-IN :
-        // 1. On vérifie d'abord si la clé existe explicitement dans rowPermissions.
-        // 2. On s'assure que sa valeur est strictement vraie (true).
-        // Si la clé n'est pas transmise par l'API (ex: 'impersonate' omit en mode usurpation), le bouton N'EST PAS généré.
-        const hasKey = Object.prototype.hasOwnProperty.call(rowPermissions, key);
-        const isAllowed = hasKey && Boolean(rowPermissions[key]);
-        // const isAllowed = rowPermissions[key] !== false;
-
-        // 💡 BAIL EARLY : Si l'action n'est pas autorisée, on ne génère pas de balise HTML
-        if (!isAllowed) {
+        // 💡 VERROU DE SÉCURITÉ (Cross-Browser Chrome/Firefox) :
+        // 1. Validation de l'objet pour éviter les TypeError si rowPermissions est null/undefined (Proxy Tabulator)
+        if (!rowPermissions || typeof rowPermissions !== 'object') {
             return '';
         }
 
-        const target = config.target || '_self';
-        const isEvent = config.isEvent ? 'true' : 'false';
+        // 2. Vérification stricte : la permission doit explicitement valoir `true`.
+        // L'accès direct `rowPermissions[key]` gère mieux les Proxies/Getters que `hasOwnProperty` dans Firefox.
+        const isAllowed = (rowPermissions[key] === true);
+
+        // 💡 BAIL EARLY : Si l'action n'est pas strictement autorisée, on retourne une chaîne vide.
+        if (!isAllowed) {
+            return '';
+        }
 
         return new ButtonBuilder()
             .setColor(config.color)
@@ -61,7 +63,6 @@ export class ButtonFactory {
             .setTitle(config.title)
             .setIcon(`${config.icon} fa-fw`)
             .build();
-
     }
 
     /**
@@ -112,87 +113,4 @@ export class ButtonFactory {
         return dropdown.build();
     }
 
-    /**
-     * Génère le menu d'actions globales pour l'en-tête de la colonne Actions.
-     * @param {Object} globalPermissions - Les permissions globales (ex: {create: true})
-     * @returns {string} Code HTML du menu déroulant d'en-tête
-     */
-    static getHeaderDropdown_backup2(globalPermissions = {}) {
-        const canCreate = globalPermissions.create === true;
-
-        // 1. Bouton "Créer un enregistrement"
-        let createItemHtml = '';
-        if (canCreate) {
-            const createBtnHtml = new ButtonBuilder()
-                .setClasses(['dropdown-item', 'text-success', 'action-create', 'fw-bold'])
-                .setAction('create')
-                .setIcon('fas fa-plus-circle me-2')
-                .setText('Créer un enregistrement')
-                .build();
-
-            createItemHtml = `
-                <li>${createBtnHtml}</li>
-                <li><hr class="dropdown-divider"></li>
-            `;
-        }
-
-        // 2. Bouton "Réinitialiser les filtres"
-        const resetBtnHtml = new ButtonBuilder()
-            .setClasses(['dropdown-item', 'text-warning', 'action-reset', 'fw-bold'])
-            .setAction('reset')
-            .setIcon('fas fa-undo me-2')
-            .setText('Réinitialiser les filtres')
-            .build();
-
-        return `
-            <div class="dropdown d-flex align-items-center justify-content-center" style="position: relative;">
-                <button class="btn shadow-sm btn-sm btn-danger action-menu-btn" type="button" title="Menu des actions globales">
-                    <i class="fas fa-cog"></i>
-                </button>
-                <ul class="dropdown-menu shadow position-absolute" style="top: 100%; right: 0; z-index: 9999; margin-top: 5px; display: none;">
-                    ${createItemHtml}
-                    <li>${resetBtnHtml}</li>
-                </ul>
-                <span class="fw-bold ms-2">Actions</span>
-            </div>
-        `;
-    }
-
-    /**
-     * Génère le menu d'actions globales pour l'en-tête de la colonne Actions.
-     * @param {Object} globalPermissions - Les permissions globales (ex: {create: true})
-     * @returns {string} Code HTML du menu déroulant manuel d'en-tête
-     */
-    static getHeaderDropdown_backup(globalPermissions = {}) {
-        const canCreate = globalPermissions.create === true;
-
-        // 💡 On ne génère le bouton "Créer" que s'il est autorisé
-        const createItemHtml = canCreate ? `
-                    <li>
-                        <button class="dropdown-item text-success action-create fw-bold"
-                                data-action="create"
-                                type="button">
-                            <i class="fas fa-plus-circle me-2"></i> Créer un enregistrement
-                        </button>
-                    </li>
-                    <li><hr class="dropdown-divider"></li>
-        ` : '';
-
-        return `
-            <div class="dropdown d-flex align-items-center justify-content-center" style="position: relative;">
-                <button class="btn shadow-sm btn-sm btn-danger action-menu-btn" type="button" title="Menu des actions globales">
-                    <i class="fas fa-cog"></i>
-                </button>
-                <ul class="dropdown-menu shadow position-absolute" style="top: 100%; right: 0; z-index: 9999; margin-top: 5px; display: none;">
-                    ${createItemHtml}
-                    <li>
-                        <button class="dropdown-item text-warning action-reset fw-bold" data-action="reset" type="button">
-                            <i class="fas fa-undo me-2"></i> Réinitialiser les filtres
-                        </button>
-                    </li>
-                </ul>
-                <span class="fw-bold ms-2">Actions</span>
-            </div>
-        `;
-    }
 }
