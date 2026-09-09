@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller;
@@ -60,6 +61,7 @@ class MenusController extends AppController
      */
     public function edit(string $id): ?Response
     {
+        // $this->request->allowMethod(['get']);
         $menu = $this->Menus->get($id);
         $this->Authorization->authorize($menu, 'edit');
 
@@ -86,18 +88,14 @@ class MenusController extends AppController
      */
     public function moveUp(string $id): ?Response
     {
+        $ms_mvup = 'Le menu a été monté avec succès.';
+        $me_mvup = 'Impossible de monter le menu (déjà au niveau le plus haut)';
         $this->request->allowMethod(['post', 'put']);
         $menu = $this->Menus->get($id);
         $this->Authorization->authorize($menu, 'moveUp');
 
-        $success = false;
-        if ($this->Menus->moveUp($menu)) {
-            $this->Menus->recover();
-            $success = true;
-            $message = __('Le menu a été monté avec succès.');
-        } else {
-            $message = __('Impossible de monter ce menu (déjà au niveau le plus haut).');
-        }
+        $success = $this->Menus->moveUp($menu);
+        $message = $success ? __($ms_mvup) : __($me_mvup);
 
         if ($this->request->is('ajax') || $this->request->accepts('application/json')) {
             return $this->response->withType('application/json')
@@ -117,18 +115,14 @@ class MenusController extends AppController
      */
     public function moveDown(string $id): ?Response
     {
+        $ms_mvdn = 'Le menu a été descendu avec succès.';
+        $me_mvdn = 'Impossible de descendre le menu (déjà au niveau le plus bas)';
         $this->request->allowMethod(['post', 'put']);
         $menu = $this->Menus->get($id);
         $this->Authorization->authorize($menu, 'moveDown');
 
-        $success = false;
-        if ($this->Menus->moveDown($menu)) {
-            $this->Menus->recover();
-            $success = true;
-            $message = __('Le menu a été descendu avec succès.');
-        } else {
-            $message = __('Impossible de descendre ce menu (déjà au niveau le plus bas).');
-        }
+        $success = $this->Menus->moveDown($menu);
+        $message = $success ? $ms_mvdn : $me_mvdn;
 
         if ($this->request->is('ajax') || $this->request->accepts('application/json')) {
             return $this->response->withType('application/json')
@@ -170,5 +164,4 @@ class MenusController extends AppController
         $success ? $this->Flash->success($message) : $this->Flash->error($message);
         return $this->redirect(['action' => 'index']);
     }
-
 }

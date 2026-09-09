@@ -46,7 +46,11 @@ class MenusTable extends AppTable
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
 
-        $this->addBehavior('Tree');
+        $this->addBehavior('Tree',
+            [
+                'level'=>'level', // Default to null, i.e. no level saving
+            ]
+        );
 
         $this->belongsTo('ParentMenus', [
             'className' => 'Menus',

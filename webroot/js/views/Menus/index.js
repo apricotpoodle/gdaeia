@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (!recordId) {
+        if (!recordId && action !== 'create') {
             console.warn('[CRUD Menus] Impossible de résoudre l\'ID pour l\'action :', action);
             return;
         }
@@ -135,7 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'moveDown':
                 moveMenuNode(action, recordId);
                 break;
-
+            case 'create':
+                window.location.href = '/menus/add';
+                break;
             default:
                 console.warn('[CRUD Menus] Action non gérée :', action);
                 break;

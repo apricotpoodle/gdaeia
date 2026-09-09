@@ -8,8 +8,11 @@ import { ColumnsFactory } from '/js/core/Tabulator/ColumnsFactory.js';
 export function getMenusColumns() {
     return [
         ColumnsFactory.id({ visible: true }),
-        ColumnsFactory.text('name', 'Nom'),
+        ColumnsFactory.text('level', 'Niveau',{'width':50}),
+        ColumnsFactory.text('name', 'Nom',{'width':500}),
         ColumnsFactory.text('url', 'URL'),
-        ColumnsFactory.boolean('active', 'Actif')
+        ColumnsFactory.boolean('dividor_before', 'Diviseur'),
+        ColumnsFactory.boolean('disabled', 'Grisé'),
+        ColumnsFactory.boolean('active', 'Actif'),
     ];
 }
