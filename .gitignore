@@ -50,6 +50,9 @@ nbproject/*
 # yarn
 yarn-debug.log
 yarn-error.log
+# IA opencode
+# IA oh-my-openagents
+/.omo/
 
 # Fichiers d'environnement (Secrets)
 .env
