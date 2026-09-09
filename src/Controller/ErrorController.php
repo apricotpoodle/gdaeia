@@ -43,6 +43,14 @@ class ErrorController extends AppController
      */
     public function beforeFilter(EventInterface $event): void
     {
+        // 🛡️ CORRECTION : On demande directement au composant (s'il est attaché à la requête)
+        // d'ignorer l'autorisation. Cela empêche le middleware de masquer la VRAIE erreur.
+        // En effet les pages d'erreur doivent TOUJOURS s'afficher
+        // the appcontroller load authorization for every controller and errorcontroller don't need it.
+        $authorization = $this->getRequest()->getAttribute('authorization');
+        if ($authorization) {
+            $authorization->skipAuthorization();
+        }
     }
 
     /**

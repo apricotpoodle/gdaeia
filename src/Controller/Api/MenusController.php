@@ -36,7 +36,7 @@ class MenusController extends AppController
      * @param \Cake\Event\EventInterface $event L'événement en cours.
      * @return \Cake\Http\Response|null|void
      */
-    public function beforeFilter(EventInterface $event)
+    public function beforeFilter(EventInterface $event) : void
     {
         parent::beforeFilter($event);
         $this->Authorization->skipAuthorization(['index']);

@@ -33,7 +33,7 @@ class FieldAuthorizationsController extends AppController
     /**
      * Bypass propre du middleware strict pour l'action index
      */
-    public function beforeFilter(EventInterface $event)
+    public function beforeFilter(EventInterface $event) : void
     {
         parent::beforeFilter($event);
         $this->Authorization->skipAuthorization(['index']);

@@ -26,7 +26,7 @@ class ApplicationformsController extends AppController
         $this->viewBuilder()->setClassName('Json');
     }
 
-    public function beforeFilter(EventInterface $event)
+    public function beforeFilter(EventInterface $event) : void
     {
         parent::beforeFilter($event);
         $this->Authorization->skipAuthorization(['index', 'getFormSchema']);

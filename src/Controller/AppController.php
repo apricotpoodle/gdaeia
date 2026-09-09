@@ -18,8 +18,10 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Controller\Controller;
+use Cake\Controller\ErrorController;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
+
 
 /**
  * Application Controller
@@ -109,6 +111,32 @@ class AppController extends Controller
                 'columns' => $columns,
             ];
         };
+    }
+
+    /**
+     * Callback beforeFilter - Exécuté avant chaque action de contrôleur.
+     */
+    public function beforeFilter(EventInterface $event): void
+    {
+        parent::beforeFilter($event);
+
+        /** @var \Cake\Http\ServerRequest $request */
+        $request = $this->getRequest();
+
+        // 🛡️ PASSERELLE DE SÉCURITÉ : Isolation de DebugKit ET de ErrorController
+        // Permet l'affichage des erreurs HTTP (ex: 404 levée par ->get())
+        // sans faire planter le middleware d'autorisation.
+        if ($request->getParam('plugin') === 'DebugKit' || $this instanceof ErrorController) {
+
+            if ($this->components()->has('Authorization')) {
+                $this->Authorization->skipAuthorization();
+            }
+
+            // Garantit que la page d'erreur est toujours rendue, même hors session
+            if ($this->components()->has('Authentication')) {
+                $this->Authentication->addUnauthenticatedActions([$request->getParam('action') ?? '*']);
+            }
+        }
     }
 
     // /**
