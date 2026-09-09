@@ -18,6 +18,7 @@ use Authorization\Policy\ResultInterface;
  * @property string|null $lastname
  * @property string $email
  * @property string|null $username
+ * @property bool $issuperuser
  * @property \Cake\I18n\DateTime|null $created
  * @property \Cake\I18n\DateTime|null $modified
  *
@@ -72,6 +73,19 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
         $name = trim($firstname . ' ' . $lastname);
 
         return $name;
+    }
+
+    /**
+     * Indique si l'opérateur est un super admin
+     *
+     * @return bool Vrai si l'utilisateur possède le flag issuperuser à vrai
+    */
+    public function isSuperUser(){
+        if (!isset($this->issuperuser)) {
+            return false;
+        }
+
+        return $this->issuperuser;
     }
 
     /**

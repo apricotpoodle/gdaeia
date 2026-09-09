@@ -12,19 +12,8 @@ use Authorization\IdentityInterface;
  *
  * Politiques d'accès pour les demandes de recrutement (Applicationforms).
  */
-class ApplicationformPolicy
+class ApplicationformPolicy extends AppPolicy
 {
-    /**
-     * Méthode utilitaire DRY : Extrait et garantit le type de l'identité connectée.
-     * Si l'identité n'est pas un humain (ex: un démon système ou une API), renvoie null.
-     */
-    private function getValidUser(IdentityInterface $identity): ?User
-    {
-        $user = $identity->getOriginalData();
-
-        return $user instanceof User ? $user : null;
-    }
-
     /**
      * Autorisation pour la liste (index)
      *
@@ -183,8 +172,8 @@ class ApplicationformPolicy
         }
 
         // Exemple : Accessible aux Admins, RH et Créateurs
-        return $user->get('issuperuser') 
-            || $applicationform->user_id === $user->id 
+        return $user->get('issuperuser')
+            || $applicationform->user_id === $user->id
             || in_array($user->get('role_id'), [User::ROLE_ADMIN, User::ROLE_2_VALIDEUR_RRH, User::ROLE_3_VALIDEUR_DRH]);
     }
 
@@ -202,7 +191,7 @@ class ApplicationformPolicy
             return false;
         }
 
-        return $user->get('issuperuser') 
+        return $user->get('issuperuser')
             || in_array($user->get('role_id'), [User::ROLE_ADMIN, User::ROLE_2_VALIDEUR_RRH, User::ROLE_3_VALIDEUR_DRH]);
     }
 
@@ -221,7 +210,7 @@ class ApplicationformPolicy
             return false;
         }
 
-        return $user->get('issuperuser') 
+        return $user->get('issuperuser')
             || in_array($user->get('role_id'), [User::ROLE_ADMIN, User::ROLE_2_VALIDEUR_RRH, User::ROLE_3_VALIDEUR_DRH, User::ROLE_4_VALIDEUR_CG]);
     }
 

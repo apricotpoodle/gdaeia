@@ -366,10 +366,21 @@ class UsersController extends AppController
 
             return $this->redirect(['action' => 'index']);
         }
+
+        /** @var Use $targerUser */
         $targetUser = $this->Users->get($id);
         $this->Authorization->authorize($targetUser, 'impersonate');
 
+        /** @var \Cake\Authorization\IdentityInterface $currentIdentity */
+        $currentIdentity = $this->Authentication->getIdentity();
+
+        // Injection des métadonnées d'impersonation sur l'entité cible
+        $targetUser->set('is_impersonating', true);
+        $targetUser->set('original_admin_id', $currentIdentity->getIdentifier());
+
         $this->Authentication->impersonate($targetUser);
+
+        $this->Flash->success(__('Vous êtes maintenant connecté en tant que {0}', $targetUser->displayName));
 
         return $this->redirect('/');
     }
