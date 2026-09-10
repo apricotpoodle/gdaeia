@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use App\Model\Table\DepartmentsTable;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
 use Cake\Datasource\EntityInterface;
@@ -50,6 +51,7 @@ class ApplicationformsController extends AppController
         $schema = $service->getFieldSchema($identity, 'Applicationforms');
 
         // Instanciation des tables
+        /** @var DepartmentsTable $departmentsTable **/
         $departmentsTable = TableRegistry::getTableLocator()->get('Departments');
         $contracttypesTable = TableRegistry::getTableLocator()->get('Contracttypes');
         $hiringreasonsTable = TableRegistry::getTableLocator()->get('Hiringreasons');

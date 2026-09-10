@@ -23,7 +23,7 @@ class ApplicationformCreateForm {
             .then(response => response.json())
             .then(payload => {
                 this.schema = payload.schema || {};
-                this.hydrateSelect('department-id', payload.departments || {});
+                // this.hydrateSelect('department-id', payload.departments || {});
                 this.hydrateSelect('contracttype-id', payload.contracttypes || {});
                 this.hydrateSelect('hiringreason-id', payload.hiringreasons || {});
                 this.hydrateSelect('professionalcategory-id', payload.professionalcategories || {});
@@ -70,6 +70,13 @@ class ApplicationformCreateForm {
         e.preventDefault();
         const formData = new FormData(this.formElement);
         const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
+
+        // FIX : Garantie d'extraction du CGR. Un champ en lecture seule ou manipulé dynamiquement
+        // peut parfois être ignoré selon la configuration de la vue CakePHP.
+        const cgrFinalInput = document.getElementById('cgr-final-input');
+        if (cgrFinalInput) {
+            formData.set('cgr', cgrFinalInput.value);
+        }
 
         try {
             const response = await fetch('/api/applicationforms/add.json', {

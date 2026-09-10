@@ -16,7 +16,7 @@ $this->assign('title', __('Ajouter un Utilisateur'));
 // Chargement du CSS et du JS vendor Treeselect
 $this->Html->css('vendor/treeselect/treeselectjs.css', ['block' => true]);
 $this->Html->script('vendor/treeselect/treeselectjs.umd.js', ['block' => 'scriptBottom']);
-$this->Html->script('views/Users/user-departments-tree.js', ['block' => 'scriptBottom']);
+$this->Html->script('views/Users/user-departments-tree.js', ['type'=> 'module', 'block' => 'scriptBottom']);
 ?>
 
 <div class="row">

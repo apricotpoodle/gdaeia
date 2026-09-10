@@ -9,6 +9,7 @@ use App\Service\Security\FieldAuthorizationService;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
+use Cake\Log\Log;
 use DateTime;
 use Exception;
 
@@ -128,13 +129,26 @@ class UsersController extends AppController
      *
      * @return \Cake\Http\Response|null Redirection en cas de succès ou rendu du formulaire.
      */
+    /**
+     * Action Add (GET/POST /users/add)
+     * Création d'un utilisateur et association avec son périmètre de départements.
+     *
+     * @return \Cake\Http\Response|null Redirection en cas de succès ou rendu du formulaire.
+     */
     public function add(): ?Response
     {
         $user = $this->Users->newEmptyEntity();
         $this->Authorization->authorize($user, 'add');
 
         if ($this->request->is('post')) {
-            $user = $this->Users->patchEntity($user, $this->request->getData(), [
+            $rawParams = $this->request->getData();
+
+            // 💡 FIX : Garantit que la clé user_departments est un tableau (même vide)
+            if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
+                $rawParams['user_departments'] = [];
+            }
+
+            $user = $this->Users->patchEntity($user, $rawParams, [
                 'associated' => ['UserDepartments'],
             ]);
 
@@ -158,9 +172,9 @@ class UsersController extends AppController
             ->orderBy(['Roles.name' => 'ASC'])
             ->toArray();
 
-        // Récupération de l'arborescence des départements autorisés selon le périmètre de l'opérateur
+        // Récupération de l'arborescence des départements autorisés
         $departmentsTree = $this->fetchTable('Departments')->findTreeSelectFormat($currentUser);
-        $selectedDepartmentIds = [];
+        $selectedDepartmentIds = []; // Vide par défaut lors d'une création
 
         $this->set(compact('user', 'roles', 'fieldSchema', 'departmentsTree', 'selectedDepartmentIds'));
 
@@ -180,15 +194,40 @@ class UsersController extends AppController
         $this->Authorization->authorize($user, 'edit');
 
         if ($this->request->is(['post', 'put', 'patch'])) {
-            $user = $this->Users->patchEntity($user, $this->request->getData(), [
+            $rawParams = $this->request->getData();
+
+            // ==============================================================
+            // 🛠️ DÉBUT DES LOGS D'ANALYSE (CONTROLEUR WEB)
+            // ==============================================================
+            Log::debug("========== EDITION USER (WEB) #{$id} ==========");
+            Log::debug("1. [HTTP POST] Données brutes reçues pour user_departments : \n" . print_r($rawParams['user_departments'] ?? 'CLÉ ABSENTE', true));            // 💡 FIX : Gestion du cas "Tout décoché"
+
+            if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
+                $rawParams['user_departments'] = [];
+            }
+
+            $user = $this->Users->patchEntity($user, $rawParams, [
                 'associated' => ['UserDepartments'],
             ]);
 
-            if ($this->Users->save($user)) {
-                $this->Flash->success(__('L\'utilisateur #{0} a été mis à jour avec succès.', $user->id));
+            Log::debug("2. [ORM PATCH] Entité après hydratation (Que contient-elle ?) : \n" . print_r($user->user_departments, true));
 
+            if ($user->hasErrors()) {
+                Log::error("🚨 [ORM ERRORS] L'entité User refuse l'enregistrement : \n" . print_r($user->getErrors(), true));
+            }
+            if ($this->Users->save($user)) {
+                Log::debug("3. [ORM SAVE] Sauvegarde réussie en Base de données !");
+                Log::debug("=========================================\n");
+                $this->Flash->success(__('L\'utilisateur #{0} a été mis à jour avec succès.', $user->id));
                 return $this->redirect(['action' => 'index']);
             }
+
+            Log::error("3. [ORM SAVE] Sauvegarde ÉCHOUÉE !");
+            Log::debug("=========================================\n");
+            // ==============================================================
+            // 🛠️ FIN DES LOGS D'ANALYSE
+            // ==============================================================
+
             $this->Flash->error(__('Impossible de mettre à jour l\'utilisateur. Veuillez corriger les erreurs.'));
         }
 

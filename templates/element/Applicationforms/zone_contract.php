@@ -56,6 +56,7 @@ $isEditable = function (string $field) use ($fieldSchema): bool {
                     'label' => false,
                     'class' => 'form-select',
                     'id' => 'hiringreason-id',
+                    'data-selected' => $applicationform->hiringreason_id, // 👈 Ajout indispensable
                     'disabled' => !$isEditable('hiringreason_id'),
                     'required' => true,
                 ]) ?>
