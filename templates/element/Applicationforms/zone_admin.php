@@ -13,6 +13,8 @@
 
 // Chargement du script de gestion dynamique du candidat
 $this->Html->script('views/Applicationforms/applicationform-candidate', ['block' => true]);
+// Chargement du script de gestion dynamique du CGR
+$this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => true]);
 ?>
 
 <div class="card shadow-sm border-0 mb-3">
@@ -50,8 +52,32 @@ $this->Html->script('views/Applicationforms/applicationform-candidate', ['block'
             <!-- Sélection du Département -->
             <div class="col-md-12">
                 <label class="form-label fs-7 fw-medium"><?= __('Département') ?></label>
+                <!-- Le composant visuel Treeselect s'accroche ici : -->
                 <div id="department-tree-select"></div>
+
+                <!-- L'input CakePHP doit impérativement être masqué (hidden) : -->
                 <?= $this->Form->hidden('department_id', ['id' => 'department-id']) ?>
+            </div>
+
+            <!-- Saisie dynamique du Code CGR -->
+            <div class="col-md-12 mt-2">
+                <label class="form-label fs-7 fw-medium text-primary">
+                    <i class="fa-solid fa-sitemap me-1"></i> <?= __('Code CGR') ?>
+                </label>
+
+                <!-- 1. Conteneur vide où le JavaScript injectera les select (Secteur, Axe, etc.) -->
+                <div id="cgr-components-container" class="d-flex flex-wrap gap-2 mb-2"></div>
+
+                <!-- 2. Champ cible lu par CakePHP lors de la sauvegarde -->
+                <?= $this->Form->control('cgr', [
+                    'id' => 'cgr-final-input',
+                    'type' => 'text',
+                    'label' => false,
+                    'class' => 'form-control form-control-sm bg-light',
+                    'readonly' => true,
+                    'disabled' => !$canEditAdmin,
+                    'placeholder' => __('Sélectionnez d\'abord un département...')
+                ]) ?>
             </div>
 
         </div>

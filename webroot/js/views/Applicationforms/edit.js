@@ -24,7 +24,7 @@ class ApplicationformEditForm {
             .then(response => response.json())
             .then(payload => {
                 this.schema = payload.schema || {};
-                this.hydrateSelect('department-id', payload.departments || {});
+                // this.hydrateSelect('department-id', payload.departments || {});
                 this.hydrateSelect('contracttype-id', payload.contracttypes || {});
                 this.hydrateSelect('hiringreason-id', payload.hiringreasons || {});
                 this.hydrateSelect('professionalcategory-id', payload.professionalcategories || {});
@@ -46,18 +46,44 @@ class ApplicationformEditForm {
 
     hydrateSelect(elementId, items) {
         const select = document.getElementById(elementId);
-        if (!select) return;
+        // 1. S'assurer que l'élément existe et qu'il s'agit bien d'une balise <select>
+        if (!select || select.tagName !== 'SELECT') return;
 
-        const selectedValue = select.dataset.selected;
+        // 2. Récupérer la valeur actuellement sélectionnée (priorité à la valeur du DOM ou au dataset)
+        const currentSelectedValue = select.value || select.dataset.selected || '';
+
+        // 3. Ne ré-hydrater que si le select est vide (pour éviter d'écraser le HTML servi par CakePHP)
+        if (select.options.length > 1 && !select.dataset.forceHydrate) {
+            return;
+        }
+
         select.innerHTML = '<option value="">-- Sélectionner --</option>';
+        if (!items) return;
 
-        Object.entries(items).forEach(([id, name]) => {
-            const option = new Option(name, id);
-            if (String(id) === String(selectedValue)) {
-                option.selected = true;
-            }
-            select.add(option);
-        });
+        // 4. Traitement si items est un Tableau d'objets : [{id: 1, name: '...'}, ...]
+        if (Array.isArray(items)) {
+            items.forEach(item => {
+                const id = item.id !== undefined ? item.id : item.value;
+                const label = item.name || item.label || item.code || id;
+
+                const option = new Option(label, id);
+                if (String(id) === String(currentSelectedValue)) {
+                    option.selected = true;
+                }
+                select.add(option);
+            });
+        } else {
+            // 5. Traitement si items est un Dictionnaire : { "1": "Nom", ... }
+            Object.entries(items).forEach(([id, name]) => {
+                const label = (typeof name === 'object') ? (name.name || name.label || id) : name;
+
+                const option = new Option(label, id);
+                if (String(id) === String(currentSelectedValue)) {
+                    option.selected = true;
+                }
+                select.add(option);
+            });
+        }
     }
 
     applyFieldAuthorizations() {

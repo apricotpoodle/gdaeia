@@ -1,5 +1,6 @@
 /**
- * Initialisation du Treeselect pour le choix du département dans la Zone 1.
+ * @file applicationform-treeselect.js
+ * @description Initialisation du Treeselect avec verrou synchrone et cast des types.
  */
 document.addEventListener('DOMContentLoaded', async function () {
     const container = document.getElementById('department-tree-select');
@@ -7,8 +8,17 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     if (!container || !hiddenInput) return;
 
+    if (container.dataset.treeselectInit === "true") {
+        return;
+    }
+    container.dataset.treeselectInit = "true";
+    container.innerHTML = '';
+
+    // 🔍 DEBUG: On inspecte ce que CakePHP a mis dans l'input (Mode Édition)
+    console.log("🌳 [Treeselect] Valeur brute du DOM (hiddenInput.value) :", hiddenInput.value);
+    console.log("🌳 [Treeselect] Type brut :", typeof hiddenInput.value);
+
     try {
-        // 1. Récupération du schéma via l'API
         const response = await fetch('/api/applicationforms/get-form-schema.json', {
             headers: {
                 'Accept': 'application/json',
@@ -16,32 +26,40 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        if (!response.ok) {
-            throw new Error('Erreur lors de la récupération du schéma');
-        }
-
+        if (!response.ok) throw new Error('Erreur API Schéma');
         const data = await response.json();
 
-        // 2. Initialisation de TreeselectJS avec l'arbre natif fourni par l'API
         if (window.Treeselect && data.departments) {
-            const currentValue = hiddenInput.value ? String(hiddenInput.value) : null;
+
+            // 💡 CORRECTION DU TYPE : On convertit la chaîne "71" en entier 71
+            // pour que Treeselect reconnaisse l'ID qui correspond au JSON.
+            let currentValue = hiddenInput.value ? hiddenInput.value : null;
+
+            if (currentValue !== null && !isNaN(currentValue)) {
+                currentValue = Number(currentValue);
+            }
+
+            console.log("🌳 [Treeselect] Valeur castée passée au composant (currentValue) :", currentValue);
+            console.log("🌳 [Treeselect] Type casté :", typeof currentValue);
 
             const treeselect = new window.Treeselect({
                 parentHtmlContainer: container,
                 value: currentValue,
-                options: data.departments, // Transmission directe du tableau hiérarchique de l'API
+                options: data.departments,
                 isSingleSelect: true,
-                openLevel: 2, // Ouvre automatiquement les 2 premiers niveaux de l'arbre
+                openLevel: 2,
                 placeholder: 'Sélectionner un département...'
             });
 
-            // Synchronisation avec le champ caché CakePHP lors de la sélection
+            // Écouteur sur la sélection du Treeselect
             treeselect.srcElement.addEventListener('input', (e) => {
-                const selectedValue = e.detail;
+                const selectedValue = Array.isArray(e.detail) ? e.detail[0] : e.detail;
                 hiddenInput.value = selectedValue || '';
 
-                // Informe le script CGR que le département a changé
-                hiddenInput.dispatchEvent(new Event('change'));
+                console.log(`[1] Treeselect: Sélection modifiée, nouvel ID = ${hiddenInput.value}`);
+
+                // Émission de l'événement change pour réveiller le script CGR
+                hiddenInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
             });
         }
     } catch (error) {
