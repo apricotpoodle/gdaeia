@@ -9,7 +9,9 @@ use App\Service\Security\FieldAuthorizationService;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
+use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
+
 
 /**
  * Class UsersController (API)
@@ -85,19 +87,21 @@ class UsersController extends AppController
         $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
 
         $user = $this->Users->newEmptyEntity();
-
         $authService = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
 
         $schema = $authService->getFieldSchema($identity, 'Users');
-
-        // Autoriser la présence de l'association user_departments dans le filtre ACL
         $schema['user_departments'] = 'EDIT';
 
         $rawParams = $this->request->getData();
+
+        // 💡 FIX : Maintien du tableau user_departments s'il est transmis
+        if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
+            $rawParams['user_departments'] = [];
+        }
+
         $filteredData = $authService->filterRequestData($rawParams, $schema);
 
-        // Intégration et association ORM des départements
         $user = $this->Users->patchEntity($user, $filteredData, [
             'associated' => ['UserDepartments'],
         ]);
@@ -129,19 +133,55 @@ class UsersController extends AppController
         $schema = $authService->getFieldSchema($identity, 'Users');
         $schema['user_departments'] = 'EDIT';
 
-        $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
+        $rawParams = $this->request->getData();
+        // ==============================================================
+        // 🛠️ DÉBUT DES LOGS D'ANALYSE
+        // ==============================================================
+        Log::debug("========== EDITION USER #{$id} ==========");
+        Log::debug("1. [HTTP POST] Données brutes reçues pour user_departments : \n" . print_r($rawParams['user_departments'] ?? 'CLÉ ABSENTE', true));
+
+        // 💡 FIX : Forcer la présence du tableau vide si tous les départements ont été décochés
+        if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
+            $rawParams['user_departments'] = [];
+        }
+
+        $filteredData = $authService->filterRequestData($rawParams, $schema);
+        Log::debug("2. [SECURITY SERVICE] Données après filtrage : \n" . print_r($filteredData['user_departments'] ?? 'PURGÉ PAR LE SERVICE', true));
 
         $user = $this->Users->patchEntity($user, $filteredData, [
             'associated' => ['UserDepartments'],
         ]);
 
+
+
+
+        // if ($this->Users->save($user)) {
+        //     return $this->response->withType('application/json')
+        //         ->withStringBody(json_encode(['success' => true]));
+        // }
+
+        Log::debug("3. [ORM PATCH] Entité après hydratation (Que contient-elle ?) : \n" . print_r($user->user_departments, true));
+
+        if ($user->hasErrors()) {
+            Log::error("🚨 [ORM ERRORS] L'entité User refuse l'enregistrement pour les raisons suivantes : \n" . print_r($user->getErrors(), true));
+        }
+
         if ($this->Users->save($user)) {
+            Log::debug("4. [ORM SAVE] Sauvegarde réussie en Base de données !");
+            Log::debug("=========================================\n");
+
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode(['success' => true]));
         }
 
+        Log::error("4. [ORM SAVE] Sauvegarde ÉCHOUÉE !");
+        Log::debug("=========================================\n");
+        // ==============================================================
+        // 🛠️ FIN DES LOGS D'ANALYSE
+        // ==============================================================
         return $this->handleValidationError($user);
     }
+
 
     /**
      * Méthode Index (GET /api/users.json)
