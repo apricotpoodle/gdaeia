@@ -408,7 +408,11 @@ class MenusTable extends AppTable
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
 
-        $this->addBehavior('Tree');
+        $this->addBehavior('Tree',
+            [
+                'level'=>'level', // Default to null, i.e. no level saving
+            ]
+        );
 
         $this->belongsTo('ParentMenus', [
             'className' => 'Menus',
@@ -4374,10 +4378,6 @@ class Applicationvalidationstep extends Entity
 -e 
 === END_FILE ===
 
-=== FILE: src/Model/Entity/toto/tutu.php ===
--e 
-=== END_FILE ===
-
 === FILE: src/Model/Entity/Worktime.php ===
 <?php
 declare(strict_types=1);
@@ -7222,6 +7222,7 @@ use App\Service\Security\FieldAuthorizationService;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
+use Cake\Log\Log;
 use DateTime;
 use Exception;
 
@@ -7341,13 +7342,26 @@ class UsersController extends AppController
      *
      * @return \Cake\Http\Response|null Redirection en cas de succès ou rendu du formulaire.
      */
+    /**
+     * Action Add (GET/POST /users/add)
+     * Création d'un utilisateur et association avec son périmètre de départements.
+     *
+     * @return \Cake\Http\Response|null Redirection en cas de succès ou rendu du formulaire.
+     */
     public function add(): ?Response
     {
         $user = $this->Users->newEmptyEntity();
         $this->Authorization->authorize($user, 'add');
 
         if ($this->request->is('post')) {
-            $user = $this->Users->patchEntity($user, $this->request->getData(), [
+            $rawParams = $this->request->getData();
+
+            // 💡 FIX : Garantit que la clé user_departments est un tableau (même vide)
+            if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
+                $rawParams['user_departments'] = [];
+            }
+
+            $user = $this->Users->patchEntity($user, $rawParams, [
                 'associated' => ['UserDepartments'],
             ]);
 
@@ -7371,9 +7385,9 @@ class UsersController extends AppController
             ->orderBy(['Roles.name' => 'ASC'])
             ->toArray();
 
-        // Récupération de l'arborescence des départements autorisés selon le périmètre de l'opérateur
+        // Récupération de l'arborescence des départements autorisés
         $departmentsTree = $this->fetchTable('Departments')->findTreeSelectFormat($currentUser);
-        $selectedDepartmentIds = [];
+        $selectedDepartmentIds = []; // Vide par défaut lors d'une création
 
         $this->set(compact('user', 'roles', 'fieldSchema', 'departmentsTree', 'selectedDepartmentIds'));
 
@@ -7393,15 +7407,40 @@ class UsersController extends AppController
         $this->Authorization->authorize($user, 'edit');
 
         if ($this->request->is(['post', 'put', 'patch'])) {
-            $user = $this->Users->patchEntity($user, $this->request->getData(), [
+            $rawParams = $this->request->getData();
+
+            // ==============================================================
+            // 🛠️ DÉBUT DES LOGS D'ANALYSE (CONTROLEUR WEB)
+            // ==============================================================
+            Log::debug("========== EDITION USER (WEB) #{$id} ==========");
+            Log::debug("1. [HTTP POST] Données brutes reçues pour user_departments : \n" . print_r($rawParams['user_departments'] ?? 'CLÉ ABSENTE', true));            // 💡 FIX : Gestion du cas "Tout décoché"
+
+            if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
+                $rawParams['user_departments'] = [];
+            }
+
+            $user = $this->Users->patchEntity($user, $rawParams, [
                 'associated' => ['UserDepartments'],
             ]);
 
-            if ($this->Users->save($user)) {
-                $this->Flash->success(__('L\'utilisateur #{0} a été mis à jour avec succès.', $user->id));
+            Log::debug("2. [ORM PATCH] Entité après hydratation (Que contient-elle ?) : \n" . print_r($user->user_departments, true));
 
+            if ($user->hasErrors()) {
+                Log::error("🚨 [ORM ERRORS] L'entité User refuse l'enregistrement : \n" . print_r($user->getErrors(), true));
+            }
+            if ($this->Users->save($user)) {
+                Log::debug("3. [ORM SAVE] Sauvegarde réussie en Base de données !");
+                Log::debug("=========================================\n");
+                $this->Flash->success(__('L\'utilisateur #{0} a été mis à jour avec succès.', $user->id));
                 return $this->redirect(['action' => 'index']);
             }
+
+            Log::error("3. [ORM SAVE] Sauvegarde ÉCHOUÉE !");
+            Log::debug("=========================================\n");
+            // ==============================================================
+            // 🛠️ FIN DES LOGS D'ANALYSE
+            // ==============================================================
+
             $this->Flash->error(__('Impossible de mettre à jour l\'utilisateur. Veuillez corriger les erreurs.'));
         }
 
@@ -7656,8 +7695,10 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Controller\Controller;
+use Cake\Controller\ErrorController;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
+
 
 /**
  * Application Controller
@@ -7749,6 +7790,32 @@ class AppController extends Controller
         };
     }
 
+    /**
+     * Callback beforeFilter - Exécuté avant chaque action de contrôleur.
+     */
+    public function beforeFilter(EventInterface $event): void
+    {
+        parent::beforeFilter($event);
+
+        /** @var \Cake\Http\ServerRequest $request */
+        $request = $this->getRequest();
+
+        // 🛡️ PASSERELLE DE SÉCURITÉ : Isolation de DebugKit ET de ErrorController
+        // Permet l'affichage des erreurs HTTP (ex: 404 levée par ->get())
+        // sans faire planter le middleware d'autorisation.
+        if ($request->getParam('plugin') === 'DebugKit' || $this instanceof ErrorController) {
+
+            if ($this->components()->has('Authorization')) {
+                $this->Authorization->skipAuthorization();
+            }
+
+            // Garantit que la page d'erreur est toujours rendue, même hors session
+            if ($this->components()->has('Authentication')) {
+                $this->Authentication->addUnauthenticatedActions([$request->getParam('action') ?? '*']);
+            }
+        }
+    }
+
     // /**
     //  * Callback beforeFilter - Exécuté avant chaque action de contrôleur.
     //  * * Cette méthode intercepte la requête pour appliquer des règles de gouvernance globale.
@@ -7803,6 +7870,7 @@ class AppController extends Controller
 
 === FILE: src/Controller/MenusController.php ===
 <?php
+
 declare(strict_types=1);
 
 namespace App\Controller;
@@ -7864,6 +7932,7 @@ class MenusController extends AppController
      */
     public function edit(string $id): ?Response
     {
+        // $this->request->allowMethod(['get']);
         $menu = $this->Menus->get($id);
         $this->Authorization->authorize($menu, 'edit');
 
@@ -7890,18 +7959,14 @@ class MenusController extends AppController
      */
     public function moveUp(string $id): ?Response
     {
+        $ms_mvup = 'Le menu a été monté avec succès.';
+        $me_mvup = 'Impossible de monter le menu (déjà au niveau le plus haut)';
         $this->request->allowMethod(['post', 'put']);
         $menu = $this->Menus->get($id);
         $this->Authorization->authorize($menu, 'moveUp');
 
-        $success = false;
-        if ($this->Menus->moveUp($menu)) {
-            $this->Menus->recover();
-            $success = true;
-            $message = __('Le menu a été monté avec succès.');
-        } else {
-            $message = __('Impossible de monter ce menu (déjà au niveau le plus haut).');
-        }
+        $success = $this->Menus->moveUp($menu);
+        $message = $success ? __($ms_mvup) : __($me_mvup);
 
         if ($this->request->is('ajax') || $this->request->accepts('application/json')) {
             return $this->response->withType('application/json')
@@ -7921,18 +7986,14 @@ class MenusController extends AppController
      */
     public function moveDown(string $id): ?Response
     {
+        $ms_mvdn = 'Le menu a été descendu avec succès.';
+        $me_mvdn = 'Impossible de descendre le menu (déjà au niveau le plus bas)';
         $this->request->allowMethod(['post', 'put']);
         $menu = $this->Menus->get($id);
         $this->Authorization->authorize($menu, 'moveDown');
 
-        $success = false;
-        if ($this->Menus->moveDown($menu)) {
-            $this->Menus->recover();
-            $success = true;
-            $message = __('Le menu a été descendu avec succès.');
-        } else {
-            $message = __('Impossible de descendre ce menu (déjà au niveau le plus bas).');
-        }
+        $success = $this->Menus->moveDown($menu);
+        $message = $success ? $ms_mvdn : $me_mvdn;
 
         if ($this->request->is('ajax') || $this->request->accepts('application/json')) {
             return $this->response->withType('application/json')
@@ -7974,7 +8035,6 @@ class MenusController extends AppController
         $success ? $this->Flash->success($message) : $this->Flash->error($message);
         return $this->redirect(['action' => 'index']);
     }
-
 }
 -e 
 === END_FILE ===
@@ -8025,6 +8085,14 @@ class ErrorController extends AppController
      */
     public function beforeFilter(EventInterface $event): void
     {
+        // 🛡️ CORRECTION : On demande directement au composant (s'il est attaché à la requête)
+        // d'ignorer l'autorisation. Cela empêche le middleware de masquer la VRAIE erreur.
+        // En effet les pages d'erreur doivent TOUJOURS s'afficher
+        // the appcontroller load authorization for every controller and errorcontroller don't need it.
+        $authorization = $this->getRequest()->getAttribute('authorization');
+        if ($authorization) {
+            $authorization->skipAuthorization();
+        }
     }
 
     /**
@@ -8148,6 +8216,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use App\Model\Table\DepartmentsTable;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
 use Cake\Datasource\EntityInterface;
@@ -8170,7 +8239,7 @@ class ApplicationformsController extends AppController
         $this->viewBuilder()->setClassName('Json');
     }
 
-    public function beforeFilter(EventInterface $event)
+    public function beforeFilter(EventInterface $event) : void
     {
         parent::beforeFilter($event);
         $this->Authorization->skipAuthorization(['index', 'getFormSchema']);
@@ -8194,6 +8263,7 @@ class ApplicationformsController extends AppController
         $schema = $service->getFieldSchema($identity, 'Applicationforms');
 
         // Instanciation des tables
+        /** @var DepartmentsTable $departmentsTable **/
         $departmentsTable = TableRegistry::getTableLocator()->get('Departments');
         $contracttypesTable = TableRegistry::getTableLocator()->get('Contracttypes');
         $hiringreasonsTable = TableRegistry::getTableLocator()->get('Hiringreasons');
@@ -8443,7 +8513,9 @@ use App\Service\Security\FieldAuthorizationService;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
+use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
+
 
 /**
  * Class UsersController (API)
@@ -8519,19 +8591,21 @@ class UsersController extends AppController
         $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
 
         $user = $this->Users->newEmptyEntity();
-
         $authService = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
 
         $schema = $authService->getFieldSchema($identity, 'Users');
-
-        // Autoriser la présence de l'association user_departments dans le filtre ACL
         $schema['user_departments'] = 'EDIT';
 
         $rawParams = $this->request->getData();
+
+        // 💡 FIX : Maintien du tableau user_departments s'il est transmis
+        if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
+            $rawParams['user_departments'] = [];
+        }
+
         $filteredData = $authService->filterRequestData($rawParams, $schema);
 
-        // Intégration et association ORM des départements
         $user = $this->Users->patchEntity($user, $filteredData, [
             'associated' => ['UserDepartments'],
         ]);
@@ -8563,19 +8637,55 @@ class UsersController extends AppController
         $schema = $authService->getFieldSchema($identity, 'Users');
         $schema['user_departments'] = 'EDIT';
 
-        $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
+        $rawParams = $this->request->getData();
+        // ==============================================================
+        // 🛠️ DÉBUT DES LOGS D'ANALYSE
+        // ==============================================================
+        Log::debug("========== EDITION USER #{$id} ==========");
+        Log::debug("1. [HTTP POST] Données brutes reçues pour user_departments : \n" . print_r($rawParams['user_departments'] ?? 'CLÉ ABSENTE', true));
+
+        // 💡 FIX : Forcer la présence du tableau vide si tous les départements ont été décochés
+        if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
+            $rawParams['user_departments'] = [];
+        }
+
+        $filteredData = $authService->filterRequestData($rawParams, $schema);
+        Log::debug("2. [SECURITY SERVICE] Données après filtrage : \n" . print_r($filteredData['user_departments'] ?? 'PURGÉ PAR LE SERVICE', true));
 
         $user = $this->Users->patchEntity($user, $filteredData, [
             'associated' => ['UserDepartments'],
         ]);
 
+
+
+
+        // if ($this->Users->save($user)) {
+        //     return $this->response->withType('application/json')
+        //         ->withStringBody(json_encode(['success' => true]));
+        // }
+
+        Log::debug("3. [ORM PATCH] Entité après hydratation (Que contient-elle ?) : \n" . print_r($user->user_departments, true));
+
+        if ($user->hasErrors()) {
+            Log::error("🚨 [ORM ERRORS] L'entité User refuse l'enregistrement pour les raisons suivantes : \n" . print_r($user->getErrors(), true));
+        }
+
         if ($this->Users->save($user)) {
+            Log::debug("4. [ORM SAVE] Sauvegarde réussie en Base de données !");
+            Log::debug("=========================================\n");
+
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode(['success' => true]));
         }
 
+        Log::error("4. [ORM SAVE] Sauvegarde ÉCHOUÉE !");
+        Log::debug("=========================================\n");
+        // ==============================================================
+        // 🛠️ FIN DES LOGS D'ANALYSE
+        // ==============================================================
         return $this->handleValidationError($user);
     }
+
 
     /**
      * Méthode Index (GET /api/users.json)
@@ -8701,7 +8811,7 @@ class MenusController extends AppController
      * @param \Cake\Event\EventInterface $event L'événement en cours.
      * @return \Cake\Http\Response|null|void
      */
-    public function beforeFilter(EventInterface $event)
+    public function beforeFilter(EventInterface $event) : void
     {
         parent::beforeFilter($event);
         $this->Authorization->skipAuthorization(['index']);
@@ -8877,7 +8987,7 @@ class FieldAuthorizationsController extends AppController
     /**
      * Bypass propre du middleware strict pour l'action index
      */
-    public function beforeFilter(EventInterface $event)
+    public function beforeFilter(EventInterface $event) : void
     {
         parent::beforeFilter($event);
         $this->Authorization->skipAuthorization(['index']);
@@ -10942,7 +11052,7 @@ $this->assign('title', __('Éditer l\'Utilisateur #{0}', $user->id));
 // 🚀 CHARGEMENT DES ASSETS TREESELECTJS ET DU SCRIPT DE VUE
 $this->Html->css('vendor/treeselect/treeselectjs.css', ['block' => true]);
 $this->Html->script('vendor/treeselect/treeselectjs.umd.js', ['block' => 'scriptBottom']);
-$this->Html->script('views/Users/user-departments-tree.js', ['block' => 'scriptBottom']);
+$this->Html->script('views/Users/user-departments-tree.js', ['type'=>'module', 'block' => 'scriptBottom']);
 ?>
 
 <div class="row">
@@ -11301,7 +11411,7 @@ $this->assign('title', __('Ajouter un Utilisateur'));
 // Chargement du CSS et du JS vendor Treeselect
 $this->Html->css('vendor/treeselect/treeselectjs.css', ['block' => true]);
 $this->Html->script('vendor/treeselect/treeselectjs.umd.js', ['block' => 'scriptBottom']);
-$this->Html->script('views/Users/user-departments-tree.js', ['block' => 'scriptBottom']);
+$this->Html->script('views/Users/user-departments-tree.js', ['type'=> 'module', 'block' => 'scriptBottom']);
 ?>
 
 <div class="row">
@@ -12024,6 +12134,8 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditReserves): boo
 
 // Chargement du script de gestion dynamique du candidat
 $this->Html->script('views/Applicationforms/applicationform-candidate', ['block' => true]);
+// Chargement du script de gestion dynamique du CGR
+$this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => true]);
 ?>
 
 <div class="card shadow-sm border-0 mb-3">
@@ -12061,8 +12173,32 @@ $this->Html->script('views/Applicationforms/applicationform-candidate', ['block'
             <!-- Sélection du Département -->
             <div class="col-md-12">
                 <label class="form-label fs-7 fw-medium"><?= __('Département') ?></label>
+                <!-- Le composant visuel Treeselect s'accroche ici : -->
                 <div id="department-tree-select"></div>
+
+                <!-- L'input CakePHP doit impérativement être masqué (hidden) : -->
                 <?= $this->Form->hidden('department_id', ['id' => 'department-id']) ?>
+            </div>
+
+            <!-- Saisie dynamique du Code CGR -->
+            <div class="col-md-12 mt-2">
+                <label class="form-label fs-7 fw-medium text-primary">
+                    <i class="fa-solid fa-sitemap me-1"></i> <?= __('Code CGR') ?>
+                </label>
+
+                <!-- 1. Conteneur vide où le JavaScript injectera les select (Secteur, Axe, etc.) -->
+                <div id="cgr-components-container" class="d-flex flex-wrap gap-2 mb-2"></div>
+
+                <!-- 2. Champ cible lu par CakePHP lors de la sauvegarde -->
+                <?= $this->Form->control('cgr', [
+                    'id' => 'cgr-final-input',
+                    'type' => 'text',
+                    'label' => false,
+                    'class' => 'form-control form-control-sm bg-light',
+                    'readonly' => true,
+                    'disabled' => !$canEditAdmin,
+                    'placeholder' => __('Sélectionnez d\'abord un département...')
+                ]) ?>
             </div>
 
         </div>
@@ -12130,6 +12266,7 @@ $isEditable = function (string $field) use ($fieldSchema): bool {
                     'label' => false,
                     'class' => 'form-select',
                     'id' => 'hiringreason-id',
+                    'data-selected' => $applicationform->hiringreason_id, // 👈 Ajout indispensable
                     'disabled' => !$isEditable('hiringreason_id'),
                     'required' => true,
                 ]) ?>
@@ -12404,55 +12541,55 @@ if (!isset($params['escape']) || $params['escape'] !== false) {
 
 === FILE: templates/element/Users/department_select.php ===
 <?php
-declare(strict_types=1);
-
 /**
  * @file templates/element/Users/department_select.php
+ * @description Élément agnostique de sélection d'arborescence pour les départements utilisateurs.
+ *
  * @var \App\View\AppView $this
- * @var array<string, string> $fieldSchema
+ * @var bool $isReadOnly
  * @var array $departmentsTree
  * @var array<int> $selectedDepartmentIds
  */
 
-$accessLevel = $fieldSchema['user_departments'] ?? 'EDIT';
-
-if ($accessLevel === 'HIDE') {
-    return;
-}
-
-$isReadOnly = ($accessLevel === 'READ');
+$isReadOnly = $isReadOnly ?? false;
+$selectedDepartmentIds = $selectedDepartmentIds ?? [];
+$departmentsTree = $departmentsTree ?? [];
 ?>
 
-<div class="mb-3 user-departments-container" id="user-departments-wrapper">
-    <label class="form-label font-weight-bold" for="user-departments-tree">
-        <i class="fa-solid fa-sitemap me-1"></i> <?= __('Départements & Arborescences Autorisés') ?>
-    </label>
-
-    <div id="user-departments-tree"
-         class="treeselect-target"
-         data-readonly="<?= $isReadOnly ? 'true' : 'false' ?>">
-    </div>
-
-    <!-- Inputs cachés formattés pour patchEntity avec HasMany (user_departments.INDEX.department_id) -->
-    <div id="user-departments-hidden-inputs">
-        <?php if (!empty($selectedDepartmentIds)): ?>
-            <?php foreach ($selectedDepartmentIds as $index => $deptId): ?>
-                <input type="hidden" name="user_departments[<?= $index ?>][department_id]" value="<?= h($deptId) ?>">
-            <?php endforeach; ?>
-        <?php endif; ?>
-    </div>
-
-    <small class="form-text text-muted">
-        <?= __('Sélectionnez les départements ou sous-arborescences que cet utilisateur a le droit de visualiser ou d\'administrer.') ?>
-    </small>
+<!-- Conteneur Agnostique TreeselectJS -->
+<div id="user-departments-tree"
+     class="treeselect-target"
+     data-field-name="user_departments"
+     data-foreign-key="department_id"
+     data-hidden-container="user-departments-hidden-inputs"
+     data-data-script="user-departments-data"
+     data-api-url="/api/users/get-form-schema.json"
+     data-placeholder="<?= __('Sélectionner les départements...') ?>"
+     data-readonly="<?= $isReadOnly ? 'true' : 'false' ?>">
 </div>
 
+<!-- Injection des données initiales sous forme de JSON local -->
 <script id="user-departments-data" type="application/json">
-<?= json_encode([
-    'options' => $departmentsTree ?? [],
-    'value' => $selectedDepartmentIds ?? []
-], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>
+    <?= json_encode([
+        'options' => $departmentsTree,
+        'value' => $selectedDepartmentIds
+    ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP) ?>
 </script>
+
+<!-- Conteneur dynamique d'inputs cachés alimenté par TreeSelectAdapter.js -->
+<div id="user-departments-hidden-inputs">
+    <?php if (!empty($selectedDepartmentIds)): ?>
+        <?php foreach ($selectedDepartmentIds as $index => $deptId): ?>
+            <input type="hidden" name="user_departments[<?= $index ?>][department_id]" value="<?= h($deptId) ?>">
+        <?php endforeach; ?>
+    <?php else: ?>
+        <input type="hidden" name="user_departments" value="">
+    <?php endif; ?>
+</div>
+
+<small class="form-text text-muted">
+    <?= __('Sélectionnez les départements ou sous-arborescences que cet utilisateur a le droit de visualiser ou d\'administrer.') ?>
+</small>
 -e 
 === END_FILE ===
 
@@ -14784,6 +14921,224 @@ export class TabulatorFactory {
             .build();
     }
 
+}
+-e 
+=== END_FILE ===
+
+=== FILE: webroot/js/core/TreeSelectAdapter.js ===
+/**
+ * @file webroot/js/core/TreeSelectAdapter.js
+ * @description Adaptateur générique et agnostique pour TreeselectJS.
+ * Compatible avec les relations ORM CakePHP (HasMany / BelongsToMany).
+ */
+
+export class TreeSelectAdapter {
+    /**
+     * @param {HTMLElement} container Élément DOM conteneur (.treeselect-target)
+     */
+    constructor(container) {
+        this.container = container;
+
+        this.fieldName = container.dataset.fieldName;
+        this.foreignKey = container.dataset.foreignKey || 'department_id';
+        this.hiddenContainerId = container.dataset.hiddenContainer;
+        this.dataScriptId = container.dataset.dataScript;
+        this.apiUrl = container.dataset.apiUrl;
+        this.isReadOnly = container.dataset.readonly === 'true';
+        this.placeholder = container.dataset.placeholder || 'Sélectionner...';
+
+        this.hiddenInputsContainer = document.getElementById(this.hiddenContainerId);
+        this.options = [];
+        this.initialValue = [];
+        this.previousValues = [];
+        this.isUpdating = false;
+    }
+
+    async init() {
+        if (!this.container || !this.hiddenInputsContainer || !this.fieldName) {
+            console.warn('[TreeSelectAdapter] Initialisation annulée : Attributs data-* manquants.', this.container);
+            return;
+        }
+
+        if (this.container.dataset.treeselectInit === "true") {
+            return;
+        }
+        this.container.dataset.treeselectInit = "true";
+
+        await this.loadData();
+
+        try {
+            const TreeselectClass = await this.loadTreeselectClass();
+
+            this.previousValues = Array.isArray(this.initialValue)
+                ? this.initialValue.map(Number).filter(v => !isNaN(v))
+                : (this.initialValue ? [Number(this.initialValue)] : []);
+
+            this.treeselect = new TreeselectClass({
+                parentHtmlContainer: this.container,
+                value: this.previousValues,
+                options: this.options,
+                isSingleSelect: false,
+                showTags: true,
+                clearable: !this.isReadOnly,
+                searchable: true,
+                placeholder: this.placeholder,
+                disabled: this.isReadOnly,
+                showCount: true,
+                openLevel: 1,
+                grouped: true,
+                isGroupedValue: false,
+                isIndependentNodes: true
+            });
+
+            this.syncHiddenInputs(this.previousValues);
+            this.treeselect.srcElement.addEventListener('input', (e) => this.handleInput(e));
+
+        } catch (err) {
+            console.error('[TreeSelectAdapter] Échec du montage de TreeselectJS :', err);
+        }
+    }
+
+    async loadData() {
+        if (this.dataScriptId) {
+            const dataScript = document.getElementById(this.dataScriptId);
+            if (dataScript && dataScript.textContent) {
+                try {
+                    const localData = JSON.parse(dataScript.textContent);
+                    this.options = localData.options || [];
+                    this.initialValue = localData.value || [];
+                } catch (e) {
+                    console.warn('[TreeSelectAdapter] Erreur lecture JSON local :', e);
+                }
+            }
+        }
+
+        if (this.options.length === 0 && this.apiUrl) {
+            try {
+                const response = await fetch(this.apiUrl, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                });
+                if (response.ok) {
+                    const apiData = await response.json();
+                    this.options = apiData.departments || apiData.options || [];
+                }
+            } catch (error) {
+                console.error('[TreeSelectAdapter] Erreur API :', error);
+            }
+        }
+    }
+
+    handleInput(e) {
+        if (this.isUpdating) return;
+
+        const rawDetail = Array.isArray(e.detail) ? e.detail : [e.detail];
+        let currentValues = rawDetail.map(Number).filter(v => !isNaN(v));
+
+        const added = currentValues.filter(v => !this.previousValues.includes(v));
+        const removed = this.previousValues.filter(v => !currentValues.includes(v));
+
+        let finalSet = new Set(currentValues);
+
+        added.forEach(id => {
+            const node = this.findNode(id, this.options);
+            if (node) {
+                const descendants = this.getDescendantIds(node);
+                descendants.forEach(dId => finalSet.add(dId));
+            }
+        });
+
+        removed.forEach(id => {
+            const node = this.findNode(id, this.options);
+            if (node) {
+                const descendants = this.getDescendantIds(node);
+                descendants.forEach(dId => finalSet.delete(dId));
+            }
+        });
+
+        const newSelection = Array.from(finalSet);
+
+        if (newSelection.length !== currentValues.length) {
+            this.isUpdating = true;
+            this.treeselect.updateValue(newSelection);
+            this.isUpdating = false;
+        }
+
+        this.previousValues = newSelection;
+        this.syncHiddenInputs(newSelection);
+    }
+
+    syncHiddenInputs(selectedValues) {
+        this.hiddenInputsContainer.innerHTML = '';
+        let index = 0;
+
+        selectedValues.forEach((id) => {
+            if (id !== null && id !== undefined && id !== '') {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = `${this.fieldName}[${index}][${this.foreignKey}]`;
+                input.value = String(id);
+                this.hiddenInputsContainer.appendChild(input);
+                index++;
+            }
+        });
+
+        if (index === 0) {
+            const emptyInput = document.createElement('input');
+            emptyInput.type = 'hidden';
+            emptyInput.name = this.fieldName;
+            emptyInput.value = '';
+            this.hiddenInputsContainer.appendChild(emptyInput);
+        }
+    }
+
+    findNode(id, nodes) {
+        const numId = Number(id);
+        for (const node of nodes) {
+            if (Number(node.value) === numId) return node;
+            if (node.children && node.children.length > 0) {
+                const found = this.findNode(numId, node.children);
+                if (found) return found;
+            }
+        }
+        return null;
+    }
+
+    getDescendantIds(node) {
+        let ids = [];
+        if (node.children && Array.isArray(node.children)) {
+            node.children.forEach(child => {
+                if (child.value !== undefined && child.value !== null) {
+                    ids.push(Number(child.value));
+                }
+                ids = ids.concat(this.getDescendantIds(child));
+            });
+        }
+        return ids;
+    }
+
+    loadTreeselectClass() {
+        return new Promise((resolve, reject) => {
+            let ClassObj = window.Treeselect || (window.default ? window.default.Treeselect : null);
+            if (ClassObj) return resolve(ClassObj);
+
+            const script = document.createElement('script');
+            script.src = '/js/vendor/treeselect/treeselectjs.umd.js';
+            script.onload = () => {
+                ClassObj = window.Treeselect || (window.default ? window.default.Treeselect : null);
+                if (ClassObj) resolve(ClassObj);
+                else reject(new Error('Impossible d\'instancier Treeselect.'));
+            };
+            script.onerror = () => reject(new Error('Échec du chargement de treeselectjs.umd.js'));
+            document.head.appendChild(script);
+        });
+    }
+
+    static autoInit() {
+        document.querySelectorAll('.treeselect-target').forEach(container => {
+            const adapter = new TreeSelectAdapter(container);
+            adapter.init();
+        });
+    }
 }
 -e 
 === END_FILE ===
@@ -32416,7 +32771,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        if (!recordId) {
+        if (!recordId && action !== 'create') {
             console.warn('[CRUD Menus] Impossible de résoudre l\'ID pour l\'action :', action);
             return;
         }
@@ -32439,7 +32794,9 @@ document.addEventListener('DOMContentLoaded', () => {
             case 'moveDown':
                 moveMenuNode(action, recordId);
                 break;
-
+            case 'create':
+                window.location.href = '/menus/add';
+                break;
             default:
                 console.warn('[CRUD Menus] Action non gérée :', action);
                 break;
@@ -32460,9 +32817,12 @@ import { ColumnsFactory } from '/js/core/Tabulator/ColumnsFactory.js';
 export function getMenusColumns() {
     return [
         ColumnsFactory.id({ visible: true }),
-        ColumnsFactory.text('name', 'Nom'),
+        ColumnsFactory.text('level', 'Niveau',{'width':50}),
+        ColumnsFactory.text('name', 'Nom',{'width':500}),
         ColumnsFactory.text('url', 'URL'),
-        ColumnsFactory.boolean('active', 'Actif')
+        ColumnsFactory.boolean('dividor_before', 'Diviseur'),
+        ColumnsFactory.boolean('disabled', 'Grisé'),
+        ColumnsFactory.boolean('active', 'Actif'),
     ];
 }
 -e 
@@ -32618,7 +32978,8 @@ if (globalTabulatorObserver) {
 
 === FILE: webroot/js/views/Applicationforms/applicationform-treeselect.js ===
 /**
- * Initialisation du Treeselect pour le choix du département dans la Zone 1.
+ * @file applicationform-treeselect.js
+ * @description Initialisation du Treeselect avec verrou synchrone et cast des types.
  */
 document.addEventListener('DOMContentLoaded', async function () {
     const container = document.getElementById('department-tree-select');
@@ -32626,8 +32987,17 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     if (!container || !hiddenInput) return;
 
+    if (container.dataset.treeselectInit === "true") {
+        return;
+    }
+    container.dataset.treeselectInit = "true";
+    container.innerHTML = '';
+
+    // 🔍 DEBUG: On inspecte ce que CakePHP a mis dans l'input (Mode Édition)
+    console.log("🌳 [Treeselect] Valeur brute du DOM (hiddenInput.value) :", hiddenInput.value);
+    console.log("🌳 [Treeselect] Type brut :", typeof hiddenInput.value);
+
     try {
-        // 1. Récupération du schéma via l'API
         const response = await fetch('/api/applicationforms/get-form-schema.json', {
             headers: {
                 'Accept': 'application/json',
@@ -32635,32 +33005,40 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         });
 
-        if (!response.ok) {
-            throw new Error('Erreur lors de la récupération du schéma');
-        }
-
+        if (!response.ok) throw new Error('Erreur API Schéma');
         const data = await response.json();
 
-        // 2. Initialisation de TreeselectJS avec l'arbre natif fourni par l'API
         if (window.Treeselect && data.departments) {
-            const currentValue = hiddenInput.value ? String(hiddenInput.value) : null;
+
+            // 💡 CORRECTION DU TYPE : On convertit la chaîne "71" en entier 71
+            // pour que Treeselect reconnaisse l'ID qui correspond au JSON.
+            let currentValue = hiddenInput.value ? hiddenInput.value : null;
+
+            if (currentValue !== null && !isNaN(currentValue)) {
+                currentValue = Number(currentValue);
+            }
+
+            console.log("🌳 [Treeselect] Valeur castée passée au composant (currentValue) :", currentValue);
+            console.log("🌳 [Treeselect] Type casté :", typeof currentValue);
 
             const treeselect = new window.Treeselect({
                 parentHtmlContainer: container,
                 value: currentValue,
-                options: data.departments, // Transmission directe du tableau hiérarchique de l'API
+                options: data.departments,
                 isSingleSelect: true,
-                openLevel: 2, // Ouvre automatiquement les 2 premiers niveaux de l'arbre
+                openLevel: 2,
                 placeholder: 'Sélectionner un département...'
             });
 
-            // Synchronisation avec le champ caché CakePHP lors de la sélection
+            // Écouteur sur la sélection du Treeselect
             treeselect.srcElement.addEventListener('input', (e) => {
-                const selectedValue = e.detail;
+                const selectedValue = Array.isArray(e.detail) ? e.detail[0] : e.detail;
                 hiddenInput.value = selectedValue || '';
 
-                // Informe le script CGR que le département a changé
-                hiddenInput.dispatchEvent(new Event('change'));
+                console.log(`[1] Treeselect: Sélection modifiée, nouvel ID = ${hiddenInput.value}`);
+
+                // Émission de l'événement change pour réveiller le script CGR
+                hiddenInput.dispatchEvent(new Event('change', { bubbles: true, cancelable: true }));
             });
         }
     } catch (error) {
@@ -32951,7 +33329,7 @@ class ApplicationformCreateForm {
             .then(response => response.json())
             .then(payload => {
                 this.schema = payload.schema || {};
-                this.hydrateSelect('department-id', payload.departments || {});
+                // this.hydrateSelect('department-id', payload.departments || {});
                 this.hydrateSelect('contracttype-id', payload.contracttypes || {});
                 this.hydrateSelect('hiringreason-id', payload.hiringreasons || {});
                 this.hydrateSelect('professionalcategory-id', payload.professionalcategories || {});
@@ -32998,6 +33376,13 @@ class ApplicationformCreateForm {
         e.preventDefault();
         const formData = new FormData(this.formElement);
         const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
+
+        // FIX : Garantie d'extraction du CGR. Un champ en lecture seule ou manipulé dynamiquement
+        // peut parfois être ignoré selon la configuration de la vue CakePHP.
+        const cgrFinalInput = document.getElementById('cgr-final-input');
+        if (cgrFinalInput) {
+            formData.set('cgr', cgrFinalInput.value);
+        }
 
         try {
             const response = await fetch('/api/applicationforms/add.json', {
@@ -33175,7 +33560,7 @@ class ApplicationformEditForm {
             .then(response => response.json())
             .then(payload => {
                 this.schema = payload.schema || {};
-                this.hydrateSelect('department-id', payload.departments || {});
+                // this.hydrateSelect('department-id', payload.departments || {});
                 this.hydrateSelect('contracttype-id', payload.contracttypes || {});
                 this.hydrateSelect('hiringreason-id', payload.hiringreasons || {});
                 this.hydrateSelect('professionalcategory-id', payload.professionalcategories || {});
@@ -33197,18 +33582,44 @@ class ApplicationformEditForm {
 
     hydrateSelect(elementId, items) {
         const select = document.getElementById(elementId);
-        if (!select) return;
+        // 1. S'assurer que l'élément existe et qu'il s'agit bien d'une balise <select>
+        if (!select || select.tagName !== 'SELECT') return;
 
-        const selectedValue = select.dataset.selected;
+        // 2. Récupérer la valeur actuellement sélectionnée (priorité à la valeur du DOM ou au dataset)
+        const currentSelectedValue = select.value || select.dataset.selected || '';
+
+        // 3. Ne ré-hydrater que si le select est vide (pour éviter d'écraser le HTML servi par CakePHP)
+        if (select.options.length > 1 && !select.dataset.forceHydrate) {
+            return;
+        }
+
         select.innerHTML = '<option value="">-- Sélectionner --</option>';
+        if (!items) return;
 
-        Object.entries(items).forEach(([id, name]) => {
-            const option = new Option(name, id);
-            if (String(id) === String(selectedValue)) {
-                option.selected = true;
-            }
-            select.add(option);
-        });
+        // 4. Traitement si items est un Tableau d'objets : [{id: 1, name: '...'}, ...]
+        if (Array.isArray(items)) {
+            items.forEach(item => {
+                const id = item.id !== undefined ? item.id : item.value;
+                const label = item.name || item.label || item.code || id;
+
+                const option = new Option(label, id);
+                if (String(id) === String(currentSelectedValue)) {
+                    option.selected = true;
+                }
+                select.add(option);
+            });
+        } else {
+            // 5. Traitement si items est un Dictionnaire : { "1": "Nom", ... }
+            Object.entries(items).forEach(([id, name]) => {
+                const label = (typeof name === 'object') ? (name.name || name.label || id) : name;
+
+                const option = new Option(label, id);
+                if (String(id) === String(currentSelectedValue)) {
+                    option.selected = true;
+                }
+                select.add(option);
+            });
+        }
     }
 
     applyFieldAuthorizations() {
@@ -33267,164 +33678,136 @@ document.addEventListener('DOMContentLoaded', () => {
 === FILE: webroot/js/views/Applicationforms/applicationform-cgr.js ===
 /**
  * @file applicationform-cgr.js
- * @description Génération dynamique des sélecteurs CGR, auto-sélection des options uniques
- * et gestion visuelle dynamique (nettoyage des indicateurs une fois le CGR complet).
- *
- * @author Équipe de Développement
- * @version 1.2.0
+ * @description Génération dynamique des sélecteurs CGR et écoute du Treeselect.
  */
-
-document.addEventListener('DOMContentLoaded', function () {
-    const departmentSelect = document.getElementById('department-id') || document.getElementById('department-id-input');
+document.addEventListener('DOMContentLoaded', function() {
+    const departmentSelect = document.getElementById('department-id');
     const cgrContainer = document.getElementById('cgr-components-container');
     const cgrFinalInput = document.getElementById('cgr-final-input');
 
+    // 💡 DIAGNOSTIC : Affichage explicite des éléments manquants
+    if (!departmentSelect) console.warn("🚨 CGR: L'élément #department-id est introuvable sur la page !");
+    if (!cgrContainer) console.warn("🚨 CGR: L'élément #cgr-components-container est introuvable !");
+    if (!cgrFinalInput) console.warn("🚨 CGR: L'élément #cgr-final-input est introuvable !");
+
     if (!departmentSelect || !cgrContainer || !cgrFinalInput) return;
 
-    /**
-     * Met à jour le style visuel de TOUS les sous-sélecteurs CGR.
-     * Si le code CGR complet est assemblé, les sélecteurs restent neutres pour ne pas surcharger l'IHM.
-     * S'il est incomplet, les sélecteurs déjà renseignés sont mis en avant.
-     */
     function refreshAllSelectStyles() {
         const selects = cgrContainer.querySelectorAll('.cgr-segment-select');
         const isCgrComplete = cgrFinalInput.value && cgrFinalInput.value.trim() !== '';
 
         selects.forEach(select => {
-            // Nettoyage systématique des classes de couleur
-            select.classList.remove(
-                'border-success', 'bg-success-subtle', 'text-success-emphasis', 'fw-semibold',
-                'border-secondary-subtle', 'bg-light'
-            );
-
+            select.classList.remove('border-success', 'bg-success-subtle', 'text-success-emphasis', 'fw-semibold', 'border-secondary-subtle', 'bg-light');
             if (isCgrComplete) {
-                // 💡 CODE COMPLET / AFFICHAGE INITIAL : Style neutre pour les sélecteurs
                 select.classList.add('border-secondary-subtle', 'bg-light');
             } else if (select.value) {
-                // 💡 SAISIE EN COURS : Mise en avant de l'élément déjà choisi
                 select.classList.add('border-success', 'bg-success-subtle', 'text-success-emphasis', 'fw-semibold');
             } else {
-                // 💡 SAISIE EN COURS : Élément en attente de choix
                 select.classList.add('border-secondary-subtle', 'bg-light');
             }
         });
     }
 
-    /**
-     * Interroge l'API CGR pour le département donné et construit les éléments <select>.
-     *
-     * @param {string} departmentId Identifiant du département.
-     * @param {string} [initialValue=''] Code CGR préexistant (ex: "S01-T02").
-     */
     function fetchAndBuildCgr(departmentId, initialValue = '') {
         if (!departmentId) {
             cgrContainer.innerHTML = '';
+            cgrFinalInput.value = '';
             return;
         }
 
+        console.log(`[3] CGR: Appel réseau vers /api/applicationforms/getCgrConfig/${departmentId}.json`);
+
         fetch(`/api/applicationforms/getCgrConfig/${departmentId}.json`, {
-            headers: { 'Accept': 'application/json' }
-        })
-        .then(res => res.json())
-        .then(data => {
-            cgrContainer.innerHTML = '';
-
-            // Si aucune règle CGR pour ce département
-            if (!data.schema || data.schema.length === 0) {
-                cgrFinalInput.readOnly = false;
-                return;
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
             }
+        })
+            .then(res => {
+                if (!res.ok) throw new Error(`HTTP erreur ${res.status}`);
+                return res.json();
+            })
+            .then(data => {
+                console.log("[4] CGR: Données reçues du serveur :", data);
+                cgrContainer.innerHTML = '';
 
-            cgrFinalInput.readOnly = true;
-            const currentParts = initialValue ? initialValue.split('-') : [];
-
-            // Construction de chaque sous-sélecteur du schéma
-            data.schema.forEach((segmentType, index) => {
-                const select = document.createElement('select');
-                select.className = 'form-select form-select-sm cgr-segment-select';
-                select.dataset.type = segmentType;
-
-                const defaultOption = document.createElement('option');
-                defaultOption.value = '';
-                defaultOption.textContent = `-- ${segmentType} --`;
-                select.appendChild(defaultOption);
-
-                const cleanType = String(segmentType).trim().toUpperCase();
-                const matchedKey = Object.keys(data.options || {}).find(k => k.trim().toUpperCase() === cleanType);
-                const availableOptions = matchedKey ? data.options[matchedKey] : [];
-
-                if (availableOptions.length === 0) {
-                    const emptyOpt = document.createElement('option');
-                    emptyOpt.disabled = true;
-                    emptyOpt.textContent = `(Aucun ${segmentType} paramétré)`;
-                    select.appendChild(emptyOpt);
-                } else {
-                    let hasPreselection = false;
-
-                    availableOptions.forEach(opt => {
-                        const option = document.createElement('option');
-                        option.value = opt.code;
-                        option.textContent = opt.label;
-
-                        // Restauration de la valeur initiale enregistrée
-                        if (currentParts[index] && currentParts[index] === opt.code) {
-                            option.selected = true;
-                            hasPreselection = true;
-                        }
-                        select.appendChild(option);
-                    });
-
-                    // Auto-sélection si une seule option est disponible
-                    if (!hasPreselection && availableOptions.length === 1) {
-                        select.value = availableOptions[0].code;
-                    }
+                if (!data.schema || data.schema.length === 0) {
+                    cgrFinalInput.readOnly = false;
+                    if (!initialValue) cgrFinalInput.value = '';
+                    return;
                 }
 
-                // Écouteur de modification du sélecteur
-                select.addEventListener('change', function () {
-                    updateFinalCgrValue();
+                cgrFinalInput.readOnly = true;
+                const currentParts = initialValue ? initialValue.split('-') : [];
+
+                data.schema.forEach((segmentType, index) => {
+                    const select = document.createElement('select');
+                    // select.className = 'form-select form-select-sm cgr-segment-select mb-2';
+                    // NOUVEAU CODE : Ajout de "w-auto" et "flex-grow-1"
+                    select.className = 'form-select form-select-sm cgr-segment-select mb-2 w-auto flex-grow-1';                    select.dataset.type = segmentType;
+                    select.required = true;
+
+                    const defaultOption = document.createElement('option');
+                    defaultOption.value = '';
+                    defaultOption.textContent = `-- ${segmentType} --`;
+                    select.appendChild(defaultOption);
+
+                    const cleanType = String(segmentType).trim().toUpperCase();
+                    const matchedKey = Object.keys(data.options || {}).find(k => k.trim().toUpperCase() === cleanType);
+                    const availableOptions = matchedKey ? data.options[matchedKey] : [];
+
+                    if (availableOptions.length === 0) {
+                        const emptyOpt = document.createElement('option');
+                        emptyOpt.disabled = true;
+                        emptyOpt.textContent = `(Aucun ${segmentType})`;
+                        select.appendChild(emptyOpt);
+                    } else {
+                        let hasPreselection = false;
+                        availableOptions.forEach(opt => {
+                            const option = document.createElement('option');
+                            option.value = opt.code;
+                            option.textContent = opt.label;
+                            if (currentParts[index] && currentParts[index] === opt.code) {
+                                option.selected = true;
+                                hasPreselection = true;
+                            }
+                            select.appendChild(option);
+                        });
+
+                        if (!hasPreselection && availableOptions.length === 1) {
+                            select.value = availableOptions[0].code;
+                        }
+                    }
+
+                    select.addEventListener('change', updateFinalCgrValue);
+                    cgrContainer.appendChild(select);
                 });
 
-                cgrContainer.appendChild(select);
-            });
-
-            // Assemblage de la valeur initiale et mise à jour des styles
-            updateFinalCgrValue();
-        })
-        .catch(err => console.error('Erreur lors du chargement du schéma CGR :', err));
+                updateFinalCgrValue();
+            })
+            .catch(err => console.error('[Erreur CGR] Le chargement a échoué :', err));
     }
 
-    /**
-     * Recalcule la valeur assemblée globale du Code CGR
-     * et rafraîchit l'IHM de tous les sélecteurs.
-     */
     function updateFinalCgrValue() {
         const selects = cgrContainer.querySelectorAll('.cgr-segment-select');
         if (selects.length === 0) return;
 
         const values = Array.from(selects).map(s => s.value).filter(Boolean);
-
         if (values.length === selects.length) {
-            // Assemblage complet (ex: "S01-T02")
             cgrFinalInput.value = values.join('-');
         } else {
-            // Incomplet
             cgrFinalInput.value = '';
         }
-
-        // Mise à jour de l'apparence des sous-sélecteurs CGR
         refreshAllSelectStyles();
-
-        // Notification d'événement vers applicationform-treeselect.js pour basculer la bannière visuelle
         cgrFinalInput.dispatchEvent(new Event('input', { bubbles: true }));
     }
 
-    // Écouteur de changement de département
-    departmentSelect.addEventListener('change', function () {
-        fetchAndBuildCgr(this.value);
+    // Le listener crucial qui fait le pont entre les deux scripts
+    departmentSelect.addEventListener('change', function() {
+        console.log(`[2] CGR: Événement 'change' intercepté ! Lancement de l'hydratation pour le département ${this.value}`);
+        fetchAndBuildCgr(this.value, '');
     });
 
-    // Initialisation au chargement de la page
     if (departmentSelect.value) {
         fetchAndBuildCgr(departmentSelect.value, cgrFinalInput.value);
     }
@@ -33477,127 +33860,12 @@ document.addEventListener('DOMContentLoaded', function() {
 === FILE: webroot/js/views/Users/user-departments-tree.js ===
 /**
  * @file webroot/js/views/Users/user-departments-tree.js
- * @description Synchronise la sélection TreeselectJS avec la structure HasMany de l'ORM CakePHP.
+ * @description Point d'entrée ES6 pour la vue Utilisateurs.
  */
+import { TreeSelectAdapter } from '../../core/TreeSelectAdapter.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
-    const targetContainer = document.getElementById('user-departments-tree');
-    const dataScript = document.getElementById('user-departments-data');
-    const hiddenInputsContainer = document.getElementById('user-departments-hidden-inputs');
-
-    if (!targetContainer || !hiddenInputsContainer) {
-        return;
-    }
-
-    let options = [];
-    let initialValue = [];
-    const isReadOnly = targetContainer.dataset.readonly === 'true';
-
-    // 1. Récupération des données locales injectées par PHP
-    if (dataScript && dataScript.textContent) {
-        try {
-            const localData = JSON.parse(dataScript.textContent);
-            options = localData.options || [];
-            initialValue = localData.value || [];
-        } catch (e) {
-            console.warn('Erreur lecture JSON local :', e);
-        }
-    }
-
-    // 2. Fallback API si les options locales sont vides
-    if (options.length === 0) {
-        try {
-            const response = await fetch('/api/users/get-form-schema.json', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                    'X-Requested-With': 'XMLHttpRequest'
-                }
-            });
-
-            if (response.ok) {
-                const apiData = await response.json();
-                options = apiData.departments || [];
-            }
-        } catch (error) {
-            console.error('Erreur API getFormSchema :', error);
-        }
-    }
-
-    /**
-     * Génère les inputs cachés au format HasMany : user_departments[INDEX][department_id]
-     */
-    const syncHiddenInputs = (selectedValues) => {
-        hiddenInputsContainer.innerHTML = '';
-        const valuesArray = Array.isArray(selectedValues) ? selectedValues : [selectedValues];
-
-        let index = 0;
-        valuesArray.forEach((id) => {
-            if (id !== null && id !== undefined && id !== '') {
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = `user_departments[${index}][department_id]`;
-                input.value = String(id);
-                hiddenInputsContainer.appendChild(input);
-                index++;
-            }
-        });
-    };
-
-    /**
-     * Tente de récupérer Treeselect, ou injecte la balise script si manquante.
-     */
-    const loadTreeselectClass = () => {
-        return new Promise((resolve, reject) => {
-            let ClassObj = window.Treeselect || (window.default ? window.default.Treeselect : null);
-            if (ClassObj) {
-                return resolve(ClassObj);
-            }
-
-            // Injection dynamique si la balise script manque
-            const script = document.createElement('script');
-            script.src = '/js/vendor/treeselect/treeselectjs.umd.js';
-            script.onload = () => {
-                ClassObj = window.Treeselect || (window.default ? window.default.Treeselect : null);
-                if (ClassObj) {
-                    resolve(ClassObj);
-                } else {
-                    reject(new Error('Impossible d\'instancier la classe Treeselect.'));
-                }
-            };
-            script.onerror = () => reject(new Error('Échec du chargement du fichier treeselectjs.umd.js'));
-            document.head.appendChild(script);
-        });
-    };
-
-    try {
-        const TreeselectClass = await loadTreeselectClass();
-
-        const treeselect = new TreeselectClass({
-            parentHtmlContainer: targetContainer,
-            value: initialValue,
-            options: options,
-            isSingleSelect: false,
-            showTags: true,
-            clearable: !isReadOnly,
-            searchable: true,
-            placeholder: 'Sélectionner les départements...',
-            disabled: isReadOnly,
-            showCount: true,
-            openLevel: 1,
-            grouped: true,
-            isGroupedValue: false,
-            isIndependentNodes: false
-        });
-
-        syncHiddenInputs(initialValue);
-
-        treeselect.srcElement.addEventListener('input', (e) => {
-            syncHiddenInputs(e.detail);
-        });
-    } catch (err) {
-        console.error('Erreur lors du montage de TreeselectJS :', err);
-    }
+document.addEventListener('DOMContentLoaded', () => {
+    TreeSelectAdapter.autoInit();
 });
 -e 
 === END_FILE ===
