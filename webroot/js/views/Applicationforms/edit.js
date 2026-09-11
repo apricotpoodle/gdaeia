@@ -3,13 +3,13 @@
  * @description Orchestrateur du formulaire d'édition des demandes de recrutement.
  * @module views/Applicationforms/edit
  */
-
 import { FlashManager } from '../../core/FlashManager.js';
 import { NavigationManager } from '../../core/NavigationManager.js';
 
 class ApplicationformEditForm {
     constructor() {
-        this.formElement = document.getElementById('applicationform-edit-form');
+        // Tolérance si l'ID varie entre la version backup et la production
+        this.formElement = document.getElementById('applicationform-edit-form') || document.getElementById('applicationform-main-form');
         this.entityId = this.formElement?.dataset.id;
         this.schema = {};
     }
@@ -24,7 +24,7 @@ class ApplicationformEditForm {
             .then(response => response.json())
             .then(payload => {
                 this.schema = payload.schema || {};
-                // this.hydrateSelect('department-id', payload.departments || {});
+                this.hydrateSelect('department-id', payload.departments || {});
                 this.hydrateSelect('contracttype-id', payload.contracttypes || {});
                 this.hydrateSelect('hiringreason-id', payload.hiringreasons || {});
                 this.hydrateSelect('professionalcategory-id', payload.professionalcategories || {});
@@ -44,45 +44,65 @@ class ApplicationformEditForm {
         NavigationManager.registerEscapeRedirect('/applicationforms/index');
     }
 
+    /**
+     * Hydrate dynamiquement un champ select avec des options.
+     * Conserve les options existantes si générées par CakePHP côté serveur (Non-régression).
+     *
+     * @param {string} elementId - L'ID de l'élément HTML
+     * @param {Object|Array} items - Données de l'API (Dictionnaire ou Tableau d'objets)
+     */
     hydrateSelect(elementId, items) {
         const select = document.getElementById(elementId);
-        // 1. S'assurer que l'élément existe et qu'il s'agit bien d'une balise <select>
+
+        // Ignorer si ce n'est pas un select (protège le input hidden de TreeselectJS)
         if (!select || select.tagName !== 'SELECT') return;
 
-        // 2. Récupérer la valeur actuellement sélectionnée (priorité à la valeur du DOM ou au dataset)
-        const currentSelectedValue = select.value || select.dataset.selected || '';
-
-        // 3. Ne ré-hydrater que si le select est vide (pour éviter d'écraser le HTML servi par CakePHP)
-        if (select.options.length > 1 && !select.dataset.forceHydrate) {
-            return;
+        // CakePHP FormHelper a-t-il DÉJÀ généré les options côté serveur ?
+        // Si le select contient déjà les options de la BDD (longueur > 1 car option vide incluse),
+        // on ne touche à rien pour préserver la sélection native de CakePHP !
+        if (select.options.length > 1) {
+            return; // 🛑 ARRET IMMÉDIAT : On laisse CakePHP gérer !
         }
 
+        // Si le select est vide, on procède à l'hydratation JS :
         select.innerHTML = '<option value="">-- Sélectionner --</option>';
         if (!items) return;
 
-        // 4. Traitement si items est un Tableau d'objets : [{id: 1, name: '...'}, ...]
-        if (Array.isArray(items)) {
-            items.forEach(item => {
-                const id = item.id !== undefined ? item.id : item.value;
-                const label = item.name || item.label || item.code || id;
+        const selectedValue = select.dataset.selected || select.getAttribute('value');
 
-                const option = new Option(label, id);
-                if (String(id) === String(currentSelectedValue)) {
-                    option.selected = true;
-                }
-                select.add(option);
-            });
-        } else {
-            // 5. Traitement si items est un Dictionnaire : { "1": "Nom", ... }
-            Object.entries(items).forEach(([id, name]) => {
-                const label = (typeof name === 'object') ? (name.name || name.label || id) : name;
+        // Itération 100% blindée, gérant dictionnaires simples ET objets imbriqués
+        Object.entries(items).forEach(([key, val]) => {
+            let optionValue, optionText;
 
-                const option = new Option(label, id);
-                if (String(id) === String(currentSelectedValue)) {
-                    option.selected = true;
-                }
-                select.add(option);
-            });
+            // Si "val" est un objet (ex: {id: 1, name: "CDI"} ou {code: "CDD", label: "CDD"})
+            if (typeof val === 'object' && val !== null) {
+                optionValue = val.id !== undefined ? val.id : (val.value || val.code || key);
+                optionText = val.name !== undefined ? val.name : (val.label !== undefined ? val.label : val.title);
+            }
+            // Si "val" est une chaîne (ex: dictionnaire plat {"1": "CDI"})
+            else {
+                optionValue = key;
+                optionText = val;
+            }
+
+            // Sécurité anti "[object Object]"
+            if (typeof optionText === 'object') {
+                optionText = "Erreur_Format_API";
+            }
+
+            const option = new Option(optionText, optionValue);
+
+            // Appliquer la pré-sélection si une donnée correspond
+            if (String(optionValue) === String(selectedValue)) {
+                option.selected = true;
+            }
+
+            select.add(option);
+        });
+
+        // Déclenche l'événement "change" pour les composants dépendants (ex: CGR)
+        if (select.value) {
+            select.dispatchEvent(new Event('change', { bubbles: true }));
         }
     }
 

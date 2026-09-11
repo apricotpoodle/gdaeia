@@ -56,4 +56,29 @@ class AppTable extends Table
 
         return $query;
     }
+
+    /**
+     * Retourne un tableau clé-valeur filtré selon les droits de l'utilisateur.
+     * Idéal pour hydrater les balises <select> des formulaires.
+     *
+     * @param User $user L'utilisateur courant
+     * @return array
+     */
+    public function getVisibleList(User $user): array
+    {
+        return $this->find('visibleList', user: $user)->toArray();
+    }
+
+    /**
+     * Custom finder qui combine 'visibleTo' et 'list'.
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query
+     * @param \App\Model\Entity\User $user
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findVisibleList(SelectQuery $query, mixed ...$options): SelectQuery
+    {
+        // On passe les arguments (notamment 'user') au finder visibleTo
+        return $query->find('visibleTo', ...$options)->find('list');
+    }
 }
