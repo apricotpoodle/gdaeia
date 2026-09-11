@@ -11,10 +11,6 @@
  * @var bool $canEditAdmin
  */
 
-// Chargement du script de gestion dynamique du candidat
-$this->Html->script('views/Applicationforms/applicationform-candidate', ['block' => true]);
-// Chargement du script de gestion dynamique du CGR
-$this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => true]);
 ?>
 
 <div class="card shadow-sm border-0 mb-3">

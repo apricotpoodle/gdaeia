@@ -192,8 +192,9 @@ export default class TreeselectWrapper {
             }
         });
 
-        // Synchronisation initiale du DOM
-        this.#syncValueToInput(initialValue);
+        // La valeur initiale reflète un état déjà connu : elle ne doit pas être
+        // interprétée par les scripts dépendants comme une action utilisateur.
+        this.#syncValueToInput(initialValue, false);
         } catch (error) {
             if (this.#ownsContainer) {
                 delete this.#container.dataset.treeselectInit;
@@ -247,9 +248,10 @@ export default class TreeselectWrapper {
     /**
      * Traduit et écrit les valeurs internes de TreeselectJS dans l'input attendu par CakePHP.
      * 
-     * @param {Array<string|number>|string|number} value 
+     * @param {Array<string|number>|string|number} value
+     * @param {boolean} [notify=true] Indique si les scripts dépendants doivent être notifiés.
      */
-    #syncValueToInput(value) {
+    #syncValueToInput(value, notify = true) {
         if (!this.#input) return;
 
         if (value === undefined || value === null) {
@@ -262,9 +264,11 @@ export default class TreeselectWrapper {
             this.#input.value = value.toString();
         }
 
-        // Déclencher manuellement l'événement change sur l'input masqué
-        // pour notifier les frameworks réactifs ou d'autres scripts de vue
-        this.#input.dispatchEvent(new Event('change', { bubbles: true }));
+        if (notify) {
+            // Déclencher manuellement l'événement change sur l'input masqué
+            // pour notifier les frameworks réactifs ou d'autres scripts de vue.
+            this.#input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
     }
 
     /**
