@@ -6,6 +6,7 @@ namespace App\Controller;
 use App\Log\EmailLoggerTrait;
 use App\Mailer\UserMailer;
 use App\Service\Security\FieldAuthorizationService;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
@@ -157,7 +158,7 @@ class UsersController extends AppController
 
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('Impossible de créer l\'utilisateur. Veuillez vérifier les erreurs du formulaire.'));
+            $this->Flash->error($this->formatUserValidationError($user));
         }
 
         $identity = $this->request->getAttribute('identity');
@@ -228,7 +229,7 @@ class UsersController extends AppController
             // 🛠️ FIN DES LOGS D'ANALYSE
             // ==============================================================
 
-            $this->Flash->error(__('Impossible de mettre à jour l\'utilisateur. Veuillez corriger les erreurs.'));
+            $this->Flash->error($this->formatUserValidationError($user));
         }
 
         $identity = $this->request->getAttribute('identity');
@@ -443,5 +444,67 @@ class UsersController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
+    }
+
+    /**
+     * Produit un message de validation immédiatement exploitable dans l'interface Web.
+     *
+     * @param \Cake\Datasource\EntityInterface $entity Entité dont la sauvegarde a échoué.
+     * @return string
+     */
+    private function formatUserValidationError(EntityInterface $entity): string
+    {
+        $error = $this->findFirstValidationError($entity->getErrors());
+        if ($error === null) {
+            return __('Impossible d\'enregistrer l\'utilisateur : le serveur n\'a pas retourné de détail de validation.');
+        }
+
+        [$field, $message] = $error;
+
+        return __('Champ « {0} » : {1}', $this->getUserFieldLabel($field), $message);
+    }
+
+    /**
+     * Extrait la première erreur en préservant le champ métier qui la porte.
+     *
+     * @param array<string, mixed> $errors Erreurs produites par l'ORM CakePHP.
+     * @param string|null $rootField Champ racine pour les associations imbriquées.
+     * @return array{0: string, 1: string}|null
+     */
+    private function findFirstValidationError(array $errors, ?string $rootField = null): ?array
+    {
+        foreach ($errors as $field => $details) {
+            $currentRootField = $rootField ?? (string)$field;
+            if (is_string($details)) {
+                return [$currentRootField, $details];
+            }
+
+            if (is_array($details)) {
+                $error = $this->findFirstValidationError($details, $currentRootField);
+                if ($error !== null) {
+                    return $error;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Retourne le libellé fonctionnel d'un champ utilisateur.
+     *
+     * @param string $field Nom technique du champ.
+     * @return string
+     */
+    private function getUserFieldLabel(string $field): string
+    {
+        return [
+            'email' => __('Adresse courriel'),
+            'username' => __('Nom d\'utilisateur'),
+            'password' => __('Mot de passe'),
+            'role_id' => __('Rôle applicatif'),
+            'user_departments' => __('Périmètre organisationnel'),
+            'department_id' => __('Département'),
+        ][$field] ?? $field;
     }
 }

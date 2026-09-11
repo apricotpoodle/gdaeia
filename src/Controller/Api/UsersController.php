@@ -236,16 +236,57 @@ class UsersController extends AppController
      */
     private function handleValidationError(EntityInterface $entity): Response
     {
-        $errors = $entity->getErrors();
-        $message = __('Le formulaire contient des données invalides.');
-
-        if (!empty($errors)) {
-            $firstError = current(reset($errors));
-            $message = (string)$firstError;
-        }
+        $error = $this->findFirstValidationError($entity->getErrors());
+        $message = $error === null
+            ? __('Impossible d\'enregistrer l\'utilisateur : le serveur n\'a pas retourné de détail de validation.')
+            : __('Champ « {0} » : {1}', $this->getUserFieldLabel($error[0]), $error[1]);
 
         return $this->response->withType('application/json')
             ->withStatus(400)
             ->withStringBody(json_encode(['success' => false, 'message' => $message]));
+    }
+
+    /**
+     * Extrait la première erreur en préservant le champ métier qui la porte.
+     *
+     * @param array<string, mixed> $errors Erreurs produites par l'ORM CakePHP.
+     * @param string|null $rootField Champ racine pour les associations imbriquées.
+     * @return array{0: string, 1: string}|null
+     */
+    private function findFirstValidationError(array $errors, ?string $rootField = null): ?array
+    {
+        foreach ($errors as $field => $details) {
+            $currentRootField = $rootField ?? (string)$field;
+            if (is_string($details)) {
+                return [$currentRootField, $details];
+            }
+
+            if (is_array($details)) {
+                $error = $this->findFirstValidationError($details, $currentRootField);
+                if ($error !== null) {
+                    return $error;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Retourne le libellé fonctionnel d'un champ utilisateur.
+     *
+     * @param string $field Nom technique du champ.
+     * @return string
+     */
+    private function getUserFieldLabel(string $field): string
+    {
+        return [
+            'email' => __('Adresse courriel'),
+            'username' => __('Nom d\'utilisateur'),
+            'password' => __('Mot de passe'),
+            'role_id' => __('Rôle applicatif'),
+            'user_departments' => __('Périmètre organisationnel'),
+            'department_id' => __('Département'),
+        ][$field] ?? $field;
     }
 }
