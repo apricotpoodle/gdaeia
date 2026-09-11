@@ -1,8 +1,10 @@
 /**
  * @file webroot/js/core/TreeSelectAdapter.js
- * @description Adaptateur générique et agnostique pour TreeselectJS.
- * Compatible avec les relations ORM CakePHP (HasMany / BelongsToMany).
+ * @description Adaptateur métier pour les sélections hiérarchiques multiples CakePHP.
+ * Délègue le cycle de vie de TreeselectJS à TreeselectWrapper.
  */
+
+import TreeselectWrapper from './TreeSelectJS/TreeselectWrapper.js';
 
 export class TreeSelectAdapter {
     /**
@@ -32,22 +34,15 @@ export class TreeSelectAdapter {
             return;
         }
 
-        if (this.container.dataset.treeselectInit === "true") {
-            return;
-        }
-        this.container.dataset.treeselectInit = "true";
-
         await this.loadData();
 
         try {
-            const TreeselectClass = await this.loadTreeselectClass();
-
             this.previousValues = Array.isArray(this.initialValue)
                 ? this.initialValue.map(Number).filter(v => !isNaN(v))
                 : (this.initialValue ? [Number(this.initialValue)] : []);
 
-            this.treeselect = new TreeselectClass({
-                parentHtmlContainer: this.container,
+            this.treeselect = new TreeselectWrapper({
+                parentContainer: this.container,
                 value: this.previousValues,
                 options: this.options,
                 isSingleSelect: false,
@@ -60,11 +55,11 @@ export class TreeSelectAdapter {
                 openLevel: 1,
                 grouped: true,
                 isGroupedValue: false,
-                isIndependentNodes: true
+                isIndependentNodes: true,
+                onChange: (value) => this.handleSelection(value)
             });
 
             this.syncHiddenInputs(this.previousValues);
-            this.treeselect.srcElement.addEventListener('input', (e) => this.handleInput(e));
 
         } catch (err) {
             console.error('[TreeSelectAdapter] Échec du montage de TreeselectJS :', err);
@@ -100,10 +95,10 @@ export class TreeSelectAdapter {
         }
     }
 
-    handleInput(e) {
+    handleSelection(value) {
         if (this.isUpdating) return;
 
-        const rawDetail = Array.isArray(e.detail) ? e.detail : [e.detail];
+        const rawDetail = Array.isArray(value) ? value : [value];
         let currentValues = rawDetail.map(Number).filter(v => !isNaN(v));
 
         const added = currentValues.filter(v => !this.previousValues.includes(v));
@@ -131,7 +126,7 @@ export class TreeSelectAdapter {
 
         if (newSelection.length !== currentValues.length) {
             this.isUpdating = true;
-            this.treeselect.updateValue(newSelection);
+            this.treeselect.value = newSelection;
             this.isUpdating = false;
         }
 
@@ -186,23 +181,6 @@ export class TreeSelectAdapter {
             });
         }
         return ids;
-    }
-
-    loadTreeselectClass() {
-        return new Promise((resolve, reject) => {
-            let ClassObj = window.Treeselect || (window.default ? window.default.Treeselect : null);
-            if (ClassObj) return resolve(ClassObj);
-
-            const script = document.createElement('script');
-            script.src = '/js/vendor/treeselect/treeselectjs.umd.js';
-            script.onload = () => {
-                ClassObj = window.Treeselect || (window.default ? window.default.Treeselect : null);
-                if (ClassObj) resolve(ClassObj);
-                else reject(new Error('Impossible d\'instancier Treeselect.'));
-            };
-            script.onerror = () => reject(new Error('Échec du chargement de treeselectjs.umd.js'));
-            document.head.appendChild(script);
-        });
     }
 
     static autoInit() {

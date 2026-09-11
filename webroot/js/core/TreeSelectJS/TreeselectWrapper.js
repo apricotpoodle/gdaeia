@@ -10,9 +10,10 @@
  * @module core/Components/TreeselectWrapper
  */
 
-import Treeselect from '../../assets/treeselectjs/treeselectjs.mjs';
-
 export default class TreeselectWrapper {
+    /** @type {Promise<typeof window.Treeselect>|null} Chargement partagé de l'asset UMD local. */
+    static #treeselectLoader = null;
+
     /**
      * @typedef {Object} WrapperConfig
      * @property {HTMLElement|string} parentContainer - Conteneur HTML ou sélecteur CSS d'ancrage pour le TreeselectJS.
@@ -27,6 +28,9 @@ export default class TreeselectWrapper {
      * @property {number} [openLevel=1] - Niveau d'ouverture initial de l'arborescence.
      * @property {boolean} [showCount=true] - Afficher le nombre d'éléments enfants à côté du libellé de groupe.
      * @property {boolean} [disabled=false] - Désactiver complètement l'interaction (ACL / Read-only).
+     * @property {boolean} [grouped] - Regrouper visuellement les nœuds hiérarchiques.
+     * @property {boolean} [isGroupedValue] - Traiter les groupes comme une valeur sélectionnable.
+     * @property {boolean} [isIndependentNodes] - Laisser TreeselectJS gérer les nœuds indépendamment.
      * @property {function} [onChange] - Callback déclenché à chaque modification de valeur : (value) => void.
      */
 
@@ -42,6 +46,9 @@ export default class TreeselectWrapper {
     /** @type {WrapperConfig} Configuration fusionnée */
     #config = null;
 
+    /** @type {boolean} Indique que cette instance est propriétaire du conteneur. */
+    #ownsContainer = false;
+
     /**
      * Constructeur du wrapper.
      * 
@@ -50,7 +57,16 @@ export default class TreeselectWrapper {
     constructor(config) {
         this.#validateAndResolveDOM(config);
         this.#config = this.#applyDefaults(config);
-        this.#init();
+
+        if (this.#container.dataset.treeselectInit === 'true') {
+            throw new Error('TreeselectWrapper : ce conteneur possède déjà une instance TreeselectJS.');
+        }
+
+        this.#container.dataset.treeselectInit = 'true';
+        this.#ownsContainer = true;
+        this.#init().catch((error) => {
+            console.error('TreeselectWrapper : échec de l\'initialisation.', error);
+        });
     }
 
     /**
@@ -112,7 +128,15 @@ export default class TreeselectWrapper {
     /**
      * Initialise et instancie la classe TreeselectJS.
      */
-    #init() {
+    async #init() {
+        try {
+            const Treeselect = await TreeselectWrapper.#loadTreeselect();
+
+            // L'instance peut avoir été détruite pendant le chargement asynchrone.
+            if (!this.#ownsContainer || !this.#container) {
+                return;
+            }
+
         // Préparation de la valeur initiale
         let initialValue = this.#config.value;
         
@@ -151,6 +175,9 @@ export default class TreeselectWrapper {
             openLevel: this.#config.openLevel,
             showCount: this.#config.showCount,
             showTags: this.#config.showTags,
+            grouped: this.#config.grouped,
+            isGroupedValue: this.#config.isGroupedValue,
+            isIndependentNodes: this.#config.isIndependentNodes,
             placeholder: this.#config.placeholder || "Sélectionnez une option..."
         });
 
@@ -167,6 +194,54 @@ export default class TreeselectWrapper {
 
         // Synchronisation initiale du DOM
         this.#syncValueToInput(initialValue);
+        } catch (error) {
+            if (this.#ownsContainer) {
+                delete this.#container.dataset.treeselectInit;
+                this.#ownsContainer = false;
+            }
+
+            throw error;
+        }
+    }
+
+    /**
+     * Charge une seule fois la distribution UMD locale de TreeselectJS.
+     * L'asset est volontairement chargé comme un script classique : cette
+     * distribution expose sa classe via window.Treeselect, contrairement à
+     * une distribution ES module qui n'est pas fournie dans le dépôt.
+     *
+     * @returns {Promise<typeof window.Treeselect>}
+     */
+    static #loadTreeselect() {
+        if (window.Treeselect) {
+            return Promise.resolve(window.Treeselect);
+        }
+
+        if (TreeselectWrapper.#treeselectLoader) {
+            return TreeselectWrapper.#treeselectLoader;
+        }
+
+        TreeselectWrapper.#treeselectLoader = new Promise((resolve, reject) => {
+            const script = document.createElement('script');
+            script.src = '/js/vendor/treeselect/treeselectjs.umd.js';
+            script.async = true;
+            script.onload = () => {
+                if (window.Treeselect) {
+                    resolve(window.Treeselect);
+                    return;
+                }
+
+                TreeselectWrapper.#treeselectLoader = null;
+                reject(new Error('TreeselectWrapper : la bibliothèque TreeselectJS est indisponible après chargement.'));
+            };
+            script.onerror = () => {
+                TreeselectWrapper.#treeselectLoader = null;
+                reject(new Error('TreeselectWrapper : échec du chargement de treeselectjs.umd.js.'));
+            };
+            document.head.appendChild(script);
+        });
+
+        return TreeselectWrapper.#treeselectLoader;
     }
 
     /**
@@ -245,8 +320,12 @@ export default class TreeselectWrapper {
         if (this.#instance) {
             this.#instance.destroy();
         }
+        if (this.#ownsContainer && this.#container) {
+            delete this.#container.dataset.treeselectInit;
+        }
         this.#container = null;
         this.#input = null;
         this.#instance = null;
+        this.#ownsContainer = false;
     }
 }
