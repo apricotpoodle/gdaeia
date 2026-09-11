@@ -26,6 +26,18 @@ $this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => tr
     <div class="card-body">
         <div class="row g-3">
 
+            <!-- Intitulé du poste -->
+            <div class="col-md-12">
+                <?= $this->Form->control('jobtitle', [
+                    'id' => 'jobtitle',
+                    'label' => ['text' => __('Intitulé du poste'), 'class' => 'form-label fs-7 fw-medium'],
+                    'class' => 'form-control form-control-sm',
+                    'placeholder' => __('Saisir l\'intitulé du poste...'),
+                    'required' => true,
+                    'disabled' => !$canEditAdmin,
+                ]) ?>
+            </div>
+
             <!-- Sélecteur Collaborateur Interne -->
             <div class="col-md-6 collaborator-select-wrapper">
                 <?= $this->Form->control('collaborator_id', [
