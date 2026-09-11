@@ -200,17 +200,70 @@ class ApplicationformsController extends AppController
      */
     private function handleValidationError(EntityInterface $entity): Response
     {
-        $errors = $entity->getErrors();
-        $message = __('Le formulaire contient des données invalides.');
-
-        if (!empty($errors)) {
-            $firstError = current(reset($errors));
-            $message = (string)$firstError;
-        }
+        $error = $this->findFirstValidationError($entity->getErrors());
+        $message = $error === null
+            ? __('Impossible d\'enregistrer la demande : le serveur n\'a pas retourné de détail de validation.')
+            : __('Champ « {0} » : {1}', $this->getApplicationformFieldLabel($error[0]), $error[1]);
 
         return $this->response->withType('application/json')
             ->withStatus(400)
             ->withStringBody(json_encode(['success' => false, 'message' => $message]));
+    }
+
+    /**
+     * Extrait la première erreur en préservant le champ métier qui la porte.
+     *
+     * @param array<string, mixed> $errors Erreurs produites par l'ORM CakePHP.
+     * @param string|null $rootField Champ racine pour les associations imbriquées.
+     * @return array{0: string, 1: string}|null
+     */
+    private function findFirstValidationError(array $errors, ?string $rootField = null): ?array
+    {
+        foreach ($errors as $field => $details) {
+            $currentRootField = $rootField ?? (string)$field;
+            if (is_string($details)) {
+                return [$currentRootField, $details];
+            }
+
+            if (is_array($details)) {
+                $error = $this->findFirstValidationError($details, $currentRootField);
+                if ($error !== null) {
+                    return $error;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Retourne le libellé fonctionnel d'un champ de demande de recrutement.
+     *
+     * @param string $field Nom technique du champ.
+     * @return string
+     */
+    private function getApplicationformFieldLabel(string $field): string
+    {
+        return [
+            'department_id' => __('Département'),
+            'user_id' => __('Créateur de la demande'),
+            'cgr' => __('Code CGR'),
+            'contracttype_id' => __('Type de contrat'),
+            'hiringreason_id' => __('Motif de recrutement'),
+            'reasonforreplacement' => __('Précision du motif'),
+            'budgetfeature_id' => __('Imputation budgétaire'),
+            'jobtitle' => __('Intitulé du poste'),
+            'professionalcategory_id' => __('Catégorie professionnelle'),
+            'worktime_id' => __('Temps de travail'),
+            'workingtimedistribution' => __('Répartition du temps de travail'),
+            'grossremuneration' => __('Rémunération brute'),
+            'period_id' => __('Périodicité'),
+            'qualification' => __('Qualification'),
+            'begin_at' => __('Date de début'),
+            'end_at' => __('Date de fin'),
+            'applicantname' => __('Nom du candidat'),
+            'yesno_id' => __('Champ Oui/Non'),
+        ][$field] ?? $field;
     }
 
     /**
