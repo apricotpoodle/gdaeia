@@ -60,6 +60,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0049** | Intégration de TreeselectJS pour les structures hiérarchiques | **Accepté** | [`0049-integrationtreeselectjs_pour_structures_hierarchiques_departments.md`](./0049-integrationtreeselectjs_pour_structures_hierarchiques_departments.md) |
 | **ADR 0050** | Sémantique des périmètres hiérarchiques utilisateur | **Proposé** | [`0050-semantique-perimetres-hierarchiques-utilisateur.md`](./0050-semantique-perimetres-hierarchiques-utilisateur.md) |
 | **ADR 0051** | Français comme langue applicative par défaut | **Proposé** | [`0051-francais-langue-applicative-par-defaut.md`](./0051-francais-langue-applicative-par-defaut.md) |
+| **ADR 0052** | Présentation unifiée des erreurs de validation Web et API | **Proposé** | [`0052-presentation-unifiee-erreurs-validation-web-api.md`](./0052-presentation-unifiee-erreurs-validation-web-api.md) |
 
 ---
 
