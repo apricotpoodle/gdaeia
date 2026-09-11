@@ -157,13 +157,13 @@ class ApplicationformsController extends AppController
         // $departments = $this->Applicationforms->Departments
         //     ->find('treeVisibleTo', user: $currentUser)
         //     ->toArray();
-        $contracttypes = $this->Applicationforms->Contracttypes->find('list', user: $currentUser)->toArray();
-        $hiringreasons = $this->Applicationforms->Hiringreasons->find('visibleTo', user: $currentUser)->toArray();
-        $professionalcategories = $this->Applicationforms->Professionalcategories->find('visibleTo', user: $currentUser)->toArray();
-        $worktimes = $this->Applicationforms->Worktimes->find('visibleTo', user: $currentUser)->toArray();
-        $periods = $this->Applicationforms->Periods->find('visibleTo', user: $currentUser)->toArray();
-        $budgetfeatures = $this->Applicationforms->Budgetfeatures->find('visibleTo', user: $currentUser)->toArray();
-        $yesnos = $this->Applicationforms->Yesnos->find('visibleTo', user: $currentUser)->toArray();
+        $contracttypes = $this->Applicationforms->Contracttypes->getVisibleList($currentUser);   //   ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $hiringreasons = $this->Applicationforms->Hiringreasons->getVisibleList($currentUser);
+        $professionalcategories = $this->Applicationforms->Professionalcategories->getVisibleList($currentUser);
+        $worktimes = $this->Applicationforms->Worktimes->getVisibleList($currentUser);
+        $periods = $this->Applicationforms->Periods->getVisibleList($currentUser);
+        $budgetfeatures = $this->Applicationforms->Budgetfeatures->getVisibleList($currentUser);
+        $yesnos = $this->Applicationforms->Yesnos->getVisibleList($currentUser);
 
         // 💡 FILTRAGE STRICT DES COLLABORATEURS SELON LE PÉRIMÈTRE UTILISATEUR
         $collaborators = $this->Applicationforms->Users
