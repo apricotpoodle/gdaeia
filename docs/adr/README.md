@@ -58,6 +58,9 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0047** | Découpage de l'IHM Applicationform en 5 zones fonctionnelles | **Accepté** | [`0048-decoupage-ihm-zones-applicationform.md`](./0048-decoupage-ihm-zones-applicationform.md) |
 | **ADR 0048** | Centralisation de l'identité dans AppView et gestion des scripts | **Accepté** | [`0047-normalisation-vues-identity-assets-js.md`](./0047-normalisation-vues-identity-assets-js.md) |
 | **ADR 0049** | Intégration de TreeselectJS pour les structures hiérarchiques | **Accepté** | [`0049-integrationtreeselectjs_pour_structures_hierarchiques_departments.md`](./0049-integrationtreeselectjs_pour_structures_hierarchiques_departments.md) |
+| **ADR 0050** | Sémantique des périmètres hiérarchiques utilisateur | **Proposé** | [`0050-semantique-perimetres-hierarchiques-utilisateur.md`](./0050-semantique-perimetres-hierarchiques-utilisateur.md) |
+| **ADR 0051** | Français comme langue applicative par défaut | **Proposé** | [`0051-francais-langue-applicative-par-defaut.md`](./0051-francais-langue-applicative-par-defaut.md) |
+| **ADR 0052** | Présentation unifiée des erreurs de validation Web et API | **Proposé** | [`0052-presentation-unifiee-erreurs-validation-web-api.md`](./0052-presentation-unifiee-erreurs-validation-web-api.md) |
 
 ---
 

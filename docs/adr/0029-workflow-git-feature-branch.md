@@ -27,7 +27,9 @@ git checkout -b feature/ma-nouvelle-fonctionnalite
 3. Appuyez sur n (new) pour créer une nouvelle branche et saisissez feature/ma-nouvelle-fonctionnalite.
 
 ## 💻 Étape 2 : Développer et Commiter (Le Quotidien)
-Développez votre code et faites des commits atomiques (petits et logiques) avec des messages respectant la norme Conventional Commits (ex: feat(module): description).
+Développez votre code et faites des commits atomiques (petits et logiques) avec des messages respectant la norme Conventional Commits (ex: `feat(module): description`).
+
+Les messages de commit sont rédigés en français par défaut. Les préfixes de la norme Conventional Commits (`feat`, `fix`, `docs`, `refactor`, etc.) restent inchangés ; seul le libellé descriptif est en français. Toute dérogation à cette règle doit être explicitement justifiée par le contexte d'intégration concerné.
 ### Documentation
 
 - Renseigner tout fichier README.md local et tout fichier ADR.
