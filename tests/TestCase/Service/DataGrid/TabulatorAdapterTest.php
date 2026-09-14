@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Test\TestCase\Service\DataGrid;
 
 use App\Service\DataGrid\TabulatorAdapter;
+use Cake\Database\Expression\QueryExpression;
+use Cake\Database\ValueBinder;
 use Cake\Datasource\Paging\PaginatedInterface;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
@@ -55,6 +57,44 @@ class TabulatorAdapterTest extends TestCase
         ]);
 
         (new TabulatorAdapter())->adaptRequest($request, $query);
+    }
+
+    public function testLaRequeteTraduitUneBorneSuperieureDePlageDeDates(): void
+    {
+        $query = $this->queryForAlias('Users');
+        $query->expects($this->once())->method('where')
+            ->with(['Users.created <=' => '2026-01-15 23:59:59'])
+            ->willReturnSelf();
+        $request = new ServerRequest([
+            'query' => ['filters' => [[
+                'field' => 'created',
+                'value' => ['end' => '2026-01-15'],
+            ]]],
+        ]);
+
+        (new TabulatorAdapter())->adaptRequest($request, $query);
+    }
+
+    public function testLaRequeteTraduitUnePlageDeDatesComplete(): void
+    {
+        $query = $this->queryForAlias('Users');
+        $sql = '';
+        $query->expects($this->once())->method('where')
+            ->willReturnCallback(function (callable $condition) use (&$sql, $query): SelectQuery {
+                $sql = $condition(new QueryExpression())->sql(new ValueBinder());
+
+                return $query;
+            });
+        $request = new ServerRequest([
+            'query' => ['filters' => [[
+                'field' => 'created',
+                'value' => ['start' => '2026-01-01', 'end' => '2026-01-31'],
+            ]]],
+        ]);
+
+        (new TabulatorAdapter())->adaptRequest($request, $query);
+
+        $this->assertStringContainsString('Users.created BETWEEN', $sql);
     }
 
     public function testLaReponseRespecteLeFormatTabulatorEtAppliqueLesDroits(): void
