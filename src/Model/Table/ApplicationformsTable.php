@@ -9,7 +9,6 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
-use Search\Manager;
 use Search\Model\Filter\Callback;
 
 /**
@@ -65,6 +64,39 @@ class ApplicationformsTable extends Table
         $this->addBehavior('Search.Search', [
             'emptyState' => false,
         ]);
+        $this->getBehavior('Search')->searchManager()
+            ->value('department_id')
+            ->callback('q', [
+                'callback' => function (SelectQuery $query, array $args, Callback $filter) {
+                    $searchValue = trim((string)($args['q'] ?? ''));
+                    if ($searchValue === '') {
+                        return true;
+                    }
+
+                    $terms = array_filter(explode(' ', $searchValue));
+                    $booleanQuery = '';
+                    foreach ($terms as $term) {
+                        $term = trim($term);
+                        if ($term !== '') {
+                            $booleanQuery .= '+' . $term . '* ';
+                        }
+                    }
+
+                    $booleanQuery = trim($booleanQuery);
+                    if ($booleanQuery === '') {
+                        return true;
+                    }
+
+                    $query->where($query->expr(
+                        'MATCH(Applicationforms.jobtitle, Applicationforms.applicantname, '
+                        . 'Applicationforms.qualification, Applicationforms.reasonforreplacement) '
+                        . 'AGAINST(:search IN BOOLEAN MODE)',
+                    ));
+                    $query->bind(':search', $booleanQuery, 'string');
+
+                    return true;
+                },
+            ]);
 
         $this->belongsTo('Departments', [
             'foreignKey' => 'department_id',
@@ -123,55 +155,6 @@ class ApplicationformsTable extends Table
             'cascadeCallbacks' => true,
             'dependent' => true,
         ]);
-    }
-
-    /**
-     * Configuration des filtres de recherche pour FriendsOfCake/Search
-     *
-     * @return \Search\Manager
-     */
-    public function searchManager(): Manager
-    {
-        $searchManager = $this->behaviors()->get('Search')->searchManager();
-
-        // Filtre exact par département
-        $searchManager->value('department_id');
-
-        // 🚀 FILTRE CALLBACK FULLTEXT PERFORMANCE (MATCH AGAINST IN BOOLEAN MODE)
-        $searchManager->callback('q', [
-            'callback' => function (SelectQuery $query, array $args, Callback $filter) {
-                $searchValue = trim((string)($args['q'] ?? ''));
-                if ($searchValue === '') {
-                    return true;
-                }
-
-                // Découpage et normalisation des termes pour MySQL BOOLEAN MODE (+mot*)
-                $terms = array_filter(explode(' ', $searchValue));
-                $booleanQuery = '';
-                foreach ($terms as $term) {
-                    $term = trim($term);
-                    if ($term !== '') {
-                        $booleanQuery .= '+' . $term . '* ';
-                    }
-                }
-
-                $booleanQuery = trim($booleanQuery);
-                if ($booleanQuery === '') {
-                    return true;
-                }
-
-                // Application de la recherche FULLTEXT multi-colonnes
-                $query->where([
-                    'MATCH(Applicationforms.jobtitle, Applicationforms.applicantname, Applicationforms.qualification, Applicationforms.reasonforreplacement) AGAINST(:search IN BOOLEAN MODE)' => [
-                        'search' => $booleanQuery,
-                    ],
-                ]);
-
-                return true;
-            },
-        ]);
-
-        return $searchManager;
     }
 
     /**

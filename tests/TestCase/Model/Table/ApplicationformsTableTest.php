@@ -108,6 +108,53 @@ class ApplicationformsTableTest extends TestCase
     }
 
     /**
+     * La recherche FULLTEXT normalise plusieurs termes et exige leur présence.
+     *
+     * @return void
+     */
+    public function testRechercheFulltextAvecPlusieursTermes(): void
+    {
+        $this->Applicationforms->saveOrFail($this->Applicationforms->newEntity($this->validData([
+            'jobtitle' => 'Architecte logiciel securise',
+            'applicantname' => 'Camille Martin',
+        ])));
+        $this->Applicationforms->saveOrFail($this->Applicationforms->newEntity($this->validData([
+            'jobtitle' => 'Analyste financier',
+            'applicantname' => 'Morgan Dupont',
+        ])));
+
+        $matches = $this->Applicationforms->find('search', search: ['q' => ' architecte   secur '])
+            ->orderByAsc('Applicationforms.id')
+            ->all()
+            ->toList();
+        $noMatch = $this->Applicationforms->find('search', search: ['q' => 'architecte financier'])
+            ->all()
+            ->toList();
+
+        $this->assertCount(1, $matches);
+        $this->assertSame('Architecte logiciel securise', $matches[0]->jobtitle);
+        $this->assertCount(0, $noMatch);
+    }
+
+    /**
+     * Une recherche vide ne doit pas ajouter de critère FULLTEXT.
+     *
+     * @return void
+     */
+    public function testRechercheFulltextVideConserveToutesLesDemandes(): void
+    {
+        $this->Applicationforms->saveOrFail($this->Applicationforms->newEntity($this->validData([
+            'jobtitle' => 'Charge de recrutement',
+        ])));
+
+        $results = $this->Applicationforms->find('search', search: ['q' => '   '])
+            ->all()
+            ->toList();
+
+        $this->assertCount(2, $results);
+    }
+
+    /**
      * @param array<string, mixed> $overrides
      * @return array<string, mixed>
      */
