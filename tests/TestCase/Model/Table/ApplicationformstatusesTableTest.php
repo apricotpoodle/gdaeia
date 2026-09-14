@@ -60,7 +60,10 @@ class ApplicationformstatusesTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $entity = $this->Applicationformstatuses->newEntity(['applicationform_id' => -1, 'has_validations' => 'invalide', 'validationstatus_id' => 'invalide', 'en_cours' => 'invalide', 'accepted' => 'invalide', 'rejected' => 'invalide']);
+        $this->assertArrayHasKey('applicationform_id', $entity->getErrors());
+        $this->assertArrayHasKey('has_validations', $entity->getErrors());
+        $this->assertArrayHasKey('validationstatus_id', $entity->getErrors());
     }
 
     /**
@@ -71,6 +74,7 @@ class ApplicationformstatusesTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $this->assertTrue($this->Applicationformstatuses->associations()->has('Applicationforms'));
+        $this->assertTrue($this->Applicationformstatuses->associations()->has('Validationstatuses'));
     }
 }

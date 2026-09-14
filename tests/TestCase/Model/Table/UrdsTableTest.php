@@ -61,7 +61,10 @@ class UrdsTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $entity = $this->Urds->newEntity(['user_id' => 'invalide', 'role_id' => 'invalide', 'department_id' => 'invalide']);
+        $this->assertArrayHasKey('user_id', $entity->getErrors());
+        $this->assertArrayHasKey('role_id', $entity->getErrors());
+        $this->assertArrayHasKey('department_id', $entity->getErrors());
     }
 
     /**
@@ -72,6 +75,8 @@ class UrdsTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $this->assertTrue($this->Urds->associations()->has('Users'));
+        $this->assertTrue($this->Urds->associations()->has('Roles'));
+        $this->assertTrue($this->Urds->associations()->has('Departments'));
     }
 }

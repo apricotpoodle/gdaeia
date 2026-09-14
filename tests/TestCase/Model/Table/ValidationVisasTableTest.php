@@ -60,7 +60,11 @@ class ValidationVisasTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $entity = $this->ValidationVisas->newEntity(['applicationform_id' => -1, 'sequence' => 'invalide', 'role_id' => -1, 'role_name' => '']);
+        $this->assertArrayHasKey('applicationform_id', $entity->getErrors());
+        $this->assertArrayHasKey('sequence', $entity->getErrors());
+        $this->assertArrayHasKey('role_id', $entity->getErrors());
+        $this->assertArrayHasKey('role_name', $entity->getErrors());
     }
 
     /**
@@ -71,6 +75,7 @@ class ValidationVisasTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $this->assertTrue($this->ValidationVisas->associations()->has('Applicationforms'));
+        $this->assertTrue($this->ValidationVisas->associations()->has('Roles'));
     }
 }

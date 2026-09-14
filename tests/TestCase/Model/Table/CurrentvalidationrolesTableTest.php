@@ -61,7 +61,10 @@ class CurrentvalidationrolesTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $entity = $this->Currentvalidationroles->newEntity(['applicationform_id' => -1, 'department_id' => 'invalide', 'validator_role_id' => -1, 'validation_sequence' => 'invalide', 'en_cours' => 'invalide']);
+        $this->assertArrayHasKey('applicationform_id', $entity->getErrors());
+        $this->assertArrayHasKey('department_id', $entity->getErrors());
+        $this->assertArrayHasKey('validator_role_id', $entity->getErrors());
     }
 
     /**
@@ -72,6 +75,7 @@ class CurrentvalidationrolesTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $this->assertTrue($this->Currentvalidationroles->associations()->has('Applicationforms'));
+        $this->assertTrue($this->Currentvalidationroles->associations()->has('Departments'));
     }
 }
