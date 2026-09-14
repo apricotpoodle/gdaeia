@@ -24,6 +24,8 @@ Renforcer la couverture fonctionnelle et mesurer son niveau afin de prévenir le
 - Mesurer la couverture initiale puis appliquer progressivement les seuils suivants, couramment retenus en contexte industriel : 80 % de lignes global, 90 % de lignes pour le code critique (sécurité, autorisation, workflow et services), et un objectif initial de 75 % de branches lorsque cette mesure est disponible.
 - Mettre en place ces contrôles dans une intégration continue compatible avec la forge retenue : GitHub Actions, Codeberg CI/Actions ou toute solution équivalente. Elle exécute les tests sur MySQL dédié, publie Clover XML et le rapport HTML comme artefacts, puis applique les seuils progressivement.
 
+La réalisation détaillée de ce dernier volet est planifiée dans le [ticket 0004 — Intégration continue MySQL et couverture](0004-mettre-en-place-une-integration-continue-mysql.md).
+
 ## Critères d'acceptation
 
 - Chaque contrôleur prioritaire dispose d'au moins un scénario d'accès autorisé et d'un scénario de refus d'accès.
