@@ -30,7 +30,7 @@ La suite complète est exécutée depuis le conteneur PHP, qui embarque le pilot
 
 Les rapports de couverture utilisent **PCOV**. Il est installé dans l’image PHP, mais désactivé par défaut (`pcov.enabled=0`) afin de préserver les performances des commandes ordinaires, notamment `make test.all`. Les commandes de couverture l’activent explicitement avec `PCOV_ENABLED=1` et désactivent Xdebug avec `XDEBUG_MODE=off` : ces deux moteurs ne doivent pas mesurer la couverture simultanément.
 
-Xdebug reste installé et dédié au débogage interactif. PHPUnit génère le rapport Clover XML destiné à l’intégration continue et le rapport HTML destiné à la consultation locale, dans un répertoire temporaire hors des sources versionnées.
+Xdebug reste installé et dédié au débogage interactif. PHPUnit génère le rapport Clover XML destiné à l’intégration continue et le rapport HTML destiné à la consultation locale, dans un répertoire temporaire hors des sources versionnées. La commande `make test.coverage` ouvre automatiquement le rapport HTML avec le navigateur système et supprime avant chaque mesure les répertoires de couverture âgés de plus de 24 heures. La cible `make test.coverage.clean` permet une suppression immédiate à la demande.
 
 ## 3. Conséquences
 
