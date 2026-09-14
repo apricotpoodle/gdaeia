@@ -28,60 +28,29 @@ class PagesControllerTest extends TestCase
 {
     use IntegrationTestTrait;
 
-    /**
-     * testDisplay method
-     *
-     * @return void
-     */
-    public function testDisplay()
+    public function testLaPageAccueilRedirigeUnVisiteurVersLaConnexion(): void
     {
-        Configure::write('debug', true);
         $this->get('/pages/home');
-        $this->assertResponseOk();
-        $this->assertResponseContains('CakePHP');
-        $this->assertResponseContains('<html>');
+        $this->assertRedirectContains('/users/login');
     }
 
-    /**
-     * Test that missing template renders 404 page in production
-     *
-     * @return void
-     */
-    public function testMissingTemplate()
+    public function testUnePageInconnueNeContournePasLaConnexion(): void
     {
-        Configure::write('debug', false);
         $this->get('/pages/not_existing');
-
-        $this->assertResponseError();
-        $this->assertResponseContains('Error');
+        $this->assertRedirectContains('/users/login');
     }
 
-    /**
-     * Test that missing template in debug mode renders missing_template error page
-     *
-     * @return void
-     */
-    public function testMissingTemplateInDebug()
+    public function testLeModeDebugNeContournePasLaConnexion(): void
     {
         Configure::write('debug', true);
         $this->get('/pages/not_existing');
-
-        $this->assertResponseFailure();
-        $this->assertResponseContains('Missing Template');
-        $this->assertResponseContains('stack-frames');
-        $this->assertResponseContains('not_existing.php');
+        $this->assertRedirectContains('/users/login');
     }
 
-    /**
-     * Test directory traversal protection
-     *
-     * @return void
-     */
-    public function testDirectoryTraversalProtection()
+    public function testUnCheminSuspectNeContournePasLaConnexion(): void
     {
         $this->get('/pages/../Layout/ajax');
-        $this->assertResponseCode(403);
-        $this->assertResponseContains('Forbidden');
+        $this->assertRedirectContains('/users/login');
     }
 
     /**
@@ -89,7 +58,7 @@ class PagesControllerTest extends TestCase
      *
      * @return void
      */
-    public function testCsrfAppliedError()
+    public function testLaProtectionCsrfRefuseUnPostSansJeton(): void
     {
         $this->post('/pages/home', ['hello' => 'world']);
 
@@ -102,7 +71,7 @@ class PagesControllerTest extends TestCase
      *
      * @return void
      */
-    public function testCsrfAppliedOk()
+    public function testLaProtectionCsrfAccepteUnPostAvecJeton(): void
     {
         $this->enableCsrfToken();
         $this->post('/pages/home', ['hello' => 'world']);
