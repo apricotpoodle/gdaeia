@@ -24,7 +24,6 @@ class UrdsTableTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Urds',
         'app.Users',
         'app.Roles',
         'app.Departments',

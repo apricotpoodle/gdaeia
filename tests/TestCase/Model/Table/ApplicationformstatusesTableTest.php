@@ -24,7 +24,6 @@ class ApplicationformstatusesTableTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Applicationformstatuses',
         'app.Applicationforms',
         'app.Validationstatuses',
     ];

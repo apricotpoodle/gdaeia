@@ -25,8 +25,7 @@ class DepartmentsTableTest extends TestCase
      */
     protected array $fixtures = [
         'app.Departments',
-        'app.DefaultCgrCode',
-        'app.OwnedCgrCodes',
+        'app.CgrCodes',
         'app.CgrStrategies',
         'app.Applicationforms',
     ];

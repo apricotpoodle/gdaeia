@@ -24,7 +24,6 @@ class CurrentvalidationrolesTableTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Currentvalidationroles',
         'app.Applicationforms',
         'app.Departments',
         'app.Validationstatuses',

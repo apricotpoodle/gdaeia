@@ -34,10 +34,7 @@ class ApplicationformsTableTest extends TestCase
         'app.Worktimes',
         'app.Periods',
         'app.Yesnos',
-        'app.Applicationformstatuses',
         'app.Applicationvalidationsteps',
-        'app.Currentvalidationroles',
-        'app.ValidationVisas',
         'app.Validations',
     ];
 

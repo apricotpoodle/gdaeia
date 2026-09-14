@@ -27,7 +27,6 @@ class UsersTableTest extends TestCase
         'app.Users',
         'app.Roles',
         'app.Applicationforms',
-        'app.Urds',
         'app.UserDepartments',
         'app.Validations',
     ];

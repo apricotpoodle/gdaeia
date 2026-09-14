@@ -25,9 +25,7 @@ class ValidationstatusesTableTest extends TestCase
      */
     protected array $fixtures = [
         'app.Validationstatuses',
-        'app.Applicationformstatuses',
         'app.Applicationvalidationsteps',
-        'app.Currentvalidationroles',
         'app.Validations',
     ];
 

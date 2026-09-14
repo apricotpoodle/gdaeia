@@ -28,9 +28,7 @@ class RolesTableTest extends TestCase
         'app.Applicationvalidationsteps',
         'app.FieldAuthorizations',
         'app.RoleMenus',
-        'app.Urds',
         'app.Users',
-        'app.ValidationVisas',
         'app.Validations',
         'app.Validationsequences',
     ];

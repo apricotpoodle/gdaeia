@@ -20,8 +20,8 @@ class DepartmentsFixture extends TestFixture
         $this->records = [
             [
                 'id' => 1,
-                'parent_id' => 1,
-                'cgr_code_id' => 1,
+                'parent_id' => null,
+                'cgr_code_id' => null,
                 'lft' => 1,
                 'rght' => 1,
                 'level' => 1,
@@ -30,9 +30,9 @@ class DepartmentsFixture extends TestFixture
                 'name' => 'Lorem ipsum dolor sit amet',
                 'sort' => 'Lorem ipsum dolor sit amet',
                 'department_type_id' => 1,
-                'cgr_strategy_id' => 1,
+                'cgr_strategy_id' => null,
                 'default_cgr' => 'Lorem ipsum dolor sit amet',
-                'current_manager_id' => 1,
+                'current_manager_id' => null,
                 'deleted' => '2026-07-03 09:24:22',
                 'created' => 1783070662,
                 'modified' => 1783070662,
