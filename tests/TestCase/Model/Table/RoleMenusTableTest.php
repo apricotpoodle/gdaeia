@@ -62,7 +62,15 @@ class RoleMenusTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $roleMenu = $this->RoleMenus->newEntity([
+            'role_id' => 'invalide',
+            'menu_id' => 'invalide',
+            'department_id' => -1,
+        ]);
+
+        $this->assertArrayHasKey('role_id', $roleMenu->getErrors());
+        $this->assertArrayHasKey('menu_id', $roleMenu->getErrors());
+        $this->assertArrayHasKey('department_id', $roleMenu->getErrors());
     }
 
     /**
@@ -73,6 +81,12 @@ class RoleMenusTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $roleMenu = $this->RoleMenus->newEntity([
+            'role_id' => 1,
+            'menu_id' => 99999,
+        ]);
+
+        $this->assertFalse($this->RoleMenus->save($roleMenu));
+        $this->assertArrayHasKey('menu_id', $roleMenu->getErrors());
     }
 }

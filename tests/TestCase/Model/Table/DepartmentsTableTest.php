@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Entity\User;
 use App\Model\Table\DepartmentsTable;
 use Cake\TestSuite\TestCase;
 
@@ -62,7 +63,10 @@ class DepartmentsTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $this->assertTrue($this->Departments->behaviors()->has('Tree'));
+        $this->assertTrue($this->Departments->associations()->has('ParentDepartments'));
+        $this->assertTrue($this->Departments->associations()->has('ChildDepartments'));
+        $this->assertTrue($this->Departments->associations()->has('CgrStrategies'));
     }
 
     /**
@@ -73,6 +77,11 @@ class DepartmentsTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $query = $this->Departments->find();
+
+        $this->assertSame(
+            $query,
+            $this->Departments->findVisibleTo($query, new User(['issuperuser' => true])),
+        );
     }
 }

@@ -65,7 +65,17 @@ class RolesTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $role = $this->Roles->newEntity([
+            'base' => 'invalide',
+            'code' => str_repeat('a', 17),
+            'name' => '',
+            'sort' => '',
+        ]);
+
+        $this->assertArrayHasKey('base', $role->getErrors());
+        $this->assertArrayHasKey('code', $role->getErrors());
+        $this->assertArrayHasKey('name', $role->getErrors());
+        $this->assertArrayHasKey('sort', $role->getErrors());
     }
 
     /**
@@ -76,6 +86,14 @@ class RolesTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $role = $this->Roles->newEntity([
+            'base' => false,
+            'code' => 'Lorem ipsum do',
+            'name' => 'Nouveau role',
+            'sort' => 'nouveau-role',
+        ]);
+
+        $this->assertFalse($this->Roles->save($role));
+        $this->assertArrayHasKey('code', $role->getErrors());
     }
 }

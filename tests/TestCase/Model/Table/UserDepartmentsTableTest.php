@@ -61,7 +61,13 @@ class UserDepartmentsTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $userDepartment = $this->UserDepartments->newEntity([
+            'user_id' => 'invalide',
+            'department_id' => 'invalide',
+        ]);
+
+        $this->assertArrayHasKey('user_id', $userDepartment->getErrors());
+        $this->assertArrayHasKey('department_id', $userDepartment->getErrors());
     }
 
     /**
@@ -72,6 +78,12 @@ class UserDepartmentsTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $userDepartment = $this->UserDepartments->newEntity([
+            'user_id' => 99999,
+            'department_id' => 1,
+        ]);
+
+        $this->assertFalse($this->UserDepartments->save($userDepartment));
+        $this->assertArrayHasKey('user_id', $userDepartment->getErrors());
     }
 }

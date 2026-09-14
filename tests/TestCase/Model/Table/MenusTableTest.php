@@ -60,7 +60,17 @@ class MenusTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $menu = $this->Menus->newEntity([
+            'parent_id' => 'invalide',
+            'level' => 'invalide',
+            'active' => 'invalide',
+            'disabled' => 'invalide',
+        ]);
+
+        $this->assertArrayHasKey('parent_id', $menu->getErrors());
+        $this->assertArrayHasKey('level', $menu->getErrors());
+        $this->assertArrayHasKey('active', $menu->getErrors());
+        $this->assertArrayHasKey('disabled', $menu->getErrors());
     }
 
     /**
@@ -71,6 +81,13 @@ class MenusTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $menu = $this->Menus->newEntity([
+            'parent_id' => 99999,
+            'name' => 'Menu enfant',
+            'active' => true,
+        ]);
+
+        $this->assertFalse($this->Menus->save($menu));
+        $this->assertArrayHasKey('parent_id', $menu->getErrors());
     }
 }
