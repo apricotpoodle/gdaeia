@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Controller\Api;
@@ -36,7 +35,7 @@ class MenusController extends AppController
      * @param \Cake\Event\EventInterface $event L'événement en cours.
      * @return \Cake\Http\Response|null|void
      */
-    public function beforeFilter(EventInterface $event) : void
+    public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
         $this->Authorization->skipAuthorization(['index']);
@@ -149,9 +148,7 @@ class MenusController extends AppController
                 $userTable = TableRegistry::getTableLocator()->get('Users');
 
                 /** @var \App\Model\Entity\User $userWithRole */
-                $userWithRole = $userTable->get($user->get('id'), [
-                    'contain' => ['Roles'],
-                ]);
+                $userWithRole = $userTable->get($user->get('id'), contain: ['Roles']);
 
                 $userData = [
                     'email' => $userWithRole->get('email'),
