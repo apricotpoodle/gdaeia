@@ -24,7 +24,6 @@ class ApplicationformstatusesTableTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Applicationformstatuses',
         'app.Applicationforms',
         'app.Validationstatuses',
     ];
@@ -59,9 +58,12 @@ class ApplicationformstatusesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ApplicationformstatusesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $entity = $this->Applicationformstatuses->newEntity(['applicationform_id' => -1, 'has_validations' => 'invalide', 'validationstatus_id' => 'invalide', 'en_cours' => 'invalide', 'accepted' => 'invalide', 'rejected' => 'invalide']);
+        $this->assertArrayHasKey('applicationform_id', $entity->getErrors());
+        $this->assertArrayHasKey('has_validations', $entity->getErrors());
+        $this->assertArrayHasKey('validationstatus_id', $entity->getErrors());
     }
 
     /**
@@ -70,8 +72,9 @@ class ApplicationformstatusesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ApplicationformstatusesTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->assertTrue($this->Applicationformstatuses->associations()->has('Applicationforms'));
+        $this->assertTrue($this->Applicationformstatuses->associations()->has('Validationstatuses'));
     }
 }

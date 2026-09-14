@@ -59,9 +59,15 @@ class UserDepartmentsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\UserDepartmentsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $userDepartment = $this->UserDepartments->newEntity([
+            'user_id' => 'invalide',
+            'department_id' => 'invalide',
+        ]);
+
+        $this->assertArrayHasKey('user_id', $userDepartment->getErrors());
+        $this->assertArrayHasKey('department_id', $userDepartment->getErrors());
     }
 
     /**
@@ -70,8 +76,14 @@ class UserDepartmentsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\UserDepartmentsTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $userDepartment = $this->UserDepartments->newEntity([
+            'user_id' => 99999,
+            'department_id' => 1,
+        ]);
+
+        $this->assertFalse($this->UserDepartments->save($userDepartment));
+        $this->assertArrayHasKey('user_id', $userDepartment->getErrors());
     }
 }

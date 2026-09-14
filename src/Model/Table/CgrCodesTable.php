@@ -45,8 +45,7 @@ class CgrCodesTable extends Table
 
         $this->addBehavior('Timestamp');
 
-        $this->belongsTo('OwnerDepartments', [
-            'className' => 'Departments',
+        $this->belongsTo('Departments', [
             'foreignKey' => 'department_id',
             'joinType' => 'INNER',
         ]);
@@ -106,7 +105,10 @@ class CgrCodesTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['department_id', 'type', 'code']), ['errorField' => 'department_id', 'message' => __('This combination of department_id, type and code already exists')]);
+        $rules->add($rules->isUnique(['department_id', 'type', 'code']), [
+            'errorField' => 'department_id',
+            'message' => __('Cette combinaison de département, type et code existe déjà.'),
+        ]);
         $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
 
         return $rules;

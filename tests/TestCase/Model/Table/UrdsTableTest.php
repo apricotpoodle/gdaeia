@@ -24,7 +24,6 @@ class UrdsTableTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Urds',
         'app.Users',
         'app.Roles',
         'app.Departments',
@@ -60,9 +59,12 @@ class UrdsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\UrdsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $entity = $this->Urds->newEntity(['user_id' => 'invalide', 'role_id' => 'invalide', 'department_id' => 'invalide']);
+        $this->assertArrayHasKey('user_id', $entity->getErrors());
+        $this->assertArrayHasKey('role_id', $entity->getErrors());
+        $this->assertArrayHasKey('department_id', $entity->getErrors());
     }
 
     /**
@@ -71,8 +73,10 @@ class UrdsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\UrdsTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->assertTrue($this->Urds->associations()->has('Users'));
+        $this->assertTrue($this->Urds->associations()->has('Roles'));
+        $this->assertTrue($this->Urds->associations()->has('Departments'));
     }
 }

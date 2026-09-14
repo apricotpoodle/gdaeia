@@ -58,9 +58,19 @@ class FieldAuthorizationsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\FieldAuthorizationsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => -1,
+            'resource' => '',
+            'field' => str_repeat('a', 51),
+            'access_level' => '',
+        ]);
+
+        $this->assertArrayHasKey('role_id', $authorization->getErrors());
+        $this->assertArrayHasKey('resource', $authorization->getErrors());
+        $this->assertArrayHasKey('field', $authorization->getErrors());
+        $this->assertArrayHasKey('access_level', $authorization->getErrors());
     }
 
     /**
@@ -69,8 +79,16 @@ class FieldAuthorizationsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\FieldAuthorizationsTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => 99999,
+            'resource' => 'Applicationforms',
+            'field' => 'jobtitle',
+            'access_level' => 'EDIT',
+        ]);
+
+        $this->assertFalse($this->FieldAuthorizations->save($authorization));
+        $this->assertArrayHasKey('role_id', $authorization->getErrors());
     }
 }

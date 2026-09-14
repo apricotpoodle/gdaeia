@@ -24,7 +24,6 @@ class CurrentvalidationrolesTableTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
-        'app.Currentvalidationroles',
         'app.Applicationforms',
         'app.Departments',
         'app.Validationstatuses',
@@ -60,9 +59,12 @@ class CurrentvalidationrolesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\CurrentvalidationrolesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $entity = $this->Currentvalidationroles->newEntity(['applicationform_id' => -1, 'department_id' => 'invalide', 'validator_role_id' => -1, 'validation_sequence' => 'invalide', 'en_cours' => 'invalide']);
+        $this->assertArrayHasKey('applicationform_id', $entity->getErrors());
+        $this->assertArrayHasKey('department_id', $entity->getErrors());
+        $this->assertArrayHasKey('validator_role_id', $entity->getErrors());
     }
 
     /**
@@ -71,8 +73,9 @@ class CurrentvalidationrolesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\CurrentvalidationrolesTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->assertTrue($this->Currentvalidationroles->associations()->has('Applicationforms'));
+        $this->assertTrue($this->Currentvalidationroles->associations()->has('Departments'));
     }
 }

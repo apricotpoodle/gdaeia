@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Entity\User;
 use App\Model\Table\DepartmentsTable;
 use Cake\TestSuite\TestCase;
 
@@ -25,8 +26,7 @@ class DepartmentsTableTest extends TestCase
      */
     protected array $fixtures = [
         'app.Departments',
-        'app.DefaultCgrCode',
-        'app.OwnedCgrCodes',
+        'app.CgrCodes',
         'app.CgrStrategies',
         'app.Applicationforms',
     ];
@@ -61,9 +61,12 @@ class DepartmentsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\DepartmentsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->assertTrue($this->Departments->behaviors()->has('Tree'));
+        $this->assertTrue($this->Departments->associations()->has('ParentDepartments'));
+        $this->assertTrue($this->Departments->associations()->has('ChildDepartments'));
+        $this->assertTrue($this->Departments->associations()->has('CgrStrategies'));
     }
 
     /**
@@ -72,8 +75,13 @@ class DepartmentsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\DepartmentsTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $query = $this->Departments->find();
+
+        $this->assertSame(
+            $query,
+            $this->Departments->findVisibleTo($query, new User(['issuperuser' => true])),
+        );
     }
 }

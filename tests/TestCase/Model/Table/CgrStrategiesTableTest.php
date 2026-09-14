@@ -58,9 +58,17 @@ class CgrStrategiesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\CgrStrategiesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $strategy = $this->CgrStrategies->newEntity([
+            'code' => str_repeat('a', 33),
+            'name' => '',
+            'definition_json' => '',
+        ]);
+
+        $this->assertArrayHasKey('code', $strategy->getErrors());
+        $this->assertArrayHasKey('name', $strategy->getErrors());
+        $this->assertArrayHasKey('definition_json', $strategy->getErrors());
     }
 
     /**
@@ -69,8 +77,15 @@ class CgrStrategiesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\CgrStrategiesTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $strategy = $this->CgrStrategies->newEntity([
+            'code' => 'Lorem ipsum dolor sit amet',
+            'name' => 'Strategie alternative',
+            'definition_json' => '[{"type":"AXE"}]',
+        ]);
+
+        $this->assertFalse($this->CgrStrategies->save($strategy));
+        $this->assertArrayHasKey('code', $strategy->getErrors());
     }
 }

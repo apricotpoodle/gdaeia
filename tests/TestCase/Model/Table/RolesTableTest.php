@@ -28,9 +28,7 @@ class RolesTableTest extends TestCase
         'app.Applicationvalidationsteps',
         'app.FieldAuthorizations',
         'app.RoleMenus',
-        'app.Urds',
         'app.Users',
-        'app.ValidationVisas',
         'app.Validations',
         'app.Validationsequences',
     ];
@@ -65,9 +63,19 @@ class RolesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\RolesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $role = $this->Roles->newEntity([
+            'base' => 'invalide',
+            'code' => str_repeat('a', 17),
+            'name' => '',
+            'sort' => '',
+        ]);
+
+        $this->assertArrayHasKey('base', $role->getErrors());
+        $this->assertArrayHasKey('code', $role->getErrors());
+        $this->assertArrayHasKey('name', $role->getErrors());
+        $this->assertArrayHasKey('sort', $role->getErrors());
     }
 
     /**
@@ -76,8 +84,16 @@ class RolesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\RolesTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $role = $this->Roles->newEntity([
+            'base' => false,
+            'code' => 'Lorem ipsum do',
+            'name' => 'Nouveau role',
+            'sort' => 'nouveau-role',
+        ]);
+
+        $this->assertFalse($this->Roles->save($role));
+        $this->assertArrayHasKey('code', $role->getErrors());
     }
 }

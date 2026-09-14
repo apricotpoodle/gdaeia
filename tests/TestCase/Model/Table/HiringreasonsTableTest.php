@@ -58,9 +58,13 @@ class HiringreasonsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\HiringreasonsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $entity = $this->Hiringreasons->newEntity(['base' => 'invalide', 'code' => str_repeat('a', 17), 'name' => '', 'sort' => '']);
+        $this->assertArrayHasKey('base', $entity->getErrors());
+        $this->assertArrayHasKey('code', $entity->getErrors());
+        $this->assertArrayHasKey('name', $entity->getErrors());
+        $this->assertArrayHasKey('sort', $entity->getErrors());
     }
 
     /**
@@ -69,8 +73,10 @@ class HiringreasonsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\HiringreasonsTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $entity = $this->Hiringreasons->newEntity(['base' => false, 'code' => 'Lorem ipsum do', 'name' => 'Nouveau', 'sort' => 'nouveau']);
+        $this->assertFalse($this->Hiringreasons->save($entity));
+        $this->assertArrayHasKey('code', $entity->getErrors());
     }
 }

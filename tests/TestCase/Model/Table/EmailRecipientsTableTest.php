@@ -58,9 +58,11 @@ class EmailRecipientsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\EmailRecipientsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $recipient = $this->EmailRecipients->newEntity(['email_log_id' => 'invalide', 'recipient_email' => '']);
+        $this->assertArrayHasKey('email_log_id', $recipient->getErrors());
+        $this->assertArrayHasKey('recipient_email', $recipient->getErrors());
     }
 
     /**
@@ -69,8 +71,10 @@ class EmailRecipientsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\EmailRecipientsTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $recipient = $this->EmailRecipients->newEntity(['email_log_id' => 99999, 'recipient_email' => 'test@example.test']);
+        $this->assertFalse($this->EmailRecipients->save($recipient));
+        $this->assertArrayHasKey('email_log_id', $recipient->getErrors());
     }
 }

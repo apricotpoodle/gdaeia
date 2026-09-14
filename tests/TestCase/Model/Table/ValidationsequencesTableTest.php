@@ -60,9 +60,19 @@ class ValidationsequencesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ValidationsequencesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $sequence = $this->Validationsequences->newEntity([
+            'department_id' => -1,
+            'name' => '',
+            'role_id' => -1,
+            'sequence' => 'invalide',
+        ]);
+
+        $this->assertArrayHasKey('department_id', $sequence->getErrors());
+        $this->assertArrayHasKey('name', $sequence->getErrors());
+        $this->assertArrayHasKey('role_id', $sequence->getErrors());
+        $this->assertArrayHasKey('sequence', $sequence->getErrors());
     }
 
     /**
@@ -71,8 +81,16 @@ class ValidationsequencesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ValidationsequencesTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $sequence = $this->Validationsequences->newEntity([
+            'department_id' => 1,
+            'name' => 'Validation RH',
+            'role_id' => 99999,
+            'sequence' => 2,
+        ]);
+
+        $this->assertFalse($this->Validationsequences->save($sequence));
+        $this->assertArrayHasKey('role_id', $sequence->getErrors());
     }
 }

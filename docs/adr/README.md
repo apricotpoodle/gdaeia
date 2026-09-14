@@ -61,6 +61,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0050** | Sémantique des périmètres hiérarchiques utilisateur | **Proposé** | [`0050-semantique-perimetres-hierarchiques-utilisateur.md`](./0050-semantique-perimetres-hierarchiques-utilisateur.md) |
 | **ADR 0051** | Français comme langue applicative par défaut | **Proposé** | [`0051-francais-langue-applicative-par-defaut.md`](./0051-francais-langue-applicative-par-defaut.md) |
 | **ADR 0052** | Présentation unifiée des erreurs de validation Web et API | **Proposé** | [`0052-presentation-unifiee-erreurs-validation-web-api.md`](./0052-presentation-unifiee-erreurs-validation-web-api.md) |
+| **ADR 0053** | Stratégie de tests et MySQL dédié à l’intégration | **Accepté** | [`0053-strategie-tests-unitaires-et-integration.md`](./0053-strategie-tests-unitaires-et-integration.md) |
 
 ---
 

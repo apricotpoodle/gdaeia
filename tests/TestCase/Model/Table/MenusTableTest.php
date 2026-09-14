@@ -58,9 +58,19 @@ class MenusTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\MenusTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $menu = $this->Menus->newEntity([
+            'parent_id' => 'invalide',
+            'level' => 'invalide',
+            'active' => 'invalide',
+            'disabled' => 'invalide',
+        ]);
+
+        $this->assertArrayHasKey('parent_id', $menu->getErrors());
+        $this->assertArrayHasKey('level', $menu->getErrors());
+        $this->assertArrayHasKey('active', $menu->getErrors());
+        $this->assertArrayHasKey('disabled', $menu->getErrors());
     }
 
     /**
@@ -69,8 +79,15 @@ class MenusTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\MenusTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $menu = $this->Menus->newEntity([
+            'parent_id' => 99999,
+            'name' => 'Menu enfant',
+            'active' => true,
+        ]);
+
+        $this->assertFalse($this->Menus->save($menu));
+        $this->assertArrayHasKey('parent_id', $menu->getErrors());
     }
 }

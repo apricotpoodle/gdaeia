@@ -18,7 +18,8 @@ Cette situation est incohérente avec l'interface métier en français et avec l
 1. **Locale de repli** : la locale applicative par défaut est `fr_FR`. La configuration CakePHP utilise cette valeur lorsque `APP_DEFAULT_LOCALE` est absente.
 2. **Configuration explicite** : `APP_DEFAULT_LOCALE` reste disponible pour un déploiement qui nécessiterait une autre locale. Toute dérogation doit être définie explicitement dans sa configuration d'environnement.
 3. **Messages utilisateur** : les messages de validation et d'erreur exposés aux utilisateurs sont rédigés en français. Les règles métier et contraintes d'intégrité dont le message n'est pas fourni par CakePHP doivent définir un message français explicite.
-4. **Portée** : cette règle s'applique aux interfaces HTML, aux réponses JSON de l'API, aux courriels et aux nouveaux modules applicatifs.
+4. **Portée** : cette règle s'applique aux interfaces HTML, aux réponses JSON de l'API, aux courriels, aux nouveaux modules applicatifs et aux libellés de scénarios, messages et rapports définis par le projet dans PHPUnit.
+5. **Outillage de test** : les cibles Make de test fixent `APP_DEFAULT_LOCALE=fr_FR`. Les noms de tests, messages d'assertion et messages de tests incomplets maintenus par l'équipe sont rédigés en français. Les messages internes non localisables de PHPUnit ou de ses dépendances ne sont pas réécrits.
 
 ## 3. Justifications
 

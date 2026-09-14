@@ -25,9 +25,7 @@ class ValidationstatusesTableTest extends TestCase
      */
     protected array $fixtures = [
         'app.Validationstatuses',
-        'app.Applicationformstatuses',
         'app.Applicationvalidationsteps',
-        'app.Currentvalidationroles',
         'app.Validations',
     ];
 
@@ -61,8 +59,14 @@ class ValidationstatusesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ValidationstatusesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $status = $this->Validationstatuses->newEntity([
+            'code' => '',
+            'name' => str_repeat('a', 101),
+        ]);
+
+        $this->assertArrayHasKey('code', $status->getErrors());
+        $this->assertArrayHasKey('name', $status->getErrors());
     }
 }

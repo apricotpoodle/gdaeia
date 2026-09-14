@@ -27,7 +27,6 @@ class UsersTableTest extends TestCase
         'app.Users',
         'app.Roles',
         'app.Applicationforms',
-        'app.Urds',
         'app.UserDepartments',
         'app.Validations',
     ];
@@ -62,9 +61,19 @@ class UsersTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\UsersTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $user = $this->Users->newEntity([
+            'email' => 'adresse-invalide',
+            'password' => '',
+            'issuperuser' => 'invalide',
+            'role_id' => 'invalide',
+        ]);
+
+        $this->assertArrayHasKey('email', $user->getErrors());
+        $this->assertArrayHasKey('password', $user->getErrors());
+        $this->assertArrayHasKey('issuperuser', $user->getErrors());
+        $this->assertArrayHasKey('role_id', $user->getErrors());
     }
 
     /**
@@ -73,8 +82,17 @@ class UsersTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\UsersTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $user = $this->Users->newEntity([
+            'username' => 'Lorem ipsum dolor sit amet',
+            'email' => 'nouvel.utilisateur@example.test',
+            'password' => 'mot-de-passe-sur',
+            'issuperuser' => false,
+            'role_id' => 1,
+        ]);
+
+        $this->assertFalse($this->Users->save($user));
+        $this->assertArrayHasKey('username', $user->getErrors());
     }
 }
