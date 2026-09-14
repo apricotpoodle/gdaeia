@@ -5,7 +5,7 @@
 
 ## Contexte
 
-La suite PHPUnit est verte avec 88 tests et 250 assertions. Les services et les tables disposent d'une couverture automatisée, et aucun scénario n'est marqué « Non implémenté ».
+La suite PHPUnit est verte avec 107 tests et 301 assertions. Les services et les tables disposent d'une couverture automatisée, et aucun scénario n'est marqué « Non implémenté ».
 
 Les contrôleurs, les parcours HTTP authentifiés, les requêtes réelles des vues SQL et certains cas limites métier restent à couvrir. Le présent ticket regroupe ces travaux sans remettre en cause la stratégie de tests MySQL.
 
@@ -15,10 +15,10 @@ Renforcer la couverture fonctionnelle et mesurer son niveau afin de prévenir le
 
 ## Travaux à réaliser
 
-- Créer des tests d'intégration HTTP pour les contrôleurs non couverts, en priorité les API `Applicationforms`, `Users`, `Comments`, `Menus` et `FieldAuthorizations`.
-- Couvrir les parcours authentifiés, les refus d'accès par rôle et périmètre de département, ainsi que les réponses d'erreur attendues.
-- Ajouter les cas limites métier : recherche FULLTEXT des demandes, bornes haute et double des plages de dates Tabulator, et enchaînement complet du workflow de validation.
-- Tester les requêtes des vues SQL `applicationformstatuses`, `currentvalidationroles`, `validation_visas` et `urds` à partir de données créées dans leurs tables sources, sans créer de fixture de vue.
+- [x] Créer des tests d'intégration HTTP pour les contrôleurs non couverts, en priorité les API `Applicationforms`, `Users`, `Comments`, `Menus` et `FieldAuthorizations`.
+- [x] Couvrir les parcours authentifiés, les refus d'accès par rôle et périmètre de département, ainsi que les réponses d'erreur attendues.
+- [x] Ajouter les cas limites métier : recherche FULLTEXT des demandes, bornes haute et double des plages de dates Tabulator, et enchaînement complet du workflow de validation.
+- [x] Tester les requêtes des vues SQL `applicationformstatuses`, `currentvalidationroles`, `validation_visas` et `urds` à partir de données créées dans leurs tables sources, sans créer de fixture de vue.
 - Vérifier la disponibilité et la compatibilité du moteur de couverture dans le conteneur (`PCOV` en priorité, ou `Xdebug`), sans dégrader l'exécution courante des tests.
 - Décider du format de rapport publié : Clover XML pour l'intégration continue et HTML pour la consultation locale ; conserver le chemin de sortie hors des sources versionnées.
 - Mesurer la couverture initiale puis appliquer progressivement les seuils suivants, couramment retenus en contexte industriel : 80 % de lignes global, 90 % de lignes pour le code critique (sécurité, autorisation, workflow et services), et un objectif initial de 75 % de branches lorsque cette mesure est disponible.
@@ -38,3 +38,8 @@ Renforcer la couverture fonctionnelle et mesurer son niveau afin de prévenir le
 - [ADR 0051 — Français, langue applicative par défaut](../adr/0051-francais-langue-applicative-par-defaut.md)
 - [ADR 0053 — Stratégie de tests unitaires et intégration](../adr/0053-strategie-tests-unitaires-et-integration.md)
 - [Configuration PHPUnit](../../phpunit.xml.dist)
+
+## Réalisations complémentaires
+
+- La cible `make test.workflow` exécute les scénarios du workflow de validation et des vues SQL avec la garde MySQL `daetf2_test`.
+- La recherche FULLTEXT est testée avec des espaces superflus, plusieurs termes obligatoires et une recherche vide. Sa configuration utilise l'API courante de FriendsOfCake/Search et lie explicitement le paramètre MySQL.
