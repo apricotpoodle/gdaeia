@@ -26,8 +26,14 @@ SQLite n’est pas retenu pour cette suite d’intégration. L’application dé
 
 La suite complète est exécutée depuis le conteneur PHP, qui embarque le pilote `pdo_mysql`. Avant toute exécution, l’opérateur doit vérifier que `DATABASE_TEST_URL` ne désigne ni la base de développement, ni une base de recette ou de production. Le bootstrap de test est autorisé à créer, modifier et reconstruire uniquement le schéma de cette base dédiée.
 
+### Moteur de couverture de code
+
+Les rapports de couverture utilisent **PCOV**. Il est installé dans l’image PHP, mais désactivé par défaut (`pcov.enabled=0`) afin de préserver les performances des commandes ordinaires, notamment `make test.all`. Les commandes de couverture l’activent explicitement avec `PCOV_ENABLED=1` et désactivent Xdebug avec `XDEBUG_MODE=off` : ces deux moteurs ne doivent pas mesurer la couverture simultanément.
+
+Xdebug reste installé et dédié au débogage interactif. PHPUnit génère le rapport Clover XML destiné à l’intégration continue et le rapport HTML destiné à la consultation locale, dans un répertoire temporaire hors des sources versionnées.
+
 ## 3. Conséquences
 
-**Positives :** séparation claire des responsabilités, retours rapides sur les règles métier, fidélité des tests d’intégration au moteur de production, protection renforcée des ACL et des périmètres, et diagnostic plus simple en CI.
+**Positives :** séparation claire des responsabilités, retours rapides sur les règles métier, fidélité des tests d’intégration au moteur de production, protection renforcée des ACL et des périmètres, diagnostic plus simple en CI et mesures de couverture plus rapides grâce à PCOV.
 
-**Négatives :** quelques mocks sont nécessaires aux services reposant sur `TableRegistry`; les tests ORM et HTTP restent plus lents, nécessitent une base MySQL dédiée et une configuration explicite de ses accès.
+**Négatives :** quelques mocks sont nécessaires aux services reposant sur `TableRegistry`; les tests ORM et HTTP restent plus lents, nécessitent une base MySQL dédiée et une configuration explicite de ses accès. PCOV ajoute une extension et impose une image PHP reconstruite après chaque mise à jour de sa version.
