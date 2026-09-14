@@ -58,9 +58,9 @@ class PeriodsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\PeriodsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 
     /**
@@ -69,8 +69,8 @@ class PeriodsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\PeriodsTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 }

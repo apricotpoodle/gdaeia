@@ -10,7 +10,7 @@ use Cake\TestSuite\TestCase;
 
 class TabulatorAdapterTest extends TestCase
 {
-    public function testAdaptResponseReturnsTabulatorShapeAndAppliesRightsFormatter(): void
+    public function testLaReponseRespecteLeFormatTabulatorEtAppliqueLesDroits(): void
     {
         $first = new Entity(['id' => 10]);
         $second = new Entity(['id' => 20]);
@@ -29,7 +29,7 @@ class TabulatorAdapterTest extends TestCase
         $this->assertSame(['actions' => ['edit' => false]], $result['data'][1]->grid_rights);
     }
 
-    public function testAdaptResponseDefaultsToOnePageAndDoesNotAddRightsWithoutFormatter(): void
+    public function testLaReponseUtiliseUnePageParDefautSansFormateurDeDroits(): void
     {
         $entity = new Entity(['id' => 10]);
         $page = $this->createStub(PaginatedInterface::class);

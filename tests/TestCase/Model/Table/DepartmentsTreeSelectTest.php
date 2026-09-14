@@ -11,7 +11,7 @@ use ReflectionMethod;
 
 class DepartmentsTreeSelectTest extends TestCase
 {
-    public function testTreeSelectFormatKeepsHierarchyAndUsesCodeAsFallbackName(): void
+    public function testLeFormatTreeSelectConserveLaHierarchieEtUtiliseLeCodeEnRepli(): void
     {
         $child = new Department(['id' => 2, 'code' => 'CHILD']);
         $root = new Department([

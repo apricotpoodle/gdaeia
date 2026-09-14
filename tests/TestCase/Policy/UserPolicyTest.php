@@ -17,7 +17,7 @@ class UserPolicyTest extends TestCase
         $this->policy = new UserPolicy();
     }
 
-    public function testDeleteNeverAllowsDeletingOwnAccount(): void
+    public function testLaSuppressionDeSonPropreCompteEstToujoursRefusee(): void
     {
         $admin = new User(['id' => 1, 'issuperuser' => true]);
 
@@ -25,7 +25,7 @@ class UserPolicyTest extends TestCase
         $this->assertTrue($this->policy->canDelete($admin, new User(['id' => 2])));
     }
 
-    public function testImpersonationIsLimitedToASuperuserAndCannotBeChained(): void
+    public function testLUsurpationEstReserveeAuSuperAdminEtNePeutPasEtreEnchainee(): void
     {
         $target = new User(['id' => 2]);
 
@@ -39,7 +39,7 @@ class UserPolicyTest extends TestCase
         ]), $target));
     }
 
-    public function testStaffAdministratorMayCreateAndEditUsers(): void
+    public function testLAdministrateurPeutCreerEtModifierLesUtilisateurs(): void
     {
         $administrator = new User(['id' => 1, 'role_id' => User::ROLE_ADMIN]);
         $target = new User(['id' => 2]);

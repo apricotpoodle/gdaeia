@@ -61,8 +61,8 @@ class ValidationstatusesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ValidationstatusesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 }

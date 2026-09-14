@@ -60,9 +60,9 @@ class CurrentvalidationrolesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\CurrentvalidationrolesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 
     /**
@@ -71,8 +71,8 @@ class CurrentvalidationrolesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\CurrentvalidationrolesTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 }

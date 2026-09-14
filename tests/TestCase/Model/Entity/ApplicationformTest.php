@@ -9,7 +9,7 @@ use Cake\TestSuite\TestCase;
 
 class ApplicationformTest extends TestCase
 {
-    public function testCandidateNamePrefersManualEntryThenCollaboratorThenFallback(): void
+    public function testLeNomDuCandidatPrivilegieLaSaisiePuisLeCollaborateurEtLeRepli(): void
     {
         $this->assertSame('Marie Curie', (new Applicationform(['applicantname' => ' Marie Curie ']))->candidate_name);
         $this->assertSame('Ada Lovelace', (new Applicationform([

@@ -18,7 +18,7 @@ class ApplicationformPolicyTest extends TestCase
         $this->policy = new ApplicationformPolicy();
     }
 
-    public function testEditIsAllowedForOwnerAdminAndSuperuser(): void
+    public function testLaModificationEstAutoriseeAuProprietaireEtAuxAdministrateurs(): void
     {
         $applicationform = new Applicationform(['user_id' => 10]);
 
@@ -27,7 +27,7 @@ class ApplicationformPolicyTest extends TestCase
         $this->assertTrue($this->policy->canEdit(new User(['id' => 11, 'issuperuser' => true]), $applicationform));
     }
 
-    public function testEditAndDeleteAreDeniedForAnUnrelatedRequester(): void
+    public function testLaModificationEtLaSuppressionSontRefuseesAuDemandeurEtranger(): void
     {
         $applicationform = new Applicationform(['user_id' => 10]);
         $requester = new User(['id' => 11, 'role_id' => User::ROLE_DEMANDEUR]);
@@ -36,7 +36,7 @@ class ApplicationformPolicyTest extends TestCase
         $this->assertFalse($this->policy->canDelete($requester, $applicationform));
     }
 
-    public function testRemunerationAndReservedZonesFollowTheirRoleRules(): void
+    public function testLesZonesDeRemunerationEtReserveesRespectentLesRoles(): void
     {
         $applicationform = new Applicationform(['user_id' => 10]);
         $requester = new User(['id' => 10, 'role_id' => User::ROLE_DEMANDEUR]);

@@ -12,7 +12,7 @@ use Cake\TestSuite\TestCase;
 
 class AdministrationPoliciesTest extends TestCase
 {
-    public function testFieldAuthorizationsAreReservedForSuperusers(): void
+    public function testLesAutorisationsDeChampSontReserveesAuxSuperAdministrateurs(): void
     {
         $policy = new FieldAuthorizationPolicy();
         $record = new FieldAuthorization();
@@ -22,7 +22,7 @@ class AdministrationPoliciesTest extends TestCase
         $this->assertTrue($policy->canEdit(new User(['issuperuser' => true]), $record));
     }
 
-    public function testMenusAreManagedByAdministratorOrSuperuser(): void
+    public function testLesMenusSontGeresParLesAdministrateurs(): void
     {
         $policy = new MenuPolicy();
         $menu = new Menu();

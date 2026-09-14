@@ -71,9 +71,9 @@ class ApplicationformsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ApplicationformsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 
     /**
@@ -82,8 +82,8 @@ class ApplicationformsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ApplicationformsTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 }

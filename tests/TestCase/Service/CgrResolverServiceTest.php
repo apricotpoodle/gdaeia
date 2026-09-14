@@ -19,7 +19,7 @@ class CgrResolverServiceTest extends TestCase
         parent::tearDown();
     }
 
-    public function testDepartmentWithoutStrategyUsesFreeConfiguration(): void
+    public function testUnDepartementSansStrategieUtiliseLaConfigurationLibre(): void
     {
         $departments = $this->createMock(DepartmentsTable::class);
         $departments->expects($this->once())

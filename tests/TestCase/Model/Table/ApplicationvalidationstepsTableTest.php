@@ -61,9 +61,9 @@ class ApplicationvalidationstepsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ApplicationvalidationstepsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 
     /**
@@ -72,8 +72,8 @@ class ApplicationvalidationstepsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ApplicationvalidationstepsTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 }

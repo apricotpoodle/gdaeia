@@ -20,7 +20,7 @@ class UsersValidationTest extends TestCase
         $this->table = $table;
     }
 
-    public function testUserCreationRejectsEmptyEmailPasswordRoleAndSuperuserFlag(): void
+    public function testLaCreationRefuseLEmailLeMotDePasseLeRoleEtLeDrapeauVides(): void
     {
         $errors = $this->validator()->validate([
             'email' => null,
@@ -35,7 +35,7 @@ class UsersValidationTest extends TestCase
         $this->assertArrayHasKey('role_id', $errors);
     }
 
-    public function testInvalidEmailAndNonBooleanSuperuserFlagAreRejected(): void
+    public function testUnEmailInvalideEtUnDrapeauNonBooleenSontRefuses(): void
     {
         $errors = $this->validator()->validate([
             'email' => 'not-an-email',

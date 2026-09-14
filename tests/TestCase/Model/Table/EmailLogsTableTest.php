@@ -58,8 +58,8 @@ class EmailLogsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\EmailLogsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 }

@@ -20,7 +20,7 @@ class ApplicationformsValidationTest extends TestCase
         $this->table = $table;
     }
 
-    public function testRequiredFieldsAreRejectedWhenCreatingAnApplicationForm(): void
+    public function testLesChampsObligatoiresSontRefusesALaCreation(): void
     {
         $errors = $this->validator()->validate(array_fill_keys([
             'department_id', 'user_id', 'contracttype_id', 'hiringreason_id',
@@ -39,7 +39,7 @@ class ApplicationformsValidationTest extends TestCase
         }
     }
 
-    public function testEndDateBeforeBeginDateIsRejected(): void
+    public function testUneDateDeFinAnterieureALaDateDeDebutEstRefusee(): void
     {
         $errors = $this->validator()->validate([
             'begin_at' => '2026-10-02',
@@ -50,7 +50,7 @@ class ApplicationformsValidationTest extends TestCase
         $this->assertArrayHasKey('greaterThanBegin', $errors['end_at']);
     }
 
-    public function testInvalidRemunerationAndNegativeCollaboratorAreRejected(): void
+    public function testUneRemunerationInvalideEtUnCollaborateurNegatifSontRefuses(): void
     {
         $errors = $this->validator()->validate([
             'grossremuneration' => 'not-a-decimal',

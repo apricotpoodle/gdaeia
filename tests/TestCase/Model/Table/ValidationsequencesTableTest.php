@@ -60,9 +60,9 @@ class ValidationsequencesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ValidationsequencesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 
     /**
@@ -71,8 +71,8 @@ class ValidationsequencesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ValidationsequencesTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 }

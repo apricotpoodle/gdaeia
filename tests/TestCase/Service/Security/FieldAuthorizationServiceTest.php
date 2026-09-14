@@ -17,7 +17,7 @@ class FieldAuthorizationServiceTest extends TestCase
         $this->service = new FieldAuthorizationService();
     }
 
-    public function testSuperuserSchemaIsEmptyAndDoesNotFilterRequestData(): void
+    public function testLeSchemaDuSuperAdminEstVideEtNeFiltrePasLesDonnees(): void
     {
         $data = ['jobtitle' => 'Analyste', 'grossremuneration' => '50000'];
 
@@ -25,7 +25,7 @@ class FieldAuthorizationServiceTest extends TestCase
         $this->assertSame($data, $this->service->filterRequestData($data, []));
     }
 
-    public function testFilterRequestDataRetainsOnlyExplicitlyEditableFields(): void
+    public function testLeFiltreConserveUniquementLesChampsExplicitementModifiables(): void
     {
         $data = [
             'jobtitle' => 'Analyste',

@@ -65,9 +65,9 @@ class RolesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\RolesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 
     /**
@@ -76,8 +76,8 @@ class RolesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\RolesTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 }

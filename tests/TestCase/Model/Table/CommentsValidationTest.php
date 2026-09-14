@@ -20,7 +20,7 @@ class CommentsValidationTest extends TestCase
         $this->table = $table;
     }
 
-    public function testCommentCreationRejectsEmptyTargetContentAndAuthor(): void
+    public function testLaCreationRefuseLaCibleLeContenuEtLAuteurVides(): void
     {
         $errors = $this->validator()->validate([
             'model' => null,
@@ -35,7 +35,7 @@ class CommentsValidationTest extends TestCase
         }
     }
 
-    public function testNegativeIdentifiersAndOversizedModelAreRejected(): void
+    public function testLesIdentifiantsNegatifsEtUnModeleTropLongSontRefuses(): void
     {
         $errors = $this->validator()->validate([
             'parent_id' => -1,

@@ -58,9 +58,9 @@ class ContracttypesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ContracttypesTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 
     /**
@@ -69,8 +69,8 @@ class ContracttypesTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\ContracttypesTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 }

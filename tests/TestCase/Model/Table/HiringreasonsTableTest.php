@@ -58,9 +58,9 @@ class HiringreasonsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\HiringreasonsTable::validationDefault()
      */
-    public function testValidationDefault(): void
+    public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 
     /**
@@ -69,8 +69,8 @@ class HiringreasonsTableTest extends TestCase
      * @return void
      * @link \App\Model\Table\HiringreasonsTable::buildRules()
      */
-    public function testBuildRules(): void
+    public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Not implemented yet.');
+        $this->markTestIncomplete('Non implémenté.');
     }
 }
