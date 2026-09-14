@@ -11,6 +11,20 @@ class ApplicationformsControllerTest extends TestCase
 {
     use IntegrationTestTrait;
 
+    protected array $fixtures = [
+        'app.Applicationforms',
+        'app.Departments',
+        'app.Users',
+        'app.Contracttypes',
+        'app.Hiringreasons',
+        'app.Budgetfeatures',
+        'app.Professionalcategories',
+        'app.Worktimes',
+        'app.Periods',
+        'app.Yesnos',
+        'app.UserDepartments',
+    ];
+
     public function testLApiDesDemandesRedirigeUnVisiteurVersLaConnexion(): void
     {
         $this->get('/api/applicationforms.json');
@@ -25,5 +39,14 @@ class ApplicationformsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertHeaderContains('Content-Type', 'application/json');
+    }
+
+    public function testUnOperateurSansDepartementNeVoitAucuneDemande(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
+        $this->get('/api/applicationforms.json');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"data":[]');
     }
 }
