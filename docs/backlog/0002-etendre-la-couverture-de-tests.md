@@ -19,8 +19,8 @@ Renforcer la couverture fonctionnelle et mesurer son niveau afin de prévenir le
 - [x] Couvrir les parcours authentifiés, les refus d'accès par rôle et périmètre de département, ainsi que les réponses d'erreur attendues.
 - [x] Ajouter les cas limites métier : recherche FULLTEXT des demandes, bornes haute et double des plages de dates Tabulator, et enchaînement complet du workflow de validation.
 - [x] Tester les requêtes des vues SQL `applicationformstatuses`, `currentvalidationroles`, `validation_visas` et `urds` à partir de données créées dans leurs tables sources, sans créer de fixture de vue.
-- Vérifier la disponibilité et la compatibilité du moteur de couverture dans le conteneur (`PCOV` en priorité, ou `Xdebug`), sans dégrader l'exécution courante des tests.
-- Décider du format de rapport publié : Clover XML pour l'intégration continue et HTML pour la consultation locale ; conserver le chemin de sortie hors des sources versionnées.
+- [x] Vérifier la disponibilité et la compatibilité du moteur de couverture dans le conteneur (`PCOV` en priorité, ou `Xdebug`), sans dégrader l'exécution courante des tests.
+- [x] Décider du format de rapport publié : Clover XML pour l'intégration continue et HTML pour la consultation locale ; conserver le chemin de sortie hors des sources versionnées.
 - Mesurer la couverture initiale puis appliquer progressivement les seuils suivants, couramment retenus en contexte industriel : 80 % de lignes global, 90 % de lignes pour le code critique (sécurité, autorisation, workflow et services), et un objectif initial de 75 % de branches lorsque cette mesure est disponible.
 
 ## Critères d'acceptation
@@ -43,3 +43,5 @@ Renforcer la couverture fonctionnelle et mesurer son niveau afin de prévenir le
 
 - La cible `make test.workflow` exécute les scénarios du workflow de validation et des vues SQL avec la garde MySQL `daetf2_test`.
 - La recherche FULLTEXT est testée avec des espaces superflus, plusieurs termes obligatoires et une recherche vide. Sa configuration utilise l'API courante de FriendsOfCake/Search et lie explicitement le paramètre MySQL.
+- PCOV 1.0.12 est le moteur retenu. Il est désactivé par défaut et activé uniquement par `PCOV_ENABLED=1` pour les mesures de couverture ; Xdebug reste réservé au débogage.
+- `make test.coverage` produit `clover.xml` et `html/index.html` dans un répertoire temporaire unique sous `/tmp` sur l'hôte. La mesure initiale, effectuée le 14 septembre 2026, est de **61,5 % des lignes** (1 630 sur 2 649). PCOV ne fournit pas la couverture de branches dans le rapport Clover (`conditionals=0`) ; l'objectif de 75 % de branches reste donc à réévaluer si Xdebug est retenu ponctuellement pour cette métrique.
