@@ -31,7 +31,7 @@ Fournir un pipeline reproductible sur la forge retenue — GitHub Actions, Codeb
 
 ## Travaux à réaliser
 
-1. Choisir la forge d'exécution initiale. GitHub Actions est le format existant ; Codeberg CI/Actions ou une autre solution reste possible.
+1. [x] Choisir la forge d'exécution initiale : **GitHub Actions**. Le dépôt applicatif est déjà hébergé sur GitHub et contient le workflow `.github/workflows/ci.yml`. Conserver une conception portable vers Codeberg CI/Actions ou une solution équivalente.
 2. Reprendre les déclencheurs : `pull_request`, lancement manuel et `push` sur les branches réellement utilisées, y compris les branches de fonctionnalités si elles doivent être contrôlées avant une demande de fusion.
 3. Simplifier la matrice PHP : supprimer le doublon PHP 8.5 et établir un job de référence PHP 8.3. Les essais sur versions minimale/maximale ne seront conservés que s'ils sont compatibles avec les dépendances et apportent une valeur explicite.
 4. Ajouter un service MySQL isolé, sa vérification de disponibilité et la création de `daetf2_test` avec les droits minimaux nécessaires.
@@ -54,6 +54,10 @@ Fournir un pipeline reproductible sur la forge retenue — GitHub Actions, Codeb
 - La décision sur la couverture de branches est documentée.
 - La configuration de qualité (PHP_CodeSniffer et PHPStan) reste verte.
 - Le ticket 0002 référence cette mise en œuvre et peut être clôturé lorsque les seuils et le pipeline sont opérationnels.
+
+## Décision prise
+
+GitHub Actions est retenu comme première cible d'intégration continue. Ce choix s'appuie sur l'hébergement actuel du dépôt et sur la présence d'un workflow existant. Le pipeline ne doit pas dépendre d'une fonctionnalité propriétaire non indispensable : une migration ultérieure vers Codeberg CI/Actions ou une forge équivalente doit rester possible en adaptant seulement la syntaxe et les mécanismes d'artefacts.
 
 ## Risques et vérifications secondaires
 

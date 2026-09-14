@@ -32,6 +32,10 @@ Les rapports de couverture utilisent **PCOV**. Il est installé dans l’image P
 
 Xdebug reste installé et dédié au débogage interactif. PHPUnit génère le rapport Clover XML destiné à l’intégration continue et le rapport HTML destiné à la consultation locale, dans un répertoire temporaire hors des sources versionnées. La commande `make test.coverage` ouvre automatiquement le rapport HTML avec le navigateur système et supprime avant chaque mesure les répertoires de couverture âgés de plus de 24 heures. La cible `make test.coverage.clean` permet une suppression immédiate à la demande.
 
+### Intégration continue
+
+GitHub Actions est la première forge retenue pour exécuter l'intégration continue, car le dépôt applicatif y est déjà hébergé et contient un workflow `.github/workflows/ci.yml`. Ce workflow doit reproduire les contraintes de cette décision : MySQL dédié, PCOV pour la couverture, rapports Clover XML et HTML en artefacts, et absence de SQLite pour les tests d'intégration. Les choix de commandes, formats de rapports et variables d'environnement restent portables afin de permettre une migration ultérieure vers Codeberg CI/Actions ou une solution équivalente.
+
 ## 3. Conséquences
 
 **Positives :** séparation claire des responsabilités, retours rapides sur les règles métier, fidélité des tests d’intégration au moteur de production, protection renforcée des ACL et des périmètres, diagnostic plus simple en CI et mesures de couverture plus rapides grâce à PCOV.
