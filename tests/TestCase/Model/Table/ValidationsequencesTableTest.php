@@ -62,7 +62,17 @@ class ValidationsequencesTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $sequence = $this->Validationsequences->newEntity([
+            'department_id' => -1,
+            'name' => '',
+            'role_id' => -1,
+            'sequence' => 'invalide',
+        ]);
+
+        $this->assertArrayHasKey('department_id', $sequence->getErrors());
+        $this->assertArrayHasKey('name', $sequence->getErrors());
+        $this->assertArrayHasKey('role_id', $sequence->getErrors());
+        $this->assertArrayHasKey('sequence', $sequence->getErrors());
     }
 
     /**
@@ -73,6 +83,14 @@ class ValidationsequencesTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $sequence = $this->Validationsequences->newEntity([
+            'department_id' => 1,
+            'name' => 'Validation RH',
+            'role_id' => 99999,
+            'sequence' => 2,
+        ]);
+
+        $this->assertFalse($this->Validationsequences->save($sequence));
+        $this->assertArrayHasKey('role_id', $sequence->getErrors());
     }
 }
