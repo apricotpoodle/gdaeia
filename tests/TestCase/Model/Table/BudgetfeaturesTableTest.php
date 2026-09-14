@@ -60,7 +60,11 @@ class BudgetfeaturesTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $entity = $this->Budgetfeatures->newEntity(['base' => 'invalide', 'code' => str_repeat('a', 17), 'name' => '', 'sort' => '']);
+        $this->assertArrayHasKey('base', $entity->getErrors());
+        $this->assertArrayHasKey('code', $entity->getErrors());
+        $this->assertArrayHasKey('name', $entity->getErrors());
+        $this->assertArrayHasKey('sort', $entity->getErrors());
     }
 
     /**
@@ -71,6 +75,8 @@ class BudgetfeaturesTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $entity = $this->Budgetfeatures->newEntity(['base' => false, 'code' => 'Lorem ipsum do', 'name' => 'Nouveau', 'sort' => 'nouveau']);
+        $this->assertFalse($this->Budgetfeatures->save($entity));
+        $this->assertArrayHasKey('code', $entity->getErrors());
     }
 }

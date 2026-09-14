@@ -60,7 +60,9 @@ class EmailRecipientsTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $recipient = $this->EmailRecipients->newEntity(['email_log_id' => 'invalide', 'recipient_email' => '']);
+        $this->assertArrayHasKey('email_log_id', $recipient->getErrors());
+        $this->assertArrayHasKey('recipient_email', $recipient->getErrors());
     }
 
     /**
@@ -71,6 +73,8 @@ class EmailRecipientsTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $recipient = $this->EmailRecipients->newEntity(['email_log_id' => 99999, 'recipient_email' => 'test@example.test']);
+        $this->assertFalse($this->EmailRecipients->save($recipient));
+        $this->assertArrayHasKey('email_log_id', $recipient->getErrors());
     }
 }

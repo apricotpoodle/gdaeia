@@ -60,6 +60,8 @@ class EmailLogsTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $log = $this->EmailLogs->newEntity(['subject' => '', 'content_text' => []]);
+        $this->assertArrayHasKey('subject', $log->getErrors());
+        $this->assertArrayHasKey('content_text', $log->getErrors());
     }
 }
