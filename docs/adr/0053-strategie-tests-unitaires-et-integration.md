@@ -14,6 +14,8 @@ Nous distinguons trois niveaux complémentaires :
 
 Chaque correction de bug ajoute d’abord un test de non-régression au niveau le plus bas qui reproduit fidèlement le défaut. Toute règle d’accès ou de filtrage de données doit comporter un cas autorisé et un cas refusé. Les tests doivent décrire un résultat métier observable, plutôt qu’une méthode interne.
 
+Les descriptions TestDox, messages d’assertion et messages de tests incomplets relevant du projet sont en français. Les cibles Make exportent `APP_DEFAULT_LOCALE=fr_FR` lors de l’exécution afin que CakePHP produise ses messages localisables dans la langue retenue par l’équipe.
+
 Les tests unitaires sont exécutés en premier. La suite complète est ensuite exécutée dans un environnement identifié comme base de tests, car son bootstrap applique les migrations et peut reconstruire son schéma.
 
 ### Moteur de la base de tests d’intégration
