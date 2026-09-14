@@ -138,6 +138,7 @@ class CommentsController extends AppController
     public function delete(string $id): ?Response
     {
         $this->request->allowMethod(['post', 'delete']);
+        $this->Authorization->skipAuthorization();
         $commentsTable = $this->fetchTable('Comments');
 
         $comment = $commentsTable->get($id);

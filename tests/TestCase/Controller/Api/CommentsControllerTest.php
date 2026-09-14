@@ -11,6 +11,11 @@ class CommentsControllerTest extends TestCase
 {
     use IntegrationTestTrait;
 
+    protected array $fixtures = [
+        'app.Comments',
+        'app.Users',
+    ];
+
     public function testLApiDesCommentairesRedirigeUnVisiteurVersLaConnexion(): void
     {
         $this->get('/api/comments.json');
@@ -25,5 +30,15 @@ class CommentsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertHeaderContains('Content-Type', 'application/json');
+    }
+
+    public function testUnOperateurNePeutPasSupprimerLeCommentaireDAutrui(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
+        $this->enableCsrfToken();
+        $this->delete('/api/comments/1.json');
+
+        $this->assertResponseCode(403);
+        $this->assertResponseContains('"success":false');
     }
 }
