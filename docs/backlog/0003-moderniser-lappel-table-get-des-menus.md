@@ -1,6 +1,6 @@
 # 0003 — Moderniser l'appel `Table::get()` des menus API
 
-**Statut :** À planifier
+**Statut :** Terminé
 **Priorité :** Moyenne
 
 ## Contexte
