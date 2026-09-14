@@ -61,6 +61,12 @@ class ValidationstatusesTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $status = $this->Validationstatuses->newEntity([
+            'code' => '',
+            'name' => str_repeat('a', 101),
+        ]);
+
+        $this->assertArrayHasKey('code', $status->getErrors());
+        $this->assertArrayHasKey('name', $status->getErrors());
     }
 }

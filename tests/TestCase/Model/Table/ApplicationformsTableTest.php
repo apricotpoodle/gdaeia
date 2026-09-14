@@ -70,7 +70,25 @@ class ApplicationformsTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $applicationform = $this->Applicationforms->newEntity([
+            'department_id' => 1,
+            'user_id' => 1,
+            'contracttype_id' => 1,
+            'hiringreason_id' => 1,
+            'budgetfeature_id' => 1,
+            'jobtitle' => '',
+            'professionalcategory_id' => 1,
+            'worktime_id' => 1,
+            'grossremuneration' => 'invalide',
+            'period_id' => 1,
+            'begin_at' => '2026-03-10',
+            'end_at' => '2026-03-09',
+            'yesno_id' => 1,
+        ]);
+
+        $this->assertArrayHasKey('jobtitle', $applicationform->getErrors());
+        $this->assertArrayHasKey('grossremuneration', $applicationform->getErrors());
+        $this->assertArrayHasKey('end_at', $applicationform->getErrors());
     }
 
     /**
@@ -81,6 +99,32 @@ class ApplicationformsTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $applicationform = $this->Applicationforms->newEntity($this->validData([
+            'department_id' => 99999,
+        ]));
+
+        $this->assertFalse($this->Applicationforms->save($applicationform));
+        $this->assertArrayHasKey('department_id', $applicationform->getErrors());
+    }
+
+    /**
+     * @param array<string, mixed> $overrides
+     * @return array<string, mixed>
+     */
+    private function validData(array $overrides = []): array
+    {
+        return array_replace([
+            'department_id' => 1,
+            'user_id' => 1,
+            'contracttype_id' => 1,
+            'hiringreason_id' => 1,
+            'budgetfeature_id' => 1,
+            'jobtitle' => 'Analyste recrutement',
+            'professionalcategory_id' => 1,
+            'worktime_id' => 1,
+            'grossremuneration' => '45000.00',
+            'period_id' => 1,
+            'yesno_id' => 1,
+        ], $overrides);
     }
 }

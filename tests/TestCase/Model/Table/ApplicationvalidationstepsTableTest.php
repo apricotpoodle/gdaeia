@@ -63,7 +63,17 @@ class ApplicationvalidationstepsTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $step = $this->Applicationvalidationsteps->newEntity([
+            'applicationform_id' => 1,
+            'role_id' => -1,
+            'validationstatus_id' => 'invalide',
+            'validationsequence_id' => 1,
+            'comment' => str_repeat('a', 101),
+        ]);
+
+        $this->assertArrayHasKey('role_id', $step->getErrors());
+        $this->assertArrayHasKey('validationstatus_id', $step->getErrors());
+        $this->assertArrayHasKey('comment', $step->getErrors());
     }
 
     /**
@@ -74,6 +84,14 @@ class ApplicationvalidationstepsTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $step = $this->Applicationvalidationsteps->newEntity([
+            'applicationform_id' => 1,
+            'role_id' => 1,
+            'validationstatus_id' => 99999,
+            'validationsequence_id' => 1,
+        ]);
+
+        $this->assertFalse($this->Applicationvalidationsteps->save($step));
+        $this->assertArrayHasKey('validationstatus_id', $step->getErrors());
     }
 }

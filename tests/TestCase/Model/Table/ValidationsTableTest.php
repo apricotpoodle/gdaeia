@@ -63,7 +63,17 @@ class ValidationsTableTest extends TestCase
      */
     public function testValidationParDefaut(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $validation = $this->Validations->newEntity([
+            'applicationform_id' => 1,
+            'user_id' => 'invalide',
+            'role_id' => 1,
+            'validationstatus_id' => 'invalide',
+            'obs' => str_repeat('a', 256),
+        ]);
+
+        $this->assertArrayHasKey('user_id', $validation->getErrors());
+        $this->assertArrayHasKey('validationstatus_id', $validation->getErrors());
+        $this->assertArrayHasKey('obs', $validation->getErrors());
     }
 
     /**
@@ -74,6 +84,14 @@ class ValidationsTableTest extends TestCase
      */
     public function testReglesIntegrite(): void
     {
-        $this->markTestIncomplete('Non implémenté.');
+        $validation = $this->Validations->newEntity([
+            'applicationform_id' => 99999,
+            'user_id' => 1,
+            'role_id' => 1,
+            'validationstatus_id' => 1,
+        ]);
+
+        $this->assertFalse($this->Validations->save($validation));
+        $this->assertArrayHasKey('applicationform_id', $validation->getErrors());
     }
 }
