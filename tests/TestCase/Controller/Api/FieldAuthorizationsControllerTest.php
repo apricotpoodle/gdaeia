@@ -26,4 +26,12 @@ class FieldAuthorizationsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertHeaderContains('Content-Type', 'application/json');
     }
+
+    public function testLApiDesAutorisationsRefuseUnOperateurNonSuperAdmin(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
+        $this->get('/api/field-authorizations.json');
+
+        $this->assertResponseCode(403);
+    }
 }
