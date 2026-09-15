@@ -87,6 +87,26 @@ export class TabulatorFactory {
     }
 
     /**
+     * Fabrique de la grille distante du référentiel des rôles.
+     *
+     * @param {string} selector Sélecteur CSS cible.
+     * @returns {Tabulator} Instance Tabulator configurée.
+     */
+    static createRolesGrid(selector) {
+        return this._createActionGrid(selector)
+            .setAjaxSource('/api/roles.json')
+            .setController('roles')
+            .setHeight('calc(100vh - 180px)')
+            .setColumns([
+                ColumnsFactory.id({ visible: true }),
+                ColumnsFactory.text('code', 'Code'),
+                ColumnsFactory.text('name', 'Libellé'),
+                ColumnsFactory.text('sort', 'Clé de tri'),
+            ])
+            .build();
+    }
+
+    /**
      * Fabrique de la grille distante des utilisateurs à ajouter à un périmètre.
      * Les filtres d'en-tête sont traduits par l'API Tabulator existante.
      *

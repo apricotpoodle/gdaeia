@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Entity\User;
 use App\Model\Table\RolesTable;
 use Cake\TestSuite\TestCase;
 
@@ -95,5 +96,29 @@ class RolesTableTest extends TestCase
 
         $this->assertFalse($this->Roles->save($role));
         $this->assertArrayHasKey('code', $role->getErrors());
+    }
+
+    /** Vérifie que le finder transversal ne retourne jamais un rôle désactivé. */
+    public function testLeFinderVisibleToExclutLesRolesDesactives(): void
+    {
+        $this->Roles->updateAll(['deleted' => '2026-09-15 12:00:00'], ['id' => 1]);
+        $operator = new User(['id' => 1, 'issuperuser' => true]);
+
+        $this->assertSame(0, $this->Roles->find('visibleTo', user: $operator)->count());
+    }
+
+    /** Vérifie que la suppression métier reste une désactivation logique. */
+    public function testSoftDeleteConserveLenregistrementEtRenseigneDeleted(): void
+    {
+        $role = $this->Roles->newEntity([
+            'base' => false,
+            'code' => 'TEMPORAIRE',
+            'name' => 'Rôle temporaire',
+            'sort' => 'temporaire',
+        ]);
+        $this->assertNotFalse($this->Roles->save($role));
+
+        $this->assertTrue($this->Roles->softDelete($role));
+        $this->assertNotNull($this->Roles->get($role->id)->deleted);
     }
 }
