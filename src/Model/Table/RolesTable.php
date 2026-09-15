@@ -3,9 +3,11 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Role;
 use App\Model\Entity\User;
+use Cake\I18n\FrozenTime;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
-use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
@@ -34,7 +36,7 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Role> deleteManyOrFail(iterable $entities, array $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class RolesTable extends Table
+class RolesTable extends AppTable
 {
     /**
      * Initialize method
@@ -49,8 +51,6 @@ class RolesTable extends Table
         $this->setTable('roles');
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
-
-        $this->addBehavior('Timestamp');
 
         $this->hasMany('Applicationvalidationsteps', [
             'foreignKey' => 'role_id',
@@ -138,13 +138,26 @@ class RolesTable extends Table
      * @param \App\Model\Entity\User $user Opérateur connecté.
      * @return \Cake\ORM\Query\SelectQuery
      */
-    public function findRoleAccessVisibleTo(\Cake\ORM\Query\SelectQuery $query, User $user): \Cake\ORM\Query\SelectQuery
+    public function findRoleAccessVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
-        $query->where(['Roles.deleted IS' => null]);
+        $query = $this->findVisibleTo($query, $user);
         if (!$user->get('issuperuser') && $user->get('role_id') !== User::ROLE_ADMIN) {
             $query->where(['1 = 0']);
         }
 
         return $query;
+    }
+
+    /**
+     * Désactive un rôle sans casser les relations historiques qui le référencent.
+     *
+     * @param \App\Model\Entity\Role $role Rôle à désactiver.
+     * @return bool Vrai si la désactivation est enregistrée.
+     */
+    public function softDelete(Role $role): bool
+    {
+        $role->set('deleted', FrozenTime::now());
+
+        return (bool)$this->save($role);
     }
 }

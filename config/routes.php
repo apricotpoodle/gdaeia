@@ -98,6 +98,7 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/menus/unassign-role-access', ['controller' => 'Menus', 'action' => 'unassignRoleAccess', '_ext' => 'json']);
 
         $builder->resources('Users'); // Crée automatiquement les routes RESTful (GET /api/users)
+        $builder->resources('Roles');
         $builder->resources('FieldAuthorizations');
         $builder->resources('Applicationforms');
         $builder->resources('Comments');

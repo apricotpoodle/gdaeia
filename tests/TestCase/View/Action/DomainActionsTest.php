@@ -9,6 +9,7 @@ use App\View\Action\ApplicationformsActions;
 use App\View\Action\FieldAuthorizationsActions;
 use App\View\Action\MenusActions;
 use App\View\Action\PublicActions;
+use App\View\Action\RolesActions;
 use App\View\Action\UiAction;
 use App\View\Action\UsersActions;
 use Cake\TestSuite\TestCase;
@@ -66,6 +67,17 @@ class DomainActionsTest extends TestCase
         $this->assertSame('index', UsersActions::index()->authorizationAction);
         $this->assertSame('index', ApplicationformsActions::index()->authorizationAction);
         $this->assertSame('index', FieldAuthorizationsActions::index()->authorizationAction);
+        $this->assertSame('index', RolesActions::index()->authorizationAction);
+    }
+
+    /** Vérifie le contrat de la commande de création des rôles. */
+    public function testLaCreationDeRoleCibleLeDomaineRoles(): void
+    {
+        $action = RolesActions::add();
+
+        $this->assertSame('add', $action->authorizationAction);
+        $this->assertSame('Roles', $action->resource);
+        $this->assertSame(['action' => 'add'], $action->url);
     }
 
     /** Vérifie que les actions publiques contournent explicitement les Policies. */
