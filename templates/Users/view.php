@@ -26,33 +26,15 @@ $this->Html->script('views/Users/user-departments-tree.js', ['type' => 'module',
                 </h3>
                 <div class="d-flex gap-2">
                     <!-- 1. Bouton Impersonate -->
-                    <?php if (!$isImpersonating && $identity->can('impersonate', $user)): ?>
-                        <?= $this->Html->link(
-                            '<i class="fa-solid fa-user-secret me-1"></i> ' . __('Incarner'),
-                            ['action' => 'impersonate', $user->id],
-                            [
-                                'class' => 'btn btn-warning btn-sm shadow-sm',
-                                'escape' => false,
-                                'confirm' => __('Voulez-vous vraiment vous connecter sous l\'identité de {0} ?', $user->display_name),
-                            ]
-                        ) ?>
+                    <?php if (!$isImpersonating): ?>
+                        <?= $this->Action->render(\App\View\Action\UsersActions::impersonate($user)) ?>
                     <?php endif; ?>
 
                     <!-- 2. Bouton Éditer -->
-                    <?php if ($identity->can('edit', $user)): ?>
-                        <?= $this->Html->link(
-                            '<i class="fa-solid fa-pen-to-square me-1"></i> ' . __('Éditer'),
-                            ['action' => 'edit', $user->id],
-                            ['class' => 'btn btn-light btn-sm shadow-sm', 'escape' => false]
-                        ) ?>
-                    <?php endif; ?>
+                    <?= $this->Action->render(\App\View\Action\UsersActions::edit($user)) ?>
 
                     <!-- 3. Bouton Retour à la liste -->
-                    <?= $this->Html->link(
-                        '<i class="fa-solid fa-arrow-left me-1"></i> ' . __('Retour à la liste'),
-                        ['action' => 'index'],
-                        ['class' => 'btn btn-outline-light btn-sm shadow-sm', 'escape' => false]
-                    ) ?>
+                    <?= $this->Action->render(\App\View\Action\UsersActions::index(__('Retour à la liste'), 'btn btn-outline-light btn-sm shadow-sm')) ?>
                 </div>
             </div>
 

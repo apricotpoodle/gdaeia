@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\User;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -97,5 +99,30 @@ class RoleMenusTable extends Table
         $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
 
         return $rules;
+    }
+
+    /**
+     * Sous-requête des identifiants de rôles associés à toutes les options de menu.
+     * Les associations départementales sont incluses : elles rendent elles
+     * aussi l'option accessible au rôle.
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query Requête à filtrer.
+     * @param array<int> $menuIds Options de menu sélectionnées.
+     * @param \App\Model\Entity\User $user Opérateur connecté.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findRoleIdsAssociatedWithMenus(SelectQuery $query, array $menuIds, User $user): SelectQuery
+    {
+        $visibleRoles = $this->Roles->find('roleAccessVisibleTo', user: $user)
+            ->select(['Roles.id']);
+
+        return $query->select(['role_id'])
+            ->distinct(['role_id'])
+            ->where([
+                'RoleMenus.menu_id IN' => $menuIds,
+                'RoleMenus.role_id IN' => $visibleRoles,
+            ])
+            ->groupBy(['RoleMenus.role_id'])
+            ->having(['COUNT(DISTINCT RoleMenus.menu_id) =' => count($menuIds)]);
     }
 }

@@ -197,3 +197,36 @@
         padding-top: 0;
     }
 }
+
+/* Écran d'attribution des menus aux rôles : trois grilles à hauteur homogène. */
+.role-menu-access-tables {
+    flex: 0 1 78%;
+    height: 78%;
+    max-height: 78%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.role-menu-access-tables > section {
+    min-height: 0;
+}
+
+.role-menu-access-table {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.role-menu-access-table .tabulator {
+    height: 100% !important;
+}
+
+@media (max-width: 991.98px) {
+    .role-menu-access {
+        overflow: auto;
+    }
+
+    .role-menu-access-table {
+        height: 30%;
+        flex: 0 0 30%;
+    }
+}

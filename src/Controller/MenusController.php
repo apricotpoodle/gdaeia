@@ -22,6 +22,16 @@ class MenusController extends AppController
     }
 
     /**
+     * Affiche l'écran d'attribution des options de menu aux rôles.
+     *
+     * @return void
+     */
+    public function roleAccess(): void
+    {
+        $this->Authorization->authorize($this->Menus->newEmptyEntity(), 'roleAccess');
+    }
+
+    /**
      * @param string $id
      * @return void
      */

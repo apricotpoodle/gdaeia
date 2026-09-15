@@ -220,4 +220,77 @@ export class TabulatorFactory {
             .build();
     }
 
+    /**
+     * Arbre des options à administrer dans l'écran d'accès par rôle.
+     * Cette grille est locale au workflow : elle ne porte ni actions CRUD,
+     * ni pagination distante, et accepte une sélection multiple.
+     *
+     * @param {string} selector Sélecteur CSS cible.
+     * @returns {Tabulator} Instance Tabulator.
+     */
+    static createRoleAccessMenusGrid(selector = '#role-access-menus-table') {
+        return this._createBaseGrid(selector)
+            .setAjaxSource('/api/menus/role-access-tree.json')
+            .disablePagination()
+            .setHeight('100%')
+            .addOptions({
+                persistence: false,
+                dataTree: true,
+                dataTreeStartExpanded: false,
+                dataTreeChildField: 'children',
+                selectableRows: true,
+                layout: 'fitColumns',
+            })
+            .setColumns([
+                ColumnsFactory.text('name', 'Option de menu'),
+            ])
+            .build();
+    }
+
+    /**
+     * Grille locale des rôles accessibles à l'opérateur.
+     * Son contenu est fourni par l'orchestrateur afin d'exclure immédiatement
+     * les rôles présents dans la grille des associations.
+     *
+     * @param {string} selector Sélecteur CSS cible.
+     * @returns {Tabulator} Instance Tabulator.
+     */
+    static createRoleAccessAvailableRolesGrid(selector = '#role-access-available-roles-table') {
+        return this._createBaseGrid(selector)
+            .setLocalData([])
+            .disablePagination()
+            .setHeight('100%')
+            .addOptions({ persistence: false, layout: 'fitColumns' })
+            .setColumns(this.getRoleAccessColumns())
+            .build();
+    }
+
+    /**
+     * Grille locale des rôles qui possèdent toutes les options sélectionnées.
+     *
+     * @param {string} selector Sélecteur CSS cible.
+     * @returns {Tabulator} Instance Tabulator.
+     */
+    static createRoleAccessSelectedRolesGrid(selector = '#role-access-selected-roles-table') {
+        return this._createBaseGrid(selector)
+            .setLocalData([])
+            .disablePagination()
+            .setHeight('100%')
+            .addOptions({ persistence: false, layout: 'fitColumns' })
+            .setColumns(this.getRoleAccessColumns())
+            .build();
+    }
+
+    /**
+     * Définit les colonnes partagées par les deux grilles de rôles.
+     *
+     * @returns {Array<Object>} Configurations de colonnes Tabulator.
+     */
+    static getRoleAccessColumns() {
+        return [
+            ColumnsFactory.text('code', 'Code', { widthGrow: 0.6 }),
+            ColumnsFactory.text('name', 'Rôle'),
+        ];
+    }
+
 }

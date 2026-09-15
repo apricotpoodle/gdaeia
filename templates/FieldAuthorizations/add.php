@@ -7,7 +7,7 @@
 <div class="field-authorizations form content">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3><?= __('Ajouter une Règle d\'Autorisation') ?></h3>
-        <?= $this->Html->link(__('Retour à la liste'), ['action' => 'index'], ['class' => 'btn btn-outline-secondary']) ?>
+        <?= $this->Action->render(\App\View\Action\FieldAuthorizationsActions::index()) ?>
     </div>
 
     <div id="fieldauth-create-form-container">

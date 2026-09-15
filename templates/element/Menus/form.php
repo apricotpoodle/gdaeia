@@ -20,6 +20,6 @@
     </fieldset>
     <div class="form-actions">
         <?= $this->Form->button('<i class="fas fa-save"></i> ' . __('Enregistrer'), ['escapeTitle' => false, 'class' => 'btn btn-primary']) ?>
-        <?= $this->Html->link(__('Annuler'), ['action' => 'index'], ['class' => 'btn btn-secondary']) ?>
+        <?= $this->Action->render(\App\View\Action\MenusActions::index(__('Annuler'))) ?>
     </div>
 <?= $this->Form->end() ?>

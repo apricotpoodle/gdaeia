@@ -22,13 +22,7 @@
 <div class="d-flex flex-column h-100">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h1 class="h3 mb-0 text-gray-800">Gestion des Utilisateurs</h1>
-        <?php if ($canBulkDepartments ?? false): ?>
-            <?= $this->Html->link(
-                '<i class="fa-solid fa-users-gear me-1"></i> ' . __('Associer des départements'),
-                ['action' => 'bulkDepartments'],
-                ['class' => 'btn btn-primary', 'escape' => false],
-            ) ?>
-        <?php endif; ?>
+        <?= $this->Action->render(\App\View\Action\UsersActions::bulkDepartments()) ?>
     </div>
 
     <div class="flex-grow-1" style="min-height: 0;">

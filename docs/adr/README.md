@@ -62,6 +62,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0051** | Français comme langue applicative par défaut | **Proposé** | [`0051-francais-langue-applicative-par-defaut.md`](./0051-francais-langue-applicative-par-defaut.md) |
 | **ADR 0052** | Présentation unifiée des erreurs de validation Web et API | **Proposé** | [`0052-presentation-unifiee-erreurs-validation-web-api.md`](./0052-presentation-unifiee-erreurs-validation-web-api.md) |
 | **ADR 0053** | Stratégie de tests et MySQL dédié à l’intégration | **Accepté** | [`0053-strategie-tests-unitaires-et-integration.md`](./0053-strategie-tests-unitaires-et-integration.md) |
+| **ADR 0054** | Commandes UI autorisées par domaine | **Proposé** | [`0054-commandes-ui-autorisees-par-domaine.md`](./0054-commandes-ui-autorisees-par-domaine.md) |
 
 ---
 

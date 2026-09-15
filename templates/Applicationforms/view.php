@@ -46,31 +46,11 @@ $this->Html->script('views/Applicationforms/applicationform-comments', ['block' 
 
         <!-- Actions contextuelles (soumises aux Policies via $identity) -->
         <div class="d-flex gap-2">
-            <?= $this->Html->link(
-                '<i class="fa-solid fa-arrow-left me-1" aria-hidden="true"></i> ' . __('Retour'),
-                ['action' => 'index'],
-                ['class' => 'btn btn-sm btn-outline-secondary', 'escape' => false]
-            ) ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index()) ?>
 
-            <?php if ($identity?->can('edit', $applicationform)): ?>
-                <?= $this->Html->link(
-                    '<i class="fa-solid fa-pen me-1" aria-hidden="true"></i> ' . __('Éditer'),
-                    ['action' => 'edit', $applicationform->id],
-                    ['class' => 'btn btn-sm btn-primary', 'escape' => false]
-                ) ?>
-            <?php endif; ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::edit($applicationform)) ?>
 
-            <?php if ($identity?->can('delete', $applicationform)): ?>
-                <?= $this->Form->postLink(
-                    '<i class="fa-solid fa-trash me-1" aria-hidden="true"></i> ' . __('Supprimer'),
-                    ['action' => 'delete', $applicationform->id],
-                    [
-                        'confirm' => __('⚠️ Supprimer la demande n° {0} ?', $applicationform->id),
-                        'class' => 'btn btn-sm btn-outline-danger',
-                        'escape' => false,
-                    ]
-                ) ?>
-            <?php endif; ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::delete($applicationform)) ?>
         </div>
     </div>
 

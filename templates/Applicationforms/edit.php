@@ -47,11 +47,7 @@ $this->Html->script('views/Applicationforms/applicationform-candidate', ['block'
                 </button>
             <?php endif; ?>
 
-            <?= $this->Html->link(
-                '<i class="fa-solid fa-arrow-left me-1"></i> ' . __('Retour à la liste'),
-                ['action' => 'index'],
-                ['class' => 'btn btn-outline-secondary', 'escape' => false]
-            ) ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index(__('Retour à la liste'), 'btn btn-outline-secondary')) ?>
         </div>
     </div>
 

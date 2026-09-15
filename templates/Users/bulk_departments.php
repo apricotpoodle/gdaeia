@@ -16,7 +16,7 @@ $this->Html->script('views/Users/bulk-departments.js', ['type' => 'module', 'blo
         <div class="card shadow-sm h-100">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                 <h1 class="h4 mb-0"><i class="fa-solid fa-users-gear me-2"></i><?= h($this->fetch('title')) ?></h1>
-                <?= $this->Html->link(__('Retour à la liste'), ['action' => 'index'], ['class' => 'btn btn-light btn-sm']) ?>
+                <?= $this->Action->render(\App\View\Action\UsersActions::index()) ?>
             </div>
             <div class="card-body bulk-departments-card-body">
 
@@ -39,7 +39,7 @@ $this->Html->script('views/Users/bulk-departments.js', ['type' => 'module', 'blo
                     </div>
 
                     <div class="bulk-departments-actions">
-                        <?= $this->Html->link(__('Annuler'), ['action' => 'index'], ['class' => 'btn btn-secondary btn-sm']) ?>
+                        <?= $this->Action->render(\App\View\Action\UsersActions::index(__('Annuler'), 'btn btn-secondary btn-sm')) ?>
                         <button id="bulk-departments-add" type="submit" class="btn btn-success btn-sm" data-association-mode="add" disabled>
                             <i class="fa-solid fa-plus me-1"></i><?= __('Ajouter les associations') ?>
                         </button>
