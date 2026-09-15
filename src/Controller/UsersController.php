@@ -8,7 +8,6 @@ use App\Mailer\UserMailer;
 use App\Service\Security\FieldAuthorizationService;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
-use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\Log\Log;
 use DateTime;
@@ -451,15 +450,12 @@ class UsersController extends AppController
     public function revertIdentity(): ?Response
     {
         $this->Authorization->skipAuthorization();
-        // Pour être sûr que nous toujours en train d'incarner quelqu'un
+        // Une URL mémorisée avant la connexion peut revenir ici sans usurpation active.
         if (!$this->Authentication->isImpersonating()) {
-            throw new NotFoundException();
+            return $this->redirect(['action' => 'index']);
         }
-        if ($this->Authentication->isImpersonating()) {
-            $this->Authentication->stopImpersonating();
-        } else {
-            $this->Flash->warning(__('Aucune session d\'origine détectée.'));
-        }
+
+        $this->Authentication->stopImpersonating();
 
         return $this->redirect(['action' => 'index']);
     }

@@ -93,6 +93,15 @@ class UsersControllerTest extends TestCase
         $this->assertResponseNotContains('bulk-departments-replace');
     }
 
+    public function testLeRetourDUsurpationSansSessionDUsurpationRevientALIndex(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/users/revert_identity');
+
+        $this->assertRedirectContains('/users');
+    }
+
     public function testLeLienDAssociationDesDepartementsEstMasqueSansDroitDeCreation(): void
     {
         $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);

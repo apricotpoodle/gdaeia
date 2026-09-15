@@ -17,6 +17,7 @@ Les statuts utilisés sont : `À planifier`, `Prêt`, `En cours`, `Bloqué` et `
 - [0005 — Moderniser l'appel TreeBehavior::recover() des menus](0005-moderniser-lappel-treebehavior-recover-des-menus.md) — priorité moyenne.
 - [0006 — Protéger l'accès URL à l'administration des menus](0006-proteger-lacces-url-a-ladministration-des-menus.md) — priorité haute.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute.
+- [0008 — Sécuriser les URL de retour post-authentification](0008-securiser-les-url-de-retour-post-authentification.md) — priorité moyenne.
 
 ## Migration vers un gestionnaire de tickets
 
