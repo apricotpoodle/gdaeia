@@ -56,6 +56,29 @@ class UsersControllerTest extends TestCase
         $this->assertSame(2, $userDepartments->find()->where(['department_id' => 2])->count());
     }
 
+    public function testLApiAssocieEtRetireUnUtilisateurDesDepartementsSelectionnes(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/users/assign-bulk-departments.json', [
+            'user_id' => 2,
+            'department_ids' => [2],
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"associations_created":1');
+
+        $this->post('/api/users/unassign-bulk-departments.json', [
+            'user_id' => 2,
+            'department_ids' => [2],
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"associations_deleted":1');
+    }
+
     public function testLEcranDAssociationMultipleEstAccessibleParUnSuperAdministrateur(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
@@ -64,6 +87,10 @@ class UsersControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('Associer des départements à plusieurs utilisateurs');
+        $this->assertResponseContains('id="bulk-departments-table"');
+        $this->assertResponseContains('id="bulk-available-users-table"');
+        $this->assertResponseContains('id="bulk-selected-users-table"');
+        $this->assertResponseNotContains('bulk-departments-replace');
     }
 
     public function testLeLienDAssociationDesDepartementsEstMasqueSansDroitDeCreation(): void

@@ -107,6 +107,36 @@ class UserDepartmentsTable extends Table
     }
 
     /**
+     * Retourne les identifiants des utilisateurs associés à tous les départements fournis.
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query Requête ORM à spécialiser.
+     * @param list<int> $departmentIds Départements sélectionnés et déjà autorisés.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findUserIdsAssociatedWithDepartments(SelectQuery $query, array $departmentIds): SelectQuery
+    {
+        return $query->select(['UserDepartments.user_id'])
+            ->where(['UserDepartments.department_id IN' => $departmentIds])
+            ->groupBy(['UserDepartments.user_id'])
+            ->having(['COUNT(DISTINCT UserDepartments.department_id) =' => count($departmentIds)]);
+    }
+
+    /**
+     * Retire les associations ciblées entre un utilisateur et des départements.
+     *
+     * @param int $userId Identifiant de l'utilisateur déjà autorisé.
+     * @param list<int> $departmentIds Identifiants des départements déjà autorisés.
+     * @return int Nombre d'associations retirées.
+     */
+    public function removeAssociationsForUser(int $userId, array $departmentIds): int
+    {
+        return $this->deleteAll([
+            'UserDepartments.user_id' => $userId,
+            'UserDepartments.department_id IN' => $departmentIds,
+        ]);
+    }
+
+    /**
      * Ajoute les associations absentes entre plusieurs utilisateurs et départements.
      *
      * Les associations existantes sont conservées : cette opération représente un ajout

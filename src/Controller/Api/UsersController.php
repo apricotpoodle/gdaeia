@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use App\Model\Entity\User;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
 use Cake\Datasource\EntityInterface;
@@ -257,7 +258,72 @@ class UsersController extends AppController
             ]));
     }
 
+    /** Retourne l'arbre des départements administrables dans l'écran d'association. */
+    public function bulkDepartmentsTree(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
 
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $departments = $this->fetchTable('Departments')->find('treeThreadedVisibleTo', user: $currentUser)
+            ->all();
+
+        $this->set('data', $departments);
+        $this->viewBuilder()->setOption('serialize', ['data']);
+    }
+
+    /** Retourne les utilisateurs administrables dans l'écran d'association. */
+    public function bulkDepartmentsUsers(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $users = $this->Users->find('visibleTo', user: $currentUser)
+            ->contain(['Roles'])
+            ->orderBy(['Users.lastname' => 'ASC', 'Users.firstname' => 'ASC'])
+            ->all();
+
+        $this->set('data', $users);
+        $this->viewBuilder()->setOption('serialize', ['data']);
+    }
+
+    /** Retourne les utilisateurs associés à tous les départements sélectionnés. */
+    public function bulkDepartmentsAssignedUsers(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $departmentIds = $this->resolveAuthorizedDepartmentIds($this->request->getQuery('department_ids'), $currentUser);
+        $userIds = $this->fetchTable('UserDepartments')->find(
+            'userIdsAssociatedWithDepartments',
+            departmentIds: $departmentIds,
+        );
+        $users = $this->Users->find('visibleTo', user: $currentUser)
+            ->contain(['Roles'])
+            ->where(['Users.id IN' => $userIds])
+            ->orderBy(['Users.lastname' => 'ASC', 'Users.firstname' => 'ASC'])
+            ->all();
+
+        $this->set('data', $users);
+        $this->viewBuilder()->setOption('serialize', ['data']);
+    }
+
+    /** Associe un utilisateur à tous les départements sélectionnés. */
+    public function assignBulkDepartments(): Response
+    {
+        return $this->updateBulkDepartmentAccess(false);
+    }
+
+    /** Retire un utilisateur de tous les départements sélectionnés. */
+    public function unassignBulkDepartments(): Response
+    {
+        return $this->updateBulkDepartmentAccess(true);
+    }
     /**
      * Méthode Index (GET /api/users.json)
      *
@@ -345,6 +411,61 @@ class UsersController extends AppController
         }
 
         return array_values($normalized);
+    }
+
+    /**
+     * Valide le périmètre et applique une mutation atomique d'association.
+     *
+     * @param bool $remove True pour retirer les associations, false pour les créer.
+     * @return \Cake\Http\Response
+     */
+    private function updateBulkDepartmentAccess(bool $remove): Response
+    {
+        $this->request->allowMethod(['post']);
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $departmentIds = $this->resolveAuthorizedDepartmentIds($this->request->getData('department_ids'), $currentUser);
+        $userId = $this->normalizePositiveIntegerList([$this->request->getData('user_id')], 'user_id')[0];
+        $targetUser = $this->Users->find('visibleTo', user: $currentUser)->where(['Users.id' => $userId])->first();
+        if ($targetUser === null) {
+            throw new ForbiddenException(__('L’utilisateur ciblé est hors de votre périmètre.'));
+        }
+        $this->Authorization->authorize($targetUser, 'edit');
+
+        /** @var \App\Model\Table\UserDepartmentsTable $userDepartments */
+        $userDepartments = $this->fetchTable('UserDepartments');
+        $count = $userDepartments->getConnection()->transactional(function () use ($userDepartments, $userId, $departmentIds, $remove): int {
+            return $remove
+                ? $userDepartments->removeAssociationsForUser($userId, $departmentIds)
+                : $userDepartments->addMissingAssociations([$userId], $departmentIds);
+        });
+
+        return $this->response->withType('application/json')->withStringBody(json_encode([
+            'success' => true,
+            $remove ? 'associations_deleted' : 'associations_created' => $count,
+        ]));
+    }
+
+    /**
+     * Valide que les départements sélectionnés appartiennent au périmètre de l'opérateur.
+     *
+     * @param mixed $values Valeur brute issue de la requête.
+     * @param \App\Model\Entity\User $currentUser Opérateur connecté.
+     * @return list<int>
+     */
+    private function resolveAuthorizedDepartmentIds(mixed $values, User $currentUser): array
+    {
+        $departmentIds = $this->normalizePositiveIntegerList($values, 'department_ids');
+        $authorizedDepartmentIds = $this->flattenTreeSelectValues(
+            $this->fetchTable('Departments')->findTreeSelectFormat($currentUser),
+        );
+        if (array_diff($departmentIds, $authorizedDepartmentIds) !== []) {
+            throw new ForbiddenException(__('Au moins un département ciblé est hors de votre périmètre.'));
+        }
+
+        return $departmentIds;
     }
 
     /**
