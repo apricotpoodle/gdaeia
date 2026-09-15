@@ -96,6 +96,12 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/menus/role-access-assigned-roles', ['controller' => 'Menus', 'action' => 'roleAccessAssignedRoles', '_ext' => 'json']);
         $builder->connect('/menus/assign-role-access', ['controller' => 'Menus', 'action' => 'assignRoleAccess', '_ext' => 'json']);
         $builder->connect('/menus/unassign-role-access', ['controller' => 'Menus', 'action' => 'unassignRoleAccess', '_ext' => 'json']);
+        $builder->connect('/validationsequences/departments-tree', ['controller' => 'Validationsequences', 'action' => 'departmentsTree', '_ext' => 'json']);
+        $builder->connect('/validationsequences/roles', ['controller' => 'Validationsequences', 'action' => 'roles', '_ext' => 'json']);
+        $builder->connect('/validationsequences/assigned-roles', ['controller' => 'Validationsequences', 'action' => 'assignedRoles', '_ext' => 'json']);
+        $builder->connect('/validationsequences/assign-role', ['controller' => 'Validationsequences', 'action' => 'assignRole', '_ext' => 'json']);
+        $builder->connect('/validationsequences/unassign-role', ['controller' => 'Validationsequences', 'action' => 'unassignRole', '_ext' => 'json']);
+        $builder->connect('/validationsequences/update-sequence', ['controller' => 'Validationsequences', 'action' => 'updateSequence', '_ext' => 'json']);
 
         $builder->resources('Users'); // Crée automatiquement les routes RESTful (GET /api/users)
         $builder->resources('Roles');

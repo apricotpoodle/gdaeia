@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -74,7 +75,7 @@ class ValidationsequencesTable extends Table
         $validator
             ->scalar('name')
             ->maxLength('name', 255)
-            ->notEmptyString('name');
+            ->allowEmptyString('name');
 
         $validator
             ->scalar('description')
@@ -86,6 +87,7 @@ class ValidationsequencesTable extends Table
 
         $validator
             ->integer('sequence')
+            ->greaterThanOrEqual('sequence', 1, __('Le numéro de séquence doit être supérieur ou égal à 1.'))
             ->notEmptyString('sequence');
 
         $validator
@@ -109,5 +111,51 @@ class ValidationsequencesTable extends Table
         $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
 
         return $rules;
+    }
+
+    /**
+     * Limite une requête aux séquences actives d'un ensemble de départements.
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query Requête à compléter.
+     * @param array<int> $departmentIds Départements dont la configuration est contrôlée.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findActiveForDepartments(SelectQuery $query, array $departmentIds): SelectQuery
+    {
+        return $query->where([
+            'Validationsequences.department_id IN' => $departmentIds,
+            'Validationsequences.deleted IS' => null,
+        ]);
+    }
+
+    /**
+     * Vérifie que chaque département possède les numéros continus de 1 à son maximum.
+     * Plusieurs rôles peuvent partager un numéro et valident alors en parallèle.
+     *
+     * @param array<int> $departmentIds Départements dont la configuration est contrôlée.
+     * @return bool Vrai lorsque chaque département possède au moins une séquence continue.
+     */
+    public function hasContiguousSequencesForDepartments(array $departmentIds): bool
+    {
+        $sequencesByDepartment = array_fill_keys($departmentIds, []);
+        $rows = $this->find('activeForDepartments', departmentIds: $departmentIds)
+            ->select(['department_id', 'sequence'])
+            ->all();
+        foreach ($rows as $row) {
+            $sequencesByDepartment[(int)$row->department_id][(int)$row->sequence] = true;
+        }
+
+        foreach ($sequencesByDepartment as $sequences) {
+            if ($sequences === []) {
+                return false;
+            }
+            $numbers = array_keys($sequences);
+            sort($numbers, SORT_NUMERIC);
+            if ($numbers !== range(1, max($numbers))) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
