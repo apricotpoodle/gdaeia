@@ -315,4 +315,37 @@ export class TabulatorFactory {
         ];
     }
 
+    static createValidationSequencesDepartmentsGrid(selector = '#validation-sequences-departments-table') {
+        return this._createBaseGrid(selector)
+            .setAjaxSource('/api/validationsequences/departments-tree.json')
+            .disablePagination()
+            .setHeight('100%')
+            .addOptions({ persistence: false, dataTree: true, dataTreeStartExpanded: false, dataTreeChildField: 'children', selectableRows: 1, layout: 'fitColumns' })
+            .setColumns([ColumnsFactory.text('name', 'Département')])
+            .build();
+    }
+
+    static createValidationSequencesAvailableRolesGrid(selector = '#validation-sequences-available-roles-table') {
+        return this._createBaseGrid(selector)
+            .setLocalData([])
+            .disablePagination()
+            .setHeight('100%')
+            .addOptions({ persistence: false, layout: 'fitColumns' })
+            .setColumns(this.getRoleAccessColumns())
+            .build();
+    }
+
+    static createValidationSequencesAssignedRolesGrid(selector = '#validation-sequences-assigned-roles-table') {
+        return this._createBaseGrid(selector)
+            .setLocalData([])
+            .disablePagination()
+            .setHeight('100%')
+            .addOptions({ persistence: false, layout: 'fitColumns' })
+            .setColumns([
+                ...this.getRoleAccessColumns(),
+                { title: 'Séquence', field: 'sequence', editor: 'number', editorParams: { min: 1, step: 1 }, sorter: 'number', hozAlign: 'center', width: 110 },
+            ])
+            .build();
+    }
+
 }

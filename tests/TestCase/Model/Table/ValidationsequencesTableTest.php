@@ -70,7 +70,6 @@ class ValidationsequencesTableTest extends TestCase
         ]);
 
         $this->assertArrayHasKey('department_id', $sequence->getErrors());
-        $this->assertArrayHasKey('name', $sequence->getErrors());
         $this->assertArrayHasKey('role_id', $sequence->getErrors());
         $this->assertArrayHasKey('sequence', $sequence->getErrors());
     }
@@ -92,5 +91,31 @@ class ValidationsequencesTableTest extends TestCase
 
         $this->assertFalse($this->Validationsequences->save($sequence));
         $this->assertArrayHasKey('role_id', $sequence->getErrors());
+    }
+
+    /** Le libellé technique peut rester vide, mais une étape est numérotée à partir de 1. */
+    public function testLeLibellePeutEtreVideEtLaSequenceDoitEtrePositive(): void
+    {
+        $sequence = $this->Validationsequences->newEntity([
+            'department_id' => 1,
+            'name' => '',
+            'role_id' => 1,
+            'sequence' => 0,
+        ]);
+
+        $this->assertArrayNotHasKey('name', $sequence->getErrors());
+        $this->assertArrayHasKey('sequence', $sequence->getErrors());
+    }
+
+    /** Chaque département configuré doit commencer à 1 et ne comporter aucun trou. */
+    public function testLesSequencesActivesDoiventEtreContinues(): void
+    {
+        $this->Validationsequences->updateAll(['deleted' => null, 'sequence' => 1], ['id' => 1]);
+
+        $this->assertTrue($this->Validationsequences->hasContiguousSequencesForDepartments([1]));
+
+        $this->Validationsequences->updateAll(['sequence' => 2], ['id' => 1]);
+
+        $this->assertFalse($this->Validationsequences->hasContiguousSequencesForDepartments([1]));
     }
 }
