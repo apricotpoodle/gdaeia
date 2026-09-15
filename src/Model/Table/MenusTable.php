@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\User;
 use ArrayObject;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
@@ -135,5 +136,24 @@ class MenusTable extends AppTable
         $rules->add($rules->existsIn(['parent_id'], 'ParentMenus'), ['errorField' => 'parent_id']);
 
         return $rules;
+    }
+
+    /**
+     * Limite les options administrables dans l'écran d'accès aux rôles.
+     * Le périmètre est volontairement identique à MenuPolicy : seuls les
+     * super-administrateurs et le rôle administrateur administrent les menus.
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query Requête à filtrer.
+     * @param \App\Model\Entity\User $user Opérateur connecté.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findRoleAccessVisibleTo(\Cake\ORM\Query\SelectQuery $query, User $user): \Cake\ORM\Query\SelectQuery
+    {
+        $query->where(['Menus.active' => true]);
+        if (!$user->get('issuperuser') && $user->get('role_id') !== User::ROLE_ADMIN) {
+            $query->where(['1 = 0']);
+        }
+
+        return $query;
     }
 }

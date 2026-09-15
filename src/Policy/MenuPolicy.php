@@ -55,6 +55,17 @@ class MenuPolicy
     }
 
     /**
+     * Autorisation dédiée à l'attribution des options de menu aux rôles.
+     *
+     * @param \Authorization\IdentityInterface $identity
+     * @return bool
+     */
+    public function canRoleAccess(IdentityInterface $identity): bool
+    {
+        return $this->isAdmin($identity);
+    }
+
+    /**
      * Autorisation pour l'affichage d'un élément (view)
      *
      * @param \Authorization\IdentityInterface $identity

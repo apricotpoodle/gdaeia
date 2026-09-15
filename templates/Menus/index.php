@@ -10,7 +10,10 @@ $this->Html->script('views/Menus/index.js', ['type' => 'module', 'block' => 'scr
 <div class="menus index content">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h3><?= __('Menus') ?></h3>
-        <?= $this->Html->link('<i class="fas fa-plus"></i> ' . __('Nouveau Menu'), ['action' => 'add'], ['escape' => false, 'class' => 'btn btn-primary']) ?>
+        <div class="d-flex gap-2">
+            <?= $this->Action->render(\App\View\Action\MenusActions::roleAccess()) ?>
+            <?= $this->Action->render(\App\View\Action\MenusActions::add()) ?>
+        </div>
     </div>
 
     <!-- Injection via le composant métier existant (TabulatorHelper) -->

@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\User;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -128,5 +129,22 @@ class RolesTable extends Table
         $rules->add($rules->isUnique(['name']), ['errorField' => 'name']);
 
         return $rules;
+    }
+
+    /**
+     * Limite les rôles administrables depuis l'écran d'accès aux menus.
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query Requête à filtrer.
+     * @param \App\Model\Entity\User $user Opérateur connecté.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findRoleAccessVisibleTo(\Cake\ORM\Query\SelectQuery $query, User $user): \Cake\ORM\Query\SelectQuery
+    {
+        $query->where(['Roles.deleted IS' => null]);
+        if (!$user->get('issuperuser') && $user->get('role_id') !== User::ROLE_ADMIN) {
+            $query->where(['1 = 0']);
+        }
+
+        return $query;
     }
 }

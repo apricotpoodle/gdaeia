@@ -46,8 +46,9 @@ class AppView extends View
         //     'className' => 'Authorization.Identity',
         // ]);        // // 1. Chargement du Helper d'Autorisation (Fournit $this->Identity dans les templates)
         // $this->addHelper('Authorization.Identity');
-        // 2. Chargement global du Helper d'infrastructure
+        // 2. Chargement global des Helpers d'infrastructure et d'actions autorisées.
         $this->loadHelper('Tabulator');
+        $this->loadHelper('Action');
         // 3. Injection de l'objet $identity dans toutes les vues (.php)
         $identity = $this->getRequest()->getAttribute('identity');
         $this->set('identity', $identity);
