@@ -185,4 +185,35 @@ class UsersControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('Retour à la connexion');
     }
+
+    public function testLeLienDAssociationDesDepartementsEstMasqueSansDroitDeCreation(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
+
+        $this->get('/users');
+
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('Associer des départements');
+    }
+
+    public function testLeLienDAssociationDesDepartementsEstAfficheAvecLeDroitDeCreation(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/users');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Associer des départements');
+    }
+
+    public function testLesLiensPublicsDAuthentificationSontRendusSansSession(): void
+    {
+        $this->get('/users/login');
+        $this->assertResponseOk();
+        $this->assertResponseContains('Mot de passe oublié ?');
+
+        $this->get('/users/forgot-password');
+        $this->assertResponseOk();
+        $this->assertResponseContains('Retour à la connexion');
+    }
 }
