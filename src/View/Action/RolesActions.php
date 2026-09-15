@@ -22,6 +22,27 @@ final class RolesActions
         );
     }
 
+    /**
+     * Commande vers la gestion des associations entre rôles et options de menu.
+     *
+     * La ressource Menus assure que la visibilité du raccourci suit exactement
+     * l'autorisation de l'écran cible.
+     *
+     * @return \App\View\Action\UiAction Commande de gestion des accès menus.
+     */
+    public static function menuAccess(): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_LINK,
+            __('Associer des options de menu'),
+            'fa-sitemap',
+            ['controller' => 'Menus', 'action' => 'roleAccess'],
+            'roleAccess',
+            'Menus',
+            ['class' => 'btn btn-outline-primary'],
+        );
+    }
+
     /** @return \App\View\Action\UiAction Commande de retour vers l'index. */
     public static function index(
         string $label = 'Retour à la liste',

@@ -80,6 +80,16 @@ class DomainActionsTest extends TestCase
         $this->assertSame(['action' => 'add'], $action->url);
     }
 
+    /** Vérifie que le raccourci des associations délègue son autorisation à Menus. */
+    public function testLAssociationDesRolesAuxMenusCibleLEcranDeMenus(): void
+    {
+        $action = RolesActions::menuAccess();
+
+        $this->assertSame('roleAccess', $action->authorizationAction);
+        $this->assertSame('Menus', $action->resource);
+        $this->assertSame(['controller' => 'Menus', 'action' => 'roleAccess'], $action->url);
+    }
+
     /** Vérifie que les actions publiques contournent explicitement les Policies. */
     public function testLesActionsPubliquesNeDemandentPasDAutorisation(): void
     {
