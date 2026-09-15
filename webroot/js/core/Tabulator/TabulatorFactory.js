@@ -99,16 +99,21 @@ export class TabulatorFactory {
             .setAjaxSource('/api/users/bulk-departments-tree.json')
             .disablePagination()
             .setHeight('100%')
-            .addOptions({ persistence: false, dataTree: true, dataTreeStartExpanded: false, dataTreeChildField: 'children', selectableRows: true, layout: 'fitColumns' })
+            .addOptions({
+                persistence: false,
+                dataTree: true,
+                dataTreeStartExpanded: false,
+                dataTreeChildField: 'children',
+                selectableRows: true,
+                layout: 'fitColumns',
+            })
             .setColumns([ColumnsFactory.text('name', 'Département')])
             .build();
     }
 
     static createBulkAvailableUsersGrid(selector = '#bulk-available-users-table') {
         return this._createBaseGrid(selector)
-            .setLocalData([])
-            .disablePagination()
-            .setHeight('100%')
+            .setAjaxSource('/api/users/bulk-departments-users.json')
             .addOptions({ persistence: false, layout: 'fitColumns' })
             .setColumns(this.getBulkUsersColumns())
             .build();
@@ -122,9 +127,7 @@ export class TabulatorFactory {
      */
     static createBulkSelectedUsersGrid(selector = '#bulk-selected-users-table') {
         return this._createBaseGrid(selector)
-            .setLocalData([])
-            .disablePagination()
-            .setHeight('100%')
+            .setAjaxSource('/api/users/bulk-departments-assigned-users.json')
             .addOptions({ persistence: false, layout: 'fitColumns' })
             .setColumns(this.getBulkUsersColumns())
             .build();

@@ -136,4 +136,40 @@ class UsersTable extends Table
             return $q->where(['UserDepartments.department_id IN' => $myDepartmentIds]);
         })->distinct(['Users.id']);
     }
+
+    /**
+     * Restreint aux utilisateurs associés à tous les départements sélectionnés.
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query Requête à filtrer.
+     * @param list<int> $departmentIds Départements explicitement sélectionnés.
+     * @param \App\Model\Entity\User $user Opérateur connecté.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findAssociatedWithDepartments(SelectQuery $query, array $departmentIds, User $user): SelectQuery
+    {
+        return $this->findVisibleTo($query, $user)
+            ->innerJoinWith('UserDepartments', function (SelectQuery $associationQuery) use ($departmentIds): SelectQuery {
+                return $associationQuery->where(['UserDepartments.department_id IN' => $departmentIds]);
+            })
+            ->groupBy(['Users.id'])
+            ->having(['COUNT(DISTINCT UserDepartments.department_id) =' => count($departmentIds)]);
+    }
+
+    /**
+     * Restreint aux utilisateurs qui ne sont pas associés à tous les départements sélectionnés.
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query Requête à filtrer.
+     * @param list<int> $departmentIds Départements explicitement sélectionnés.
+     * @param \App\Model\Entity\User $user Opérateur connecté.
+     * @return \Cake\ORM\Query\SelectQuery
+     */
+    public function findNotAssociatedWithDepartments(SelectQuery $query, array $departmentIds, User $user): SelectQuery
+    {
+        $associatedUserIds = $this->UserDepartments->find(
+            'userIdsAssociatedWithDepartments',
+            departmentIds: $departmentIds,
+        );
+
+        return $this->findVisibleTo($query, $user)->where(['Users.id NOT IN' => $associatedUserIds]);
+    }
 }

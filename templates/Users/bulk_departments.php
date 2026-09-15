@@ -25,11 +25,11 @@ $this->Html->script('views/Users/bulk-departments.js', ['type' => 'module', 'blo
         </section>
         <section class="col-lg-3 d-flex flex-column">
             <h4 class="h6"><?= __('Utilisateurs disponibles') ?></h4>
-            <div id="bulk-available-users-table" class="role-menu-access-table"></div>
+            <div id="bulk-available-users-table" class="role-menu-access-table bulk-departments-users-table"></div>
         </section>
         <section class="col-lg-4 d-flex flex-column">
             <h4 class="h6"><?= __('Utilisateurs associés à la sélection') ?></h4>
-            <div id="bulk-selected-users-table" class="role-menu-access-table"></div>
+            <div id="bulk-selected-users-table" class="role-menu-access-table bulk-departments-users-table"></div>
         </section>
     </div>
 </div>

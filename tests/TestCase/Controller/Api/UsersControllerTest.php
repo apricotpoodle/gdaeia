@@ -14,6 +14,7 @@ class UsersControllerTest extends TestCase
     /** @var array<string> */
     protected array $fixtures = [
         'app.Users',
+        'app.Roles',
         'app.Departments',
         'app.UserDepartments',
     ];
@@ -32,6 +33,28 @@ class UsersControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertHeaderContains('Content-Type', 'application/json');
+    }
+
+    public function testLApiRetourneLesUtilisateursDisponiblesPourLAssociationDeDepartements(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/api/users/bulk-departments-users.json');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"data"');
+        $this->assertResponseContains('"last_page"');
+    }
+
+    public function testLApiRetourneUneListePagineeVideDesUtilisateursAssociesSansSelection(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/api/users/bulk-departments-assigned-users.json?page=1&size=20');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"data":[]');
+        $this->assertResponseContains('"last_page"');
     }
 
     public function testLApiAssocieUnPerimetreExpliciteAPlusieursUtilisateurs(): void
@@ -77,6 +100,36 @@ class UsersControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('"associations_deleted":1');
+    }
+
+    public function testLApiEtendUnDepartementParentAChacunDeSesEnfantsLorsDeLAssociation(): void
+    {
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/users/assign-bulk-departments.json', [
+            'user_id' => 2,
+            'department_ids' => [1],
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"associations_created":2');
+        $this->assertSame(2, $this->getTableLocator()->get('UserDepartments')->find()
+            ->where(['user_id' => 2])
+            ->count());
+
+        $this->get('/api/users/bulk-departments-assigned-users.json?department_ids[]=1');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('utilisateur-de-test@example.test');
+        $this->assertResponseContains('"last_page"');
+
+        $this->get('/api/users/bulk-departments-users.json?department_ids[]=1');
+
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('utilisateur-de-test@example.test');
     }
 
     public function testLEcranDAssociationMultipleEstAccessibleParUnSuperAdministrateur(): void

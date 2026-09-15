@@ -15,45 +15,23 @@ if (departmentsTableElement && availableUsersTableElement && selectedUsersTableE
     const availableUsersTable = TabulatorFactory.createBulkAvailableUsersGrid('#bulk-available-users-table');
     const selectedUsersTable = TabulatorFactory.createBulkSelectedUsersGrid('#bulk-selected-users-table');
     const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content') || '';
-    /** @type {Array<{id: number|string, firstname: string, lastname: string, email: string, role: object}>} */
-    let visibleUsers = [];
-
     const selectedDepartmentIds = () => departmentsTable.getSelectedRows()
         .map((row) => Number(row.getData().id))
         .filter((id) => Number.isInteger(id) && id > 0);
 
     async function refreshAssignedUsers() {
         const departmentIds = selectedDepartmentIds();
-        if (departmentIds.length === 0) {
-            await selectedUsersTable.replaceData([]);
-            await availableUsersTable.replaceData(visibleUsers);
-            return;
-        }
+        const query = new URLSearchParams();
+        departmentIds.forEach((id) => query.append('department_ids[]', String(id)));
+        const suffix = query.size > 0 ? `?${query.toString()}` : '';
 
         try {
-            const query = new URLSearchParams();
-            departmentIds.forEach((id) => query.append('department_ids[]', String(id)));
-            const response = await fetch(`/api/users/bulk-departments-assigned-users.json?${query.toString()}`, {
-                headers: { Accept: 'application/json' },
-            });
-            const payload = await readJson(response, 'Impossible de charger les utilisateurs associés.');
-            const assignedUsers = payload.data || [];
-            const assignedUserIds = new Set(assignedUsers.map((user) => Number(user.id)));
-            await selectedUsersTable.replaceData(assignedUsers);
-            await availableUsersTable.replaceData(visibleUsers.filter((user) => !assignedUserIds.has(Number(user.id))));
+            await Promise.all([
+                availableUsersTable.setData(`/api/users/bulk-departments-users.json${suffix}`),
+                selectedUsersTable.setData(`/api/users/bulk-departments-assigned-users.json${suffix}`),
+            ]);
         } catch (error) {
-            FlashManager.error(error.message);
-        }
-    }
-
-    async function loadVisibleUsers() {
-        try {
-            const response = await fetch('/api/users/bulk-departments-users.json', { headers: { Accept: 'application/json' } });
-            const payload = await readJson(response, 'Impossible de charger les utilisateurs disponibles.');
-            visibleUsers = payload.data || [];
-            await refreshAssignedUsers();
-        } catch (error) {
-            FlashManager.error(error.message);
+            FlashManager.error('Impossible de charger les utilisateurs.');
         }
     }
 
@@ -79,8 +57,14 @@ if (departmentsTableElement && availableUsersTableElement && selectedUsersTableE
     }
 
     async function readJson(response, fallbackMessage) {
-        const payload = await response.json();
-        if (!response.ok || !payload.success) {
+        const body = await response.text();
+        let payload;
+        try {
+            payload = JSON.parse(body);
+        } catch (error) {
+            throw new Error(fallbackMessage);
+        }
+        if (!response.ok || payload.success === false) {
             throw new Error(payload.message || fallbackMessage);
         }
         return payload;
@@ -94,5 +78,4 @@ if (departmentsTableElement && availableUsersTableElement && selectedUsersTableE
     departmentsTable.on('rowSelectionChanged', refreshAssignedUsers);
     availableUsersTable.on('rowDblClick', (event, row) => updateDepartmentAccess('assign-bulk-departments', row.getData()));
     selectedUsersTable.on('rowDblClick', (event, row) => updateDepartmentAccess('unassign-bulk-departments', row.getData()));
-    loadVisibleUsers();
 }
