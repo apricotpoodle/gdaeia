@@ -94,19 +94,27 @@ export class TabulatorFactory {
      * @param {Map<number, Object>} selectedUsers Utilisateurs déjà retenus, indexés par identifiant.
      * @returns {Tabulator} Instance Tabulator.
      */
-    static createBulkAvailableUsersGrid(selector, selectedUsers) {
+    static createBulkDepartmentsGrid(selector = '#bulk-departments-table') {
         return this._createBaseGrid(selector)
-            .setAjaxSource('/api/users.json')
-            .setController('users')
+            .setAjaxSource('/api/users/bulk-departments-tree.json')
+            .disablePagination()
             .setHeight('100%')
             .addOptions({
+                persistence: false,
+                dataTree: true,
+                dataTreeStartExpanded: false,
+                dataTreeChildField: 'children',
                 selectableRows: true,
-                selectableRowsPersistence: true,
-                rowFormatter: (row) => {
-                    const isSelected = selectedUsers.has(Number(row.getData().id));
-                    row.getElement().style.display = isSelected ? 'none' : '';
-                },
+                layout: 'fitColumns',
             })
+            .setColumns([ColumnsFactory.text('name', 'Département')])
+            .build();
+    }
+
+    static createBulkAvailableUsersGrid(selector = '#bulk-available-users-table') {
+        return this._createBaseGrid(selector)
+            .setAjaxSource('/api/users/bulk-departments-users.json')
+            .addOptions({ persistence: false, layout: 'fitColumns' })
             .setColumns(this.getBulkUsersColumns())
             .build();
     }
@@ -117,16 +125,10 @@ export class TabulatorFactory {
      * @param {string} selector Sélecteur CSS cible.
      * @returns {Tabulator} Instance Tabulator.
      */
-    static createBulkSelectedUsersGrid(selector) {
+    static createBulkSelectedUsersGrid(selector = '#bulk-selected-users-table') {
         return this._createBaseGrid(selector)
-            .setLocalData([])
-            .setController('users')
-            .disablePagination()
-            .setHeight('100%')
-            .addOptions({
-                selectableRows: true,
-                renderVertical: 'virtual',
-            })
+            .setAjaxSource('/api/users/bulk-departments-assigned-users.json')
+            .addOptions({ persistence: false, layout: 'fitColumns' })
             .setColumns(this.getBulkUsersColumns())
             .build();
     }

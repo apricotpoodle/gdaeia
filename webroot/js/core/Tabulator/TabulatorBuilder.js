@@ -196,6 +196,8 @@ export class TabulatorBuilder {
         delete this.config.paginationMode;
         delete this.config.paginationSize;
         delete this.config.paginationPosition;
+        delete this.config.progressiveLoad;
+        delete this.config.progressiveLoadScrollMargin;
 
         return this;
     }

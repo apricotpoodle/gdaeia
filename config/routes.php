@@ -86,6 +86,11 @@ return function (RouteBuilder $routes): void {
         // Routes spécifiques pour l'API Users
         $builder->connect('/users/get-form-schema', ['controller' => 'Users', 'action' => 'getFormSchema', '_ext' => 'json']);
         $builder->connect('/users/bulk-departments', ['controller' => 'Users', 'action' => 'bulkDepartments', '_ext' => 'json']);
+        $builder->connect('/users/bulk-departments-tree', ['controller' => 'Users', 'action' => 'bulkDepartmentsTree', '_ext' => 'json']);
+        $builder->connect('/users/bulk-departments-users', ['controller' => 'Users', 'action' => 'bulkDepartmentsUsers', '_ext' => 'json']);
+        $builder->connect('/users/bulk-departments-assigned-users', ['controller' => 'Users', 'action' => 'bulkDepartmentsAssignedUsers', '_ext' => 'json']);
+        $builder->connect('/users/assign-bulk-departments', ['controller' => 'Users', 'action' => 'assignBulkDepartments', '_ext' => 'json']);
+        $builder->connect('/users/unassign-bulk-departments', ['controller' => 'Users', 'action' => 'unassignBulkDepartments', '_ext' => 'json']);
         $builder->connect('/menus/role-access-tree', ['controller' => 'Menus', 'action' => 'roleAccessTree', '_ext' => 'json']);
         $builder->connect('/menus/role-access-roles', ['controller' => 'Menus', 'action' => 'roleAccessRoles', '_ext' => 'json']);
         $builder->connect('/menus/role-access-assigned-roles', ['controller' => 'Menus', 'action' => 'roleAccessAssignedRoles', '_ext' => 'json']);

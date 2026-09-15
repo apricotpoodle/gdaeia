@@ -7,70 +7,29 @@ declare(strict_types=1);
  */
 
 $this->assign('title', __('Associer des départements à plusieurs utilisateurs'));
-$this->Html->css('vendor/treeselect/treeselectjs.css', ['block' => true]);
 $this->Html->script('views/Users/bulk-departments.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>
-
-<div class="row justify-content-center bulk-departments-screen">
-    <div class="col-xl-10 h-100">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h1 class="h4 mb-0"><i class="fa-solid fa-users-gear me-2"></i><?= h($this->fetch('title')) ?></h1>
-                <?= $this->Action->render(\App\View\Action\UsersActions::index()) ?>
-            </div>
-            <div class="card-body bulk-departments-card-body">
-
-                <?php if (!($canEditDepartments ?? false)): ?>
-                    <div class="alert alert-warning mb-0" role="alert">
-                        <?= __('Votre profil ne permet pas de modifier les périmètres organisationnels.') ?>
-                    </div>
-                <?php else: ?>
-                <form id="bulk-departments-form" class="bulk-departments-form" novalidate>
-                    <div class="bulk-departments-tree">
-                        <label class="form-label fw-semibold mb-1"><?= __('Périmètre Departments') ?></label>
-                        <?= $this->element('Users/department_select', [
-                            'fieldName' => 'department_ids',
-                            'foreignKey' => 'id',
-                            'hiddenContainerId' => 'bulk-department-ids',
-                            'dataScriptId' => null,
-                            'departmentsTree' => [],
-                            'selectedDepartmentIds' => [],
-                        ]) ?>
-                    </div>
-
-                    <div class="bulk-departments-actions">
-                        <?= $this->Action->render(\App\View\Action\UsersActions::index(__('Annuler'), 'btn btn-secondary btn-sm')) ?>
-                        <button id="bulk-departments-add" type="submit" class="btn btn-success btn-sm" data-association-mode="add" disabled>
-                            <i class="fa-solid fa-plus me-1"></i><?= __('Ajouter les associations') ?>
-                        </button>
-                        <button id="bulk-departments-replace" type="submit" class="btn btn-danger btn-sm" data-association-mode="replace" disabled>
-                            <i class="fa-solid fa-arrows-rotate me-1"></i><?= __('Remplacer les associations') ?>
-                        </button>
-                    </div>
-
-                    <div class="bulk-departments-users">
-                        <fieldset>
-                            <legend class="form-label fw-semibold mb-2"><?= __('Utilisateurs concernés') ?></legend>
-                            <div class="row g-3 align-items-stretch bulk-user-tables">
-                                <div class="col-md-5 bulk-user-table">
-                                    <label for="bulk-available-users-table" class="form-label small text-muted"><?= __('Utilisateurs à sélectionner') ?></label>
-                                    <div id="bulk-available-users-table" aria-describedby="bulk-users-help"></div>
-                                </div>
-                                <div class="col-md-2 bulk-transfer-column">
-                                    <span id="bulk-add-users-button"></span>
-                                    <span id="bulk-remove-users-button"></span>
-                                </div>
-                                <div class="col-md-5 bulk-user-table">
-                                    <label for="bulk-selected-users-table" class="form-label small text-muted"><?= __('Utilisateurs sélectionnés') ?></label>
-                                    <div id="bulk-selected-users-table"></div>
-                                </div>
-                            </div>
-                            <div id="bulk-users-help" class="form-text mt-2"><?= __('Filtrez chaque colonne dans les en-têtes. Sélectionnez une ou plusieurs lignes, puis utilisez les flèches ou un double-clic.') ?></div>
-                        </fieldset>
-                    </div>
-                </form>
-                <?php endif; ?>
-            </div>
+<div class="role-menu-access content h-100 d-flex flex-column">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-shrink-0">
+        <div>
+            <h3 class="mb-1"><?= __('Départements et utilisateurs') ?></h3>
+            <p class="text-muted mb-0"><?= __('Sélectionnez un ou plusieurs départements, puis double-cliquez un utilisateur pour l’attribuer. Double-cliquez un utilisateur associé pour le retirer.') ?></p>
         </div>
+        <?= $this->Action->render(\App\View\Action\UsersActions::index()) ?>
+    </div>
+
+    <div class="row g-3 role-menu-access-tables flex-grow-1">
+        <section class="col-lg-5 d-flex flex-column">
+            <h4 class="h6"><?= __('Départements') ?></h4>
+            <div id="bulk-departments-table" class="role-menu-access-table"></div>
+        </section>
+        <section class="col-lg-3 d-flex flex-column">
+            <h4 class="h6"><?= __('Utilisateurs disponibles') ?></h4>
+            <div id="bulk-available-users-table" class="role-menu-access-table bulk-departments-users-table"></div>
+        </section>
+        <section class="col-lg-4 d-flex flex-column">
+            <h4 class="h6"><?= __('Utilisateurs associés à la sélection') ?></h4>
+            <div id="bulk-selected-users-table" class="role-menu-access-table bulk-departments-users-table"></div>
+        </section>
     </div>
 </div>

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use App\Model\Entity\User;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
 use Cake\Datasource\EntityInterface;
@@ -257,7 +258,74 @@ class UsersController extends AppController
             ]));
     }
 
+    /** Retourne l'arbre des départements administrables dans l'écran d'association. */
+    public function bulkDepartmentsTree(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
 
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $departments = $this->fetchTable('Departments')->find('treeThreadedVisibleTo', user: $currentUser)
+            ->all();
+
+        $this->set('data', $departments);
+        $this->viewBuilder()->setOption('serialize', ['data']);
+    }
+
+    /** Retourne les utilisateurs administrables non associés à la sélection éventuelle. */
+    public function bulkDepartmentsUsers(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $selectedDepartmentIds = $this->request->getQuery('department_ids');
+        $users = is_array($selectedDepartmentIds)
+            ? $this->Users->find(
+                'notAssociatedWithDepartments',
+                departmentIds: $this->resolveAuthorizedDepartmentIds($selectedDepartmentIds, $currentUser),
+                user: $currentUser,
+            )
+            : $this->Users->find('visibleTo', user: $currentUser);
+        $this->renderBulkDepartmentUsers($users
+            ->contain(['Roles'])
+            ->orderBy(['Users.lastname' => 'ASC', 'Users.firstname' => 'ASC']));
+    }
+
+    /** Retourne les utilisateurs associés à tous les départements sélectionnés. */
+    public function bulkDepartmentsAssignedUsers(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $selectedDepartmentIds = $this->request->getQuery('department_ids');
+        $users = is_array($selectedDepartmentIds)
+            ? $this->Users->find(
+                'associatedWithDepartments',
+                departmentIds: $this->resolveAuthorizedDepartmentIds($selectedDepartmentIds, $currentUser),
+                user: $currentUser,
+            )
+            : $this->Users->find('visibleTo', user: $currentUser)->where(['Users.id IS' => null]);
+        $this->renderBulkDepartmentUsers($users
+            ->contain(['Roles'])
+            ->orderBy(['Users.lastname' => 'ASC', 'Users.firstname' => 'ASC']));
+    }
+
+    /** Associe un utilisateur à tous les départements sélectionnés. */
+    public function assignBulkDepartments(): Response
+    {
+        return $this->updateBulkDepartmentAccess(false);
+    }
+
+    /** Retire un utilisateur de tous les départements sélectionnés. */
+    public function unassignBulkDepartments(): Response
+    {
+        return $this->updateBulkDepartmentAccess(true);
+    }
     /**
      * Méthode Index (GET /api/users.json)
      *
@@ -345,6 +413,131 @@ class UsersController extends AppController
         }
 
         return array_values($normalized);
+    }
+
+    /**
+     * Valide le périmètre et applique une mutation atomique d'association.
+     *
+     * @param bool $remove True pour retirer les associations, false pour les créer.
+     * @return \Cake\Http\Response
+     */
+    private function updateBulkDepartmentAccess(bool $remove): Response
+    {
+        $this->request->allowMethod(['post']);
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $selectedDepartmentIds = $this->resolveAuthorizedDepartmentIds(
+            $this->request->getData('department_ids'),
+            $currentUser,
+        );
+        $departmentIds = $this->resolveSelectedDepartmentAndDescendantIds($selectedDepartmentIds, $currentUser);
+        $userId = $this->normalizePositiveIntegerList([$this->request->getData('user_id')], 'user_id')[0];
+        $targetUser = $this->Users->find('visibleTo', user: $currentUser)->where(['Users.id' => $userId])->first();
+        if ($targetUser === null) {
+            throw new ForbiddenException(__('L’utilisateur ciblé est hors de votre périmètre.'));
+        }
+        $this->Authorization->authorize($targetUser, 'edit');
+
+        /** @var \App\Model\Table\UserDepartmentsTable $userDepartments */
+        $userDepartments = $this->fetchTable('UserDepartments');
+        $count = $userDepartments->getConnection()->transactional(function () use ($userDepartments, $userId, $departmentIds, $remove): int {
+            return $remove
+                ? $userDepartments->removeAssociationsForUser($userId, $departmentIds)
+                : $userDepartments->addMissingAssociations([$userId], $departmentIds);
+        });
+
+        return $this->response->withType('application/json')->withStringBody(json_encode([
+            'success' => true,
+            $remove ? 'associations_deleted' : 'associations_created' => $count,
+        ]));
+    }
+
+    /**
+     * Applique le protocole Tabulator aux listes d'utilisateurs de l'association.
+     *
+     * @param \Cake\ORM\Query\SelectQuery $query Utilisateurs déjà filtrés par le finder métier.
+     * @return void
+     */
+    private function renderBulkDepartmentUsers(\Cake\ORM\Query\SelectQuery $query): void
+    {
+        $adapter = new TabulatorAdapter();
+        $query = $adapter->adaptRequest($this->request, $query);
+        $queryParams = $this->request->getQueryParams();
+
+        try {
+            $users = $this->paginate($query, [
+                'limit' => (int)($queryParams['size'] ?? 40),
+                'page' => (int)($queryParams['page'] ?? 1),
+            ]);
+        } catch (\Cake\Http\Exception\NotFoundException) {
+            $this->request = $this->request->withQueryParams(array_merge($queryParams, ['page' => 1]));
+            $users = $this->paginate($query, [
+                'limit' => (int)($queryParams['size'] ?? 40),
+                'page' => 1,
+            ]);
+        }
+
+        $output = $adapter->adaptResponse($users);
+        $this->set($output);
+        $this->viewBuilder()->setOption('serialize', array_keys($output));
+    }
+
+    /**
+     * Valide que les départements sélectionnés appartiennent au périmètre de l'opérateur.
+     *
+     * @param mixed $values Valeur brute issue de la requête.
+     * @param \App\Model\Entity\User $currentUser Opérateur connecté.
+     * @return list<int>
+     */
+    private function resolveAuthorizedDepartmentIds(mixed $values, User $currentUser): array
+    {
+        $departmentIds = $this->normalizePositiveIntegerList($values, 'department_ids');
+        $visibleCount = $this->fetchTable('Departments')->find('visibleTo', user: $currentUser)
+            ->where(['Departments.id IN' => $departmentIds])
+            ->count();
+        if ($visibleCount !== count($departmentIds)) {
+            throw new ForbiddenException(__('Au moins un département ciblé est hors de votre périmètre.'));
+        }
+
+        return $departmentIds;
+    }
+
+    /**
+     * Étend les départements explicitement sélectionnés à leurs descendants visibles.
+     *
+     * L'écran conserve la sélection explicite dans la grille, comme l'association
+     * rôles/options de menu ; l'extension hiérarchique intervient uniquement lors
+     * de la mutation afin de persister tous les droits effectifs.
+     *
+     * @param list<int> $selectedDepartmentIds Départements explicitement sélectionnés.
+     * @param \App\Model\Entity\User $currentUser Opérateur connecté.
+     * @return list<int> Départements sélectionnés et descendants autorisés.
+     */
+    private function resolveSelectedDepartmentAndDescendantIds(array $selectedDepartmentIds, User $currentUser): array
+    {
+        $departments = $this->fetchTable('Departments');
+        $selectedDepartments = $departments->find('visibleTo', user: $currentUser)
+            ->select(['id', 'lft', 'rght'])
+            ->where(['Departments.id IN' => $selectedDepartmentIds])
+            ->all()
+            ->toList();
+        $visibleDepartments = $departments->find('visibleTo', user: $currentUser)
+            ->select(['id', 'lft', 'rght'])
+            ->all()
+            ->toList();
+        $departmentIds = [];
+        foreach ($visibleDepartments as $department) {
+            foreach ($selectedDepartments as $selectedDepartment) {
+                if ($department->lft >= $selectedDepartment->lft && $department->rght <= $selectedDepartment->rght) {
+                    $departmentIds[] = (int)$department->id;
+                    break;
+                }
+            }
+        }
+
+        return array_values(array_unique($departmentIds));
     }
 
     /**
