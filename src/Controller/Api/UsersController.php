@@ -8,6 +8,7 @@ use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
+use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Response;
 use Cake\Log\Log;
 use Cake\ORM\TableRegistry;
@@ -182,6 +183,80 @@ class UsersController extends AppController
         return $this->handleValidationError($user);
     }
 
+    /**
+     * Endpoint : POST /api/users/bulk-departments.json
+     *
+     * Ajoute un même périmètre explicite de départements à plusieurs utilisateurs.
+     * Les identifiants transmis correspondent à l'état effectif de TreeSelectAdapter :
+     * lorsqu'un parent est coché, ses descendants font déjà partie de cette liste.
+     *
+     * @return \Cake\Http\Response
+     */
+    public function bulkDepartments(): Response
+    {
+        $this->request->allowMethod(['post']);
+
+        $rawParams = $this->request->getData();
+        $userIds = $this->normalizePositiveIntegerList($rawParams['user_ids'] ?? null, 'user_ids');
+        $associationMode = $rawParams['association_mode'] ?? 'add';
+        if (!is_string($associationMode) || !in_array($associationMode, ['add', 'replace'], true)) {
+            throw new \Cake\Http\Exception\BadRequestException(__('Le mode d’association est invalide.'));
+        }
+        $departmentIds = $this->normalizePositiveIntegerList(
+            $rawParams['department_ids'] ?? null,
+            'department_ids',
+            $associationMode === 'replace',
+        );
+
+        $identity = $this->request->getAttribute('identity');
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $identity->getOriginalData();
+
+        $authService = new FieldAuthorizationService();
+        $fieldSchema = $authService->getFieldSchema($identity, 'Users');
+        if (($fieldSchema['user_departments'] ?? 'EDIT') !== 'EDIT') {
+            throw new ForbiddenException(__('Vous ne disposez pas du droit de modifier les périmètres organisationnels.'));
+        }
+
+        $targetUsers = $this->Users->find('visibleTo', user: $currentUser)
+            ->where(['Users.id IN' => $userIds])
+            ->all()
+            ->toList();
+
+        if (count($targetUsers) !== count($userIds)) {
+            throw new ForbiddenException(__('Au moins un utilisateur ciblé est hors de votre périmètre.'));
+        }
+        foreach ($targetUsers as $targetUser) {
+            $this->Authorization->authorize($targetUser, 'edit');
+        }
+
+        $authorizedDepartmentIds = $this->flattenTreeSelectValues(
+            $this->fetchTable('Departments')->findTreeSelectFormat($currentUser),
+        );
+        if (array_diff($departmentIds, $authorizedDepartmentIds) !== []) {
+            throw new ForbiddenException(__('Au moins un département ciblé est hors de votre périmètre.'));
+        }
+
+        /** @var \App\Model\Table\UserDepartmentsTable $userDepartments */
+        $userDepartments = $this->fetchTable('UserDepartments');
+        $createdCount = $userDepartments->getConnection()->transactional(function () use ($userDepartments, $userIds, $departmentIds, $associationMode): int {
+            if ($associationMode === 'replace') {
+                return $userDepartments->replaceAssociationsForUsers($userIds, $departmentIds);
+            }
+
+            return $userDepartments->addMissingAssociations($userIds, $departmentIds);
+        });
+
+        return $this->response->withType('application/json')
+            ->withStringBody(json_encode([
+                'success' => true,
+                'users_count' => count($userIds),
+                'departments_count' => count($departmentIds),
+                'associations_created' => $createdCount,
+                'association_mode' => $associationMode,
+            ]));
+    }
+
 
     /**
      * Méthode Index (GET /api/users.json)
@@ -244,6 +319,53 @@ class UsersController extends AppController
         return $this->response->withType('application/json')
             ->withStatus(400)
             ->withStringBody(json_encode(['success' => false, 'message' => $message]));
+    }
+
+    /**
+     * Valide une liste d'identifiants entiers positifs et élimine ses doublons.
+     *
+     * @param mixed $values Valeur brute issue du corps JSON.
+     * @param string $field Nom du champ à afficher en cas d'erreur.
+     * @param bool $allowEmpty Autorise une liste vide, uniquement pour une suppression explicite par remplacement.
+     * @return list<int>
+     * @throws \Cake\Http\Exception\BadRequestException Si le format est invalide.
+     */
+    private function normalizePositiveIntegerList(mixed $values, string $field, bool $allowEmpty = false): array
+    {
+        if (!is_array($values) || (!$allowEmpty && $values === [])) {
+            throw new \Cake\Http\Exception\BadRequestException(__('Le champ « {0} » doit être une liste non vide d’identifiants.', $field));
+        }
+
+        $normalized = [];
+        foreach ($values as $value) {
+            if ((!is_int($value) && !(is_string($value) && ctype_digit($value))) || (int)$value < 1) {
+                throw new \Cake\Http\Exception\BadRequestException(__('Le champ « {0} » contient un identifiant invalide.', $field));
+            }
+            $normalized[(int)$value] = (int)$value;
+        }
+
+        return array_values($normalized);
+    }
+
+    /**
+     * Extrait récursivement les valeurs autorisées d'un arbre TreeselectJS.
+     *
+     * @param array<int, array<string, mixed>> $nodes Arbre formaté pour TreeselectJS.
+     * @return list<int>
+     */
+    private function flattenTreeSelectValues(array $nodes): array
+    {
+        $values = [];
+        foreach ($nodes as $node) {
+            if (isset($node['value'])) {
+                $values[] = (int)$node['value'];
+            }
+            if (isset($node['children']) && is_array($node['children'])) {
+                array_push($values, ...$this->flattenTreeSelectValues($node['children']));
+            }
+        }
+
+        return array_values(array_unique($values));
     }
 
     /**

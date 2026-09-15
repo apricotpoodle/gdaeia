@@ -28,7 +28,9 @@ export class ButtonFactory {
         viewpdf: { icon: 'fas fa-file-pdf', color: 'warning', title: 'Ouvrir le document PDF', target: '_blank' },
         impersonate: { icon: 'fas fa-user-secret', color: 'secondary', title: 'Incarner la session utilisateur', target: '_self' },
         moveUp: { icon: 'fas fa-arrow-up', color: 'secondary', title: 'Monter', isEvent: true },
-        moveDown: { icon: 'fas fa-arrow-down', color: 'secondary', title: 'Descendre', isEvent: true }
+        moveDown: { icon: 'fas fa-arrow-down', color: 'secondary', title: 'Descendre', isEvent: true },
+        addToSelection: { icon: 'fas fa-angle-right', color: 'primary', title: 'Ajouter les utilisateurs sélectionnés' },
+        removeFromSelection: { icon: 'fas fa-angle-left', color: 'secondary', title: 'Retirer les utilisateurs sélectionnés' }
     };
 
     /**
@@ -71,6 +73,26 @@ export class ButtonFactory {
         }
 
         return builder.build();
+    }
+
+    /**
+     * Génère un bouton de commande d'écran à partir du registre centralisé.
+     *
+     * @param {string} key Identifiant de commande.
+     * @returns {string} Balisage HTML du bouton ou une chaîne vide.
+     */
+    static getCommandButton(key) {
+        const config = this.#configs[key];
+        if (!config) {
+            return '';
+        }
+
+        return new ButtonBuilder()
+            .setColor(config.color)
+            .setAction(key)
+            .setTitle(config.title)
+            .setIcon(`${config.icon} fa-fw`)
+            .build();
     }
 
     /**

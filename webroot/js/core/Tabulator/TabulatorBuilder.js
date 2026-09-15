@@ -245,6 +245,25 @@ export class TabulatorBuilder {
         return this;
     }
 
+    /**
+     * Définit une source locale pour une grille dont les lignes sont pilotées par la vue.
+     *
+     * @param {Array<Object>} data Données initiales de la grille.
+     * @returns {this}
+     */
+    setLocalData(data = []) {
+        this.config.data = data;
+        this.config.isLocalDataSource = true;
+        delete this.config.ajaxURL;
+        delete this.config.progressiveLoad;
+        delete this.config.progressiveLoadScrollMargin;
+        delete this.config.paginationMode;
+        delete this.config.filterMode;
+        delete this.config.sortMode;
+        delete this.config.dataSendParams;
+        return this;
+    }
+
     setRemotePagination(size = 20) {
         this.config.pagination = true;
         this.config.paginationMode = "remote";
@@ -566,7 +585,7 @@ export class TabulatorBuilder {
 
         const table = new Tabulator(this.selector, this.config);
 
-        if (!this.config.ajaxURL) {
+        if (!this.config.ajaxURL && !this.config.isLocalDataSource) {
             console.warn("TabulatorBuilder: Aucune source Ajax configurée avant l'appel à build().");
         }
 

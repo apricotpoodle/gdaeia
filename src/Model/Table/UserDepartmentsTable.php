@@ -105,4 +105,92 @@ class UserDepartmentsTable extends Table
         return $query->select(['UserDepartments.department_id'])
             ->where(['UserDepartments.user_id' => $user->id]);
     }
+
+    /**
+     * Ajoute les associations absentes entre plusieurs utilisateurs et départements.
+     *
+     * Les associations existantes sont conservées : cette opération représente un ajout
+     * de droits explicites, et non le remplacement d'un périmètre utilisateur.
+     *
+     * @param list<int> $userIds Identifiants des utilisateurs déjà autorisés.
+     * @param list<int> $departmentIds Identifiants des départements déjà autorisés.
+     * @return int Nombre d'associations effectivement créées.
+     * @throws \RuntimeException Si une association ne peut pas être sauvegardée.
+     */
+    public function addMissingAssociations(array $userIds, array $departmentIds): int
+    {
+        $existingAssociations = $this->find()
+            ->select(['user_id', 'department_id'])
+            ->where([
+                'UserDepartments.user_id IN' => $userIds,
+                'UserDepartments.department_id IN' => $departmentIds,
+            ])
+            ->all();
+
+        $existingKeys = [];
+        foreach ($existingAssociations as $association) {
+            $existingKeys[(int)$association->user_id . ':' . (int)$association->department_id] = true;
+        }
+
+        $newAssociations = [];
+        foreach ($userIds as $userId) {
+            foreach ($departmentIds as $departmentId) {
+                $key = $userId . ':' . $departmentId;
+                if (!isset($existingKeys[$key])) {
+                    $newAssociations[] = [
+                        'user_id' => $userId,
+                        'department_id' => $departmentId,
+                    ];
+                }
+            }
+        }
+
+        if ($newAssociations === []) {
+            return 0;
+        }
+
+        $entities = $this->newEntities($newAssociations);
+        if ($this->saveMany($entities, ['atomic' => false]) === false) {
+            throw new \RuntimeException('Impossible d\'enregistrer les associations utilisateurs-départements.');
+        }
+
+        return count($entities);
+    }
+
+    /**
+     * Remplace intégralement les périmètres explicites des utilisateurs ciblés.
+     *
+     * Cette méthode doit être appelée dans une transaction par le service appelant :
+     * si une nouvelle association est invalide, les suppressions sont annulées.
+     *
+     * @param list<int> $userIds Identifiants des utilisateurs déjà autorisés.
+     * @param list<int> $departmentIds Identifiants des départements déjà autorisés.
+     * @return int Nombre d'associations créées après le remplacement.
+     * @throws \RuntimeException Si une association ne peut pas être sauvegardée.
+     */
+    public function replaceAssociationsForUsers(array $userIds, array $departmentIds): int
+    {
+        $this->deleteAll(['UserDepartments.user_id IN' => $userIds]);
+
+        $newAssociations = [];
+        foreach ($userIds as $userId) {
+            foreach ($departmentIds as $departmentId) {
+                $newAssociations[] = [
+                    'user_id' => $userId,
+                    'department_id' => $departmentId,
+                ];
+            }
+        }
+
+        if ($newAssociations === []) {
+            return 0;
+        }
+
+        $entities = $this->newEntities($newAssociations);
+        if ($this->saveMany($entities, ['atomic' => false]) === false) {
+            throw new \RuntimeException('Impossible de remplacer les associations utilisateurs-départements.');
+        }
+
+        return count($entities);
+    }
 }

@@ -85,6 +85,24 @@ class UsersController extends AppController
     public function index(): void
     {
         $this->Authorization->authorize($this->Users->newEmptyEntity(), 'index');
+        $this->set('canBulkDepartments', $this->Authorization->can($this->Users->newEmptyEntity(), 'add'));
+    }
+
+    /**
+     * Action Bulk Departments (GET /users/bulk-departments)
+     *
+     * Affiche l'interface de sélection groupée. Les données et l'écriture sont
+     * déléguées à l'API afin de préserver la séparation Web/API.
+     *
+     * @return void
+     */
+    public function bulkDepartments(): void
+    {
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+
+        $identity = $this->request->getAttribute('identity');
+        $fieldSchema = (new FieldAuthorizationService())->getFieldSchema($identity, 'Users');
+        $this->set('canEditDepartments', ($fieldSchema['user_departments'] ?? 'EDIT') === 'EDIT');
     }
 
     /**

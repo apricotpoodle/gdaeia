@@ -86,6 +86,65 @@ export class TabulatorFactory {
             .build();
     }
 
+    /**
+     * Fabrique de la grille distante des utilisateurs à ajouter à un périmètre.
+     * Les filtres d'en-tête sont traduits par l'API Tabulator existante.
+     *
+     * @param {string} selector Sélecteur CSS cible.
+     * @param {Map<number, Object>} selectedUsers Utilisateurs déjà retenus, indexés par identifiant.
+     * @returns {Tabulator} Instance Tabulator.
+     */
+    static createBulkAvailableUsersGrid(selector, selectedUsers) {
+        return this._createBaseGrid(selector)
+            .setAjaxSource('/api/users.json')
+            .setController('users')
+            .setHeight('100%')
+            .addOptions({
+                selectableRows: true,
+                selectableRowsPersistence: true,
+                rowFormatter: (row) => {
+                    const isSelected = selectedUsers.has(Number(row.getData().id));
+                    row.getElement().style.display = isSelected ? 'none' : '';
+                },
+            })
+            .setColumns(this.getBulkUsersColumns())
+            .build();
+    }
+
+    /**
+     * Fabrique de la grille locale des utilisateurs retenus pour l'opération de masse.
+     *
+     * @param {string} selector Sélecteur CSS cible.
+     * @returns {Tabulator} Instance Tabulator.
+     */
+    static createBulkSelectedUsersGrid(selector) {
+        return this._createBaseGrid(selector)
+            .setLocalData([])
+            .setController('users')
+            .disablePagination()
+            .setHeight('100%')
+            .addOptions({
+                selectableRows: true,
+                renderVertical: 'virtual',
+            })
+            .setColumns(this.getBulkUsersColumns())
+            .build();
+    }
+
+    /**
+     * Colonnes communes aux deux grilles de sélection de masse.
+     *
+     * @returns {Array<Object>} Configurations de colonnes Tabulator.
+     */
+    static getBulkUsersColumns() {
+        return [
+            ColumnsFactory.text('lastname', 'Nom'),
+            ColumnsFactory.text('firstname', 'Prénom'),
+            ColumnsFactory.text('email', 'Adresse courriel'),
+            ColumnsFactory.text('role.code', 'Rôle'),
+        ];
+    }
+
     static createFieldAuthorizationsGrid(selector = "#fieldauthorizations-grid") {
         return this._createActionGrid(selector)
             .setAjaxSource('/api/field-authorizations.json')

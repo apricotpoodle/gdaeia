@@ -67,3 +67,133 @@
     color: #fff !important;
     border-color: #0d6efd !important;
 }
+
+/* Écran d'association de départements : l'IHM reste confinée à la hauteur disponible. */
+.bulk-departments-screen {
+    height: calc(100vh - 7rem);
+    height: calc(100dvh - 7rem);
+    max-height: calc(100vh - 7rem);
+    max-height: calc(100dvh - 7rem);
+    min-height: 0;
+}
+
+.bulk-departments-screen .card {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.bulk-departments-card-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.bulk-departments-form {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 0;
+}
+
+.bulk-departments-tree,
+.bulk-departments-actions {
+    flex: 0 0 auto;
+}
+
+.bulk-departments-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+.bulk-departments-users {
+    flex: 0 0 70%;
+    height: 70%;
+    max-height: 70%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.bulk-departments-users fieldset {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.bulk-departments-users .row {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.bulk-departments-users .bulk-user-table {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.bulk-departments-users .bulk-user-table>[id$='-users-table'] {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: 100%;
+}
+
+.bulk-departments-users .tabulator {
+    height: 100% !important;
+    max-height: 100% !important;
+}
+
+.bulk-departments-users .tabulator-tableholder {
+    overflow-y: auto !important;
+}
+
+.bulk-transfer-column {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-top: 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .bulk-departments-screen {
+        height: auto;
+        max-height: none;
+    }
+
+    .bulk-departments-card-body,
+    .bulk-departments-form,
+    .bulk-departments-users {
+        overflow: visible;
+    }
+
+    .bulk-departments-users {
+        flex-basis: auto;
+        height: auto;
+        max-height: none;
+    }
+
+    .bulk-departments-users fieldset,
+    .bulk-departments-users .row,
+    .bulk-departments-users .bulk-user-table {
+        height: auto;
+        max-height: none;
+    }
+
+    .bulk-departments-users .bulk-user-table {
+        display: block;
+    }
+
+    .bulk-transfer-column {
+        align-items: center;
+        flex-direction: row;
+        justify-content: center;
+        padding-top: 0;
+    }
+}

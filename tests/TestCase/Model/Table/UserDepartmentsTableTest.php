@@ -86,4 +86,30 @@ class UserDepartmentsTableTest extends TestCase
         $this->assertFalse($this->UserDepartments->save($userDepartment));
         $this->assertArrayHasKey('user_id', $userDepartment->getErrors());
     }
+
+    public function testAjouteLesAssociationsAbsentesSansDupliquerLesExistantes(): void
+    {
+        $createdCount = $this->UserDepartments->getConnection()->transactional(
+            fn (): int => $this->UserDepartments->addMissingAssociations([1, 2], [1, 2]),
+        );
+
+        $this->assertSame(3, $createdCount);
+        $this->assertSame(4, $this->UserDepartments->find()->count());
+
+        $this->assertSame(
+            0,
+            $this->UserDepartments->addMissingAssociations([1, 2], [1, 2]),
+        );
+    }
+
+    public function testRemplaceLesAssociationsDesUtilisateursCiblesUniquement(): void
+    {
+        $createdCount = $this->UserDepartments->getConnection()->transactional(
+            fn (): int => $this->UserDepartments->replaceAssociationsForUsers([1, 2], [2]),
+        );
+
+        $this->assertSame(2, $createdCount);
+        $this->assertSame(0, $this->UserDepartments->find()->where(['department_id' => 1])->count());
+        $this->assertSame(2, $this->UserDepartments->find()->where(['department_id' => 2])->count());
+    }
 }

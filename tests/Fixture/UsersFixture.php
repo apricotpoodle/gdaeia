@@ -33,6 +33,21 @@ class UsersFixture extends TestFixture
                 'created' => 1783069293,
                 'modified' => 1783069293,
             ],
+            [
+                'id' => 2,
+                'username' => 'utilisateur-de-test',
+                'email' => 'utilisateur-de-test@example.test',
+                'password' => 'Lorem ipsum dolor sit amet',
+                'firstname' => 'Utilisateur',
+                'lastname' => 'Test',
+                'token' => null,
+                'issuperuser' => 0,
+                'role_id' => 1,
+                'token_expires' => null,
+                'deleted' => null,
+                'created' => 1783069293,
+                'modified' => 1783069293,
+            ],
         ];
         parent::init();
     }
