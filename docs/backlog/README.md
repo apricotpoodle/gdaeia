@@ -14,6 +14,7 @@ Les statuts utilisés sont : `À planifier`, `Prêt`, `En cours`, `Bloqué` et `
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
 - [0002 — Mutualiser la présentation des erreurs de validation](0002-mutualiser-la-presentation-des-erreurs-validation.md) — priorité moyenne.
 - [0004 — Mettre en place une intégration continue MySQL et couverture](0004-mettre-en-place-une-integration-continue-mysql.md) — priorité haute.
+- [0005 — Moderniser l'appel TreeBehavior::recover() des menus](0005-moderniser-lappel-treebehavior-recover-des-menus.md) — priorité moyenne.
 
 ## Migration vers un gestionnaire de tickets
 
