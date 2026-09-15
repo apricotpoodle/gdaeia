@@ -19,6 +19,9 @@ export class TreeSelectAdapter {
         this.dataScriptId = container.dataset.dataScript;
         this.apiUrl = container.dataset.apiUrl;
         this.isReadOnly = container.dataset.readonly === 'true';
+        this.alwaysOpen = container.dataset.alwaysOpen === 'true';
+        this.staticList = container.dataset.staticList === 'true';
+        this.expandSelected = container.dataset.expandSelected === 'true';
         this.placeholder = container.dataset.placeholder || 'Sélectionner...';
 
         this.hiddenInputsContainer = document.getElementById(this.hiddenContainerId);
@@ -50,9 +53,13 @@ export class TreeSelectAdapter {
                 clearable: !this.isReadOnly,
                 searchable: true,
                 placeholder: this.placeholder,
-                disabled: this.isReadOnly,
+                disabled: false,
+                readOnly: this.isReadOnly,
                 showCount: true,
                 openLevel: 1,
+                alwaysOpen: this.alwaysOpen,
+                staticList: this.staticList,
+                expandSelected: this.expandSelected,
                 grouped: true,
                 isGroupedValue: false,
                 isIndependentNodes: true,

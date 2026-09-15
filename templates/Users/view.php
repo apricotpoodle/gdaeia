@@ -13,7 +13,7 @@ $this->assign('title', __('Profil Utilisateur #{0}', $user->id));
 // Ingestion des assets TreeselectJS
 $this->Html->css('vendor/treeselect/treeselectjs.css', ['block' => true]);
 $this->Html->script('vendor/treeselect/treeselectjs.umd.js', ['block' => 'scriptBottom']);
-$this->Html->script('views/Users/user-departments-tree.js', ['block' => 'scriptBottom']);
+$this->Html->script('views/Users/user-departments-tree.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>
 
 <div class="row">
@@ -116,6 +116,10 @@ $this->Html->script('views/Users/user-departments-tree.js', ['block' => 'scriptB
                         'fieldSchema' => array_merge($fieldSchema ?? [], ['user_departments' => 'READ']),
                         'departmentsTree' => $departmentsTree ?? [],
                         'selectedDepartmentIds' => $selectedDepartmentIds ?? [],
+                        'isReadOnly' => true,
+                        'alwaysOpen' => true,
+                        'staticList' => true,
+                        'expandSelected' => true,
                     ]) ?>
                 </fieldset>
             </div>

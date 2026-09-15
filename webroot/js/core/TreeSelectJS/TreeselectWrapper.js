@@ -25,9 +25,13 @@ export default class TreeselectWrapper {
      * @property {boolean} [clearable=true] - Afficher l'icône de nettoyage.
      * @property {boolean} [searchable=true] - Activer la recherche textuelle à la volée.
      * @property {boolean} [appendToBody=false] - Injecter le panneau de liste dans le body (utile si contraintes overflow).
+     * @property {boolean} [alwaysOpen=false] - Maintenir la liste ouverte.
+     * @property {boolean} [staticList=false] - Afficher la liste dans le flux du document, sans superposition.
+     * @property {boolean} [expandSelected=false] - Ouvrir les branches contenant une valeur sélectionnée.
      * @property {number} [openLevel=1] - Niveau d'ouverture initial de l'arborescence.
      * @property {boolean} [showCount=true] - Afficher le nombre d'éléments enfants à côté du libellé de groupe.
      * @property {boolean} [disabled=false] - Désactiver complètement l'interaction (ACL / Read-only).
+     * @property {boolean} [readOnly=false] - Autoriser la navigation et la recherche tout en annulant toute modification de sélection.
      * @property {boolean} [grouped] - Regrouper visuellement les nœuds hiérarchiques.
      * @property {boolean} [isGroupedValue] - Traiter les groupes comme une valeur sélectionnable.
      * @property {boolean} [isIndependentNodes] - Laisser TreeselectJS gérer les nœuds indépendamment.
@@ -48,6 +52,9 @@ export default class TreeselectWrapper {
 
     /** @type {boolean} Indique que cette instance est propriétaire du conteneur. */
     #ownsContainer = false;
+
+    /** @type {Array<string|number>|string|number|null} Valeur figée lorsque le composant est consultable uniquement. */
+    #readOnlyValue = null;
 
     /**
      * Constructeur du wrapper.
@@ -116,9 +123,13 @@ export default class TreeselectWrapper {
             clearable: true,
             searchable: true,
             appendToBody: false,     // Confinement DOM par défaut
+            alwaysOpen: false,
+            staticList: false,
+            expandSelected: false,
             openLevel: 1,
             showCount: true,
             disabled: false,
+            readOnly: false,
             // Mode dropdown propre pour le mode single select (pas de tags encombrants)
             showTags: !isSingleSelect, 
             ...config
@@ -161,17 +172,24 @@ export default class TreeselectWrapper {
             initialValue = Array.isArray(initialValue) ? initialValue : [initialValue];
         }
 
+        if (this.#config.readOnly) {
+            this.#readOnlyValue = Array.isArray(initialValue) ? [...initialValue] : initialValue;
+        }
+
         // Instanciation de TreeselectJS avec la Façade de configuration
         this.#instance = new Treeselect({
             parentHtmlContainer: this.#container,
             value: initialValue,
             options: this.#config.options,
-            disabled: this.#config.disabled,
+            disabled: this.#config.disabled && !this.#config.readOnly,
             isSingleSelect: this.#config.isSingleSelect,
             isBoostedRendering: this.#config.isBoostedRendering,
             clearable: this.#config.clearable,
             searchable: this.#config.searchable,
             appendToBody: this.#config.appendToBody,
+            alwaysOpen: this.#config.alwaysOpen,
+            staticList: this.#config.staticList,
+            expandSelected: this.#config.expandSelected,
             openLevel: this.#config.openLevel,
             showCount: this.#config.showCount,
             showTags: this.#config.showTags,
@@ -184,6 +202,10 @@ export default class TreeselectWrapper {
         // Liaison de l'événement de changement (Adaptateur DOM)
         this.#instance.srcElement.addEventListener('input', (event) => {
             const newValue = event.detail; // Array d'ID ou ID simple
+            if (this.#config.readOnly) {
+                this.#instance.updateValue(this.#readOnlyValue);
+                return;
+            }
             this.#syncValueToInput(newValue);
             
             // Notification du callback utilisateur si présent
@@ -303,6 +325,9 @@ export default class TreeselectWrapper {
         } else {
             cleanValue = Array.isArray(newValue) ? newValue : [newValue];
             this.#instance.updateValue(cleanValue);
+        }
+        if (this.#config.readOnly) {
+            this.#readOnlyValue = Array.isArray(cleanValue) ? [...cleanValue] : cleanValue;
         }
         this.#syncValueToInput(cleanValue);
     }
