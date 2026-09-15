@@ -49,4 +49,14 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('"data":[]');
     }
+
+    public function testLeLienDeCreationEstRenduParLaCommandeDeDomaine(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
+
+        $this->get('/');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Nouvelle demande');
+    }
 }

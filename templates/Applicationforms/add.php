@@ -40,11 +40,7 @@ $this->Html->script('views/Applicationforms/applicationform-candidate', ['block'
         </h2>
 
         <div class="btn-toolbar gap-2">
-            <?= $this->Html->link(
-                '<i class="fa-solid fa-arrow-left me-1"></i> ' . __('Retour à la liste'),
-                ['action' => 'index'],
-                ['class' => 'btn btn-outline-secondary', 'escape' => false]
-            ) ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index(__('Retour à la liste'), 'btn btn-outline-secondary')) ?>
         </div>
     </div>
 
@@ -108,11 +104,7 @@ $this->Html->script('views/Applicationforms/applicationform-candidate', ['block'
 
     <!-- Actions bas de page -->
     <div class="mt-4 mb-5 text-end">
-        <?= $this->Html->link(
-            '<i class="fa-solid fa-xmark me-1"></i> ' . __('Annuler'),
-            ['action' => 'index'],
-            ['class' => 'btn btn-secondary me-2', 'escape' => false]
-        ) ?>
+        <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index(__('Annuler'), 'btn btn-secondary me-2')) ?>
         <?= $this->Form->button(
             '<i class="fa-solid fa-paper-plane me-1"></i> ' . __('Créer la demande'),
             [

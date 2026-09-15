@@ -41,11 +41,7 @@
             </div>
 
             <div class="text-center">
-                <?= $this->Html->link(
-                    __('<i class="fas fa-arrow-left me-1"></i> Retour à la connexion'),
-                    ['action' => 'login'],
-                    ['class' => 'small text-muted text-decoration-none fw-semibold', 'escape' => false]
-                ) ?>
+                <?= $this->Action->render(\App\View\Action\PublicActions::login()) ?>
             </div>
 
             <?= $this->Form->end() ?>

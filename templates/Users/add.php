@@ -28,11 +28,7 @@ $this->Html->script('views/Users/user-departments-tree.js', ['type'=> 'module', 
                     <?= h($this->fetch('title')) ?>
                 </h3>
                 <div>
-                    <?= $this->Html->link(
-                        '<i class="fa-solid fa-arrow-left me-1"></i> ' . __('Retour à la liste'),
-                        ['action' => 'index'],
-                        ['class' => 'btn btn-light btn-sm', 'escape' => false]
-                    ) ?>
+                    <?= $this->Action->render(\App\View\Action\UsersActions::index()) ?>
                 </div>
             </div>
 
@@ -126,11 +122,7 @@ $this->Html->script('views/Users/user-departments-tree.js', ['type'=> 'module', 
                 </fieldset>
 
                 <div class="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
-                    <?= $this->Html->link(
-                        '<i class="fa-solid fa-xmark me-1"></i> ' . __('Annuler'),
-                        ['action' => 'index'],
-                        ['class' => 'btn btn-secondary', 'escape' => false]
-                    ) ?>
+                    <?= $this->Action->render(\App\View\Action\UsersActions::index(__('Annuler'), 'btn btn-secondary')) ?>
                     <?= $this->Form->button(
                         '<i class="fa-solid fa-floppy-disk me-1"></i> ' . __('Enregistrer'),
                         ['type' => 'submit', 'class' => 'btn btn-success', 'escapeTitle' => false]

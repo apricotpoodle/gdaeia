@@ -37,17 +37,17 @@ class UsersControllerTest extends TestCase
     public function testLApiAssocieUnPerimetreExpliciteAPlusieursUtilisateurs(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
         $this->configRequest([
             'headers' => [
                 'Accept' => 'application/json',
-                'Content-Type' => 'application/json',
             ],
         ]);
 
-        $this->post('/api/users/bulk-departments.json', json_encode([
+        $this->post('/api/users/bulk-departments.json', [
             'user_ids' => [1, 2],
             'department_ids' => [2],
-        ]));
+        ]);
 
         $this->assertResponseOk();
         $this->assertResponseContains('"associations_created":2');
@@ -64,5 +64,36 @@ class UsersControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('Associer des départements à plusieurs utilisateurs');
+    }
+
+    public function testLeLienDAssociationDesDepartementsEstMasqueSansDroitDeCreation(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
+
+        $this->get('/users');
+
+        $this->assertResponseOk();
+        $this->assertResponseNotContains('Associer des départements');
+    }
+
+    public function testLeLienDAssociationDesDepartementsEstAfficheAvecLeDroitDeCreation(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/users');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Associer des départements');
+    }
+
+    public function testLesLiensPublicsDAuthentificationSontRendusSansSession(): void
+    {
+        $this->get('/users/login');
+        $this->assertResponseOk();
+        $this->assertResponseContains('Mot de passe oublié ?');
+
+        $this->get('/users/forgot-password');
+        $this->assertResponseOk();
+        $this->assertResponseContains('Retour à la connexion');
     }
 }

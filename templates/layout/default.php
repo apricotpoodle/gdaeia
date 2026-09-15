@@ -60,9 +60,7 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
 <body class="vh-100 d-flex flex-column overflow-hidden">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand fw-bold mb-0 h1" href="<?php echo $this->Url->build('/'); ?>">
-                <i class="fas fa-shield-halved me-2 text-danger"></i>GDAETF2
-            </a>
+            <?= $this->Action->render(\App\View\Action\PublicActions::home()) ?>
 
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#top-navigation-menu" aria-controls="top-navigation-menu" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>

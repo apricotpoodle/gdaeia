@@ -12,12 +12,8 @@ $this->Html->script('views/Applicationforms/edit.js', ['type' => 'module', 'bloc
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h3><?= __('Modifier la Demande de Recrutement #{0}', h($applicationform->id)) ?></h3>
         <div class="d-flex gap-2">
-            <a href="<?= $this->Url->build(['action' => 'view', $applicationform->id]) ?>" class="btn btn-outline-info btn-sm">
-                <i class="fas fa-eye me-1"></i> <?= __('Consulter') ?>
-            </a>
-            <a href="<?= $this->Url->build(['action' => 'index']) ?>" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-arrow-left me-1"></i> <?= __('Retour à la liste') ?>
-            </a>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::view($applicationform)) ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index(__('Retour à la liste'), 'btn btn-outline-secondary btn-sm')) ?>
         </div>
     </div>
 
@@ -91,7 +87,7 @@ $this->Html->script('views/Applicationforms/edit.js', ['type' => 'module', 'bloc
         </div>
 
         <div class="d-flex justify-content-end gap-2 mt-4">
-            <a href="<?= $this->Url->build(['action' => 'index']) ?>" class="btn btn-light"><?= __('Annuler') ?></a>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index(__('Annuler'), 'btn btn-light')) ?>
             <button type="submit" class="btn btn-primary">
                 <i class="fas fa-save me-1"></i> <?= __('Mettre à jour') ?>
             </button>

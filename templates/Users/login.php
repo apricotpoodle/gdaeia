@@ -58,11 +58,7 @@
                     ]) ?>
                 </div>
                 <div>
-                    <?= $this->Html->link(
-                        __('Mot de passe oublié ?'),
-                        ['controller' => 'Users', 'action' => 'forgotPassword'],
-                        ['class' => 'small text-primary text-decoration-none fw-semibold']
-                    ) ?>
+                    <?= $this->Action->render(\App\View\Action\PublicActions::forgotPassword()) ?>
                 </div>
             </div>
 

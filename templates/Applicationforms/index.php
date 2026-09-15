@@ -12,11 +12,7 @@ $this->Html->script('views/Applicationforms/index.js', ['type' => 'module', 'blo
     <div class="d-flex justify-content-between align-items-center mb-3 flex-shrink-0">
         <h3><?= __('Demandes de Recrutement') ?></h3>
         <div>
-            <?= $this->Html->link(
-                '<i class="fa-solid fa-plus me-1"></i> ' . __('Nouvelle demande'),
-                ['action' => 'add'],
-                ['class' => 'btn btn-primary', 'escape' => false]
-            ) ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::add()) ?>
         </div>
     </div>
 
