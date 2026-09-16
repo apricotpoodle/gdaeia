@@ -1,7 +1,7 @@
 # ADR 0051 : Français comme langue applicative par défaut
 
 **Date :** 11 Septembre 2026  
-**Statut :** Proposé  
+**Statut :** Accepté
 **Dépendances :**
 * [ADR 0019 : Internationalisation et ergonomie transversale des grilles de données](./0019-i18n-et-ergonomie-des-grilles.md)
 

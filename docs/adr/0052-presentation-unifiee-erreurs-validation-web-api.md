@@ -1,7 +1,7 @@
 # ADR 0052 : Présentation unifiée des erreurs de validation Web et API
 
 **Date :** 11 Septembre 2026
-**Statut :** Proposé
+**Statut :** Accepté
 **Dépendances :**
 * [ADR 0045 : Administration CRUD de la sécurité des champs](./0045-gestion-crud-field-authorizations.md)
 * [ADR 0051 : Français comme langue applicative par défaut](./0051-francais-langue-applicative-par-defaut.md)

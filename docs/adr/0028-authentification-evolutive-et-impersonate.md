@@ -1,6 +1,6 @@
 # ADR 0028 : Infrastructure d'Authentification Évolutive et Habilitations de Session
 
-**Statut :** Proposé
+**Statut :** Accepté
 
 ## Contexte
 L'application requiert la mise en place d'un système d'authentification et d'autorisation robuste, capable de gérer des accès par couple identifiant/mot de passe dans un premier temps, tout en garantissant une extension transparente vers un fournisseur d'identité tiers (Google OAuth 2.0) à moyen terme. De plus, une fonctionnalité d'usurpation d'identité (`impersonate`) est requise pour le support technique de niveau Super Administrateur.

@@ -1,7 +1,7 @@
 # ADR 0050 : Sémantique des périmètres hiérarchiques utilisateur
 
 **Date :** 11 Septembre 2026  
-**Statut :** Proposé  
+**Statut :** Accepté
 **Dépendances :**
 * [ADR 0041 : Ségrégation des données (RLS) centralisée via Custom Finders](./0041-segregation-donnees-model-custom-finders.md)
 * [ADR 0049 : Intégration de TreeselectJS pour les structures hiérarchiques](./0049-integrationtreeselectjs_pour_structures_hierarchiques_departments.md)
