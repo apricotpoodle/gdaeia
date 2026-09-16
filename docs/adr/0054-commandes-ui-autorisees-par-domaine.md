@@ -2,7 +2,7 @@
 
 **Date :** 15 septembre 2026
 
-**Statut :** Proposé
+**Statut :** Accepté
 
 **Dépendances :** [ADR 0023](./0023-factory-boutons-actions-ui.md), [ADR 0032](./0032-flux-de-travail-developpement.md), [ADR 0047](./0047-normalisation-vues-identity-assets-js.md)
 

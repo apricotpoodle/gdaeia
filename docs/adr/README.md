@@ -36,7 +36,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0025** | Routage Dynamique Polymorphique des Actions de Ligne Tabulator | **Accepté** | [`0025-routage-dynamique-metadonnees-dropdown.md`](./0025-routage-dynamique-metadonnees-dropdown.md) |
 | **ADR 0026** | Contrôle d'Accès Visuel et Structurel Unifié des Grilles via grid_rights | **Accepté** | [`0026-controle-acces-visuel-grid-rights.md`](./0026-controle-acces-visuel-grid-rights.md) |
 | **ADR 0027** | Gestion Dynamique des Messages Flash et Suppressions Asynchrones | **Accepté** | [`0027-gestion-messages-flash-dynamiques.md`](./0027-gestion-messages-flash-dynamiques.md) |
-| **ADR 0028** | Infrastructure d'Authentification Évolutive (Google OAuth Ready) | **Proposé** | [`0028-authentification-evolutive-et-impersonate.md`](./0028-authentification-evolutive-et-impersonate.md) |
+| **ADR 0028** | Infrastructure d'Authentification Évolutive (Google OAuth Ready) | **Accepté** | [`0028-authentification-evolutive-et-impersonate.md`](./0028-authentification-evolutive-et-impersonate.md) |
 | **ADR 0029** | Workflow Git : Le Feature Branch Flow | **Accepté** | [`0029-workflow-git-feature-branch.md`](./0029-workflow-git-feature-branch.md) |
 | **ADR 0030** | Modernisation de l'infrastructure front-end via les modules ES6 | **Accepté** | [`0030-modernisation-scripts-modules-es6.md`](./0030-modernisation-scripts-modules-es6.md) |
 | **ADR 0031** | Stratégie d'exemption de sécurité pour les outils de dev (DebugKit) | **Accepté** | [`0031-exemption-securite-debugkit.md`](./0031-exemption-securite-debugkit.md) |
@@ -58,11 +58,11 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0047** | Découpage de l'IHM Applicationform en 5 zones fonctionnelles | **Accepté** | [`0048-decoupage-ihm-zones-applicationform.md`](./0048-decoupage-ihm-zones-applicationform.md) |
 | **ADR 0048** | Centralisation de l'identité dans AppView et gestion des scripts | **Accepté** | [`0047-normalisation-vues-identity-assets-js.md`](./0047-normalisation-vues-identity-assets-js.md) |
 | **ADR 0049** | Intégration de TreeselectJS pour les structures hiérarchiques | **Accepté** | [`0049-integrationtreeselectjs_pour_structures_hierarchiques_departments.md`](./0049-integrationtreeselectjs_pour_structures_hierarchiques_departments.md) |
-| **ADR 0050** | Sémantique des périmètres hiérarchiques utilisateur | **Proposé** | [`0050-semantique-perimetres-hierarchiques-utilisateur.md`](./0050-semantique-perimetres-hierarchiques-utilisateur.md) |
-| **ADR 0051** | Français comme langue applicative par défaut | **Proposé** | [`0051-francais-langue-applicative-par-defaut.md`](./0051-francais-langue-applicative-par-defaut.md) |
-| **ADR 0052** | Présentation unifiée des erreurs de validation Web et API | **Proposé** | [`0052-presentation-unifiee-erreurs-validation-web-api.md`](./0052-presentation-unifiee-erreurs-validation-web-api.md) |
+| **ADR 0050** | Sémantique des périmètres hiérarchiques utilisateur | **Accepté** | [`0050-semantique-perimetres-hierarchiques-utilisateur.md`](./0050-semantique-perimetres-hierarchiques-utilisateur.md) |
+| **ADR 0051** | Français comme langue applicative par défaut | **Accepté** | [`0051-francais-langue-applicative-par-defaut.md`](./0051-francais-langue-applicative-par-defaut.md) |
+| **ADR 0052** | Présentation unifiée des erreurs de validation Web et API | **Accepté** | [`0052-presentation-unifiee-erreurs-validation-web-api.md`](./0052-presentation-unifiee-erreurs-validation-web-api.md) |
 | **ADR 0053** | Stratégie de tests et MySQL dédié à l’intégration | **Accepté** | [`0053-strategie-tests-unitaires-et-integration.md`](./0053-strategie-tests-unitaires-et-integration.md) |
-| **ADR 0054** | Commandes UI autorisées par domaine | **Proposé** | [`0054-commandes-ui-autorisees-par-domaine.md`](./0054-commandes-ui-autorisees-par-domaine.md) |
+| **ADR 0054** | Commandes UI autorisées par domaine | **Accepté** | [`0054-commandes-ui-autorisees-par-domaine.md`](./0054-commandes-ui-autorisees-par-domaine.md) |
 
 ---
 
