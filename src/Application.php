@@ -18,6 +18,8 @@ declare(strict_types=1);
 namespace App;
 
 use App\Command\TestEmailCommand;
+use App\Command\BacklogNextCommand;
+use App\Command\ValidationReminderCommand;
 use App\Middleware\HostHeaderMiddleware;
 use Authentication\AuthenticationService;
 use Authentication\AuthenticationServiceInterface;
@@ -243,6 +245,8 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
 
         // Enregistrement explicite de la commande
         $commands->add('test_email', TestEmailCommand::class);
+        $commands->add('backlog next', BacklogNextCommand::class);
+        $commands->add('validation remind', ValidationReminderCommand::class);
 
         return $commands;
     }

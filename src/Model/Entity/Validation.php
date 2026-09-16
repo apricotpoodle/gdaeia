@@ -41,6 +41,8 @@ class Validation extends Entity
         'role_id' => true,
         'validated' => true,
         'validationstatus_id' => true,
+        'applicationvalidationstep_id' => true,
+        'is_proxy' => true,
         'obs' => true,
         'deleted' => true,
         'created' => true,

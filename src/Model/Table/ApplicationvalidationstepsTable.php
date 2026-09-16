@@ -57,11 +57,17 @@ class ApplicationvalidationstepsTable extends Table
         ]);
         $this->belongsTo('Validationstatuses', [
             'foreignKey' => 'validationstatus_id',
-            'joinType' => 'INNER',
+            'joinType' => 'LEFT',
         ]);
         $this->belongsTo('Validationsequences', [
             'foreignKey' => 'validationsequence_id',
             'joinType' => 'INNER',
+        ]);
+        $this->belongsTo('ValidationWorkflowRuns', [
+            'foreignKey' => 'validation_workflow_run_id',
+        ]);
+        $this->hasOne('Validations', [
+            'foreignKey' => 'applicationvalidationstep_id',
         ]);
     }
 
@@ -83,7 +89,7 @@ class ApplicationvalidationstepsTable extends Table
 
         $validator
             ->nonNegativeInteger('validationstatus_id')
-            ->notEmptyString('validationstatus_id');
+            ->allowEmptyString('validationstatus_id');
 
         $validator
             ->scalar('comment')
@@ -112,7 +118,7 @@ class ApplicationvalidationstepsTable extends Table
     {
         $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), ['errorField' => 'applicationform_id']);
         $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
-        $rules->add($rules->existsIn(['validationstatus_id'], 'Validationstatuses'), ['errorField' => 'validationstatus_id']);
+        $rules->add($rules->existsIn(['validationstatus_id'], 'Validationstatuses'), ['errorField' => 'validationstatus_id', 'allowNullableNulls' => true]);
         $rules->add($rules->existsIn(['validationsequence_id'], 'Validationsequences'), ['errorField' => 'validationsequence_id']);
 
         return $rules;

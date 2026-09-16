@@ -209,7 +209,7 @@ export class TabulatorFactory {
             .setController('applicationforms')
             .setHeight("calc(100vh - 180px)")
             .setColumns(getApplicationformColumns())
-            .setWithActions(['view', 'edit', 'delete'])
+            .setWithActions(['view', 'edit', 'launchValidation', 'delete'])
             .build();
     }
 

@@ -5,7 +5,9 @@ namespace App\Policy;
 
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\User;
+use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Authorization\IdentityInterface;
+use Cake\ORM\TableRegistry;
 
 /**
  * Class ApplicationformPolicy
@@ -44,8 +46,16 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        // Le Super Admin a toujours accès, sinon à affiner selon les règles métier
-        return true;
+        if ($user->get('issuperuser') || $applicationform->user_id === $user->id) {
+            return true;
+        }
+        if ($applicationform->department_id === null) {
+            return false;
+        }
+
+        return TableRegistry::getTableLocator()->get('UserDepartments')->find()
+            ->where(['user_id' => $user->id, 'department_id' => $applicationform->department_id])
+            ->count() > 0;
     }
 
     /**
@@ -80,8 +90,40 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        // Le Super Admin ou le créateur de la demande
-        return $user->get('issuperuser') || $applicationform->user_id === $user->id || in_array($user->get('role_id'), Applicationform::ALLOWED_ROLES_FOR_EDIT);
+        if ((int)$user->get('role_id') === User::ROLE_ADMIN || $user->get('issuperuser')) {
+            return true;
+        }
+        if (!$this->canView($identity, $applicationform)) {
+            return false;
+        }
+        return $applicationform->user_id === $user->id || in_array($user->get('role_id'), Applicationform::ALLOWED_ROLES_FOR_EDIT);
+    }
+
+    /** Le créateur ou un Admin visible peut soumettre une AF au cycle. */
+    public function canLaunchValidation(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        $user = $this->getValidUser($identity);
+        if (
+            $user === null
+            || !$this->canView($identity, $applicationform)
+            || ($applicationform->user_id !== $user->id && (int)$user->role_id !== User::ROLE_ADMIN)
+        ) {
+            return false;
+        }
+
+        if ($applicationform->has('validation_workflow_run')) {
+            return $applicationform->validation_workflow_run === null;
+        }
+
+        return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
+            ->where(['applicationform_id' => $applicationform->id])
+            ->count() === 0;
+    }
+
+    /** Le service réévalue ensuite le rôle courant, l'échéance et la suppléance. */
+    public function canVoteValidation(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        return $this->canView($identity, $applicationform);
     }
 
     /**

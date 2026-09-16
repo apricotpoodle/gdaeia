@@ -102,6 +102,9 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/validationsequences/assign-role', ['controller' => 'Validationsequences', 'action' => 'assignRole', '_ext' => 'json']);
         $builder->connect('/validationsequences/unassign-role', ['controller' => 'Validationsequences', 'action' => 'unassignRole', '_ext' => 'json']);
         $builder->connect('/validationsequences/update-sequence', ['controller' => 'Validationsequences', 'action' => 'updateSequence', '_ext' => 'json']);
+        $builder->connect('/applicationforms/{id}/validation/start', ['controller' => 'Applicationforms', 'action' => 'startValidation', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/applicationforms/{id}/validation/vote', ['controller' => 'Applicationforms', 'action' => 'voteValidation', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/applicationforms/{id}/validation', ['controller' => 'Applicationforms', 'action' => 'validationState', '_ext' => 'json'], ['pass' => ['id']]);
 
         $builder->resources('Users'); // Crée automatiquement les routes RESTful (GET /api/users)
         $builder->resources('Roles');

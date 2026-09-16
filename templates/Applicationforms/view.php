@@ -17,6 +17,7 @@ $this->assign('title', __('Demande n°{0}', $applicationform->id));
 
 // Inclusion du script JS pour la gestion dynamique des commentaires
 $this->Html->script('views/Applicationforms/applicationform-comments', ['block' => true]);
+$this->Html->script('views/Applicationforms/validation-workflow', ['type' => 'module', 'block' => true]);
 ?>
 
 <div class="container-fluid mt-2 mb-4 px-3">
@@ -49,6 +50,10 @@ $this->Html->script('views/Applicationforms/applicationform-comments', ['block' 
             <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index()) ?>
 
             <?= $this->Action->render(\App\View\Action\ApplicationformsActions::edit($applicationform)) ?>
+
+            <?php if (($applicationform->validation_workflow_run ?? null) === null): ?>
+                <?= $this->Action->render(\App\View\Action\ApplicationformsActions::launchValidation($applicationform)) ?>
+            <?php endif; ?>
 
             <?= $this->Action->render(\App\View\Action\ApplicationformsActions::delete($applicationform)) ?>
         </div>
@@ -141,6 +146,11 @@ $this->Html->script('views/Applicationforms/applicationform-comments', ['block' 
         <li class="nav-item" role="presentation">
             <button class="nav-item nav-link active py-2 fs-7 fw-semibold" id="details-tab" data-bs-toggle="tab" data-bs-target="#details-pane" type="button" role="tab" aria-controls="details-pane" aria-selected="true">
                 <i class="fa-solid fa-align-left me-1 text-primary"></i><?= __('Détails de la demande') ?>
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-item nav-link py-2 fs-7 fw-semibold" id="validation-tab" data-bs-toggle="tab" data-bs-target="#validation-pane" type="button" role="tab">
+                <i class="fa-solid fa-stamp me-1 text-primary"></i><?= __('Validation') ?>
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -243,6 +253,11 @@ $this->Html->script('views/Applicationforms/applicationform-comments', ['block' 
                 <?= $this->element('Applicationforms/comments_block', [
                     'comments' => $applicationform->comments ?? [],
                 ]) ?>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="validation-pane" role="tabpanel" aria-labelledby="validation-tab" tabindex="0">
+            <div id="validation-workflow" data-applicationform-id="<?= h($applicationform->id) ?>">
+                <p class="text-muted mb-0"><?= __('Chargement de l’état de validation…') ?></p>
             </div>
         </div>
 

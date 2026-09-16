@@ -28,6 +28,7 @@ use Search\Model\Filter\Callback;
  * @property \App\Model\Table\CurrentvalidationrolesTable&\Cake\ORM\Association\HasMany $Currentvalidationroles
  * @property \App\Model\Table\ValidationVisasTable&\Cake\ORM\Association\HasMany $ValidationVisas
  * @property \App\Model\Table\ValidationsTable&\Cake\ORM\Association\HasMany $Validations
+ * @property \App\Model\Table\ValidationWorkflowRunsTable&\Cake\ORM\Association\HasOne $ValidationWorkflowRuns
  * @method \App\Model\Entity\Applicationform newEmptyEntity()
  * @method \App\Model\Entity\Applicationform newEntity(array $data, array $options = [])
  * @method array<\App\Model\Entity\Applicationform> newEntities(array $data, array $options = [])
@@ -147,6 +148,9 @@ class ApplicationformsTable extends Table
             'foreignKey' => 'applicationform_id',
         ]);
         $this->hasMany('Validations', [
+            'foreignKey' => 'applicationform_id',
+        ]);
+        $this->hasOne('ValidationWorkflowRuns', [
             'foreignKey' => 'applicationform_id',
         ]);
         $this->hasMany('Comments', [

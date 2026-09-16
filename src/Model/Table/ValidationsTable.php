@@ -62,6 +62,9 @@ class ValidationsTable extends Table
         $this->belongsTo('Validationstatuses', [
             'foreignKey' => 'validationstatus_id',
         ]);
+        $this->belongsTo('Applicationvalidationsteps', [
+            'foreignKey' => 'applicationvalidationstep_id',
+        ]);
     }
 
     /**

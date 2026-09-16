@@ -76,6 +76,20 @@ final class ApplicationformsActions
         );
     }
 
+    /** Commande de lancement API du cycle de validation. */
+    public static function launchValidation(Applicationform $applicationform): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_BUTTON,
+            __('Lancer la validation'),
+            'fa-rocket',
+            '#',
+            'launchValidation',
+            $applicationform,
+            ['class' => 'btn btn-sm btn-success', 'id' => 'launch-validation', 'data-applicationform-id' => $applicationform->id],
+        );
+    }
+
     /**
      * @param string $label Libellé du lien de retour.
      * @param string $class Classes CSS Bootstrap.

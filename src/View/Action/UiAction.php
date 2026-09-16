@@ -16,6 +16,8 @@ final readonly class UiAction
 
     /** Rendu par FormHelper::postLink(). */
     public const TYPE_POST_LINK = 'postLink';
+    /** Rendu par HtmlHelper::tag('button') pour les commandes API. */
+    public const TYPE_BUTTON = 'button';
 
     /**
      * @param self::TYPE_* $type Type de contrôle à rendre.

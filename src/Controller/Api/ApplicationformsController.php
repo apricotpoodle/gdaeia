@@ -7,9 +7,13 @@ use App\Controller\AppController;
 use App\Model\Table\DepartmentsTable;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
+use App\Service\Workflow\ApplicationformValidationWorkflow;
+use App\Service\Workflow\WorkflowStartFailureException;
+use App\Mailer\ValidationWorkflowMailer;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\TableRegistry;
 
 /**
@@ -21,6 +25,153 @@ use Cake\ORM\TableRegistry;
  */
 class ApplicationformsController extends AppController
 {
+    public function startValidation(string $id): Response
+    {
+        $this->request->allowMethod(['post']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'launchValidation');
+        /** @var \App\Model\Entity\User $actor */
+        $actor = $this->request->getAttribute('identity')->getOriginalData();
+        try {
+            $result = (new ApplicationformValidationWorkflow())->start($applicationform, $actor);
+            if ($result['issues'] !== []) {
+                $this->sendBlockedStartAlert($applicationform, $result['issues']);
+
+                return $this->workflowResponse(false, __('Le cycle ne peut pas être lancé.'), $result['issues'], 422);
+            }
+            foreach ($result['recipients'] as $recipient) {
+                (new ValidationWorkflowMailer())->safeSend('validationStep', [$recipient, $applicationform]);
+            }
+            return $this->workflowResponse(true, __('Le cycle de validation est lancé.'), []);
+        } catch (WorkflowStartFailureException $exception) {
+            $this->sendBlockedStartAlert($applicationform, [$exception->getMessage()]);
+
+            return $this->workflowResponse(false, $exception->getMessage(), [], 422);
+        } catch (\RuntimeException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 409);
+        }
+    }
+
+    public function voteValidation(string $id): Response
+    {
+        $this->request->allowMethod(['post']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'voteValidation');
+        /** @var \App\Model\Entity\User $actor */
+        $actor = $this->request->getAttribute('identity')->getOriginalData();
+        $approved = ($this->request->getData('decision') === 'accepter');
+        if (!$approved && $this->request->getData('decision') !== 'refuser') {
+            return $this->workflowResponse(false, __('Décision de validation invalide.'), [], 422);
+        }
+        $stepId = filter_var($this->request->getData('step_id'), FILTER_VALIDATE_INT);
+        if ($stepId === false || $stepId < 1) {
+            return $this->workflowResponse(false, __('Étape de validation invalide.'), [], 422);
+        }
+        $workflow = new ApplicationformValidationWorkflow();
+        $isProxy = (int)$actor->role_id === 1;
+        try {
+            $result = $workflow->vote($applicationform, $actor, $stepId, $approved, (string)$this->request->getData('comment'), $isProxy);
+            foreach ($result['nextRecipients'] as $recipient) {
+                (new ValidationWorkflowMailer())->safeSend('validationStep', [$recipient, $applicationform]);
+            }
+            if ($result['final']) {
+                $this->sendFinalResult($applicationform, $result['state'], (string)$this->request->getData('comment'));
+            }
+            return $this->workflowResponse(true, __('Votre vote a été enregistré.'), ['state' => $result['state'], 'final' => $result['final']]);
+        } catch (\RuntimeException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 422);
+        }
+    }
+
+    public function validationState(string $id): void
+    {
+        $this->request->allowMethod(['get']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'view');
+        $run = $this->fetchTable('ValidationWorkflowRuns')->find()->where(['applicationform_id' => $id])->first();
+        /** @var \App\Model\Entity\User $actor */
+        $actor = $this->request->getAttribute('identity')->getOriginalData();
+        $workflow = new ApplicationformValidationWorkflow();
+        $rawSteps = $run === null ? [] : $this->fetchTable('Applicationvalidationsteps')->find()
+            ->contain(['Roles'])
+            ->where(['validation_workflow_run_id' => $run->id])
+            ->orderByAsc('sequence_number')
+            ->all()
+            ->toList();
+        $isProxy = (int)$actor->role_id === \App\Model\Entity\User::ROLE_ADMIN;
+        $steps = array_map(function ($step) use ($workflow, $applicationform, $actor, $isProxy): array {
+            $canVote = $step->state === 'en_attente'
+                && $workflow->canVoteStep($step, $applicationform, $actor, $isProxy);
+
+            return [
+                'id' => (int)$step->id,
+                'sequence_number' => (int)$step->sequence_number,
+                'state' => (string)$step->state,
+                'due_at' => $step->due_at,
+                'completed_at' => $step->completed_at,
+                'comment' => $step->comment,
+                'role' => [
+                    'id' => (int)$step->role_id,
+                    'name' => (string)($step->role->name ?? __('Rôle n°{0}', $step->role_id)),
+                ],
+                'can_vote' => $canVote,
+                'is_proxy_vote' => $canVote && $isProxy,
+            ];
+        }, $rawSteps);
+        $completedSteps = count(array_filter($rawSteps, static fn($step): bool => in_array($step->state, ['acceptee', 'refusee'], true)));
+        $progress = [
+            'completed' => $completedSteps,
+            'total' => count($rawSteps),
+            'percentage' => $rawSteps === [] ? 0 : (int)round(100 * $completedSteps / count($rawSteps)),
+        ];
+        $this->set(compact('run', 'steps', 'progress'));
+        $this->viewBuilder()->setOption('serialize', ['run', 'steps', 'progress']);
+    }
+
+    private function workflowResponse(bool $success, string $message, array $details, int $status = 200): Response
+    {
+        return $this->response->withType('application/json')->withStatus($status)
+            ->withStringBody((string)json_encode(['success' => $success, 'message' => $message, 'details' => $details]));
+    }
+
+    private function sendFinalResult(\App\Model\Entity\Applicationform $applicationform, string $state, ?string $comment): void
+    {
+        $loaded = $this->Applicationforms->get($applicationform->id, contain: ['Users', 'Departments' => ['Managers']]);
+        $recipients = [$loaded->user];
+        if ($loaded->department->manager !== null) {
+            $recipients[] = $loaded->department->manager;
+        }
+        $sent = [];
+        foreach ($recipients as $recipient) {
+            if ($recipient !== null && !isset($sent[$recipient->email])) {
+                $sent[$recipient->email] = true;
+                (new ValidationWorkflowMailer())->safeSend('finalResult', [$recipient, $loaded, $state, $comment]);
+            }
+        }
+    }
+
+    /**
+     * Informe les administrateurs associés au département lorsqu'une précondition bloque le cycle.
+     *
+     * @param list<string> $issues Préconditions de lancement non satisfaites.
+     */
+    private function sendBlockedStartAlert(\App\Model\Entity\Applicationform $applicationform, array $issues): void
+    {
+        $administrators = $this->fetchTable('Users')->find()
+            ->innerJoinWith('UserDepartments', function (SelectQuery $query) use ($applicationform): SelectQuery {
+                return $query->where(['UserDepartments.department_id' => $applicationform->department_id]);
+            })
+            ->where([
+                'Users.role_id' => \App\Model\Entity\User::ROLE_ADMIN,
+                'Users.deleted IS' => null,
+            ])
+            ->distinct(['Users.id'])
+            ->all();
+
+        foreach ($administrators as $administrator) {
+            (new ValidationWorkflowMailer())->safeSend('validationBlocked', [$administrator, $applicationform, $issues]);
+        }
+    }
     public function initialize(): void
     {
         parent::initialize();
@@ -181,9 +332,25 @@ class ApplicationformsController extends AppController
         $schema = $authService->getFieldSchema($identity, 'Applicationforms');
         $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
 
+        $activeRun = $this->fetchTable('ValidationWorkflowRuns')->find()
+            ->where(['applicationform_id' => $applicationform->id, 'state' => 'en_attente'])->first();
+        if ($activeRun !== null && isset($filteredData['department_id']) && (int)$filteredData['department_id'] !== (int)$applicationform->department_id) {
+            return $this->workflowResponse(false, __('Le département ne peut pas être modifié pendant un cycle de validation.'), [], 422);
+        }
+
         $applicationform = $this->Applicationforms->patchEntity($applicationform, $filteredData);
 
         if ($this->Applicationforms->save($applicationform)) {
+            if ($activeRun !== null) {
+                /** @var \App\Model\Entity\User $operator */
+                $operator = $identity->getOriginalData();
+                $this->fetchTable('Comments')->saveOrFail($this->fetchTable('Comments')->newEntity([
+                    'model' => 'Applicationforms', 'foreign_key' => $applicationform->id,
+                    'type' => 'WORKFLOW_EDIT_AUDIT',
+                    'content' => __('Modification pendant le cycle par {0} le {1}.', $operator->display_name, \Cake\I18n\FrozenTime::now()->i18nFormat('dd/MM/yyyy HH:mm')),
+                    'user_id' => $operator->id,
+                ]));
+            }
             return $this->response->withType('application/json')
                 ->withStringBody(json_encode(['success' => true]));
         }
@@ -291,6 +458,8 @@ class ApplicationformsController extends AppController
                 'Users',
                 'Contracttypes',
                 'Hiringreasons',
+                'Applicationformstatuses',
+                'ValidationWorkflowRuns',
                 'Comments',
                 'Comments' => ['Users'], // Charge le fil de discussion et ses auteurs
             ]);
@@ -314,7 +483,7 @@ class ApplicationformsController extends AppController
         }
 
         // 4. Droits dynamiques de la grille
-        $rightsFormatter = $this->createGridRightsFormatter();
+        $rightsFormatter = $this->createGridRightsFormatter(['launchValidation']);
 
         // 5. Rendu structuré pour Tabulator
         $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);

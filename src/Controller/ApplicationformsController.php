@@ -46,6 +46,7 @@ class ApplicationformsController extends AppController
             'Periods',
             'Yesnos',
             'Comments' => ['Users'],
+            'ValidationWorkflowRuns',
         ]);
 
         $this->Authorization->authorize($applicationform, 'view');

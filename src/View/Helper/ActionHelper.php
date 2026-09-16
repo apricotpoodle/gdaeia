@@ -41,6 +41,7 @@ class ActionHelper extends Helper
         return match ($action->type) {
             UiAction::TYPE_LINK => $this->Html->link($label, $action->url, $options),
             UiAction::TYPE_POST_LINK => $this->Form->postLink($label, $action->url, $options),
+            UiAction::TYPE_BUTTON => $this->Html->tag('button', $label, ['type' => 'button'] + $options),
             default => throw new InvalidArgumentException(sprintf('Type d’action UI inconnu : %s', $action->type)),
         };
     }

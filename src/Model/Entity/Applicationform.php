@@ -46,6 +46,7 @@ namespace App\Model\Entity;
  * @property \App\Model\Entity\Currentvalidationrole[] $currentvalidationroles
  * @property \App\Model\Entity\ValidationVisa[] $validation_visas
  * @property \App\Model\Entity\Validation[] $validations
+ * @property \App\Model\Entity\ValidationWorkflowRun|null $validation_workflow_run
  * @property \App\Model\Entity\Comment[] $comments
  *
  * @property-read string $candidate_name Nom du candidat ou collaborateur pressenti

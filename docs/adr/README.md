@@ -63,6 +63,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0052** | Présentation unifiée des erreurs de validation Web et API | **Accepté** | [`0052-presentation-unifiee-erreurs-validation-web-api.md`](./0052-presentation-unifiee-erreurs-validation-web-api.md) |
 | **ADR 0053** | Stratégie de tests et MySQL dédié à l’intégration | **Accepté** | [`0053-strategie-tests-unitaires-et-integration.md`](./0053-strategie-tests-unitaires-et-integration.md) |
 | **ADR 0054** | Commandes UI autorisées par domaine | **Accepté** | [`0054-commandes-ui-autorisees-par-domaine.md`](./0054-commandes-ui-autorisees-par-domaine.md) |
+| **ADR 0055** | Workflow de validation des Applicationforms | **Accepté** | [`0055-workflow-validation-applicationforms.md`](./0055-workflow-validation-applicationforms.md) |
 
 ---
 
