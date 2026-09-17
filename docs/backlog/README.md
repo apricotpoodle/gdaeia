@@ -18,6 +18,7 @@ Les statuts utilisés sont : `À planifier`, `Prêt`, `En cours`, `Bloqué` et `
 - [0006 — Protéger l'accès URL à l'administration des menus](0006-proteger-lacces-url-a-ladministration-des-menus.md) — priorité haute.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute.
 - [0008 — Sécuriser les URL de retour post-authentification](0008-securiser-les-url-de-retour-post-authentification.md) — priorité moyenne.
+- [0009 — Remettre l’application en conformité PHP_CodeSniffer](0009-remettre-en-conformite-phpcs.md) — priorité haute.
 
 ## Migration vers un gestionnaire de tickets
 
