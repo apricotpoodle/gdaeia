@@ -58,6 +58,7 @@ final class TreeIntegrityChecker
     /** @return array<string, mixed> */
     private function checkTable(string $name, Table $table): array
     {
+        /** @var list<array<string, mixed>> $issues */
         $issues = [];
         if (!$table->behaviors()->has('Tree')) {
             $this->addIssue($issues, 'CONFIGURATION', 'Le behavior Tree n’est pas chargé.', []);
@@ -123,7 +124,10 @@ final class TreeIntegrityChecker
         return $this->report($name, $table, count($nodes), $issues);
     }
 
-    /** @param array<string, array<string, mixed>> $nodes @param list<array<string, mixed>> $issues */
+    /**
+     * @param array<string, array<string, mixed>> $nodes
+     * @param list<array<string, mixed>> $issues
+     */
     private function checkGraph(array $nodes, array &$issues): void
     {
         foreach ($nodes as $key => $node) {
@@ -142,6 +146,7 @@ final class TreeIntegrityChecker
             }
         }
 
+        /** @var array<string, true> $reportedCycles */
         $reportedCycles = [];
         foreach (array_keys($nodes) as $start) {
             $path = [];
@@ -172,7 +177,10 @@ final class TreeIntegrityChecker
         }
     }
 
-    /** @param array<string, array<string, mixed>> $nodes @param list<array<string, mixed>> $issues */
+    /**
+     * @param array<string, array<string, mixed>> $nodes
+     * @param list<array<string, mixed>> $issues
+     */
     private function checkIntervals(array $nodes, array &$issues): void
     {
         $boundaries = [];
@@ -252,7 +260,10 @@ final class TreeIntegrityChecker
         }
     }
 
-    /** @param array<string, array<string, mixed>> $nodes @param list<array<string, mixed>> $issues */
+    /**
+     * @param array<string, array<string, mixed>> $nodes
+     * @param list<array<string, mixed>> $issues
+     */
     private function checkLevels(array $nodes, array &$issues): void
     {
         foreach ($nodes as $key => $node) {
@@ -279,7 +290,10 @@ final class TreeIntegrityChecker
         }
     }
 
-    /** @param array<string, array<string, mixed>> $nodes @param list<array<string, mixed>> $issues */
+    /**
+     * @param array<string, array<string, mixed>> $nodes
+     * @param list<array<string, mixed>> $issues
+     */
     private function checkDescendantCounts(array $nodes, array &$issues): void
     {
         $children = [];
@@ -309,7 +323,10 @@ final class TreeIntegrityChecker
         }
     }
 
-    /** @param array<string, list<string>> $children @param array<string, bool> $visited */
+    /**
+     * @param array<string, list<string>> $children
+     * @param array<string, bool> $visited
+     */
     private function countDescendants(string $key, array $children, array $visited): int
     {
         if (isset($visited[$key])) {
@@ -324,13 +341,19 @@ final class TreeIntegrityChecker
         return $count;
     }
 
-    /** @param list<array<string, mixed>> $issues @param array<string, mixed> $details */
+    /**
+     * @param list<array<string, mixed>> $issues
+     * @param array<string, mixed> $details
+     */
     private function addIssue(array &$issues, string $code, string $message, array $details): void
     {
         $issues[] = ['code' => $code, 'message' => $message, 'details' => $details];
     }
 
-    /** @param list<array<string, mixed>> $issues @return array<string, mixed> */
+    /**
+     * @param list<array<string, mixed>> $issues
+     * @return array<string, mixed>
+     */
     private function report(string $name, Table $table, int $nodeCount, array $issues): array
     {
         return [

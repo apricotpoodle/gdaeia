@@ -5,7 +5,7 @@ namespace App\Service;
 
 use App\Mailer\TreeIntegrityMailer;
 use Cake\Core\Configure;
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 
 /** Centralise la configuration et l’expédition des alertes TreeBehavior. */
 final class TreeIntegrityAlertService
@@ -77,7 +77,7 @@ final class TreeIntegrityAlertService
             $this->instanceName(),
             (string)env('APP_HOST_HOSTNAME', 'non renseigné'),
             gethostname() ?: 'inconnu',
-            FrozenTime::now()->format(DATE_ATOM),
+            DateTime::now()->format(DATE_ATOM),
             $isTest,
         ]);
     }

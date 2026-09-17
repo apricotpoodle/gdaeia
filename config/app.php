@@ -471,6 +471,13 @@ return [
         'ignoreAuthorization' => env('DEBUG_KIT_IGNORE_AUTHORIZATION', false),
     ],
 
+    'IdeHelper' => [
+        'assocsAsGenerics' => true,
+        'genericsInParam' => 'detailed',
+        'concreteEntitiesInParam' => 'strict',
+        'tableEntityQuery' => true,
+    ],
+
     /**
      * TestSuite configuration.
      *

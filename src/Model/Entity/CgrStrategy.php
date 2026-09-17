@@ -11,7 +11,7 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property string $code
  * @property string $name
- * @property array $definition_json
+ * @property array<string, mixed>|string $definition_json
  * @property \Cake\I18n\DateTime $created
  * @property \Cake\I18n\DateTime|null $modified
  *
