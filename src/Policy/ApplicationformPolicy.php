@@ -5,7 +5,6 @@ namespace App\Policy;
 
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\User;
-use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Authorization\IdentityInterface;
 use Cake\ORM\TableRegistry;
 
@@ -90,13 +89,43 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        if ((int)$user->get('role_id') === User::ROLE_ADMIN || $user->get('issuperuser')) {
-            return true;
-        }
         if (!$this->canView($identity, $applicationform)) {
             return false;
         }
-        return $applicationform->user_id === $user->id || in_array($user->get('role_id'), Applicationform::ALLOWED_ROLES_FOR_EDIT);
+
+        if ((int)$user->get('role_id') === User::ROLE_ADMIN || $user->get('issuperuser')) {
+            return true;
+        }
+
+        if ($this->hasActiveWorkflow($applicationform)) {
+            return TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->find()
+                ->innerJoinWith('ValidationWorkflowRuns', static function ($query) use ($applicationform) {
+                    return $query->where([
+                        'ValidationWorkflowRuns.applicationform_id' => $applicationform->id,
+                        'ValidationWorkflowRuns.state' => 'en_attente',
+                    ]);
+                })
+                ->where(['Applicationvalidationsteps.role_id' => $user->get('role_id')])
+                ->count() > 0;
+        }
+
+        return $applicationform->user_id === $user->id
+            || in_array($user->get('role_id'), Applicationform::ALLOWED_ROLES_FOR_EDIT);
+    }
+
+    /** Détermine si un cycle de validation est actif pour la demande. */
+    private function hasActiveWorkflow(Applicationform $applicationform): bool
+    {
+        if ($applicationform->id === null) {
+            return false;
+        }
+
+        return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
+            ->where([
+                'applicationform_id' => $applicationform->id,
+                'state' => 'en_attente',
+            ])
+            ->count() > 0;
     }
 
     /** Le créateur ou un Admin visible peut soumettre une AF au cycle. */
@@ -106,7 +135,7 @@ class ApplicationformPolicy extends AppPolicy
         if (
             $user === null
             || !$this->canView($identity, $applicationform)
-            || ($applicationform->user_id !== $user->id && (int)$user->role_id !== User::ROLE_ADMIN)
+            || ($applicationform->user_id !== $user->id && (int)$user->get('role_id') !== User::ROLE_ADMIN)
         ) {
             return false;
         }
@@ -118,6 +147,23 @@ class ApplicationformPolicy extends AppPolicy
         return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
             ->where(['applicationform_id' => $applicationform->id])
             ->count() === 0;
+    }
+
+    /** Seul un administrateur visible peut effacer un cycle déjà lancé. */
+    public function canResetValidation(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        $user = $this->getValidUser($identity);
+        if (
+            $user === null
+            || !$this->canView($identity, $applicationform)
+            || ((int)$user->get('role_id') !== User::ROLE_ADMIN && !$user->get('issuperuser'))
+        ) {
+            return false;
+        }
+
+        return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
+            ->where(['applicationform_id' => $applicationform->id])
+            ->count() === 1;
     }
 
     /** Le service réévalue ensuite le rôle courant, l'échéance et la suppléance. */
@@ -149,6 +195,7 @@ class ApplicationformPolicy extends AppPolicy
     // =========================================================================
 
     // --- ZONE ADMIN ---
+
     /**
      * Autorisation pour la zone Admin view
      *
@@ -174,6 +221,7 @@ class ApplicationformPolicy extends AppPolicy
     }
 
     // --- ZONE CONTRAT ---
+
     /**
      * Autorisation pour la zone Contrat view
      *
@@ -199,6 +247,7 @@ class ApplicationformPolicy extends AppPolicy
     }
 
     // --- ZONE RÉMUNÉRATION ---
+
     /**
      * Autorisation pour la zone rémunération view
      *
@@ -216,7 +265,11 @@ class ApplicationformPolicy extends AppPolicy
         // Exemple : Accessible aux Admins, RH et Créateurs
         return $user->get('issuperuser')
             || $applicationform->user_id === $user->id
-            || in_array($user->get('role_id'), [User::ROLE_ADMIN, User::ROLE_2_VALIDEUR_RRH, User::ROLE_3_VALIDEUR_DRH]);
+            || in_array($user->get('role_id'), [
+                User::ROLE_ADMIN,
+                User::ROLE_2_VALIDEUR_RRH,
+                User::ROLE_3_VALIDEUR_DRH,
+            ]);
     }
 
     /**
@@ -234,10 +287,15 @@ class ApplicationformPolicy extends AppPolicy
         }
 
         return $user->get('issuperuser')
-            || in_array($user->get('role_id'), [User::ROLE_ADMIN, User::ROLE_2_VALIDEUR_RRH, User::ROLE_3_VALIDEUR_DRH]);
+            || in_array($user->get('role_id'), [
+                User::ROLE_ADMIN,
+                User::ROLE_2_VALIDEUR_RRH,
+                User::ROLE_3_VALIDEUR_DRH,
+            ]);
     }
 
     // --- ZONE RÉSERVÉS (RH / ADMIN) ---
+
     /**
      * Autorisation pour la zone reserves view
      *
@@ -253,7 +311,12 @@ class ApplicationformPolicy extends AppPolicy
         }
 
         return $user->get('issuperuser')
-            || in_array($user->get('role_id'), [User::ROLE_ADMIN, User::ROLE_2_VALIDEUR_RRH, User::ROLE_3_VALIDEUR_DRH, User::ROLE_4_VALIDEUR_CG]);
+            || in_array($user->get('role_id'), [
+                User::ROLE_ADMIN,
+                User::ROLE_2_VALIDEUR_RRH,
+                User::ROLE_3_VALIDEUR_DRH,
+                User::ROLE_4_VALIDEUR_CG,
+            ]);
     }
 
     /**
@@ -269,6 +332,7 @@ class ApplicationformPolicy extends AppPolicy
     }
 
     // --- ZONE COMMENTAIRES ---
+
     /**
      * Autorisation pour la zone commentaires view
      *
@@ -292,5 +356,4 @@ class ApplicationformPolicy extends AppPolicy
     {
         return $this->getValidUser($identity) !== null;
     }
-
-    }
+}

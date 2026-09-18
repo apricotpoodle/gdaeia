@@ -42,7 +42,7 @@ class AppMailer extends Mailer
      * et en automatisant la journalisation dans logs/email.log.
      *
      * @param string $action Le nom de la méthode à appeler dans le Mailer enfant.
-     * @param array $args Les arguments à passer à cette méthode (ex: [$user]).
+     * @param list<mixed> $args Les arguments à passer à cette méthode (ex: [$user]).
      * @return bool True si l'envoi a réussi, False si le serveur SMTP a échoué.
      */
     public function safeSend(string $action, array $args = []): bool

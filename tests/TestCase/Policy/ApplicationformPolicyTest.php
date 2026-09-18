@@ -6,6 +6,7 @@ namespace App\Test\TestCase\Policy;
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\User;
 use App\Policy\ApplicationformPolicy;
+use Authorization\IdentityInterface;
 use Cake\TestSuite\TestCase;
 
 class ApplicationformPolicyTest extends TestCase
@@ -18,12 +19,12 @@ class ApplicationformPolicyTest extends TestCase
         $this->policy = new ApplicationformPolicy();
     }
 
-    public function testLaModificationEstAutoriseeAuProprietaireEtAuxAdministrateurs(): void
+    public function testLaModificationEstAutoriseeAuProprietaireEtAuSuperAdministrateur(): void
     {
         $applicationform = new Applicationform(['user_id' => 10]);
 
         $this->assertTrue($this->policy->canEdit(new User(['id' => 10]), $applicationform));
-        $this->assertTrue($this->policy->canEdit(new User(['id' => 11, 'role_id' => User::ROLE_ADMIN]), $applicationform));
+        $this->assertFalse($this->policy->canEdit(new User(['id' => 11, 'role_id' => User::ROLE_ADMIN]), $applicationform));
         $this->assertTrue($this->policy->canEdit(new User(['id' => 11, 'issuperuser' => true]), $applicationform));
     }
 
@@ -48,5 +49,36 @@ class ApplicationformPolicyTest extends TestCase
         $this->assertTrue($this->policy->canEditZoneRemuneration($rrh, $applicationform));
         $this->assertTrue($this->policy->canViewZoneReserves($cg, $applicationform));
         $this->assertTrue($this->policy->canEditZoneReserves($cg, $applicationform));
+    }
+
+    public function testLeLancementEstRefuseSansIdentiteOuHorsDuPerimetreVisible(): void
+    {
+        $applicationform = new Applicationform(['user_id' => 10]);
+
+        $this->assertFalse($this->policy->canLaunchValidation($this->identity([]), $applicationform));
+        $this->assertFalse($this->policy->canLaunchValidation(
+            $this->identity(new User(['id' => 11, 'role_id' => User::ROLE_DEMANDEUR])),
+            $applicationform,
+        ));
+    }
+
+    public function testLeVoteEstRefuseSansIdentiteOuHorsDuPerimetreVisible(): void
+    {
+        $applicationform = new Applicationform(['user_id' => 10]);
+
+        $this->assertFalse($this->policy->canVoteValidation($this->identity([]), $applicationform));
+        $this->assertFalse($this->policy->canVoteValidation(
+            $this->identity(new User(['id' => 11, 'role_id' => User::ROLE_DEMANDEUR])),
+            $applicationform,
+        ));
+    }
+
+    /** @param User|array<never, never> $user */
+    private function identity(User|array $user): IdentityInterface
+    {
+        $identity = $this->createStub(IdentityInterface::class);
+        $identity->method('getOriginalData')->willReturn($user);
+
+        return $identity;
     }
 }

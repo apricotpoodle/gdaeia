@@ -10,18 +10,48 @@ use Cake\Core\Configure;
 /** Courriels transactionnels du cycle de validation. */
 final class ValidationWorkflowMailer extends AppMailer
 {
+    /**
+     * Prépare le courriel de notification ou de relance d'une étape de validation.
+     *
+     * @param \App\Model\Entity\User $recipient Destinataire.
+     * @param \App\Model\Entity\Applicationform $applicationform Demande concernée.
+     */
     public function validationStep(User $recipient, Applicationform $applicationform): void
     {
-        $this->setTo($recipient->email)->setSubject(__('Validation attendue — demande n°{0}', $applicationform->id))
-            ->setViewVars(['recipient' => $recipient, 'applicationform' => $applicationform, 'url' => $this->url($applicationform)])
+        $this->setTo($recipient->email)
+            ->setSubject(__('Validation attendue — demande n°{0}', $applicationform->id))
+            ->setViewVars([
+                'recipient' => $recipient,
+                'applicationform' => $applicationform,
+                'url' => $this->url($applicationform),
+            ])
             ->viewBuilder()->setTemplate('validation_step');
     }
 
-    public function finalResult(User $recipient, Applicationform $applicationform, string $state, ?string $comment): void
-    {
+    /**
+     * Prépare le courriel annonçant le résultat final du cycle.
+     *
+     * @param \App\Model\Entity\User $recipient Destinataire.
+     * @param \App\Model\Entity\Applicationform $applicationform Demande concernée.
+     * @param string $state État final.
+     * @param string|null $comment Commentaire associé.
+     */
+    public function finalResult(
+        User $recipient,
+        Applicationform $applicationform,
+        string $state,
+        ?string $comment,
+    ): void {
         $label = $state === 'acceptee' ? __('acceptée') : __('refusée');
-        $this->setTo($recipient->email)->setSubject(__('Demande n°{0} {1}', $applicationform->id, $label))
-            ->setViewVars(['recipient' => $recipient, 'applicationform' => $applicationform, 'state' => $state, 'comment' => $comment, 'url' => $this->url($applicationform)])
+        $this->setTo($recipient->email)
+            ->setSubject(__('Demande n°{0} {1}', $applicationform->id, $label))
+            ->setViewVars([
+                'recipient' => $recipient,
+                'applicationform' => $applicationform,
+                'state' => $state,
+                'comment' => $comment,
+                'url' => $this->url($applicationform),
+            ])
             ->viewBuilder()->setTemplate('validation_final');
     }
 
@@ -43,8 +73,15 @@ final class ValidationWorkflowMailer extends AppMailer
             ->viewBuilder()->setTemplate('validation_blocked');
     }
 
+    /**
+     * Construit l'URL de la page de validation d'une demande.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform Demande concernée.
+     * @return string URL de la demande.
+     */
     private function url(Applicationform $applicationform): string
     {
-        return rtrim((string)Configure::read('App.fullBaseUrl', 'http://localhost'), '/') . '/applicationforms/view/' . $applicationform->id . '?tab=validation';
+        return rtrim((string)Configure::read('App.fullBaseUrl', 'http://localhost'), '/')
+            . '/applicationforms/view/' . $applicationform->id . '?tab=validation';
     }
 }
