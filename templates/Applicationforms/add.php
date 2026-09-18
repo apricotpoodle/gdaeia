@@ -5,7 +5,6 @@
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Applicationform $applicationform
  * @var \Authorization\IdentityInterface $identity
- * @var array<int, string> $departments
  * @var array<int, string> $contracttypes
  * @var array<int, string> $hiringreasons
  * @var array<int, string> $professionalcategories

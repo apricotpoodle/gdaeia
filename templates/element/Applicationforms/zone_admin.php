@@ -5,9 +5,7 @@
  * @description Élément représentant la Zone 1 (Administration) du formulaire.
  *
  * @var \App\View\AppView $this
- * @var \App\Model\Entity\Applicationform $applicationform
  * @var array<int, string> $collaborators
- * @var array<string, string> $fieldSchema
  * @var bool $canEditAdmin
  */
 
