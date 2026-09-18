@@ -1,6 +1,6 @@
 # 0018 — Annulation et réinitialisation administrative d’un cycle
 
-**Statut :** À planifier  
+**Statut :** Terminé  
 **Dépendance :** 0017
 
 ## Objectif

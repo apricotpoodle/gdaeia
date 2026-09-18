@@ -1,6 +1,6 @@
 # 0017 — Recette
 
-**Statut :** À planifier  
+**Statut :** Terminé  
 **Dépendance :** 0016
 
 ## Prompt Codex

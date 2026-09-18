@@ -1,6 +1,6 @@
 # 0015 — Édition et audit
 
-**Statut :** En cours  
+**Statut :** Terminé  
 **Dépendance :** 0014
 
 ## Prompt Codex

@@ -1,6 +1,6 @@
 # 0016 — Relances
 
-**Statut :** En cours  
+**Statut :** Terminé  
 **Dépendances :** 0014, 0015
 
 ## Prompt Codex

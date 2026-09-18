@@ -1,6 +1,6 @@
 # 0013 — Lancement
 
-**Statut :** En cours  
+**Statut :** Terminé  
 **Dépendance :** 0011
 
 ## Prompt Codex

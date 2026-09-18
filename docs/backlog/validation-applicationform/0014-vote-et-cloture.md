@@ -1,6 +1,6 @@
 # 0014 — Vote et clôture
 
-**Statut :** En cours  
+**Statut :** Terminé  
 **Dépendance :** 0013
 
 ## Prompt Codex

@@ -19,6 +19,9 @@ Les statuts utilisés sont : `À planifier`, `Prêt`, `En cours`, `Bloqué` et `
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute.
 - [0008 — Sécuriser les URL de retour post-authentification](0008-securiser-les-url-de-retour-post-authentification.md) — priorité moyenne.
 - [0009 — Remettre l’application en conformité PHP_CodeSniffer](0009-remettre-en-conformite-phpcs.md) — priorité haute.
+- [0010 — Rétablir PHPStan dans le conteneur applicatif](0010-retablir-phpstan-conteneur.md) — priorité haute.
+- [0011 — Remettre l’application en conformité PHPStan](0011-remettre-en-conformite-phpstan.md) — priorité haute.
+- [0012 — Verrouiller une AF pendant son cycle de validation](0012-verrouiller-af-cycle-validation.md) — priorité haute.
 
 ## Migration vers un gestionnaire de tickets
 

@@ -1,6 +1,6 @@
 # 0012 — Paramétrage
 
-**Statut :** À planifier  
+**Statut :** Terminé  
 **Dépendance :** 0011
 
 ## Prompt Codex
