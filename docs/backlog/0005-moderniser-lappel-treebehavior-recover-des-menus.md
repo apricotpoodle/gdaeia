@@ -1,6 +1,6 @@
 # 0005 — Moderniser l'appel `TreeBehavior::recover()` des menus
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Moyenne
 
@@ -34,3 +34,12 @@ La correction ne doit modifier ni la stratégie de reconstruction de l'arbre, ni
 - [Documentation CakePHP TreeBehavior](../vendor_docs/cakephp-5/orm/behaviors/tree.md)
 - [ADR 0032 — Standardisation du flux de travail de développement](../adr/0032-flux-de-travail-developpement.md)
 - [Ticket 0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md)
+
+## Réalisation
+
+Le commit `b506fe2` avait introduit la reconstruction manuelle dans
+`MenusTable::afterSave()`. Le commit `d2577ae` a ensuite supprimé ce hook et
+l'appel déprécié `$this->recover()` : le `TreeBehavior` gère directement les
+mises à jour de l'arbre lors des opérations sur les menus. La dépréciation
+visée par ce ticket n'est donc plus présente ; remplacer un appel désormais
+absent par `getBehavior('Tree')->recover()` ne serait pas justifié.

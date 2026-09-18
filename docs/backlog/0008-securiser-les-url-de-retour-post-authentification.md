@@ -1,6 +1,6 @@
 # 0008 — Sécuriser les URL de retour post-authentification
 
-**Statut :** En cours
+**Statut :** Terminé
 
 **Priorité :** Moyenne
 
@@ -26,3 +26,12 @@ Définir et appliquer une stratégie commune de repli vers la page par défaut a
 - [UsersController](../../src/Controller/UsersController.php)
 - [ADR 0028 — Authentification évolutive](../adr/0028-authentification-evolutive-et-impersonate.md)
 - [ADR 0040 — Mécanisme d'usurpation d'identité](../adr/0040-mecanisme-usurpation-identite-impersonate.md)
+
+## Réalisation
+
+La stratégie de repli a été mise en œuvre dans le commit `c00800e`
+(`fix(auth): sécurise les retours post-authentification`), fusionné par
+`e7820e0`. Elle remplace le retour vers `revert_identity` sans usurpation
+active par `/users/index`, conserve les retours internes applicables et laisse
+le composant d'authentification écarter les destinations externes. Les trois
+parcours sont couverts par des tests HTTP.
