@@ -38,7 +38,9 @@ class MenusController extends AppController
     public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
-        $this->Authorization->skipAuthorization();
+        if ($this->getRequest()->getParam('action') === 'index') {
+            $this->Authorization->skipAuthorization();
+        }
     }
 
     /**
