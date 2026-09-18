@@ -26,6 +26,7 @@ export class ButtonFactory {
         edit: { icon: 'fas fa-edit', color: 'primary', title: 'Modifier l\'enregistrement', target: '_self', isEvent: true },
         delete: { icon: 'fas fa-trash', color: 'danger', title: 'Supprimer l\'enregistrement', isEvent: true },
         launchValidation: { icon: 'fas fa-rocket', color: 'success', title: 'Lancer le cycle de validation', isEvent: true },
+        resetValidation: { icon: 'fas fa-rotate-left', color: 'warning', title: 'Remettre le cycle de validation à zéro', isEvent: true },
         viewpdf: { icon: 'fas fa-file-pdf', color: 'warning', title: 'Ouvrir le document PDF', target: '_blank' },
         impersonate: { icon: 'fas fa-user-secret', color: 'secondary', title: 'Incarner la session utilisateur', target: '_self' },
         moveUp: { icon: 'fas fa-arrow-up', color: 'secondary', title: 'Monter', isEvent: true },

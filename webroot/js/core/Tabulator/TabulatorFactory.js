@@ -209,7 +209,7 @@ export class TabulatorFactory {
             .setController('applicationforms')
             .setHeight("calc(100vh - 180px)")
             .setColumns(getApplicationformColumns())
-            .setWithActions(['view', 'edit', 'launchValidation', 'delete'])
+            .setWithActions(['view', 'edit', 'launchValidation', 'resetValidation', 'delete'])
             .build();
     }
 
@@ -344,7 +344,25 @@ export class TabulatorFactory {
             .setColumns([
                 ...this.getRoleAccessColumns(),
                 { title: 'Séquence', field: 'sequence', editor: 'number', editorParams: { min: 1, step: 1 }, sorter: 'number', hozAlign: 'center', width: 110 },
+                { title: 'Délai (h)', field: 'reminder_delay_hours', editor: 'number', editorParams: { min: 1, step: 1 }, sorter: 'number', hozAlign: 'center', width: 110 },
             ])
+            .build();
+    }
+
+    static createWorkflowCommentTemplatesGrid(selector = '#validation-comment-templates-grid') {
+        return this._createActionGrid(selector)
+            .setAjaxSource('/api/workflow-settings/comment-templates.json')
+            .setController('workflow-settings')
+            .setRemotePagination()
+            .setHeight('calc(100vh - 420px)')
+            .setColumns([
+                { title: 'Décision', field: 'decision', headerFilter: 'input' },
+                { title: 'Libellé', field: 'label', headerFilter: 'input' },
+                { title: 'Commentaire', field: 'content', headerFilter: 'input' },
+                { title: 'Position', field: 'position', sorter: 'number' },
+                { title: 'Actif', field: 'active', formatter: 'tickCross' },
+            ])
+            .setWithActions(['edit', 'delete'])
             .build();
     }
 

@@ -18,10 +18,8 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use Cake\Controller\Controller;
-use Cake\Controller\ErrorController;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
-
 
 /**
  * Application Controller
@@ -30,6 +28,8 @@ use Cake\Event\EventInterface;
  * will inherit them.
  *
  * @link https://book.cakephp.org/5/en/controllers.html#the-app-controller
+ * @property \Authentication\Controller\Component\AuthenticationComponent $Authentication
+ * @property \Authorization\Controller\Component\AuthorizationComponent $Authorization
  */
 class AppController extends Controller
 {
@@ -61,7 +61,7 @@ class AppController extends Controller
      * Callback avant le rendu de la vue.
      * Injecte les flags globaux (comme le mode Impersonate) pour TOUTES les vues HTML.
      *
-     * @param \Cake\Event\EventInterface $event
+     * @param \Cake\Event\EventInterface<\Cake\Controller\Controller> $event
      * @return void
      */
     public function beforeRender(EventInterface $event): void
@@ -82,7 +82,7 @@ class AppController extends Controller
      * Génère un formateur de droits (grid_rights) standardisé pour le TabulatorAdapter.
      * Automatise le CRUD de base et permet l'injection de règles spécifiques.
      *
-     * @param array $extraActions Liste d'actions métiers supplémentaires (ex: ['impersonate', 'validate'])
+     * @param list<string> $extraActions Liste d'actions métiers supplémentaires (ex: ['impersonate', 'validate'])
      * @param callable|null $columnsFormatter Hook pour formater la visibilité spécifique des colonnes
      * @return callable
      */
@@ -93,8 +93,8 @@ class AppController extends Controller
         return function (EntityInterface $entity) use ($authorization, $extraActions, $columnsFormatter) {
             // 1. Le Socle Industriel Commun (CRUD)
             $actions = [
-                'view'   => $authorization->can($entity, 'view'),
-                'edit'   => $authorization->can($entity, 'edit'),
+                'view' => $authorization->can($entity, 'view'),
+                'edit' => $authorization->can($entity, 'edit'),
                 'delete' => $authorization->can($entity, 'delete'),
             ];
 
@@ -126,8 +126,7 @@ class AppController extends Controller
         // 🛡️ PASSERELLE DE SÉCURITÉ : Isolation de DebugKit ET de ErrorController
         // Permet l'affichage des erreurs HTTP (ex: 404 levée par ->get())
         // sans faire planter le middleware d'autorisation.
-        if ($request->getParam('plugin') === 'DebugKit' || $this instanceof ErrorController) {
-
+        if ($request->getParam('plugin') === 'DebugKit') {
             if ($this->components()->has('Authorization')) {
                 $this->Authorization->skipAuthorization();
             }

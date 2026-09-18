@@ -122,3 +122,13 @@ async function render() {
 
 activateValidationTabFromUrl();
 render();
+
+document.querySelector('#reset-validation')?.addEventListener('click', async () => {
+    if (!window.confirm('Annuler et supprimer définitivement les étapes et votes du cycle ?')) return;
+    try {
+        await request('/api/applicationforms/' + id + '/validation/reset.json', { method: 'POST', body: JSON.stringify({ _csrfToken: token }) });
+        window.location.reload();
+    } catch (error) {
+        window.alert(error.message);
+    }
+});

@@ -13,6 +13,10 @@ use Throwable;
  * Rendu générique des commandes UI après vérification de leur Policy.
  * Implémente le point de passage unique de présentation défini par les
  * fabriques de commandes de domaine.
+ *
+ * @extends \Cake\View\Helper<\Cake\View\View>
+ * @property \Cake\View\Helper\HtmlHelper $Html
+ * @property \Cake\View\Helper\FormHelper $Form
  */
 class ActionHelper extends Helper
 {

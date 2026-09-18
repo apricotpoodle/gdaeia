@@ -10,6 +10,7 @@ use Throwable;
 /**
  * @class TabulatorHelper
  * @description Générateur de structure DOM pour les grilles Tabulator couplé au plugin Authorization.
+ * @extends \Cake\View\Helper<\Cake\View\View>
  */
 class TabulatorHelper extends Helper
 {

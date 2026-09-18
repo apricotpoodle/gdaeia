@@ -86,7 +86,25 @@ final class ApplicationformsActions
             '#',
             'launchValidation',
             $applicationform,
-            ['class' => 'btn btn-sm btn-success', 'id' => 'launch-validation', 'data-applicationform-id' => $applicationform->id],
+            [
+                'class' => 'btn btn-sm btn-success',
+                'id' => 'launch-validation',
+                'data-applicationform-id' => $applicationform->id,
+            ],
+        );
+    }
+
+    /** Commande de remise à zéro administrative du cycle. */
+    public static function resetValidation(Applicationform $applicationform): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_BUTTON,
+            __('Annuler et réinitialiser le cycle'),
+            'fa-rotate-left',
+            '#',
+            'resetValidation',
+            $applicationform,
+            ['class' => 'btn btn-sm btn-outline-warning', 'id' => 'reset-validation'],
         );
     }
 

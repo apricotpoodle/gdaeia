@@ -12,6 +12,8 @@ use App\View\Action\PublicActions;
 use App\View\Action\RolesActions;
 use App\View\Action\UiAction;
 use App\View\Action\UsersActions;
+use App\View\Action\ValidationsequencesActions;
+use App\View\Action\WorkflowSettingsActions;
 use Cake\TestSuite\TestCase;
 
 /** Vérifie le contrat déclaratif des commandes rendues par ActionHelper. */
@@ -60,6 +62,30 @@ class DomainActionsTest extends TestCase
         $this->assertSame(['action' => 'view', 12], $action->url);
     }
 
+    /** Vérifie le contrat de la commande de lancement du cycle de validation. */
+    public function testLeLancementDeValidationEstUneCommandeProtegeeDeDomaine(): void
+    {
+        $applicationform = new Applicationform(['id' => 12]);
+        $action = ApplicationformsActions::launchValidation($applicationform);
+
+        $this->assertSame(UiAction::TYPE_BUTTON, $action->type);
+        $this->assertSame('launchValidation', $action->authorizationAction);
+        $this->assertSame($applicationform, $action->resource);
+        $this->assertSame('fa-rocket', $action->icon);
+    }
+
+    /** Vérifie le contrat de la commande de remise à zéro du cycle. */
+    public function testLaRemiseAZeroDuCycleEstUneCommandeProtegeeDeDomaine(): void
+    {
+        $applicationform = new Applicationform(['id' => 12]);
+        $action = ApplicationformsActions::resetValidation($applicationform);
+
+        $this->assertSame(UiAction::TYPE_BUTTON, $action->type);
+        $this->assertSame('resetValidation', $action->authorizationAction);
+        $this->assertSame($applicationform, $action->resource);
+        $this->assertSame('reset-validation', $action->options['id']);
+    }
+
     /** Vérifie que les retours restent soumis à la Policy de consultation de liste. */
     public function testLesActionsDeRetourDesDomainesRestentSoumisesALaPolicyIndex(): void
     {
@@ -96,5 +122,25 @@ class DomainActionsTest extends TestCase
         $this->assertFalse(PublicActions::home()->requiresAuthorization);
         $this->assertFalse(PublicActions::forgotPassword()->requiresAuthorization);
         $this->assertFalse(PublicActions::login()->requiresAuthorization);
+    }
+
+    /** Vérifie que la navigation du paramétrage global porte la Policy du domaine. */
+    public function testLaNavigationDuParametrageGlobalEstUneCommandeProtegee(): void
+    {
+        $action = WorkflowSettingsActions::validationSequences();
+
+        $this->assertSame('index', $action->authorizationAction);
+        $this->assertSame('WorkflowSettings', $action->resource);
+        $this->assertSame(['controller' => 'Validationsequences', 'action' => 'index'], $action->url);
+    }
+
+    /** Vérifie que les séquences donnent accès au paramétrage global via une commande protégée. */
+    public function testLeRaccourciDesSequencesCibleLeParametrageGlobal(): void
+    {
+        $action = ValidationsequencesActions::workflowSettings();
+
+        $this->assertSame('index', $action->authorizationAction);
+        $this->assertSame('Validationsequences', $action->resource);
+        $this->assertSame(['controller' => 'WorkflowSettings', 'action' => 'index'], $action->url);
     }
 }

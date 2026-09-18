@@ -9,6 +9,8 @@
  * @var \App\View\AppView $this Instance de la vue CakePHP.
  * @var \App\Model\Entity\Applicationform $applicationform Entité de la demande.
  * @var \Authorization\IdentityInterface|null $identity Identité de l'utilisateur connecté.
+ * @var mixed $departmentPath
+ * @var \App\Model\Entity\Department $department
  */
 
 use Cake\I18n\Number;
@@ -53,6 +55,8 @@ $this->Html->script('views/Applicationforms/validation-workflow', ['type' => 'mo
 
             <?php if (($applicationform->validation_workflow_run ?? null) === null): ?>
                 <?= $this->Action->render(\App\View\Action\ApplicationformsActions::launchValidation($applicationform)) ?>
+            <?php else: ?>
+                <?= $this->Action->render(\App\View\Action\ApplicationformsActions::resetValidation($applicationform)) ?>
             <?php endif; ?>
 
             <?= $this->Action->render(\App\View\Action\ApplicationformsActions::delete($applicationform)) ?>
