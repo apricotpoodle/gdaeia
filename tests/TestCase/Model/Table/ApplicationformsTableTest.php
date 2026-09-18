@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Test\TestCase\Model\Table;
 
 use App\Model\Table\ApplicationformsTable;
+use Cake\TestSuite\Fixture\FixtureStrategyInterface;
+use Cake\TestSuite\Fixture\TruncateStrategy;
 use Cake\TestSuite\TestCase;
 
 /**
@@ -11,6 +13,16 @@ use Cake\TestSuite\TestCase;
  */
 class ApplicationformsTableTest extends TestCase
 {
+    /**
+     * Rend les insertions visibles au moteur FULLTEXT MySQL.
+     *
+     * @return \Cake\TestSuite\Fixture\FixtureStrategyInterface
+     */
+    protected function getFixtureStrategy(): FixtureStrategyInterface
+    {
+        return new TruncateStrategy();
+    }
+
     /**
      * Test subject
      *

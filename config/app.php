@@ -488,6 +488,6 @@ return [
      */
     'TestSuite' => [
         'errorLevel' => null,
-        'fixtureStrategy' => null,
+        'fixtureStrategy' => \Cake\TestSuite\Fixture\TransactionStrategy::class,
     ],
 ];
