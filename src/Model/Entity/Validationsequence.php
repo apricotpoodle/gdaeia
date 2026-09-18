@@ -14,6 +14,8 @@ use Cake\ORM\Entity;
  * @property string|null $description
  * @property int $role_id
  * @property int $sequence
+ * @property int|null $sequence_max
+ * @property int|null $reminder_delay_hours
  * @property \Cake\I18n\DateTime|null $deleted
  * @property \Cake\I18n\DateTime|null $modified
  * @property \Cake\I18n\DateTime $created
@@ -39,6 +41,7 @@ class Validationsequence extends Entity
         'description' => true,
         'role_id' => true,
         'sequence' => true,
+        'reminder_delay_hours' => true,
         'deleted' => true,
         'modified' => true,
         'created' => true,

@@ -6,8 +6,13 @@ namespace App\Model\Table;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
+/**
+ * @extends \Cake\ORM\Table<array{Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\ValidationCommentTemplate>
+ * @mixin \Cake\ORM\Behavior\TimestampBehavior
+ */
 final class ValidationCommentTemplatesTable extends Table
 {
+    /** @inheritDoc */
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -16,6 +21,7 @@ final class ValidationCommentTemplatesTable extends Table
         $this->addBehavior('Timestamp');
     }
 
+    /** @inheritDoc */
     public function validationDefault(Validator $validator): Validator
     {
         return $validator->inList('decision', ['accepter', 'refuser'])->notEmptyString('decision')

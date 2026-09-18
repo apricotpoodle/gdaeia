@@ -11,8 +11,8 @@ use Cake\ORM\Entity;
  * @property int $applicationform_id
  * @property int $department_id
  * @property int $validator_role_id
- * @property int $validation_sequence
- * @property int|null $validationstatus_id
+ * @property int|null $validation_sequence
+ * @property int $validationstatus_id
  * @property int $en_cours
  * @property int $accepted
  * @property int $rejected

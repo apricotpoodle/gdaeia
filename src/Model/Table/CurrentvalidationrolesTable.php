@@ -10,22 +10,24 @@ use Cake\Validation\Validator;
 /**
  * Currentvalidationroles Model
  *
- * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\BelongsTo $Applicationforms
- * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\BelongsTo $Departments
- * @property \App\Model\Table\ValidationstatusesTable&\Cake\ORM\Association\BelongsTo $Validationstatuses
- * @method \App\Model\Entity\Currentvalidationrole newEmptyEntity()
- * @method \App\Model\Entity\Currentvalidationrole newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Currentvalidationrole> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Currentvalidationrole get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Currentvalidationrole findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Currentvalidationrole patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Currentvalidationrole> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Currentvalidationrole|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Currentvalidationrole saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Currentvalidationrole>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Currentvalidationrole>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Currentvalidationrole>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Currentvalidationrole> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Currentvalidationrole>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Currentvalidationrole>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Currentvalidationrole>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Currentvalidationrole> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\ApplicationformsTable> $Applicationforms
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\DepartmentsTable> $Departments
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\ValidationstatusesTable> $Validationstatuses
+ * @method \App\Model\Entity\Currentvalidationrole newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Currentvalidationrole[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Currentvalidationrole get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Currentvalidationrole findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\Currentvalidationrole>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Currentvalidationrole patchEntity(\App\Model\Entity\Currentvalidationrole $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Currentvalidationrole[] patchEntities(iterable<\App\Model\Entity\Currentvalidationrole> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Currentvalidationrole|false save(\App\Model\Entity\Currentvalidationrole $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Currentvalidationrole saveOrFail(\App\Model\Entity\Currentvalidationrole $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Currentvalidationrole>|false saveMany(iterable<\App\Model\Entity\Currentvalidationrole> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Currentvalidationrole> saveManyOrFail(iterable<\App\Model\Entity\Currentvalidationrole> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Currentvalidationrole>|false deleteMany(iterable<\App\Model\Entity\Currentvalidationrole> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Currentvalidationrole> deleteManyOrFail(iterable<\App\Model\Entity\Currentvalidationrole> $entities, array<string, mixed> $options = [])
+ * @extends \Cake\ORM\Table<array{}, \App\Model\Entity\Currentvalidationrole>
+ * @method bool delete(\App\Model\Entity\Currentvalidationrole $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\Currentvalidationrole $entity, array<string, mixed> $options = [])
  */
 class CurrentvalidationrolesTable extends Table
 {
@@ -107,9 +109,15 @@ class CurrentvalidationrolesTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), ['errorField' => 'applicationform_id']);
-        $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
-        $rules->add($rules->existsIn(['validationstatus_id'], 'Validationstatuses'), ['errorField' => 'validationstatus_id']);
+        $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), [
+            'errorField' => 'applicationform_id',
+        ]);
+        $rules->add($rules->existsIn(['department_id'], 'Departments'), [
+            'errorField' => 'department_id',
+        ]);
+        $rules->add($rules->existsIn(['validationstatus_id'], 'Validationstatuses'), [
+            'errorField' => 'validationstatus_id',
+        ]);
 
         return $rules;
     }

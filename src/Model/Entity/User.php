@@ -18,13 +18,23 @@ use Authorization\Policy\ResultInterface;
  * @property string|null $lastname
  * @property string $email
  * @property string|null $username
+ * @property string|null $token
+ * @property int $role_id
+ * @property \App\Model\Entity\Role $role
+ * @property \App\Model\Entity\UserDepartment[] $user_departments
  * @property bool $issuperuser
- * @property \Cake\I18n\DateTime|null $created
+ * @property \Authorization\AuthorizationServiceInterface $authorization
+ * @property \Cake\I18n\DateTime $created
  * @property \Cake\I18n\DateTime|null $modified
- *
- * @property-read string $full_name  Nom complet (Prénom Nom)
- * @property-read string $display_name  Nom d'affichage par défaut avec fallback
+ * @property-read string $full_name Nom complet (Prénom Nom)
+ * @property-read string $display_name Nom d'affichage par défaut avec fallback
  * @package App\Model\Entity
+ * @property string $password
+ * @property \Cake\I18n\DateTime|null $token_expires
+ * @property \Cake\I18n\DateTime|null $deleted
+ * @property \App\Model\Entity\Applicationform[] $applicationforms
+ * @property \App\Model\Entity\Urd[] $urds
+ * @property \App\Model\Entity\Validation[] $validations
  */
 class User extends AppEntity implements AuthenticationIdentity, AuthorizationIdentity
 {
@@ -33,8 +43,8 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
      * en dehors des Super Administrateurs.
      */
     public const ALLOWED_ROLES_FOR_CREATE = [self::ROLE_ADMIN];
-    public const ALLOWED_ROLES_FOR_EDIT   = [self::ROLE_ADMIN];
-    public const ALLOWED_ROLES_FOR_VIEW   = [self::ROLE_ADMIN];
+    public const ALLOWED_ROLES_FOR_EDIT = [self::ROLE_ADMIN];
+    public const ALLOWED_ROLES_FOR_VIEW = [self::ROLE_ADMIN];
     public const ALLOWED_ROLES_FOR_DELETE = [self::ROLE_ADMIN];
 
     protected array $_accessible = [
@@ -64,6 +74,7 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
      * Exemple : "Jean Dupont"
      *
      * @return string
+     * @see \App\Model\Entity\User::$full_name
      */
     protected function _getFullName(): string
     {
@@ -79,8 +90,9 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
      * Indique si l'opérateur est un super admin
      *
      * @return bool Vrai si l'utilisateur possède le flag issuperuser à vrai
-    */
-    public function isSuperUser(){
+     */
+    public function isSuperUser(): bool
+    {
         if (!isset($this->issuperuser)) {
             return false;
         }
@@ -91,7 +103,7 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
     /**
      * Vérifie si l'utilisateur possède un rôle spécifique ou s'il appartient à un ensemble de rôles autorisés.
      *
-     * @param int|int[] $roleAllowed ID de rôle unique ou tableau d'IDs de rôles autorisés.
+     * @param array<int>|int $roleAllowed ID de rôle unique ou tableau d'IDs de rôles autorisés.
      * @return bool Vrai si l'utilisateur possède l'un des rôles spécifiés.
      */
     public function hasRole(int|array $roleAllowed): bool
@@ -112,6 +124,7 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
      * Utilise le nom complet si disponible, sinon le nom d'utilisateur, sinon l'adresse email.
      *
      * @return string
+     * @see \App\Model\Entity\User::$display_name
      */
     protected function _getDisplayName(): string
     {
@@ -128,31 +141,37 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
         return $this->email ?? '';
     }
 
+    /** @inheritDoc */
     public function getIdentifier(): int|string|null
     {
         return $this->id;
     }
 
+    /** @inheritDoc */
     public function can(string $action, mixed $resource): bool
     {
         return $this->authorization->can($this, $action, $resource);
     }
 
+    /** @inheritDoc */
     public function canResult(string $action, mixed $resource): ResultInterface
     {
         return $this->authorization->canResult($this, $action, $resource);
     }
 
+    /** @inheritDoc */
     public function applyScope(string $action, mixed $resource, mixed ...$optionalArgs): mixed
     {
         return $this->authorization->applyScope($this, $action, $resource, ...$optionalArgs);
     }
 
+    /** @inheritDoc */
     public function getOriginalData(): ArrayAccess|array
     {
         return $this;
     }
 
+    /** @inheritDoc */
     public function setAuthorization(AuthorizationServiceInterface $service): static
     {
         $this->authorization = $service;
@@ -165,6 +184,7 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
      *
      * @param string $password -
      * @return string
+     * @see \App\Model\Entity\User::$password
      */
     protected function _setPassword(string $password): string
     {

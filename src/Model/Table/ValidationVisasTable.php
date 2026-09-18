@@ -10,21 +10,23 @@ use Cake\Validation\Validator;
 /**
  * ValidationVisas Model
  *
- * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\BelongsTo $Applicationforms
- * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\BelongsTo $Roles
- * @method \App\Model\Entity\ValidationVisa newEmptyEntity()
- * @method \App\Model\Entity\ValidationVisa newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\ValidationVisa> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\ValidationVisa get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\ValidationVisa findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\ValidationVisa patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\ValidationVisa> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\ValidationVisa|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\ValidationVisa saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\ValidationVisa>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\ValidationVisa>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\ValidationVisa>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\ValidationVisa> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\ValidationVisa>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\ValidationVisa>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\ValidationVisa>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\ValidationVisa> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\ApplicationformsTable> $Applicationforms
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\RolesTable> $Roles
+ * @method \App\Model\Entity\ValidationVisa newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\ValidationVisa[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\ValidationVisa get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\ValidationVisa findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\ValidationVisa>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\ValidationVisa patchEntity(\App\Model\Entity\ValidationVisa $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\ValidationVisa[] patchEntities(iterable<\App\Model\Entity\ValidationVisa> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\ValidationVisa|false save(\App\Model\Entity\ValidationVisa $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\ValidationVisa saveOrFail(\App\Model\Entity\ValidationVisa $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\ValidationVisa>|false saveMany(iterable<\App\Model\Entity\ValidationVisa> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\ValidationVisa> saveManyOrFail(iterable<\App\Model\Entity\ValidationVisa> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\ValidationVisa>|false deleteMany(iterable<\App\Model\Entity\ValidationVisa> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\ValidationVisa> deleteManyOrFail(iterable<\App\Model\Entity\ValidationVisa> $entities, array<string, mixed> $options = [])
+ * @extends \Cake\ORM\Table<array{}, \App\Model\Entity\ValidationVisa>
+ * @method bool delete(\App\Model\Entity\ValidationVisa $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\ValidationVisa $entity, array<string, mixed> $options = [])
  */
 class ValidationVisasTable extends Table
 {
@@ -103,7 +105,9 @@ class ValidationVisasTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), ['errorField' => 'applicationform_id']);
+        $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), [
+            'errorField' => 'applicationform_id',
+        ]);
         $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
 
         return $rules;
