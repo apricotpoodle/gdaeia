@@ -102,8 +102,15 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/validationsequences/assign-role', ['controller' => 'Validationsequences', 'action' => 'assignRole', '_ext' => 'json']);
         $builder->connect('/validationsequences/unassign-role', ['controller' => 'Validationsequences', 'action' => 'unassignRole', '_ext' => 'json']);
         $builder->connect('/validationsequences/update-sequence', ['controller' => 'Validationsequences', 'action' => 'updateSequence', '_ext' => 'json']);
+        $builder->connect('/validationsequences/update-delay', ['controller' => 'Validationsequences', 'action' => 'updateDelay', '_ext' => 'json']);
+        $builder->connect('/workflow-settings/default-due-hours', ['controller' => 'WorkflowSettings', 'action' => 'defaultDueHours', '_ext' => 'json']);
+        $builder->connect('/workflow-settings/comment-templates', ['controller' => 'WorkflowSettings', 'action' => 'commentTemplates', '_ext' => 'json']);
+        $builder->connect('/workflow-settings/comment-templates/create', ['controller' => 'WorkflowSettings', 'action' => 'createCommentTemplate', '_ext' => 'json']);
+        $builder->connect('/workflow-settings/comment-templates/{id}', ['controller' => 'WorkflowSettings', 'action' => 'updateCommentTemplate', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/workflow-settings/comment-templates/{id}/delete', ['controller' => 'WorkflowSettings', 'action' => 'deleteCommentTemplate', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/start', ['controller' => 'Applicationforms', 'action' => 'startValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/vote', ['controller' => 'Applicationforms', 'action' => 'voteValidation', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/applicationforms/{id}/validation/reset', ['controller' => 'Applicationforms', 'action' => 'resetValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation', ['controller' => 'Applicationforms', 'action' => 'validationState', '_ext' => 'json'], ['pass' => ['id']]);
 
         $builder->resources('Users'); // Crée automatiquement les routes RESTful (GET /api/users)

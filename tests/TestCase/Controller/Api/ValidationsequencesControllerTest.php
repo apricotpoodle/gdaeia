@@ -7,6 +7,9 @@ use App\Model\Entity\User;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
+/**
+ * @link \App\Controller\Api\ValidationsequencesController
+ */
 class ValidationsequencesControllerTest extends TestCase
 {
     use IntegrationTestTrait;
@@ -76,7 +79,7 @@ class ValidationsequencesControllerTest extends TestCase
         $this->get('/api/validationsequences/assigned-roles.json?department_ids[]=1');
 
         $this->assertResponseOk();
-        $this->assertResponseContains('"sequence":2');
+        $this->assertResponseRegExp('/"sequence"\\s*:\\s*2/');
 
         $this->post('/api/validationsequences/unassign-role.json', [
             'department_ids' => [1],
@@ -98,8 +101,11 @@ class ValidationsequencesControllerTest extends TestCase
             'role_id' => 1,
         ]);
 
-        $this->assertResponseCode(400);
-        $this->assertSame(2, $sequences->find()->where(['role_id' => 1, 'sequence' => 1])->count());
+        $this->assertResponseOk();
+        $this->assertSame(0, $sequences->find()->where([
+            'department_id IN' => [1, 2],
+            'deleted IS' => null,
+        ])->count());
     }
 
     public function testLEcranEstRefuseAUnOperateurNonAutorise(): void
