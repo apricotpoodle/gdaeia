@@ -1,5 +1,7 @@
 <?php
-/** @var \App\View\AppView $this */
+/**
+ * @var \App\View\AppView $this
+ */
 $this->assign('title', __('Gestion des rôles'));
 $this->Html->script('views/Roles/index.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>

@@ -90,7 +90,7 @@ class UserDepartmentsTableTest extends TestCase
     public function testAjouteLesAssociationsAbsentesSansDupliquerLesExistantes(): void
     {
         $createdCount = $this->UserDepartments->getConnection()->transactional(
-            fn (): int => $this->UserDepartments->addMissingAssociations([1, 2], [1, 2]),
+            fn(): int => $this->UserDepartments->addMissingAssociations([1, 2], [1, 2]),
         );
 
         $this->assertSame(3, $createdCount);
@@ -105,7 +105,7 @@ class UserDepartmentsTableTest extends TestCase
     public function testRemplaceLesAssociationsDesUtilisateursCiblesUniquement(): void
     {
         $createdCount = $this->UserDepartments->getConnection()->transactional(
-            fn (): int => $this->UserDepartments->replaceAssociationsForUsers([1, 2], [2]),
+            fn(): int => $this->UserDepartments->replaceAssociationsForUsers([1, 2], [2]),
         );
 
         $this->assertSame(2, $createdCount);

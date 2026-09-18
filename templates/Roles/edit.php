@@ -1,5 +1,8 @@
 <?php
-/** @var \App\View\AppView $this */
+/**
+ * @var \App\View\AppView $this
+ * @var \App\Model\Entity\Role $role
+ */
 /** @var \App\Model\Entity\Role $role */
 $this->assign('title', __('Modifier le rôle #{0}', $role->id));
 ?>

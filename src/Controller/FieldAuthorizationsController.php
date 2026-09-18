@@ -5,6 +5,10 @@ namespace App\Controller;
 
 use Exception;
 
+/** @property \App\Model\Table\FieldAuthorizationsTable $FieldAuthorizations */
+/**
+ * @property \App\Model\Table\FieldAuthorizationsTable $FieldAuthorizations
+ */
 class FieldAuthorizationsController extends AppController
 {
     /**
@@ -67,7 +71,7 @@ class FieldAuthorizationsController extends AppController
             return $this->response
                 ->withType('application/json')
                 ->withStatus($success ? 200 : 400)
-                ->withStringBody(json_encode([
+                ->withStringBody((string)json_encode([
                     'success' => $success,
                     'message' => $message,
                 ]));

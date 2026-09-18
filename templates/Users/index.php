@@ -3,8 +3,8 @@
 /**
  * Vue principale pour la gestion des utilisateurs.
  * * @var \App\View\AppView $this
- * @var bool $canBulkDepartments
  * @author L'Équipe de Développement
+ * @var \App\View\AppView $this
  */
 
 // Injection des librairies externes (Tabulator) et de notre script spécifique dans le bloc <head>

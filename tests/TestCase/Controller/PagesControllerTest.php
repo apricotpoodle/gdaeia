@@ -23,6 +23,8 @@ use Cake\TestSuite\TestCase;
 
 /**
  * PagesControllerTest class
+ *
+ * @link \App\Controller\PagesController
  */
 class PagesControllerTest extends TestCase
 {

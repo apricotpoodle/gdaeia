@@ -1,5 +1,8 @@
 <?php
-/** @var \App\View\AppView $this */
+/**
+ * @var \App\View\AppView $this
+ * @var \App\Model\Entity\Role $role
+ */
 /** @var \App\Model\Entity\Role $role */
 /** @var \Authorization\IdentityInterface|null $identity */
 $this->assign('title', __('Rôle #{0}', $role->id));

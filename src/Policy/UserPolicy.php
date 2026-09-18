@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 /**
  * @file src/Policy/UserPolicy.php
  */
@@ -7,17 +8,14 @@ declare(strict_types=1);
 namespace App\Policy;
 
 use App\Model\Entity\User;
-use Authentication\Authenticator\AuthenticatorInterface;
-use Authentication\Identity;
-use Authorization\IdentityInterface;
 use App\Policy\Trait\ImpersonationCheckTrait;
+use Authorization\IdentityInterface;
 
 /**
  * Users policy
  */
 class UserPolicy extends AppPolicy
 {
-
     use ImpersonationCheckTrait;
 
     /**
@@ -126,7 +124,8 @@ class UserPolicy extends AppPolicy
     {
         $user = $this->getValidUser($identity);
         if (!$user) {
-            return false;        }
+            return false;
+        }
 
         return $user->isSuperUser() || $user->id == $target->id || $user->hasRole($user::ALLOWED_ROLES_FOR_VIEW);
     }
