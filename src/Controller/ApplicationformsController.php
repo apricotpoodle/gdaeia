@@ -3,7 +3,10 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\Security\FieldAuthorizationService;
+use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Datasource\EntityInterface;
+use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Exception;
 
@@ -11,10 +14,13 @@ use Exception;
  * Class ApplicationformsController (Web)
  *
  * Gère l'affichage des vues HTML et l'action de suppression hybride.
+ *
+ * @property \App\Model\Table\ApplicationformsTable $Applicationforms
  */
 class ApplicationformsController extends AppController
 {
-    public function beforeFilter(\Cake\Event\EventInterface $event): void
+    /** @inheritDoc */
+    public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
     }
@@ -35,7 +41,7 @@ class ApplicationformsController extends AppController
         $applicationform = $this->Applicationforms->get($id, contain: [
             'Departments' => [
                 'ParentDepartments', // 👈 Pour le fil d'Ariane
-                'Managers',          // 👈 Pour le chef de service
+                'Managers', // 👈 Pour le chef de service
             ],
             'Users',
             'Contracttypes',
@@ -46,6 +52,7 @@ class ApplicationformsController extends AppController
             'Periods',
             'Yesnos',
             'Comments' => ['Users'],
+            'ValidationWorkflowRuns',
         ]);
 
         $this->Authorization->authorize($applicationform, 'view');
@@ -90,7 +97,7 @@ class ApplicationformsController extends AppController
         }
 
         // Récupération des données de référence et de sécurité (ADR 0042 / 0046)
-        $authService = new \App\Service\Security\FieldAuthorizationService();
+        $authService = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
         $fieldSchema = $authService->getFieldSchema($identity, 'Applicationforms');
 
@@ -98,14 +105,23 @@ class ApplicationformsController extends AppController
         $currentUser = $identity->getOriginalData();
 
         // Listes de références filtrées par le périmètre (visibleTo)
-        $contracttypes = $this->Applicationforms->Contracttypes->find('visibleTo', user: $currentUser)->find('list')->toArray();
-        $hiringreasons = $this->Applicationforms->Hiringreasons->find('visibleTo', user: $currentUser)->find('list')->toArray();
-        $professionalcategories = $this->Applicationforms->Professionalcategories->find('visibleTo', user: $currentUser)->find('list')->toArray();
-        $worktimes = $this->Applicationforms->Worktimes->find('visibleTo', user: $currentUser)->find('list')->toArray();
-        $periods = $this->Applicationforms->Periods->find('visibleTo', user: $currentUser)->find('list')->toArray();
-        $budgetfeatures = $this->Applicationforms->Budgetfeatures->find('visibleTo', user: $currentUser)->find('list')->toArray();
-        $yesnos = $this->Applicationforms->Yesnos->find('visibleTo', user: $currentUser)->find('list')->toArray();
-        $collaborators = $this->Applicationforms->Users->find('visibleTo', user: $currentUser)->find('list', keyField: 'id', valueField: 'display_name')->toArray();
+        $contracttypes = $this->Applicationforms->Contracttypes
+            ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $hiringreasons = $this->Applicationforms->Hiringreasons
+            ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $professionalcategories = $this->Applicationforms->Professionalcategories
+            ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $worktimes = $this->Applicationforms->Worktimes
+            ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $periods = $this->Applicationforms->Periods
+            ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $budgetfeatures = $this->Applicationforms->Budgetfeatures
+            ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $yesnos = $this->Applicationforms->Yesnos
+            ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $collaborators = $this->Applicationforms->Users
+            ->find('visibleTo', user: $currentUser)
+            ->find('list', keyField: 'id', valueField: 'display_name')->toArray();
 
         $this->set(compact(
             'applicationform',
@@ -117,7 +133,7 @@ class ApplicationformsController extends AppController
             'periods',
             'budgetfeatures',
             'yesnos',
-            'collaborators'
+            'collaborators',
         ));
 
         return null;
@@ -142,7 +158,10 @@ class ApplicationformsController extends AppController
             $applicationform = $this->Applicationforms->patchEntity($applicationform, $this->request->getData());
 
             if ($this->Applicationforms->save($applicationform)) {
-                $this->Flash->success(__('La demande de recrutement #{0} a été mise à jour avec succès.', $applicationform->id));
+                $this->Flash->success(__(
+                    'La demande de recrutement #{0} a été mise à jour avec succès.',
+                    $applicationform->id,
+                ));
 
                 return $this->redirect(['action' => 'index']);
             }
@@ -158,7 +177,7 @@ class ApplicationformsController extends AppController
         // $departments = $this->Applicationforms->Departments
         //     ->find('treeVisibleTo', user: $currentUser)
         //     ->toArray();
-        $contracttypes = $this->Applicationforms->Contracttypes->getVisibleList($currentUser);   //   ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        $contracttypes = $this->Applicationforms->Contracttypes->getVisibleList($currentUser);
         $hiringreasons = $this->Applicationforms->Hiringreasons->getVisibleList($currentUser);
         $professionalcategories = $this->Applicationforms->Professionalcategories->getVisibleList($currentUser);
         $worktimes = $this->Applicationforms->Worktimes->getVisibleList($currentUser);
@@ -182,7 +201,7 @@ class ApplicationformsController extends AppController
             'periods',
             'budgetfeatures',
             'yesnos',
-            'collaborators'
+            'collaborators',
         ));
 
         return null;
@@ -203,7 +222,7 @@ class ApplicationformsController extends AppController
 
         $success = false;
         try {
-            if ($this->Applicationforms->delete($applicationform)) {
+            if ((new ApplicationformValidationWorkflow())->deleteApplicationform($applicationform)) {
                 $message = __('La demande de recrutement #{0} a été supprimée avec succès.', $id);
                 $success = true;
             } else {
@@ -217,7 +236,7 @@ class ApplicationformsController extends AppController
             return $this->response
                 ->withType('application/json')
                 ->withStatus($success ? 200 : 400)
-                ->withStringBody(json_encode([
+                ->withStringBody((string)json_encode([
                     'success' => $success,
                     'message' => $message,
                 ]));

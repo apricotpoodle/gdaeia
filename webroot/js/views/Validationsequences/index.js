@@ -112,9 +112,29 @@ if (departmentsElement && availableRolesElement && assignedRolesElement) {
         }
     }
 
+    async function updateDelay(cell) {
+        const role = cell.getRow().getData();
+        const reminder_delay_hours = cell.getValue() === '' ? null : Number(cell.getValue());
+        if (reminder_delay_hours !== null && (!Number.isInteger(reminder_delay_hours) || reminder_delay_hours < 1)) {
+            FlashManager.warning('Le délai doit être un entier positif.');
+            await refreshRoles();
+            return;
+        }
+        try {
+            await mutate('update-delay', { department_ids: selectedDepartmentIds(), role_id: Number(role.id), reminder_delay_hours }, 'Impossible de modifier le délai.');
+            FlashManager.success('Délai de validation mis à jour.');
+        } catch (error) {
+            FlashManager.error(error.message);
+            await refreshRoles();
+        }
+    }
+
     departmentsTable.on('rowSelectionChanged', refreshRoles);
     availableRolesTable.on('rowDblClick', (event, row) => assignRole(row.getData()));
     assignedRolesTable.on('rowDblClick', (event, row) => unassignRole(row.getData()));
-    assignedRolesTable.on('cellEdited', updateSequence);
+    assignedRolesTable.on('cellEdited', (cell) => {
+        if (cell.getField() === 'sequence') updateSequence(cell);
+        if (cell.getField() === 'reminder_delay_hours') updateDelay(cell);
+    });
     loadRoles();
 }

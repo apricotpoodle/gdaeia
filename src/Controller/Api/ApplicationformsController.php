@@ -4,13 +4,22 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
-use App\Model\Table\DepartmentsTable;
+use App\Mailer\ValidationWorkflowMailer;
+use App\Model\Entity\Applicationform;
+use App\Model\Entity\User;
+use App\Service\CgrResolverService;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
+use App\Service\Workflow\ApplicationformValidationWorkflow;
+use App\Service\Workflow\WorkflowStartFailureException;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
+use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
+use Cake\I18n\DateTime;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\TableRegistry;
+use RuntimeException;
 
 /**
  * Class ApplicationformsController (API)
@@ -21,16 +30,256 @@ use Cake\ORM\TableRegistry;
  */
 class ApplicationformsController extends AppController
 {
+    /**
+     * Démarre le cycle de validation d'une demande.
+     *
+     * @param string $id Identifiant de la demande.
+     * @return \Cake\Http\Response Réponse JSON.
+     */
+    public function startValidation(string $id): Response
+    {
+        $this->request->allowMethod(['post']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'launchValidation');
+        /** @var \App\Model\Entity\User $actor */
+        $actor = $this->request->getAttribute('identity')->getOriginalData();
+        try {
+            $result = (new ApplicationformValidationWorkflow())->start($applicationform, $actor);
+            if ($result['issues'] !== []) {
+                $this->sendBlockedStartAlert($applicationform, $result['issues']);
+
+                return $this->workflowResponse(
+                    false,
+                    __('Le cycle ne peut pas être lancé.'),
+                    $result['issues'],
+                    422,
+                );
+            }
+            foreach ($result['recipients'] as $recipient) {
+                (new ValidationWorkflowMailer())->safeSend('validationStep', [$recipient, $applicationform]);
+            }
+
+            return $this->workflowResponse(true, __('Le cycle de validation est lancé.'), []);
+        } catch (WorkflowStartFailureException $exception) {
+            $this->sendBlockedStartAlert($applicationform, [$exception->getMessage()]);
+
+            return $this->workflowResponse(false, $exception->getMessage(), [], 422);
+        } catch (RuntimeException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 409);
+        }
+    }
+
+    /**
+     * Enregistre le vote de validation de l'opérateur.
+     *
+     * @param string $id Identifiant de la demande.
+     * @return \Cake\Http\Response Réponse JSON.
+     */
+    public function voteValidation(string $id): Response
+    {
+        $this->request->allowMethod(['post']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'voteValidation');
+        /** @var \App\Model\Entity\User $actor */
+        $actor = $this->request->getAttribute('identity')->getOriginalData();
+        $approved = ($this->request->getData('decision') === 'accepter');
+        if (!$approved && $this->request->getData('decision') !== 'refuser') {
+            return $this->workflowResponse(false, __('Décision de validation invalide.'), [], 422);
+        }
+        $stepId = filter_var($this->request->getData('step_id'), FILTER_VALIDATE_INT);
+        if ($stepId === false || $stepId < 1) {
+            return $this->workflowResponse(false, __('Étape de validation invalide.'), [], 422);
+        }
+        $workflow = new ApplicationformValidationWorkflow();
+        $isProxy = (int)$actor->role_id === 1;
+        try {
+            $result = $workflow->vote(
+                $applicationform,
+                $actor,
+                $stepId,
+                $approved,
+                (string)$this->request->getData('comment'),
+                $isProxy,
+            );
+            foreach ($result['nextRecipients'] as $recipient) {
+                (new ValidationWorkflowMailer())->safeSend('validationStep', [$recipient, $applicationform]);
+            }
+            if ($result['final']) {
+                $this->sendFinalResult($applicationform, $result['state'], (string)$this->request->getData('comment'));
+            }
+
+            return $this->workflowResponse(true, __('Votre vote a été enregistré.'), [
+                'state' => $result['state'],
+                'final' => $result['final'],
+            ]);
+        } catch (RuntimeException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 422);
+        }
+    }
+
+    /**
+     * Supprime, de manière transactionnelle, le cycle d'une demande avant un nouveau lancement.
+     *
+     * @param string $id Identifiant de la demande.
+     * @return \Cake\Http\Response Réponse JSON du résultat.
+     */
+    public function resetValidation(string $id): Response
+    {
+        $this->request->allowMethod(['post']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'resetValidation');
+
+        try {
+            $deleted = (new ApplicationformValidationWorkflow())->reset($applicationform);
+
+            return $this->workflowResponse(
+                true,
+                __('Le cycle a été supprimé ; la demande peut de nouveau être lancée.'),
+                ['deleted' => $deleted],
+            );
+        } catch (RuntimeException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 409);
+        }
+    }
+
+    /**
+     * Retourne l'état du cycle de validation d'une demande.
+     *
+     * @param string $id Identifiant de la demande.
+     */
+    public function validationState(string $id): void
+    {
+        $this->request->allowMethod(['get']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'view');
+        /** @var \App\Model\Entity\ValidationWorkflowRun|null $run */
+        $run = $this->fetchTable('ValidationWorkflowRuns')->find()
+            ->where(['applicationform_id' => $id])
+            ->first();
+        /** @var \App\Model\Entity\User $actor */
+        $actor = $this->request->getAttribute('identity')->getOriginalData();
+        $workflow = new ApplicationformValidationWorkflow();
+        /** @var list<\App\Model\Entity\Applicationvalidationstep> $rawSteps */
+        $rawSteps = $run === null ? [] : $this->fetchTable('Applicationvalidationsteps')->find()
+            ->contain(['Roles'])
+            ->where(['validation_workflow_run_id' => $run->id])
+            ->orderByAsc('sequence_number')
+            ->all()
+            ->toList();
+        $isProxy = (int)$actor->role_id === User::ROLE_ADMIN;
+        $steps = array_map(function ($step) use ($workflow, $applicationform, $actor, $isProxy): array {
+            $canVote = $step->state === 'en_attente'
+                && $workflow->canVoteStep($step, $applicationform, $actor, $isProxy);
+
+            return [
+                'id' => (int)$step->id,
+                'sequence_number' => (int)$step->sequence_number,
+                'state' => (string)$step->state,
+                'due_at' => $step->due_at,
+                'completed_at' => $step->completed_at,
+                'comment' => $step->comment,
+                'role' => [
+                    'id' => (int)$step->role_id,
+                    'name' => (string)($step->role->name ?? __('Rôle n°{0}', $step->role_id)),
+                ],
+                'can_vote' => $canVote,
+                'is_proxy_vote' => $canVote && $isProxy,
+            ];
+        }, $rawSteps);
+        $completedSteps = count(array_filter(
+            $rawSteps,
+            static fn($step): bool => in_array($step->state, ['acceptee', 'refusee'], true),
+        ));
+        $progress = [
+            'completed' => $completedSteps,
+            'total' => count($rawSteps),
+            'percentage' => $rawSteps === [] ? 0 : (int)round(100 * $completedSteps / count($rawSteps)),
+        ];
+        $this->set(compact('run', 'steps', 'progress'));
+        $this->viewBuilder()->setOption('serialize', ['run', 'steps', 'progress']);
+    }
+
+    /**
+     * Construit une réponse JSON homogène pour le workflow.
+     *
+     * @param bool $success Indique si l'opération a réussi.
+     * @param string $message Message destiné à l'utilisateur.
+     * @param array<mixed> $details Détails complémentaires ou erreurs de validation.
+     * @param int $status Code HTTP.
+     * @return \Cake\Http\Response Réponse JSON.
+     */
+    private function workflowResponse(bool $success, string $message, array $details, int $status = 200): Response
+    {
+        return $this->response->withType('application/json')->withStatus($status)
+            ->withStringBody((string)json_encode([
+                'success' => $success,
+                'message' => $message,
+                'details' => $success ? $details : [],
+                'errors' => $success ? [] : ($details === [] ? [$message] : $details),
+            ]));
+    }
+
+    /**
+     * Envoie le résultat final du cycle aux destinataires concernés.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform Demande concernée.
+     * @param string $state État final du cycle.
+     * @param string|null $comment Commentaire associé au vote final.
+     */
+    private function sendFinalResult(Applicationform $applicationform, string $state, ?string $comment): void
+    {
+        $loaded = $this->Applicationforms->get($applicationform->id, contain: ['Users', 'Departments' => ['Managers']]);
+        $recipients = [$loaded->user];
+        if ($loaded->department->manager !== null) {
+            $recipients[] = $loaded->department->manager;
+        }
+        $sent = [];
+        foreach ($recipients as $recipient) {
+            if ($recipient !== null && !isset($sent[$recipient->email])) {
+                $sent[$recipient->email] = true;
+                (new ValidationWorkflowMailer())->safeSend('finalResult', [$recipient, $loaded, $state, $comment]);
+            }
+        }
+    }
+
+    /**
+     * Informe les administrateurs associés au département lorsqu'une précondition bloque le cycle.
+     *
+     * @param list<string> $issues Préconditions de lancement non satisfaites.
+     */
+    private function sendBlockedStartAlert(Applicationform $applicationform, array $issues): void
+    {
+        $administrators = $this->fetchTable('Users')->find()
+            ->innerJoinWith('UserDepartments', function (SelectQuery $query) use ($applicationform): SelectQuery {
+                return $query->where(['UserDepartments.department_id' => $applicationform->department_id]);
+            })
+            ->where([
+                'Users.role_id' => User::ROLE_ADMIN,
+                'Users.deleted IS' => null,
+            ])
+            ->distinct(['Users.id'])
+            ->all();
+
+        foreach ($administrators as $administrator) {
+            (new ValidationWorkflowMailer())->safeSend(
+                'validationBlocked',
+                [$administrator, $applicationform, $issues],
+            );
+        }
+    }
+
+    /** @inheritDoc */
     public function initialize(): void
     {
         parent::initialize();
         $this->viewBuilder()->setClassName('Json');
     }
 
-    public function beforeFilter(EventInterface $event) : void
+    /** @inheritDoc */
+    public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
-        $this->Authorization->skipAuthorization(['index', 'getFormSchema']);
+        $this->Authorization->skipAuthorization();
     }
 
     /**
@@ -51,7 +300,7 @@ class ApplicationformsController extends AppController
         $schema = $service->getFieldSchema($identity, 'Applicationforms');
 
         // Instanciation des tables
-        /** @var DepartmentsTable $departmentsTable **/
+        /** @var \App\Model\Table\DepartmentsTable $departmentsTable **/
         $departmentsTable = TableRegistry::getTableLocator()->get('Departments');
         $contracttypesTable = TableRegistry::getTableLocator()->get('Contracttypes');
         $hiringreasonsTable = TableRegistry::getTableLocator()->get('Hiringreasons');
@@ -158,7 +407,7 @@ class ApplicationformsController extends AppController
 
         if ($this->Applicationforms->save($applicationform)) {
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => true, 'id' => $applicationform->id]));
+                ->withStringBody((string)json_encode(['success' => true, 'id' => $applicationform->id]));
         }
 
         /** @var \Cake\Datasource\EntityInterface $applicationform */
@@ -181,15 +430,75 @@ class ApplicationformsController extends AppController
         $schema = $authService->getFieldSchema($identity, 'Applicationforms');
         $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
 
+        $activeRun = $this->fetchTable('ValidationWorkflowRuns')->find()
+            ->where([
+                'applicationform_id' => $applicationform->id,
+                'state' => 'en_attente',
+            ])->first();
+        if (
+            $activeRun !== null
+            && isset($filteredData['department_id'])
+            && (int)$filteredData['department_id'] !== (int)$applicationform->department_id
+        ) {
+            return $this->workflowResponse(
+                false,
+                __('Le département ne peut pas être modifié pendant un cycle de validation.'),
+                [],
+                422,
+            );
+        }
+
         $applicationform = $this->Applicationforms->patchEntity($applicationform, $filteredData);
+        $hasChanges = $applicationform->isDirty();
 
         if ($this->Applicationforms->save($applicationform)) {
+            if ($activeRun !== null && $hasChanges) {
+                /** @var \App\Model\Entity\User $operator */
+                $operator = $identity->getOriginalData();
+                $this->fetchTable('Comments')->saveOrFail($this->fetchTable('Comments')->newEntity([
+                    'model' => 'Applicationforms',
+                    'foreign_key' => $applicationform->id,
+                    'type' => 'WORKFLOW_EDIT_AUDIT',
+                    'content' => __(
+                        'Modification pendant le cycle par {0} le {1}.',
+                        $operator->display_name,
+                        DateTime::now()->i18nFormat('dd/MM/yyyy HH:mm'),
+                    ),
+                    'user_id' => $operator->id,
+                ]));
+            }
+
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => true]));
+                ->withStringBody((string)json_encode(['success' => true]));
         }
 
         /** @var \Cake\Datasource\EntityInterface $applicationform */
         return $this->handleValidationError($applicationform);
+    }
+
+    /**
+     * Supprime une demande et son cycle éventuel pour un Super Administrateur.
+     *
+     * @param string $id Identifiant de la demande.
+     * @return \Cake\Http\Response Réponse JSON.
+     */
+    public function delete(string $id): Response
+    {
+        $this->request->allowMethod(['delete']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'delete');
+
+        try {
+            $deleted = (new ApplicationformValidationWorkflow())->deleteApplicationform($applicationform);
+
+            return $this->workflowResponse(
+                true,
+                __('La demande et son éventuel cycle de validation ont été supprimés.'),
+                $deleted,
+            );
+        } catch (RuntimeException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 409);
+        }
     }
 
     /**
@@ -207,7 +516,7 @@ class ApplicationformsController extends AppController
 
         return $this->response->withType('application/json')
             ->withStatus(400)
-            ->withStringBody(json_encode(['success' => false, 'message' => $message]));
+            ->withStringBody((string)json_encode(['success' => false, 'message' => $message]));
     }
 
     /**
@@ -291,6 +600,8 @@ class ApplicationformsController extends AppController
                 'Users',
                 'Contracttypes',
                 'Hiringreasons',
+                'Applicationformstatuses',
+                'ValidationWorkflowRuns',
                 'Comments',
                 'Comments' => ['Users'], // Charge le fil de discussion et ses auteurs
             ]);
@@ -302,19 +613,19 @@ class ApplicationformsController extends AppController
         try {
             $paginatedData = $this->paginate($query, [
                 'limit' => (int)($queryParams['size'] ?? 40), // Valeur conseillée pour le scroll progressif (ADR 0039)
-                'page'  => (int)($queryParams['page'] ?? 1),
+                'page' => (int)($queryParams['page'] ?? 1),
             ]);
-        } catch (\Cake\Http\Exception\NotFoundException $e) {
+        } catch (NotFoundException $e) {
             // Si la page demandée dépasse le total, on force le retour à la page 1
             $this->request = $this->request->withQueryParams(array_merge($queryParams, ['page' => 1]));
             $paginatedData = $this->paginate($query, [
                 'limit' => (int)($queryParams['size'] ?? 40),
-                'page'  => 1,
+                'page' => 1,
             ]);
         }
 
         // 4. Droits dynamiques de la grille
-        $rightsFormatter = $this->createGridRightsFormatter();
+        $rightsFormatter = $this->createGridRightsFormatter(['launchValidation', 'resetValidation']);
 
         // 5. Rendu structuré pour Tabulator
         $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);
@@ -331,11 +642,10 @@ class ApplicationformsController extends AppController
         $this->request->allowMethod(['get']);
         $this->Authorization->skipAuthorization();
 
-        $resolver = new \App\Service\CgrResolverService();
+        $resolver = new CgrResolverService();
         $config = $resolver->getCgrConfigForDepartment((int)$departmentId);
 
         $this->set($config);
         $this->viewBuilder()->setOption('serialize', array_keys($config));
     }
-
 }

@@ -14,34 +14,39 @@ use Search\Model\Filter\Callback;
 /**
  * Applicationforms Model
  *
- * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\BelongsTo $Departments
- * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
- * @property \App\Model\Table\ContracttypesTable&\Cake\ORM\Association\BelongsTo $Contracttypes
- * @property \App\Model\Table\HiringreasonsTable&\Cake\ORM\Association\BelongsTo $Hiringreasons
- * @property \App\Model\Table\BudgetfeaturesTable&\Cake\ORM\Association\BelongsTo $Budgetfeatures
- * @property \App\Model\Table\ProfessionalcategoriesTable&\Cake\ORM\Association\BelongsTo $Professionalcategories
- * @property \App\Model\Table\WorktimesTable&\Cake\ORM\Association\BelongsTo $Worktimes
- * @property \App\Model\Table\PeriodsTable&\Cake\ORM\Association\BelongsTo $Periods
- * @property \App\Model\Table\YesnosTable&\Cake\ORM\Association\BelongsTo $Yesnos
- * @property \App\Model\Table\ApplicationformstatusesTable&\Cake\ORM\Association\HasMany $Applicationformstatuses
- * @property \App\Model\Table\ApplicationvalidationstepsTable&\Cake\ORM\Association\HasMany $Applicationvalidationsteps
- * @property \App\Model\Table\CurrentvalidationrolesTable&\Cake\ORM\Association\HasMany $Currentvalidationroles
- * @property \App\Model\Table\ValidationVisasTable&\Cake\ORM\Association\HasMany $ValidationVisas
- * @property \App\Model\Table\ValidationsTable&\Cake\ORM\Association\HasMany $Validations
- * @method \App\Model\Entity\Applicationform newEmptyEntity()
- * @method \App\Model\Entity\Applicationform newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Applicationform> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Applicationform get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Applicationform findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Applicationform patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Applicationform> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Applicationform|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Applicationform saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Applicationform>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationform>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Applicationform>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationform> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Applicationform>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationform>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Applicationform>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationform> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\DepartmentsTable> $Departments
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\UsersTable> $Users
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\ContracttypesTable> $Contracttypes
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\HiringreasonsTable> $Hiringreasons
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\BudgetfeaturesTable> $Budgetfeatures
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\ProfessionalcategoriesTable> $Professionalcategories
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\WorktimesTable> $Worktimes
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\PeriodsTable> $Periods
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\YesnosTable> $Yesnos
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationformstatusesTable> $Applicationformstatuses
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationvalidationstepsTable> $Applicationvalidationsteps
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\CurrentvalidationrolesTable> $Currentvalidationroles
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ValidationVisasTable> $ValidationVisas
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ValidationsTable> $Validations
+ * @property \Cake\ORM\Association\HasOne<\App\Model\Table\ValidationWorkflowRunsTable> $ValidationWorkflowRuns
+ * @method \App\Model\Entity\Applicationform newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationform[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationform get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Applicationform findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\Applicationform>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationform patchEntity(\App\Model\Entity\Applicationform $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationform[] patchEntities(iterable<\App\Model\Entity\Applicationform> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationform|false save(\App\Model\Entity\Applicationform $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationform saveOrFail(\App\Model\Entity\Applicationform $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Applicationform>|false saveMany(iterable<\App\Model\Entity\Applicationform> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Applicationform> saveManyOrFail(iterable<\App\Model\Entity\Applicationform> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Applicationform>|false deleteMany(iterable<\App\Model\Entity\Applicationform> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Applicationform> deleteManyOrFail(iterable<\App\Model\Entity\Applicationform> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
+ * @extends \Cake\ORM\Table<array{Search: \Search\Model\Behavior\SearchBehavior, Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\Applicationform>
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\CommentsTable> $Comments
+ * @mixin \Search\Model\Behavior\SearchBehavior
+ * @method bool delete(\App\Model\Entity\Applicationform $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\Applicationform $entity, array<string, mixed> $options = [])
  */
 class ApplicationformsTable extends Table
 {
@@ -147,6 +152,9 @@ class ApplicationformsTable extends Table
             'foreignKey' => 'applicationform_id',
         ]);
         $this->hasMany('Validations', [
+            'foreignKey' => 'applicationform_id',
+        ]);
+        $this->hasOne('ValidationWorkflowRuns', [
             'foreignKey' => 'applicationform_id',
         ]);
         $this->hasMany('Comments', [
@@ -255,6 +263,7 @@ class ApplicationformsTable extends Table
 
                     // Récupération du type de contrat
                     $contracttypesTable = TableRegistry::getTableLocator()->get('Contracttypes');
+                    /** @var \App\Model\Entity\Contracttype|null $contractType */
                     $contractType = $contracttypesTable->find()->where(['id' => $contractTypeId])->first();
 
                     if (!$contractType) {
@@ -315,7 +324,9 @@ class ApplicationformsTable extends Table
         $rules->add($rules->existsIn(['contracttype_id'], 'Contracttypes'), ['errorField' => 'contracttype_id']);
         $rules->add($rules->existsIn(['hiringreason_id'], 'Hiringreasons'), ['errorField' => 'hiringreason_id']);
         $rules->add($rules->existsIn(['budgetfeature_id'], 'Budgetfeatures'), ['errorField' => 'budgetfeature_id']);
-        $rules->add($rules->existsIn(['professionalcategory_id'], 'Professionalcategories'), ['errorField' => 'professionalcategory_id']);
+        $rules->add($rules->existsIn(['professionalcategory_id'], 'Professionalcategories'), [
+            'errorField' => 'professionalcategory_id',
+        ]);
         $rules->add($rules->existsIn(['worktime_id'], 'Worktimes'), ['errorField' => 'worktime_id']);
         $rules->add($rules->existsIn(['period_id'], 'Periods'), ['errorField' => 'period_id']);
         $rules->add($rules->existsIn(['yesno_id'], 'Yesnos'), ['errorField' => 'yesno_id']);
@@ -331,9 +342,9 @@ class ApplicationformsTable extends Table
      *
      * Utilisation : ->find('visibleTo', user: $currentUser)
      *
-     * @param \Cake\ORM\Query\SelectQuery $query L'objet Query de l'ORM.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query L'objet Query de l'ORM.
      * @param \App\Model\Entity\User $user L'opérateur courant.
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {

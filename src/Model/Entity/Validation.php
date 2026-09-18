@@ -22,7 +22,10 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Applicationform $applicationform
  * @property \App\Model\Entity\User $user
  * @property \App\Model\Entity\Role $role
- * @property \App\Model\Entity\Validationstatus $validationstatus
+ * @property \App\Model\Entity\Validationstatus|null $validationstatus
+ * @property int|null $applicationvalidationstep_id
+ * @property bool $is_proxy
+ * @property \App\Model\Entity\Applicationvalidationstep|null $applicationvalidationstep
  */
 class Validation extends Entity
 {
@@ -41,6 +44,8 @@ class Validation extends Entity
         'role_id' => true,
         'validated' => true,
         'validationstatus_id' => true,
+        'applicationvalidationstep_id' => true,
+        'is_proxy' => true,
         'obs' => true,
         'deleted' => true,
         'created' => true,

@@ -53,9 +53,9 @@ class FieldAuthorizationService
     /**
      * Filtre les données soumises par un formulaire (Request Data) en fonction du schéma d'autorisation.
      *
-     * @param array $data Les données brutes issues du POST/JSON.
+     * @param array<string, mixed> $data Les données brutes issues du POST/JSON.
      * @param array<string, string> $fieldSchema La carte retournée par getFieldSchema.
-     * @return array Les données nettoyées et sécurisées.
+     * @return array<string, mixed> Les données nettoyées et sécurisées.
      */
     public function filterRequestData(array $data, array $fieldSchema): array
     {

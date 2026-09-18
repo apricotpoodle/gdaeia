@@ -1,5 +1,4 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Model\Entity;
@@ -46,8 +45,8 @@ namespace App\Model\Entity;
  * @property \App\Model\Entity\Currentvalidationrole[] $currentvalidationroles
  * @property \App\Model\Entity\ValidationVisa[] $validation_visas
  * @property \App\Model\Entity\Validation[] $validations
+ * @property \App\Model\Entity\ValidationWorkflowRun|null $validation_workflow_run
  * @property \App\Model\Entity\Comment[] $comments
- *
  * @property-read string $candidate_name Nom du candidat ou collaborateur pressenti
  */
 class Applicationform extends AppEntity
@@ -55,10 +54,10 @@ class Applicationform extends AppEntity
     /**
      * Cartographie des zones d'IHM
      */
-    public const ZONE_ADMIN        = 'admin';
-    public const ZONE_CONTRAT      = 'contrat';
+    public const ZONE_ADMIN = 'admin';
+    public const ZONE_CONTRAT = 'contrat';
     public const ZONE_REMUNERATION = 'remuneration';
-    public const ZONE_RESERVES     = 'reserves';
+    public const ZONE_RESERVES = 'reserves';
     public const ZONE_COMMENTAIRES = 'commentaires';
 
     /**
@@ -72,8 +71,8 @@ class Applicationform extends AppEntity
         self::ZONE_COMMENTAIRES,
     ];
 
-    public const ALLOWED_ROLES_FOR_EDIT   = [self::ROLE_ADMIN];
-    public const ALLOWED_ROLES_FOR_ZONE_RESERVES  = [self::ROLE_ADMIN, self::ROLE_4_VALIDEUR_CG];
+    public const ALLOWED_ROLES_FOR_EDIT = [self::ROLE_ADMIN];
+    public const ALLOWED_ROLES_FOR_ZONE_RESERVES = [self::ROLE_ADMIN, self::ROLE_4_VALIDEUR_CG];
 
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
@@ -140,6 +139,7 @@ class Applicationform extends AppEntity
      * 3. Fallback neutre ('-')
      *
      * @return string
+     * @see \App\Model\Entity\Applicationform::$candidate_name
      */
     protected function _getCandidateName(): string
     {
@@ -151,7 +151,10 @@ class Applicationform extends AppEntity
 
         // 2. Si un collaborateur interne est lié via collaborator_id
         if (isset($this->collaborator)) {
-            $collabName = $this->collaborator->display_name ?? $this->collaborator->full_name ?? $this->collaborator->email ?? '';
+            $collabName = $this->collaborator->display_name
+                ?? $this->collaborator->full_name
+                ?? $this->collaborator->email
+                ?? '';
             if (trim($collabName) !== '') {
                 return trim($collabName);
             }

@@ -3,7 +3,6 @@
  * Element : Zone Champs Réservés Administration/RH
  *
  * @var \App\View\AppView $this
- * @var \App\Model\Entity\Applicationform $applicationform
  * @var array<int, string> $budgetfeatures
  * @var array<int, string> $yesnos
  * @var array<string, string> $fieldSchema

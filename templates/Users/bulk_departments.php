@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 /**
  * @var \App\View\AppView $this
- * @var bool $canEditDepartments
  */
 
 $this->assign('title', __('Associer des départements à plusieurs utilisateurs'));

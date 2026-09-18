@@ -37,10 +37,7 @@ class MenuPolicy
     {
         $user = $this->getValidUser($identity);
 
-        return $user !== null && (
-            (bool)$user->get('issuperuser') ||
-            $user->get('role_id') === User::ROLE_ADMIN
-        );
+        return $user !== null && (bool)$user->get('issuperuser');
     }
 
     /**

@@ -3,7 +3,6 @@
  * Element : Zone Temps de travail & Rémunération
  *
  * @var \App\View\AppView $this
- * @var \App\Model\Entity\Applicationform $applicationform
  * @var array<int, string> $professionalcategories
  * @var array<int, string> $worktimes
  * @var array<int, string> $periods

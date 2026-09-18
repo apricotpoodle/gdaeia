@@ -10,21 +10,23 @@ use Cake\Validation\Validator;
 /**
  * CgrStrategies Model
  *
- * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\HasMany $Departments
- * @method \App\Model\Entity\CgrStrategy newEmptyEntity()
- * @method \App\Model\Entity\CgrStrategy newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\CgrStrategy> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\CgrStrategy get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\CgrStrategy findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\CgrStrategy patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\CgrStrategy> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\CgrStrategy|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\CgrStrategy saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\CgrStrategy>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\CgrStrategy>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\CgrStrategy>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\CgrStrategy> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\CgrStrategy>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\CgrStrategy>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\CgrStrategy>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\CgrStrategy> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\DepartmentsTable> $Departments
+ * @method \App\Model\Entity\CgrStrategy newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrStrategy[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrStrategy get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\CgrStrategy findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\CgrStrategy>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrStrategy patchEntity(\App\Model\Entity\CgrStrategy $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrStrategy[] patchEntities(iterable<\App\Model\Entity\CgrStrategy> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrStrategy|false save(\App\Model\Entity\CgrStrategy $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrStrategy saveOrFail(\App\Model\Entity\CgrStrategy $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\CgrStrategy>|false saveMany(iterable<\App\Model\Entity\CgrStrategy> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\CgrStrategy> saveManyOrFail(iterable<\App\Model\Entity\CgrStrategy> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\CgrStrategy>|false deleteMany(iterable<\App\Model\Entity\CgrStrategy> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\CgrStrategy> deleteManyOrFail(iterable<\App\Model\Entity\CgrStrategy> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
+ * @extends \Cake\ORM\Table<array{Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\CgrStrategy>
+ * @method bool delete(\App\Model\Entity\CgrStrategy $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\CgrStrategy $entity, array<string, mixed> $options = [])
  */
 class CgrStrategiesTable extends Table
 {

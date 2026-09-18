@@ -8,7 +8,11 @@ use App\Model\Entity\User;
 use Cake\Http\Response;
 use Exception;
 
-/** Contrôleur Web : vues HTML et parcours de formulaires des rôles. */
+/**
+ * Contrôleur Web : vues HTML et parcours de formulaires des rôles.
+ *
+ * @property \App\Model\Table\RolesTable $Roles
+ */
 class RolesController extends AppController
 {
     /** Affiche la coquille HTML de la grille distante. */
@@ -87,21 +91,30 @@ class RolesController extends AppController
 
         if ($this->request->is('ajax') || $this->request->accepts('application/json')) {
             return $this->response->withType('application/json')->withStatus($success ? 200 : 400)
-                ->withStringBody(json_encode(compact('success', 'message')));
+                ->withStringBody((string)json_encode(compact('success', 'message')));
         }
 
         $success ? $this->Flash->success($message) : $this->Flash->error($message);
 
-        return $this->redirect(['action' => 'index']);
+        return $this->redirect(['action' => 'index']) ?? $this->response;
     }
 
     /** @return \App\Model\Entity\Role */
     private function getActiveRole(string $id): Role
     {
-        return $this->Roles->find('visibleTo', user: $this->getOperator())->where(['Roles.id' => $id])->firstOrFail();
+        /** @var \App\Model\Entity\Role $role */
+        $role = $this->Roles->find('visibleTo', user: $this->getOperator())
+            ->where(['Roles.id' => $id])
+            ->firstOrFail();
+
+        return $role;
     }
 
-    /** Empêche une requête forgée de créer ou de modifier un rôle socle. */
+    /**
+     * Empêche une requête forgée de créer ou de modifier un rôle socle.
+     *
+     * @return array{accessibleFields: array{base: false, deleted: false}}
+     */
     private function patchOptions(): array
     {
         return ['accessibleFields' => ['base' => false, 'deleted' => false]];

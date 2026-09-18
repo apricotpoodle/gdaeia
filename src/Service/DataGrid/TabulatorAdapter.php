@@ -25,8 +25,8 @@ class TabulatorAdapter
      * envoyés par Tabulator à la requête ORM.
      *
      * @param \Cake\Http\ServerRequest $request L'objet requête HTTP courant.
-     * @param \Cake\ORM\Query\SelectQuery $query La requête ORM initiale.
-     * @return \Cake\ORM\Query\SelectQuery La requête ORM modifiée.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query La requête ORM initiale.
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> La requête ORM modifiée.
      */
     public function adaptRequest(ServerRequest $request, SelectQuery $query): SelectQuery
     {
@@ -51,15 +51,21 @@ class TabulatorAdapter
             foreach ($queryParams['filters'] as $filter) {
                 $field = $filter['field'] ?? null;
                 $type = strtolower($filter['type'] ?? '=');
+                /** @var mixed $value Valeur de filtre issue de la requête Tabulator. */
                 $value = $filter['value'] ?? '';
 
+                $dateRange = $this->dateRange($value);
+
                 // On autorise les chaînes non vides OU les tableaux (pour le filtre Date Range)
-                if (is_string($field) && ($value !== '' || is_array($value))) {
+                if (is_string($field) && ($value !== '' || $dateRange !== null)) {
                     $ormField = $this->resolveOrmField($field, $mainAlias);
 
                     // 🛡️ INTERCEPTION : Gestion spécifique du filtre "Date Range" (Plage de dates)
-                    if (is_array($value) && (array_key_exists('start', $value) || array_key_exists('end', $value))) {
-                        $this->applyDateRangeCondition($query, $ormField, $value);
+                    if (
+                        $dateRange !== null
+                        && (array_key_exists('start', $dateRange) || array_key_exists('end', $dateRange))
+                    ) {
+                        $this->applyDateRangeCondition($query, $ormField, $dateRange);
                         continue; // On passe au filtre suivant
                     }
 
@@ -102,7 +108,7 @@ class TabulatorAdapter
      * Formate intelligemment les limites horaires pour inclure la journée entière sur les champs DATETIME.
      * (Respect du principe DRY et encapsulation de la logique complexe).
      *
-     * @param \Cake\ORM\Query\SelectQuery $query La requête ORM à modifier.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query La requête ORM à modifier.
      * @param string $field Le champ ORM sécurisé (ex: 'Users.created').
      * @param array<string, mixed> $range Le tableau contenant les clés 'start' et/ou 'end'.
      * @return void
@@ -111,7 +117,7 @@ class TabulatorAdapter
     {
         // Ajout des bornes horaires pour englober la journée entière (00:00:00 à 23:59:59)
         $start = !empty($range['start']) ? $range['start'] . ' 00:00:00' : null;
-        $end   = !empty($range['end'])   ? $range['end'] . ' 23:59:59' : null;
+        $end = !empty($range['end']) ? $range['end'] . ' 23:59:59' : null;
 
         if ($start !== null && $end !== null) {
             // Condition stricte BETWEEN via QueryExpression (Compatible PHPStan)
@@ -123,6 +129,17 @@ class TabulatorAdapter
         } elseif ($end !== null) {
             $query->where(["{$field} <=" => $end]);
         }
+    }
+
+    /**
+     * Normalise une valeur de filtre de plage de dates lorsqu'elle est structurée.
+     *
+     * @param mixed $value Valeur transmise par Tabulator.
+     * @return array<string, mixed>|null
+     */
+    private function dateRange(mixed $value): ?array
+    {
+        return is_array($value) ? $value : null;
     }
 
     /**
@@ -148,9 +165,9 @@ class TabulatorAdapter
     /**
      * Formate la réponse paginée pour Tabulator.
      *
-     * @param \Cake\Datasource\Paging\PaginatedInterface $paginatedData Les entités issues de la pagination
+     * @param \Cake\Datasource\Paging\PaginatedInterface<int, \Cake\Datasource\EntityInterface> $paginatedData Les entités issues de la pagination
      * @param callable|null $rightsFormatter Fonction anonyme pour injecter les grid_rights
-     * @return array Structure JSON attendue par Tabulator
+     * @return array{data: list<\Cake\Datasource\EntityInterface>, last_page: int} Structure JSON attendue par Tabulator
      */
     public function adaptResponse(PaginatedInterface $paginatedData, ?callable $rightsFormatter = null): array
     {
@@ -165,7 +182,7 @@ class TabulatorAdapter
         // 2. Application des droits via la fabrique DRY du contrôleur
         if ($rightsFormatter !== null) {
             foreach ($entities as $entity) {
-                $entity->grid_rights = $rightsFormatter($entity);
+                $entity->set('grid_rights', $rightsFormatter($entity));
             }
         }
 

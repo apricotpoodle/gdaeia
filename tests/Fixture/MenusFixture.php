@@ -26,10 +26,10 @@ class MenusFixture extends TestFixture
         $this->records = [
             [
                 'id' => 1,
-                'parent_id' => 1,
+                'parent_id' => null,
                 'lft' => 1,
-                'rght' => 1,
-                'level' => 1,
+                'rght' => 2,
+                'level' => 0,
                 'name' => 'Lorem ipsum dolor sit amet',
                 'url' => 'Lorem ipsum dolor sit amet',
                 'active' => 1,

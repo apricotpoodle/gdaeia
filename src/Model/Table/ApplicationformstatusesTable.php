@@ -10,21 +10,23 @@ use Cake\Validation\Validator;
 /**
  * Applicationformstatuses Model
  *
- * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\BelongsTo $Applicationforms
- * @property \App\Model\Table\ValidationstatusesTable&\Cake\ORM\Association\BelongsTo $Validationstatuses
- * @method \App\Model\Entity\Applicationformstatus newEmptyEntity()
- * @method \App\Model\Entity\Applicationformstatus newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Applicationformstatus> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Applicationformstatus get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Applicationformstatus findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Applicationformstatus patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Applicationformstatus> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Applicationformstatus|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Applicationformstatus saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Applicationformstatus>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationformstatus>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Applicationformstatus>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationformstatus> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Applicationformstatus>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationformstatus>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Applicationformstatus>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Applicationformstatus> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\ApplicationformsTable> $Applicationforms
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\ValidationstatusesTable> $Validationstatuses
+ * @method \App\Model\Entity\Applicationformstatus newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationformstatus[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationformstatus get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Applicationformstatus findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\Applicationformstatus>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationformstatus patchEntity(\App\Model\Entity\Applicationformstatus $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationformstatus[] patchEntities(iterable<\App\Model\Entity\Applicationformstatus> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationformstatus|false save(\App\Model\Entity\Applicationformstatus $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Applicationformstatus saveOrFail(\App\Model\Entity\Applicationformstatus $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Applicationformstatus>|false saveMany(iterable<\App\Model\Entity\Applicationformstatus> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Applicationformstatus> saveManyOrFail(iterable<\App\Model\Entity\Applicationformstatus> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Applicationformstatus>|false deleteMany(iterable<\App\Model\Entity\Applicationformstatus> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Applicationformstatus> deleteManyOrFail(iterable<\App\Model\Entity\Applicationformstatus> $entities, array<string, mixed> $options = [])
+ * @extends \Cake\ORM\Table<array{}, \App\Model\Entity\Applicationformstatus>
+ * @method bool delete(\App\Model\Entity\Applicationformstatus $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\Applicationformstatus $entity, array<string, mixed> $options = [])
  */
 class ApplicationformstatusesTable extends Table
 {
@@ -101,8 +103,12 @@ class ApplicationformstatusesTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), ['errorField' => 'applicationform_id']);
-        $rules->add($rules->existsIn(['validationstatus_id'], 'Validationstatuses'), ['errorField' => 'validationstatus_id']);
+        $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), [
+            'errorField' => 'applicationform_id',
+        ]);
+        $rules->add($rules->existsIn(['validationstatus_id'], 'Validationstatuses'), [
+            'errorField' => 'validationstatus_id',
+        ]);
 
         return $rules;
     }

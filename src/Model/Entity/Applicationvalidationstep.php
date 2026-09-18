@@ -11,17 +11,27 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property int $applicationform_id
  * @property int $role_id
- * @property int $validationstatus_id
+ * @property int|null $validationstatus_id
  * @property string|null $comment
  * @property int $validationsequence_id
+ * @property int|null $validation_workflow_run_id
+ * @property int|null $sequence_number
+ * @property string|null $state
+ * @property \Cake\I18n\DateTime|null $due_at
+ * @property \Cake\I18n\DateTime|null $activated_at
+ * @property \Cake\I18n\DateTime|null $completed_at
+ * @property int $reminder_count
+ * @property \Cake\I18n\DateTime|null $last_reminded_at
  * @property \Cake\I18n\DateTime|null $deleted
  * @property \Cake\I18n\DateTime|null $modified
  * @property \Cake\I18n\DateTime $created
  *
  * @property \App\Model\Entity\Applicationform $applicationform
  * @property \App\Model\Entity\Role $role
- * @property \App\Model\Entity\Validationstatus $validationstatus
+ * @property \App\Model\Entity\Validationstatus|null $validationstatus
  * @property \App\Model\Entity\Validationsequence $validationsequence
+ * @property \App\Model\Entity\ValidationWorkflowRun|null $validation_workflow_run
+ * @property \App\Model\Entity\Validation|null $validation
  */
 class Applicationvalidationstep extends Entity
 {
@@ -40,6 +50,14 @@ class Applicationvalidationstep extends Entity
         'validationstatus_id' => true,
         'comment' => true,
         'validationsequence_id' => true,
+        'validation_workflow_run_id' => true,
+        'sequence_number' => true,
+        'state' => true,
+        'due_at' => true,
+        'activated_at' => true,
+        'completed_at' => true,
+        'reminder_count' => true,
+        'last_reminded_at' => true,
         'deleted' => true,
         'modified' => true,
         'created' => true,

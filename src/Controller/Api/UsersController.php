@@ -9,11 +9,13 @@ use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
+use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
+use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use Cake\Log\Log;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\TableRegistry;
-
 
 /**
  * Class UsersController (API)
@@ -34,14 +36,11 @@ class UsersController extends AppController
         $this->viewBuilder()->setClassName('Json');
     }
 
-    /**
-     * @param \Cake\Event\EventInterface $event
-     * @return void
-     */
+    /** @inheritDoc */
     public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
-        $this->Authorization->skipAuthorization(['getFormSchema']);
+        $this->Authorization->skipAuthorization();
     }
 
     /**
@@ -70,6 +69,7 @@ class UsersController extends AppController
             ->toArray();
 
         // Arborescence filtrée par périmètre opérateur
+        /** @var \App\Model\Table\DepartmentsTable $departmentsTable */
         $departmentsTable = TableRegistry::getTableLocator()->get('Departments');
         $departments = $departmentsTable->findTreeSelectFormat($currentUser);
 
@@ -107,10 +107,11 @@ class UsersController extends AppController
         $user = $this->Users->patchEntity($user, $filteredData, [
             'associated' => ['UserDepartments'],
         ]);
+        /** @var \App\Model\Entity\User $user */
 
         if ($this->Users->save($user)) {
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => true, 'id' => $user->id]));
+                ->withStringBody((string)json_encode(['success' => true, 'id' => $user->id]));
         }
 
         return $this->handleValidationError($user);
@@ -140,7 +141,10 @@ class UsersController extends AppController
         // 🛠️ DÉBUT DES LOGS D'ANALYSE
         // ==============================================================
         Log::debug("========== EDITION USER #{$id} ==========");
-        Log::debug("1. [HTTP POST] Données brutes reçues pour user_departments : \n" . print_r($rawParams['user_departments'] ?? 'CLÉ ABSENTE', true));
+        Log::debug(
+            "1. [HTTP POST] Données brutes reçues pour user_departments : \n"
+            . print_r($rawParams['user_departments'] ?? 'CLÉ ABSENTE', true),
+        );
 
         // 💡 FIX : Forcer la présence du tableau vide si tous les départements ont été décochés
         if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
@@ -148,35 +152,42 @@ class UsersController extends AppController
         }
 
         $filteredData = $authService->filterRequestData($rawParams, $schema);
-        Log::debug("2. [SECURITY SERVICE] Données après filtrage : \n" . print_r($filteredData['user_departments'] ?? 'PURGÉ PAR LE SERVICE', true));
+        Log::debug(
+            "2. [SECURITY SERVICE] Données après filtrage : \n"
+            . print_r($filteredData['user_departments'] ?? 'PURGÉ PAR LE SERVICE', true),
+        );
 
         $user = $this->Users->patchEntity($user, $filteredData, [
             'associated' => ['UserDepartments'],
         ]);
-
-
-
+        /** @var \App\Model\Entity\User $user */
 
         // if ($this->Users->save($user)) {
         //     return $this->response->withType('application/json')
         //         ->withStringBody(json_encode(['success' => true]));
         // }
 
-        Log::debug("3. [ORM PATCH] Entité après hydratation (Que contient-elle ?) : \n" . print_r($user->user_departments, true));
+        Log::debug(
+            "3. [ORM PATCH] Entité après hydratation (Que contient-elle ?) : \n"
+            . print_r($user->user_departments, true),
+        );
 
         if ($user->hasErrors()) {
-            Log::error("🚨 [ORM ERRORS] L'entité User refuse l'enregistrement pour les raisons suivantes : \n" . print_r($user->getErrors(), true));
+            Log::error(
+                "🚨 [ORM ERRORS] L'entité User refuse l'enregistrement pour les raisons suivantes : \n"
+                . print_r($user->getErrors(), true),
+            );
         }
 
         if ($this->Users->save($user)) {
-            Log::debug("4. [ORM SAVE] Sauvegarde réussie en Base de données !");
+            Log::debug('4. [ORM SAVE] Sauvegarde réussie en Base de données !');
             Log::debug("=========================================\n");
 
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => true]));
+                ->withStringBody((string)json_encode(['success' => true]));
         }
 
-        Log::error("4. [ORM SAVE] Sauvegarde ÉCHOUÉE !");
+        Log::error('4. [ORM SAVE] Sauvegarde ÉCHOUÉE !');
         Log::debug("=========================================\n");
         // ==============================================================
         // 🛠️ FIN DES LOGS D'ANALYSE
@@ -201,7 +212,7 @@ class UsersController extends AppController
         $userIds = $this->normalizePositiveIntegerList($rawParams['user_ids'] ?? null, 'user_ids');
         $associationMode = $rawParams['association_mode'] ?? 'add';
         if (!is_string($associationMode) || !in_array($associationMode, ['add', 'replace'], true)) {
-            throw new \Cake\Http\Exception\BadRequestException(__('Le mode d’association est invalide.'));
+            throw new BadRequestException(__('Le mode d’association est invalide.'));
         }
         $departmentIds = $this->normalizePositiveIntegerList(
             $rawParams['department_ids'] ?? null,
@@ -216,7 +227,9 @@ class UsersController extends AppController
         $authService = new FieldAuthorizationService();
         $fieldSchema = $authService->getFieldSchema($identity, 'Users');
         if (($fieldSchema['user_departments'] ?? 'EDIT') !== 'EDIT') {
-            throw new ForbiddenException(__('Vous ne disposez pas du droit de modifier les périmètres organisationnels.'));
+            throw new ForbiddenException(__(
+                'Vous ne disposez pas du droit de modifier les périmètres organisationnels.',
+            ));
         }
 
         $targetUsers = $this->Users->find('visibleTo', user: $currentUser)
@@ -231,8 +244,10 @@ class UsersController extends AppController
             $this->Authorization->authorize($targetUser, 'edit');
         }
 
+        /** @var \App\Model\Table\DepartmentsTable $departmentsTable */
+        $departmentsTable = $this->fetchTable('Departments');
         $authorizedDepartmentIds = $this->flattenTreeSelectValues(
-            $this->fetchTable('Departments')->findTreeSelectFormat($currentUser),
+            $departmentsTable->findTreeSelectFormat($currentUser),
         );
         if (array_diff($departmentIds, $authorizedDepartmentIds) !== []) {
             throw new ForbiddenException(__('Au moins un département ciblé est hors de votre périmètre.'));
@@ -240,7 +255,12 @@ class UsersController extends AppController
 
         /** @var \App\Model\Table\UserDepartmentsTable $userDepartments */
         $userDepartments = $this->fetchTable('UserDepartments');
-        $createdCount = $userDepartments->getConnection()->transactional(function () use ($userDepartments, $userIds, $departmentIds, $associationMode): int {
+        $createdCount = $userDepartments->getConnection()->transactional(function () use (
+            $userDepartments,
+            $userIds,
+            $departmentIds,
+            $associationMode,
+        ): int {
             if ($associationMode === 'replace') {
                 return $userDepartments->replaceAssociationsForUsers($userIds, $departmentIds);
             }
@@ -249,7 +269,7 @@ class UsersController extends AppController
         });
 
         return $this->response->withType('application/json')
-            ->withStringBody(json_encode([
+            ->withStringBody((string)json_encode([
                 'success' => true,
                 'users_count' => count($userIds),
                 'departments_count' => count($departmentIds),
@@ -326,6 +346,7 @@ class UsersController extends AppController
     {
         return $this->updateBulkDepartmentAccess(true);
     }
+
     /**
      * Méthode Index (GET /api/users.json)
      *
@@ -350,13 +371,13 @@ class UsersController extends AppController
         try {
             $paginatedData = $this->paginate($query, [
                 'limit' => (int)($queryParams['size'] ?? 40),
-                'page'  => (int)($queryParams['page'] ?? 1),
+                'page' => (int)($queryParams['page'] ?? 1),
             ]);
-        } catch (\Cake\Http\Exception\NotFoundException $e) {
+        } catch (NotFoundException $e) {
             $this->request = $this->request->withQueryParams(array_merge($queryParams, ['page' => 1]));
             $paginatedData = $this->paginate($query, [
                 'limit' => (int)($queryParams['size'] ?? 40),
-                'page'  => 1,
+                'page' => 1,
             ]);
         }
         // 2. Détermination dynamique des actions supplémentaires selon le mode d'impersonation
@@ -386,7 +407,7 @@ class UsersController extends AppController
 
         return $this->response->withType('application/json')
             ->withStatus(400)
-            ->withStringBody(json_encode(['success' => false, 'message' => $message]));
+            ->withStringBody((string)json_encode(['success' => false, 'message' => $message]));
     }
 
     /**
@@ -401,13 +422,13 @@ class UsersController extends AppController
     private function normalizePositiveIntegerList(mixed $values, string $field, bool $allowEmpty = false): array
     {
         if (!is_array($values) || (!$allowEmpty && $values === [])) {
-            throw new \Cake\Http\Exception\BadRequestException(__('Le champ « {0} » doit être une liste non vide d’identifiants.', $field));
+            throw new BadRequestException(__('Le champ « {0} » doit être une liste non vide d’identifiants.', $field));
         }
 
         $normalized = [];
         foreach ($values as $value) {
             if ((!is_int($value) && !(is_string($value) && ctype_digit($value))) || (int)$value < 1) {
-                throw new \Cake\Http\Exception\BadRequestException(__('Le champ « {0} » contient un identifiant invalide.', $field));
+                throw new BadRequestException(__('Le champ « {0} » contient un identifiant invalide.', $field));
             }
             $normalized[(int)$value] = (int)$value;
         }
@@ -442,13 +463,18 @@ class UsersController extends AppController
 
         /** @var \App\Model\Table\UserDepartmentsTable $userDepartments */
         $userDepartments = $this->fetchTable('UserDepartments');
-        $count = $userDepartments->getConnection()->transactional(function () use ($userDepartments, $userId, $departmentIds, $remove): int {
+        $count = $userDepartments->getConnection()->transactional(function () use (
+            $userDepartments,
+            $userId,
+            $departmentIds,
+            $remove,
+        ): int {
             return $remove
                 ? $userDepartments->removeAssociationsForUser($userId, $departmentIds)
                 : $userDepartments->addMissingAssociations([$userId], $departmentIds);
         });
 
-        return $this->response->withType('application/json')->withStringBody(json_encode([
+        return $this->response->withType('application/json')->withStringBody((string)json_encode([
             'success' => true,
             $remove ? 'associations_deleted' : 'associations_created' => $count,
         ]));
@@ -457,10 +483,10 @@ class UsersController extends AppController
     /**
      * Applique le protocole Tabulator aux listes d'utilisateurs de l'association.
      *
-     * @param \Cake\ORM\Query\SelectQuery $query Utilisateurs déjà filtrés par le finder métier.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Utilisateurs déjà filtrés par le finder métier.
      * @return void
      */
-    private function renderBulkDepartmentUsers(\Cake\ORM\Query\SelectQuery $query): void
+    private function renderBulkDepartmentUsers(SelectQuery $query): void
     {
         $adapter = new TabulatorAdapter();
         $query = $adapter->adaptRequest($this->request, $query);
@@ -471,7 +497,7 @@ class UsersController extends AppController
                 'limit' => (int)($queryParams['size'] ?? 40),
                 'page' => (int)($queryParams['page'] ?? 1),
             ]);
-        } catch (\Cake\Http\Exception\NotFoundException) {
+        } catch (NotFoundException) {
             $this->request = $this->request->withQueryParams(array_merge($queryParams, ['page' => 1]));
             $users = $this->paginate($query, [
                 'limit' => (int)($queryParams['size'] ?? 40),
@@ -517,16 +543,19 @@ class UsersController extends AppController
      */
     private function resolveSelectedDepartmentAndDescendantIds(array $selectedDepartmentIds, User $currentUser): array
     {
+        /** @var \App\Model\Table\DepartmentsTable $departments */
         $departments = $this->fetchTable('Departments');
         $selectedDepartments = $departments->find('visibleTo', user: $currentUser)
             ->select(['id', 'lft', 'rght'])
             ->where(['Departments.id IN' => $selectedDepartmentIds])
             ->all()
             ->toList();
+        /** @var list<\App\Model\Entity\Department> $selectedDepartments */
         $visibleDepartments = $departments->find('visibleTo', user: $currentUser)
             ->select(['id', 'lft', 'rght'])
             ->all()
             ->toList();
+        /** @var list<\App\Model\Entity\Department> $visibleDepartments */
         $departmentIds = [];
         foreach ($visibleDepartments as $department) {
             foreach ($selectedDepartments as $selectedDepartment) {

@@ -32,6 +32,62 @@ if (globalTabulatorObserver) {
         window.location.href = demande._actionUrl;
     });
 
+    globalTabulatorObserver.subscribe(`${tableSelector}:action:launchValidation`, async (demande) => {
+        if (!confirm(`Lancer le cycle de validation de la demande n° ${demande.id} ?`)) return;
+        try {
+            const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
+            if (!csrfToken) throw new Error('Jeton CSRF manquant.');
+            const response = await fetch(`/api/applicationforms/${demande.id}/validation/start.json`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ _csrfToken: csrfToken }),
+            });
+            const body = await response.text();
+            let payload;
+            try { payload = JSON.parse(body); } catch (_) { throw new Error(`Réponse serveur inattendue (${response.status}) : ${body.slice(0, 160)}`); }
+            if (!response.ok || !payload.success) throw new Error(payload.message || 'Le cycle ne peut pas être lancé.');
+            FlashManager.success(payload.message);
+            const row = applicationformsTable.getRow(demande.id);
+            if (row) {
+                const rowData = row.getData();
+                await row.update({
+                    grid_rights: {
+                        ...rowData.grid_rights,
+                        actions: {
+                            ...rowData.grid_rights?.actions,
+                            launchValidation: false,
+                        },
+                    },
+                });
+            }
+            await applicationformsTable.replaceData();
+        } catch (error) {
+            FlashManager.error(`<strong>Action refusée :</strong> ${error.message}`);
+        }
+    });
+
+    globalTabulatorObserver.subscribe(`${tableSelector}:action:resetValidation`, async (demande) => {
+        const confirmation = `Remettre à zéro le cycle de la demande n° ${demande.id} ?\n\nCette opération supprime définitivement les étapes et les votes du cycle. La demande elle-même reste inchangée.`;
+        if (!confirm(confirmation)) return;
+        try {
+            const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
+            if (!csrfToken) throw new Error('Jeton CSRF manquant.');
+            const response = await fetch(`/api/applicationforms/${demande.id}/validation/reset.json`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json', 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ _csrfToken: csrfToken }),
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) throw new Error(payload.message || 'Le cycle ne peut pas être remis à zéro.');
+            FlashManager.success(payload.message);
+            await applicationformsTable.replaceData();
+        } catch (error) {
+            FlashManager.error(`<strong>Action refusée :</strong> ${error.message}`);
+        }
+    });
+
     // Signal d'action : Suppression asynchrone (AJAX / Fetch) avec jeton CSRF
     globalTabulatorObserver.subscribe(`${tableSelector}:action:delete`, async (demande) => {
         const posteTitle = demande.jobtitle || `#${demande.id}`;

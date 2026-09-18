@@ -1,11 +1,11 @@
 <?php
 /**
  * @var \App\Model\Entity\User $user
- * @var \App\Model\Entity\User $identity
  * @var bool $isImpersonating
  * @var array $fieldSchema
  * @var array $departmentsTree
  * @var array $selectedDepartmentIds
+ * @var \App\View\AppView $this
  */
 
 $this->assign('title', __('Profil Utilisateur #{0}', $user->id));

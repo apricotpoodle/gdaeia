@@ -107,15 +107,17 @@ class ValidationsequencesTableTest extends TestCase
         $this->assertArrayHasKey('sequence', $sequence->getErrors());
     }
 
-    /** Chaque département configuré doit commencer à 1 et ne comporter aucun trou. */
-    public function testLesSequencesActivesDoiventEtreContinues(): void
+    /** Un département sans rôle est valide ; une configuration non vide doit commencer à 1 et ne comporter aucun trou. */
+    public function testLesSequencesActivesPeuventEtreVidesMaisDoiventEtreContinues(): void
     {
-        $this->Validationsequences->updateAll(['deleted' => null, 'sequence' => 1], ['id' => 1]);
-
         $this->assertTrue($this->Validationsequences->hasContiguousSequencesForDepartments([1]));
 
-        $this->Validationsequences->updateAll(['sequence' => 2], ['id' => 1]);
+        $this->Validationsequences->updateAll(['deleted' => null, 'sequence' => 2], ['id' => 1]);
 
         $this->assertFalse($this->Validationsequences->hasContiguousSequencesForDepartments([1]));
+
+        $this->Validationsequences->updateAll(['sequence' => 1], ['id' => 1]);
+
+        $this->assertTrue($this->Validationsequences->hasContiguousSequencesForDepartments([1]));
     }
 }

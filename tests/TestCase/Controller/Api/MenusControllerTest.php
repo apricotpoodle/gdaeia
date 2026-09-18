@@ -7,6 +7,9 @@ use App\Model\Entity\User;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
+/**
+ * @link \App\Controller\Api\MenusController
+ */
 class MenusControllerTest extends TestCase
 {
     use IntegrationTestTrait;
@@ -23,7 +26,7 @@ class MenusControllerTest extends TestCase
     /** Vérifie que l'API historique des menus protège ses données d'un visiteur. */
     public function testLApiDesMenusRedirigeUnVisiteurVersLaConnexion(): void
     {
-        $this->get('/api/menus.json');
+        $this->get('/api/menus/grid.json');
 
         $this->assertRedirectContains('/users/login');
     }
@@ -36,6 +39,27 @@ class MenusControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertHeaderContains('Content-Type', 'application/json');
+    }
+
+    /** Vérifie qu'un administrateur non super-utilisateur est refusé par l'API. */
+    public function testLApiDesMenusRefuseUnAdministrateurOrdinaire(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/api/menus/grid.json');
+
+        $this->assertResponseCode(403);
+    }
+
+    /** Vérifie le repli et le message de refus de l'administration Web. */
+    public function testLEcranDesMenusRedirigeUnAdministrateurOrdinaire(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/menus');
+
+        $this->assertRedirect('/');
+        $this->assertSession('Vous n’êtes pas autorisé à administrer les menus.', 'Flash.flash.0.message');
     }
 
     /** Vérifie que l'attribution couvre aussi les descendants du menu sélectionné. */

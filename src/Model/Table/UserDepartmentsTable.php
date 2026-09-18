@@ -8,26 +8,29 @@ use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use RuntimeException;
 
 /**
  * UserDepartments Model
  *
- * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
- * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\BelongsTo $Departments
- * @method \App\Model\Entity\UserDepartment newEmptyEntity()
- * @method \App\Model\Entity\UserDepartment newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\UserDepartment> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\UserDepartment get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\UserDepartment findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\UserDepartment patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\UserDepartment> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\UserDepartment|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\UserDepartment saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\UserDepartment>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\UserDepartment>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\UserDepartment>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\UserDepartment> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\UserDepartment>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\UserDepartment>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\UserDepartment>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\UserDepartment> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\UsersTable> $Users
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\DepartmentsTable> $Departments
+ * @method \App\Model\Entity\UserDepartment newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\UserDepartment[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\UserDepartment get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\UserDepartment findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\UserDepartment>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\UserDepartment patchEntity(\App\Model\Entity\UserDepartment $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\UserDepartment[] patchEntities(iterable<\App\Model\Entity\UserDepartment> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\UserDepartment|false save(\App\Model\Entity\UserDepartment $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\UserDepartment saveOrFail(\App\Model\Entity\UserDepartment $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\UserDepartment>|false saveMany(iterable<\App\Model\Entity\UserDepartment> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\UserDepartment> saveManyOrFail(iterable<\App\Model\Entity\UserDepartment> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\UserDepartment>|false deleteMany(iterable<\App\Model\Entity\UserDepartment> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\UserDepartment> deleteManyOrFail(iterable<\App\Model\Entity\UserDepartment> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
+ * @extends \Cake\ORM\Table<array{Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\UserDepartment>
+ * @method bool delete(\App\Model\Entity\UserDepartment $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\UserDepartment $entity, array<string, mixed> $options = [])
  */
 class UserDepartmentsTable extends Table
 {
@@ -85,7 +88,10 @@ class UserDepartmentsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['user_id', 'department_id']), ['errorField' => 'user_id', 'message' => __('This combination of user_id and department_id already exists')]);
+        $rules->add($rules->isUnique(['user_id', 'department_id']), [
+            'errorField' => 'user_id',
+            'message' => __('This combination of user_id and department_id already exists'),
+        ]);
         $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
         $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
 
@@ -96,9 +102,9 @@ class UserDepartmentsTable extends Table
      * Custom finder : Récupère la requête des lignes de départements associées à un utilisateur donné.
      * Utilisation : ->find('departmentsOf', user: $userEntity)
      *
-     * @param \Cake\ORM\Query\SelectQuery $query L'objet Query de l'ORM.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query L'objet Query de l'ORM.
      * @param \App\Model\Entity\User $user L'entité de l'opérateur.
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findDepartmentsOf(SelectQuery $query, User $user): SelectQuery
     {
@@ -109,9 +115,9 @@ class UserDepartmentsTable extends Table
     /**
      * Retourne les identifiants des utilisateurs associés à tous les départements fournis.
      *
-     * @param \Cake\ORM\Query\SelectQuery $query Requête ORM à spécialiser.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête ORM à spécialiser.
      * @param list<int> $departmentIds Départements sélectionnés et déjà autorisés.
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findUserIdsAssociatedWithDepartments(SelectQuery $query, array $departmentIds): SelectQuery
     {
@@ -181,7 +187,7 @@ class UserDepartmentsTable extends Table
 
         $entities = $this->newEntities($newAssociations);
         if ($this->saveMany($entities, ['atomic' => false]) === false) {
-            throw new \RuntimeException('Impossible d\'enregistrer les associations utilisateurs-départements.');
+            throw new RuntimeException('Impossible d\'enregistrer les associations utilisateurs-départements.');
         }
 
         return count($entities);
@@ -218,7 +224,7 @@ class UserDepartmentsTable extends Table
 
         $entities = $this->newEntities($newAssociations);
         if ($this->saveMany($entities, ['atomic' => false]) === false) {
-            throw new \RuntimeException('Impossible de remplacer les associations utilisateurs-départements.');
+            throw new RuntimeException('Impossible de remplacer les associations utilisateurs-départements.');
         }
 
         return count($entities);

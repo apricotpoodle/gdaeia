@@ -9,20 +9,20 @@ use Cake\Validation\Validator;
 /**
  * Periods Model
  *
- * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationformsTable> $Applicationforms
  * @method \App\Model\Entity\Period newEmptyEntity()
- * @method \App\Model\Entity\Period newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Period> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Period get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Period findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Period patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Period> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Period|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Period saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Period>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Period> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Period>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Period> deleteManyOrFail(iterable $entities, array $options = [])
+ * @method \App\Model\Entity\Period newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Period> newEntities(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Period get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Period findOrCreate($search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Period patchEntity(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Period> patchEntities(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Period|false save(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Period saveOrFail(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Period>|false saveMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Period> saveManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Period>|false deleteMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Period>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Period> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class PeriodsTable extends AppTable

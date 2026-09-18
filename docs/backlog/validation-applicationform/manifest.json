@@ -1,0 +1,17 @@
+{
+  "workflow": "validation-af",
+  "tickets": [
+    {"id":"0009","path":"0009-adr-et-orchestration.md","status":"Terminé","dependsOn":[]},
+    {"id":"0010","path":"0010-schema-et-vues.md","status":"Terminé","dependsOn":["0009"]},
+    {"id":"0011","path":"0011-service-et-policies.md","status":"Terminé","dependsOn":["0010"]},
+    {"id":"0012","path":"0012-parametrage.md","status":"Terminé","dependsOn":["0011"]},
+    {"id":"0013","path":"0013-lancement.md","status":"Terminé","dependsOn":["0011"]},
+    {"id":"0014","path":"0014-vote-et-cloture.md","status":"Terminé","dependsOn":["0013"]},
+    {"id":"0015","path":"0015-edition-et-audit.md","status":"Terminé","dependsOn":["0014"]},
+    {"id":"0016","path":"0016-relances.md","status":"Terminé","dependsOn":["0014","0015"]},
+    {"id":"0017","path":"0017-recette.md","status":"Terminé","dependsOn":["0016"]},
+    {"id":"0018","path":"0018-annulation-et-reinitialisation.md","status":"Terminé","dependsOn":["0017"]},
+    {"id":"0019","path":"0019-autoriser-sequence-sans-role.md","status":"Terminé","dependsOn":["0012"]},
+    {"id":"0020","path":"0020-reorganiser-parametrage-workflow.md","status":"Terminé","dependsOn":["0012"]}
+  ]
+}

@@ -4,31 +4,29 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Model\Entity\User;
-use ArrayObject;
-use Cake\Datasource\EntityInterface;
-use Cake\Event\EventInterface;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 
 /**
  * Menus Model
  *
- * @property \App\Model\Table\MenusTable&\Cake\ORM\Association\BelongsTo $ParentMenus
- * @property \App\Model\Table\MenusTable&\Cake\ORM\Association\HasMany $ChildMenus
- * @property \App\Model\Table\RoleMenusTable&\Cake\ORM\Association\HasMany $RoleMenus
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\MenusTable> $ParentMenus
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\MenusTable> $ChildMenus
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\RoleMenusTable> $RoleMenus
  * @method \App\Model\Entity\Menu newEmptyEntity()
- * @method \App\Model\Entity\Menu newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Menu> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Menu get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Menu findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Menu patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Menu> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Menu|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Menu saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Menu>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Menu> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Menu>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Menu> deleteManyOrFail(iterable $entities, array $options = [])
+ * @method \App\Model\Entity\Menu newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Menu> newEntities(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Menu get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Menu findOrCreate($search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Menu patchEntity(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Menu> patchEntities(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Menu|false save(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Menu saveOrFail(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Menu>|false saveMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Menu> saveManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Menu>|false deleteMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Menu>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Menu> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TreeBehavior
  */
 class MenusTable extends AppTable
@@ -47,10 +45,11 @@ class MenusTable extends AppTable
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
 
-        $this->addBehavior('Tree',
+        $this->addBehavior(
+            'Tree',
             [
-                'level'=>'level', // Default to null, i.e. no level saving
-            ]
+                'level' => 'level', // Default to null, i.e. no level saving
+            ],
         );
 
         $this->belongsTo('ParentMenus', [
@@ -64,23 +63,6 @@ class MenusTable extends AppTable
         $this->hasMany('RoleMenus', [
             'foreignKey' => 'menu_id',
         ]);
-    }
-
-    /**
-     * Reconstruit automatiquement les index lft/rght de l'arbre intervallaire après chaque modification
-     * afin de prévenir la corruption du B-Tree.
-     *
-     * @param \Cake\Event\EventInterface $event
-     * @param \Cake\ORM\EntityInterface $entity
-     * @param \ArrayObject $options
-     * @return void
-     */
-    public function afterSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
-    {
-        // On ne reconstruit l'arbre que si le parent ou la position a été altéré
-        if ($entity->isNew() || $entity->isDirty('parent_id') || $entity->isDirty('lft') || $entity->isDirty('rght')) {
-            $this->recover();
-        }
     }
 
     /**
@@ -143,11 +125,11 @@ class MenusTable extends AppTable
      * Le périmètre est volontairement identique à MenuPolicy : seuls les
      * super-administrateurs et le rôle administrateur administrent les menus.
      *
-     * @param \Cake\ORM\Query\SelectQuery $query Requête à filtrer.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête à filtrer.
      * @param \App\Model\Entity\User $user Opérateur connecté.
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
-    public function findRoleAccessVisibleTo(\Cake\ORM\Query\SelectQuery $query, User $user): \Cake\ORM\Query\SelectQuery
+    public function findRoleAccessVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
         $query->where(['Menus.active' => true]);
         if (!$user->get('issuperuser') && $user->get('role_id') !== User::ROLE_ADMIN) {

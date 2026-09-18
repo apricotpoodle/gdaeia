@@ -11,23 +11,25 @@ use Cake\Validation\Validator;
 /**
  * Validationsequences Model
  *
- * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\BelongsTo $Departments
- * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\BelongsTo $Roles
- * @property \App\Model\Table\ApplicationvalidationstepsTable&\Cake\ORM\Association\HasMany $Applicationvalidationsteps
- * @method \App\Model\Entity\Validationsequence newEmptyEntity()
- * @method \App\Model\Entity\Validationsequence newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Validationsequence> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Validationsequence get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Validationsequence findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Validationsequence patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Validationsequence> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Validationsequence|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Validationsequence saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Validationsequence>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationsequence>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Validationsequence>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationsequence> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Validationsequence>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationsequence>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Validationsequence>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationsequence> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\DepartmentsTable> $Departments
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\RolesTable> $Roles
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationvalidationstepsTable> $Applicationvalidationsteps
+ * @method \App\Model\Entity\Validationsequence newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationsequence[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationsequence get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Validationsequence findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\Validationsequence>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationsequence patchEntity(\App\Model\Entity\Validationsequence $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationsequence[] patchEntities(iterable<\App\Model\Entity\Validationsequence> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationsequence|false save(\App\Model\Entity\Validationsequence $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationsequence saveOrFail(\App\Model\Entity\Validationsequence $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Validationsequence>|false saveMany(iterable<\App\Model\Entity\Validationsequence> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Validationsequence> saveManyOrFail(iterable<\App\Model\Entity\Validationsequence> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Validationsequence>|false deleteMany(iterable<\App\Model\Entity\Validationsequence> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Validationsequence> deleteManyOrFail(iterable<\App\Model\Entity\Validationsequence> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
+ * @extends \Cake\ORM\Table<array{Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\Validationsequence>
+ * @method bool delete(\App\Model\Entity\Validationsequence $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\Validationsequence $entity, array<string, mixed> $options = [])
  */
 class ValidationsequencesTable extends Table
 {
@@ -91,6 +93,11 @@ class ValidationsequencesTable extends Table
             ->notEmptyString('sequence');
 
         $validator
+            ->nonNegativeInteger('reminder_delay_hours')
+            ->greaterThan('reminder_delay_hours', 0, __('Le délai doit être un entier positif.'))
+            ->allowEmptyString('reminder_delay_hours');
+
+        $validator
             ->dateTime('deleted')
             ->allowEmptyDateTime('deleted');
 
@@ -106,7 +113,10 @@ class ValidationsequencesTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['department_id', 'role_id']), ['errorField' => 'department_id', 'message' => __('This combination of department_id and role_id already exists')]);
+        $rules->add($rules->isUnique(['department_id', 'role_id']), [
+            'errorField' => 'department_id',
+            'message' => __('This combination of department_id and role_id already exists'),
+        ]);
         $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
         $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
 
@@ -116,9 +126,9 @@ class ValidationsequencesTable extends Table
     /**
      * Limite une requête aux séquences actives d'un ensemble de départements.
      *
-     * @param \Cake\ORM\Query\SelectQuery $query Requête à compléter.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête à compléter.
      * @param array<int> $departmentIds Départements dont la configuration est contrôlée.
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findActiveForDepartments(SelectQuery $query, array $departmentIds): SelectQuery
     {
@@ -133,7 +143,7 @@ class ValidationsequencesTable extends Table
      * Plusieurs rôles peuvent partager un numéro et valident alors en parallèle.
      *
      * @param array<int> $departmentIds Départements dont la configuration est contrôlée.
-     * @return bool Vrai lorsque chaque département possède au moins une séquence continue.
+     * @return bool Vrai lorsque chaque département possède une configuration vide ou une séquence continue.
      */
     public function hasContiguousSequencesForDepartments(array $departmentIds): bool
     {
@@ -147,7 +157,7 @@ class ValidationsequencesTable extends Table
 
         foreach ($sequencesByDepartment as $sequences) {
             if ($sequences === []) {
-                return false;
+                continue;
             }
             $numbers = array_keys($sequences);
             sort($numbers, SORT_NUMERIC);

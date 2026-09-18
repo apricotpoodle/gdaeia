@@ -11,7 +11,11 @@ use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 use RuntimeException;
 
-/** API de configuration des rôles validateurs par sous-arbre de départements. */
+/**
+ * API de configuration des rôles validateurs par sous-arbre de départements.
+ *
+ * @property \App\Model\Table\ValidationsequencesTable $Validationsequences
+ */
 class ValidationsequencesController extends AppController
 {
     /** @return void */
@@ -26,7 +30,9 @@ class ValidationsequencesController extends AppController
     {
         $this->request->allowMethod(['get']);
         $this->authorizeManagement();
-        $departments = $this->fetchTable('Departments')->find('treeThreadedVisibleTo', user: $this->getOperator())->all();
+        $departments = $this->fetchTable('Departments')
+            ->find('treeThreadedVisibleTo', user: $this->getOperator())
+            ->all();
         $this->set('data', $departments);
         $this->viewBuilder()->setOption('serialize', ['data']);
     }
@@ -61,22 +67,30 @@ class ValidationsequencesController extends AppController
                 'role_id',
                 'sequence' => 'MIN(Validationsequences.sequence)',
                 'sequence_max' => 'MAX(Validationsequences.sequence)',
+                'reminder_delay_hours' => 'MIN(Validationsequences.reminder_delay_hours)',
             ])
             ->innerJoinWith('Roles')
             ->contain(['Roles'])
-            ->where(['Validationsequences.department_id IN' => $departmentIds, 'Validationsequences.deleted IS' => null])
+            ->where([
+                'Validationsequences.department_id IN' => $departmentIds,
+                'Validationsequences.deleted IS' => null,
+            ])
             ->groupBy(['Validationsequences.role_id'])
             ->having(['COUNT(DISTINCT Validationsequences.department_id) =' => count($departmentIds)])
             ->orderByAsc('Roles.name')
             ->all()
             ->toList();
+        /** @var list<\App\Model\Entity\Validationsequence> $sequences */
 
         $data = array_map(static function ($sequence): array {
             return [
                 'id' => (int)$sequence->role_id,
                 'code' => (string)$sequence->role->code,
                 'name' => (string)$sequence->role->name,
-                'sequence' => (int)$sequence->sequence === (int)$sequence->sequence_max ? (int)$sequence->sequence : null,
+                'sequence' => (int)$sequence->sequence === (int)$sequence->sequence_max
+                    ? (int)$sequence->sequence : null,
+                'reminder_delay_hours' => $sequence->reminder_delay_hours === null
+                    ? null : (int)$sequence->reminder_delay_hours,
             ];
         }, $sequences);
         $this->set('data', $data);
@@ -92,47 +106,54 @@ class ValidationsequencesController extends AppController
         $roleId = $this->positiveInteger($this->request->getData('role_id'), 'role_id');
         $sequence = $this->positiveInteger($this->request->getData('sequence') ?? 1, 'sequence');
         $operator = $this->getOperator();
-        $role = $this->fetchTable('Roles')->find('roleAccessVisibleTo', user: $operator)->where(['Roles.id' => $roleId])->first();
+        $role = $this->fetchTable('Roles')->find('roleAccessVisibleTo', user: $operator)
+            ->where(['Roles.id' => $roleId])
+            ->first();
         if ($role === null) {
             throw new NotFoundException(__('Le rôle validateur est introuvable ou inactif.'));
         }
 
         try {
-            $created = $this->Validationsequences->getConnection()->transactional(function () use ($departmentIds, $roleId, $sequence): int {
-                $existing = $this->Validationsequences->find()
-                ->where(['department_id IN' => $departmentIds, 'role_id' => $roleId])
-                ->all()->indexBy('department_id')->toArray();
-                $created = 0;
-                foreach ($departmentIds as $departmentId) {
-                    if (isset($existing[$departmentId])) {
-                        if ($existing[$departmentId]->deleted !== null) {
-                            $existing[$departmentId]->patch([
-                            'deleted' => null,
-                            'sequence' => $sequence,
-                            'name' => '',
-                            ]);
-                            if (!$this->Validationsequences->save($existing[$departmentId])) {
-                                throw new RuntimeException(__('Impossible de réactiver la séquence de validation.'));
+            $created = $this->Validationsequences->getConnection()->transactional(
+                function () use ($departmentIds, $roleId, $sequence): int {
+                    $existing = $this->Validationsequences->find()
+                    ->where(['department_id IN' => $departmentIds, 'role_id' => $roleId])
+                    ->all()->indexBy('department_id')->toArray();
+                    /** @var array<int, \App\Model\Entity\Validationsequence> $existing */
+                    $created = 0;
+                    foreach ($departmentIds as $departmentId) {
+                        if (isset($existing[$departmentId])) {
+                            if ($existing[$departmentId]->deleted !== null) {
+                                $existing[$departmentId]->patch([
+                                'deleted' => null,
+                                'sequence' => $sequence,
+                                'name' => '',
+                                ]);
+                                if (!$this->Validationsequences->save($existing[$departmentId])) {
+                                    throw new RuntimeException(__(
+                                        'Impossible de réactiver la séquence de validation.',
+                                    ));
+                                }
+                                $created++;
                             }
-                            $created++;
+                            continue;
                         }
-                        continue;
+                        $entity = $this->Validationsequences->newEntity([
+                        'department_id' => $departmentId,
+                        'role_id' => $roleId,
+                        'sequence' => $sequence,
+                        'name' => '',
+                        ]);
+                        if (!$this->Validationsequences->save($entity)) {
+                            throw new RuntimeException(__('Impossible d’enregistrer la séquence de validation.'));
+                        }
+                        $created++;
                     }
-                    $entity = $this->Validationsequences->newEntity([
-                    'department_id' => $departmentId,
-                    'role_id' => $roleId,
-                    'sequence' => $sequence,
-                    'name' => '',
-                    ]);
-                    if (!$this->Validationsequences->save($entity)) {
-                        throw new RuntimeException(__('Impossible d’enregistrer la séquence de validation.'));
-                    }
-                    $created++;
-                }
-                $this->assertContiguousSequences($departmentIds);
+                    $this->assertContiguousSequences($departmentIds);
 
-                return $created;
-            });
+                    return $created;
+                },
+            );
         } catch (BadRequestException | RuntimeException $exception) {
             return $this->jsonError($exception->getMessage());
         }
@@ -148,16 +169,18 @@ class ValidationsequencesController extends AppController
         $departmentIds = $this->resolveDepartmentIds($this->request->getData('department_ids'));
         $roleId = $this->positiveInteger($this->request->getData('role_id'), 'role_id');
         try {
-            $deleted = $this->Validationsequences->getConnection()->transactional(function () use ($departmentIds, $roleId): int {
-                $deleted = $this->Validationsequences->deleteAll([
-                'department_id IN' => $departmentIds,
-                'role_id' => $roleId,
-                'deleted IS' => null,
-                ]);
-                $this->assertContiguousSequences($departmentIds);
+            $deleted = $this->Validationsequences->getConnection()->transactional(
+                function () use ($departmentIds, $roleId): int {
+                    $deleted = $this->Validationsequences->deleteAll([
+                    'department_id IN' => $departmentIds,
+                    'role_id' => $roleId,
+                    'deleted IS' => null,
+                    ]);
+                    $this->assertContiguousSequences($departmentIds);
 
-                return $deleted;
-            });
+                    return $deleted;
+                },
+            );
         } catch (BadRequestException $exception) {
             return $this->jsonError($exception->getMessage());
         }
@@ -174,18 +197,46 @@ class ValidationsequencesController extends AppController
         $roleId = $this->positiveInteger($this->request->getData('role_id'), 'role_id');
         $sequence = $this->positiveInteger($this->request->getData('sequence'), 'sequence');
         try {
-            $updated = $this->Validationsequences->getConnection()->transactional(function () use ($departmentIds, $roleId, $sequence): int {
-                $updated = $this->Validationsequences->updateAll(['sequence' => $sequence], [
-                'department_id IN' => $departmentIds,
-                'role_id' => $roleId,
-                'deleted IS' => null,
-                ]);
-                $this->assertContiguousSequences($departmentIds);
+            $updated = $this->Validationsequences->getConnection()->transactional(
+                function () use ($departmentIds, $roleId, $sequence): int {
+                    $updated = $this->Validationsequences->updateAll(['sequence' => $sequence], [
+                    'department_id IN' => $departmentIds,
+                    'role_id' => $roleId,
+                    'deleted IS' => null,
+                    ]);
+                    $this->assertContiguousSequences($departmentIds);
 
-                return $updated;
-            });
+                    return $updated;
+                },
+            );
         } catch (BadRequestException $exception) {
             return $this->jsonError($exception->getMessage());
+        }
+
+        return $this->jsonSuccess(['associations_updated' => $updated]);
+    }
+
+    /** Définit le délai d'échéance d'une séquence, ou le repli global si nul. */
+    public function updateDelay(): Response
+    {
+        $this->request->allowMethod(['post']);
+        $this->authorizeManagement();
+        $departmentIds = $this->resolveDepartmentIds($this->request->getData('department_ids'));
+        $roleId = $this->positiveInteger($this->request->getData('role_id'), 'role_id');
+        $rawDelay = $this->request->getData('reminder_delay_hours');
+        $delay = $rawDelay === null || $rawDelay === ''
+            ? null : $this->positiveInteger($rawDelay, 'reminder_delay_hours');
+        $updated = $this->Validationsequences->updateAll(['reminder_delay_hours' => $delay], [
+            'department_id IN' => $departmentIds,
+            'role_id' => $roleId,
+            'deleted IS' => null,
+        ]);
+        if ($updated !== count($departmentIds)) {
+            return $this->jsonError(
+                __('Le rôle validateur n’est pas associé à tous les départements sélectionnés.'),
+                [],
+                422,
+            );
         }
 
         return $this->jsonSuccess(['associations_updated' => $updated]);
@@ -201,17 +252,29 @@ class ValidationsequencesController extends AppController
     private function assertContiguousSequences(array $departmentIds): void
     {
         if (!$this->Validationsequences->hasContiguousSequencesForDepartments($departmentIds)) {
-            throw new BadRequestException(__('Chaque département doit disposer d’une séquence continue, commençant à 1.'));
+            throw new BadRequestException(__(
+                'Chaque département doit disposer d’une séquence continue, commençant à 1.',
+            ));
         }
     }
 
-    /** @param mixed $rawDepartmentIds @return list<int> */
+    /**
+     * @param mixed $rawDepartmentIds
+     * @return list<int>
+     */
     private function resolveDepartmentIds(mixed $rawDepartmentIds): array
     {
         $selectedIds = $this->positiveIntegerList($rawDepartmentIds, 'department_ids');
-        $visibleDepartments = $this->fetchTable('Departments')->find('visibleTo', user: $this->getOperator())
+        /** @var \App\Model\Table\DepartmentsTable $departments */
+        $departments = $this->fetchTable('Departments');
+        $visibleDepartments = $departments
+            ->find('visibleTo', user: $this->getOperator())
             ->select(['id', 'lft', 'rght'])->all()->toList();
-        $selectedDepartments = array_filter($visibleDepartments, static fn($department): bool => in_array((int)$department->id, $selectedIds, true));
+        /** @var list<\App\Model\Entity\Department> $visibleDepartments */
+        $selectedDepartments = array_filter(
+            $visibleDepartments,
+            static fn($department): bool => in_array((int)$department->id, $selectedIds, true),
+        );
         if (count($selectedDepartments) !== count($selectedIds)) {
             throw new ForbiddenException(__('Au moins un département ciblé est hors de votre périmètre.'));
         }
@@ -229,14 +292,21 @@ class ValidationsequencesController extends AppController
         return array_values(array_unique($departmentIds));
     }
 
-    /** @param mixed $values @param string $field @return list<int> */
+    /**
+     * @param mixed $values
+     * @param string $field
+     * @return list<int>
+     */
     private function positiveIntegerList(mixed $values, string $field): array
     {
         if (!is_array($values) || $values === []) {
             throw new BadRequestException(__('Le champ « {0} » doit être une liste non vide d’identifiants.', $field));
         }
 
-        return array_values(array_unique(array_map(fn($value): int => $this->positiveInteger($value, $field), $values)));
+        return array_values(array_unique(array_map(
+            fn($value): int => $this->positiveInteger($value, $field),
+            $values,
+        )));
     }
 
     /** @param mixed $value @param string $field @return int */
@@ -260,16 +330,28 @@ class ValidationsequencesController extends AppController
         return $user;
     }
 
-    /** @param array<string, int> $data @return \Cake\Http\Response */
+    /**
+     * @param array<string, mixed> $data
+     * @return \Cake\Http\Response
+     */
     private function jsonSuccess(array $data): Response
     {
-        return $this->response->withType('application/json')->withStringBody(json_encode(['success' => true] + $data));
+        return $this->response
+            ->withType('application/json')
+            ->withStringBody((string)json_encode(['success' => true] + $data));
     }
 
-    /** @return \Cake\Http\Response */
-    private function jsonError(string $message): Response
+    /**
+     * @param array<string, mixed> $errors
+     * @return \Cake\Http\Response
+     */
+    private function jsonError(string $message, array $errors = [], int $status = 400): Response
     {
-        return $this->response->withType('application/json')->withStatus(400)
-            ->withStringBody(json_encode(['success' => false, 'message' => $message], JSON_UNESCAPED_UNICODE));
+        return $this->response->withType('application/json')->withStatus($status)
+            ->withStringBody((string)json_encode([
+                'success' => false,
+                'message' => $message,
+                'errors' => $errors,
+            ], JSON_UNESCAPED_UNICODE));
     }
 }

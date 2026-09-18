@@ -9,20 +9,20 @@ use Cake\Validation\Validator;
 /**
  * Budgetfeatures Model
  *
- * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
+ * @property \App\Model\Table\ApplicationformsTable $Applicationforms
  * @method \App\Model\Entity\Budgetfeature newEmptyEntity()
- * @method \App\Model\Entity\Budgetfeature newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Budgetfeature> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Budgetfeature get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Budgetfeature findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Budgetfeature patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Budgetfeature> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Budgetfeature|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Budgetfeature saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Budgetfeature>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Budgetfeature>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Budgetfeature>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Budgetfeature> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Budgetfeature>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Budgetfeature>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Budgetfeature>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Budgetfeature> deleteManyOrFail(iterable $entities, array $options = [])
+ * @method \App\Model\Entity\Budgetfeature newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method list<\App\Model\Entity\Budgetfeature> newEntities(list<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Budgetfeature get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Budgetfeature findOrCreate(mixed $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Budgetfeature patchEntity(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method list<\App\Model\Entity\Budgetfeature> patchEntities(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Budgetfeature|false save(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Budgetfeature saveOrFail(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Budgetfeature>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Budgetfeature>|false saveMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Budgetfeature>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Budgetfeature> saveManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Budgetfeature>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Budgetfeature>|false deleteMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Budgetfeature>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Budgetfeature> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class BudgetfeaturesTable extends AppTable

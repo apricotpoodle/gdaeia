@@ -13,6 +13,7 @@ use Cake\Validation\Validator;
  */
 class CommentsTable extends AppTable
 {
+    /** @inheritDoc */
     public function initialize(array $config): void
     {
         parent::initialize($config);
@@ -37,6 +38,7 @@ class CommentsTable extends AppTable
         ]);
     }
 
+    /** @inheritDoc */
     public function validationDefault(Validator $validator): Validator
     {
         $validator
@@ -71,6 +73,7 @@ class CommentsTable extends AppTable
         return $validator;
     }
 
+    /** @inheritDoc */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->existsIn(['parent_id'], 'ParentComments'), ['errorField' => 'parent_id']);
@@ -82,9 +85,9 @@ class CommentsTable extends AppTable
     /**
      * Custom finder : Restreint la liste des commentaires selon le périmètre de l'opérateur.
      *
-     * @param SelectQuery $query
-     * @param User $user
-     * @return SelectQuery
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query
+     * @param \App\Model\Entity\User $user
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
@@ -99,5 +102,4 @@ class CommentsTable extends AppTable
         // et reliés aux demandes auxquelles ils ont accès.
         return $query;
     }
-
 }

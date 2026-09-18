@@ -18,14 +18,14 @@ namespace App\View;
 
 use Cake\View\View;
 
-
 /**
  * Application View
  *
  * Your application's default view class
  *
  * @link https://book.cakephp.org/5/en/views.html#the-app-view
- * @extends \Cake\View\View<\App\View\AppView>
+ * @property \App\View\Helper\TabulatorHelper $Tabulator
+ * @property \App\View\Helper\ActionHelper $Action
  */
 class AppView extends View
 {
@@ -52,6 +52,5 @@ class AppView extends View
         // 3. Injection de l'objet $identity dans toutes les vues (.php)
         $identity = $this->getRequest()->getAttribute('identity');
         $this->set('identity', $identity);
-
     }
 }

@@ -13,6 +13,10 @@ use Throwable;
  * Rendu générique des commandes UI après vérification de leur Policy.
  * Implémente le point de passage unique de présentation défini par les
  * fabriques de commandes de domaine.
+ *
+ * @extends \Cake\View\Helper<\Cake\View\View>
+ * @property \Cake\View\Helper\HtmlHelper $Html
+ * @property \Cake\View\Helper\FormHelper $Form
  */
 class ActionHelper extends Helper
 {
@@ -34,6 +38,11 @@ class ActionHelper extends Helper
         }
 
         $options = ['escape' => false] + $action->options;
+        if ($action->type === UiAction::TYPE_LINK && isset($options['confirm'])) {
+            $confirmation = (string)$options['confirm'];
+            unset($options['confirm']);
+            $options['onclick'] = 'return confirm(' . json_encode($confirmation) . ');';
+        }
         $label = $action->icon === null
             ? h($action->label)
             : sprintf('<i class="fa-solid %s me-1" aria-hidden="true"></i>%s', h($action->icon), h($action->label));
@@ -41,6 +50,7 @@ class ActionHelper extends Helper
         return match ($action->type) {
             UiAction::TYPE_LINK => $this->Html->link($label, $action->url, $options),
             UiAction::TYPE_POST_LINK => $this->Form->postLink($label, $action->url, $options),
+            UiAction::TYPE_BUTTON => $this->Html->tag('button', $label, ['type' => 'button'] + $options),
             default => throw new InvalidArgumentException(sprintf('Type d’action UI inconnu : %s', $action->type)),
         };
     }

@@ -11,12 +11,11 @@ trait ImpersonationCheckTrait
     /**
      * Vérifie de manière stricte si l'utilisateur courant est en mode impersonation.
      *
-     * @param IdentityInterface $user Identité envoyée par Authorization
+     * @param \Authorization\IdentityInterface $user Identité envoyée par Authorization
      * @return bool
      */
     protected function isImpersonating(IdentityInterface $user): bool
     {
-        /** @var mixed $entity */
         $entity = $user->getOriginalData();
 
         if (!($entity instanceof EntityInterface)) {
@@ -32,8 +31,8 @@ trait ImpersonationCheckTrait
     /**
      * Récupère l'ID de l'administrateur d'origine si en mode impersonation.
      *
-     * @param IdentityInterface $user
-     * @return int|string|null
+     * @param \Authorization\IdentityInterface $user
+     * @return string|int|null
      */
     protected function getOriginalAdminId(IdentityInterface $user): int|string|null
     {

@@ -1,5 +1,8 @@
 <?php
-/** @var \App\View\AppView $this */
+/**
+ * @var \App\View\AppView $this
+ * @var mixed $role
+ */
 /** @var \App\Model\Entity\Role $role */
 $this->assign('title', __('Ajouter un rôle'));
 ?>

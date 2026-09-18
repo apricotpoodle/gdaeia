@@ -1,5 +1,8 @@
 <?php
-/** @var \App\View\AppView $this */
+/**
+ * @var \App\View\AppView $this
+ * @var \App\Model\Entity\Role $role
+ */
 /** @var \App\Model\Entity\Role $role */
 ?>
 <?= $this->Form->create($role, ['class' => 'needs-validation', 'novalidate' => true]) ?>

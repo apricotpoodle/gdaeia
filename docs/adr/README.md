@@ -63,6 +63,11 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0052** | Présentation unifiée des erreurs de validation Web et API | **Accepté** | [`0052-presentation-unifiee-erreurs-validation-web-api.md`](./0052-presentation-unifiee-erreurs-validation-web-api.md) |
 | **ADR 0053** | Stratégie de tests et MySQL dédié à l’intégration | **Accepté** | [`0053-strategie-tests-unitaires-et-integration.md`](./0053-strategie-tests-unitaires-et-integration.md) |
 | **ADR 0054** | Commandes UI autorisées par domaine | **Accepté** | [`0054-commandes-ui-autorisees-par-domaine.md`](./0054-commandes-ui-autorisees-par-domaine.md) |
+| **ADR 0055** | Workflow de validation des Applicationforms | **Accepté** | [`0055-workflow-validation-applicationforms.md`](./0055-workflow-validation-applicationforms.md) |
+| **ADR 0056** | Remise à zéro exceptionnelle d’un cycle de validation | **Accepté** | [`0056-remise-a-zero-cycle-validation.md`](./0056-remise-a-zero-cycle-validation.md) |
+| **ADR 0057** | Point d’entrée fiche pour la réinitialisation d’un cycle | **Accepté** | [`0057-point-entree-fiche-reinitialisation-cycle.md`](./0057-point-entree-fiche-reinitialisation-cycle.md) |
+| **ADR 0058** | Séparation du paramétrage global du workflow | **Accepté** | [`0058-separation-parametrage-global-workflow.md`](./0058-separation-parametrage-global-workflow.md) |
+| **ADR 0059** | Validation locale avant partage | **Accepté** | [`0059-validation-locale-avant-partage.md`](./0059-validation-locale-avant-partage.md) |
 
 ---
 

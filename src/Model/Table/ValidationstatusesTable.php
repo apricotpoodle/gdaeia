@@ -9,24 +9,26 @@ use Cake\Validation\Validator;
 /**
  * Validationstatuses Model
  *
- * @property \App\Model\Table\ApplicationformstatusesTable&\Cake\ORM\Association\HasMany $Applicationformstatuses
- * @property \App\Model\Table\ApplicationvalidationstepsTable&\Cake\ORM\Association\HasMany $Applicationvalidationsteps
- * @property \App\Model\Table\CurrentvalidationrolesTable&\Cake\ORM\Association\HasMany $Currentvalidationroles
- * @property \App\Model\Table\ValidationsTable&\Cake\ORM\Association\HasMany $Validations
- * @method \App\Model\Entity\Validationstatus newEmptyEntity()
- * @method \App\Model\Entity\Validationstatus newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Validationstatus> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Validationstatus get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Validationstatus findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Validationstatus patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Validationstatus> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Validationstatus|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Validationstatus saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Validationstatus>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationstatus>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Validationstatus>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationstatus> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Validationstatus>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationstatus>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Validationstatus>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Validationstatus> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationformstatusesTable> $Applicationformstatuses
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationvalidationstepsTable> $Applicationvalidationsteps
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\CurrentvalidationrolesTable> $Currentvalidationroles
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ValidationsTable> $Validations
+ * @method \App\Model\Entity\Validationstatus newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationstatus[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationstatus get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Validationstatus findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\Validationstatus>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationstatus patchEntity(\App\Model\Entity\Validationstatus $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationstatus[] patchEntities(iterable<\App\Model\Entity\Validationstatus> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationstatus|false save(\App\Model\Entity\Validationstatus $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Validationstatus saveOrFail(\App\Model\Entity\Validationstatus $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Validationstatus>|false saveMany(iterable<\App\Model\Entity\Validationstatus> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Validationstatus> saveManyOrFail(iterable<\App\Model\Entity\Validationstatus> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Validationstatus>|false deleteMany(iterable<\App\Model\Entity\Validationstatus> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Validationstatus> deleteManyOrFail(iterable<\App\Model\Entity\Validationstatus> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
+ * @extends \Cake\ORM\Table<array{Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\Validationstatus>
+ * @method bool delete(\App\Model\Entity\Validationstatus $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\Validationstatus $entity, array<string, mixed> $options = [])
  */
 class ValidationstatusesTable extends Table
 {

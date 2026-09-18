@@ -1,18 +1,38 @@
 <?php
-
 declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\User;
+use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Exception;
 
 /**
  * Class MenusController
  * Gère l'IHM pour le CRUD et la manipulation de l'arbre des menus.
+ *
+ * @property \App\Model\Table\MenusTable $Menus
  */
 class MenusController extends AppController
 {
+    /** Redirige les administrateurs non techniques hors de l'administration des menus. */
+    public function beforeFilter(EventInterface $event): void
+    {
+        parent::beforeFilter($event);
+
+        $identity = $this->getRequest()->getAttribute('identity');
+        $user = $identity?->getOriginalData();
+        if ($user instanceof User && !$user->issuperuser) {
+            $this->Authorization->skipAuthorization();
+            $this->Flash->error(__('Vous n’êtes pas autorisé à administrer les menus.'));
+            $event->setResult($this->redirect('/'));
+            $event->stopPropagation();
+
+            return;
+        }
+    }
+
     /**
      * @return void
      */
@@ -54,6 +74,7 @@ class MenusController extends AppController
             $menu = $this->Menus->patchEntity($menu, $this->request->getData());
             if ($this->Menus->save($menu)) {
                 $this->Flash->success(__('Menu créé avec succès.'));
+
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('Impossible de créer le menu.'));
@@ -62,6 +83,7 @@ class MenusController extends AppController
         // $parentMenus = $this->Menus->ParentMenus->find('treeList', spacer: '— ')->toArray();
         $parentMenus = $this->Menus->find('treeList', spacer: '— ')->toArray();
         $this->set(compact('menu', 'parentMenus'));
+
         return null;
     }
 
@@ -79,6 +101,7 @@ class MenusController extends AppController
             $menu = $this->Menus->patchEntity($menu, $this->request->getData());
             if ($this->Menus->save($menu)) {
                 $this->Flash->success(__('Menu mis à jour.'));
+
                 return $this->redirect(['action' => 'index']);
             }
             $this->Flash->error(__('Erreur lors de la mise à jour.'));
@@ -87,6 +110,7 @@ class MenusController extends AppController
         // $parentMenus = $this->Menus->ParentMenus->find('treeList', spacer: '— ')->toArray();
         $parentMenus = $this->Menus->find('treeList', spacer: '— ')->toArray();
         $this->set(compact('menu', 'parentMenus'));
+
         return null;
     }
 
@@ -109,7 +133,7 @@ class MenusController extends AppController
 
         if ($this->request->is('ajax') || $this->request->accepts('application/json')) {
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => $success, 'message' => $message]));
+                ->withStringBody((string)json_encode(['success' => $success, 'message' => $message]));
         }
 
         $success ? $this->Flash->success($message) : $this->Flash->error($message);
@@ -136,7 +160,7 @@ class MenusController extends AppController
 
         if ($this->request->is('ajax') || $this->request->accepts('application/json')) {
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => $success, 'message' => $message]));
+                ->withStringBody((string)json_encode(['success' => $success, 'message' => $message]));
         }
 
         $success ? $this->Flash->success($message) : $this->Flash->error($message);
@@ -156,7 +180,6 @@ class MenusController extends AppController
         $success = false;
         try {
             if ($this->Menus->delete($menu)) {
-                $this->Menus->recover();
                 $message = __('Menu supprimé.');
                 $success = true;
             } else {
@@ -168,10 +191,11 @@ class MenusController extends AppController
 
         if ($this->request->is('ajax') || $this->request->accepts('application/json')) {
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => $success, 'message' => $message]));
+                ->withStringBody((string)json_encode(['success' => $success, 'message' => $message]));
         }
 
         $success ? $this->Flash->success($message) : $this->Flash->error($message);
+
         return $this->redirect(['action' => 'index']);
     }
 }

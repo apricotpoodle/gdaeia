@@ -1,6 +1,6 @@
 # 0006 — Protéger l'accès URL à l'administration des menus
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Haute
 

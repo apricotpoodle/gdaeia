@@ -9,21 +9,23 @@ use Cake\Validation\Validator;
 /**
  * EmailLogs Model
  *
- * @property \App\Model\Table\EmailRecipientsTable&\Cake\ORM\Association\HasMany $EmailRecipients
- * @method \App\Model\Entity\EmailLog newEmptyEntity()
- * @method \App\Model\Entity\EmailLog newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\EmailLog> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\EmailLog get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\EmailLog findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\EmailLog patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\EmailLog> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\EmailLog|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\EmailLog saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\EmailLog>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\EmailLog>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\EmailLog>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\EmailLog> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\EmailLog>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\EmailLog>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\EmailLog>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\EmailLog> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\EmailRecipientsTable> $EmailRecipients
+ * @method \App\Model\Entity\EmailLog newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\EmailLog[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\EmailLog get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\EmailLog findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\EmailLog>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\EmailLog patchEntity(\App\Model\Entity\EmailLog $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\EmailLog[] patchEntities(iterable<\App\Model\Entity\EmailLog> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\EmailLog|false save(\App\Model\Entity\EmailLog $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\EmailLog saveOrFail(\App\Model\Entity\EmailLog $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\EmailLog>|false saveMany(iterable<\App\Model\Entity\EmailLog> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\EmailLog> saveManyOrFail(iterable<\App\Model\Entity\EmailLog> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\EmailLog>|false deleteMany(iterable<\App\Model\Entity\EmailLog> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\EmailLog> deleteManyOrFail(iterable<\App\Model\Entity\EmailLog> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
+ * @extends \Cake\ORM\Table<array{Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\EmailLog>
+ * @method bool delete(\App\Model\Entity\EmailLog $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\EmailLog $entity, array<string, mixed> $options = [])
  */
 class EmailLogsTable extends Table
 {

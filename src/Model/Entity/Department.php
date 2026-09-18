@@ -26,11 +26,12 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\DateTime $created
  * @property \Cake\I18n\DateTime|null $modified
  *
- * @property \App\Model\Entity\ParentDepartment $parent_department
- * @property \App\Model\Entity\ChildDepartment[] $child_departments
+ * @property \App\Model\Entity\Department|null $parent_department
+ * @property list<\App\Model\Entity\Department> $child_departments
  * @property \App\Model\Entity\CgrCode $default_cgr_code
  * @property \App\Model\Entity\CgrCode[] $owned_cgr_codes
  * @property \App\Model\Entity\CgrStrategy $cgr_strategy
+ * @property \App\Model\Entity\User|null $manager
  * @property \App\Model\Entity\Applicationform[] $applicationforms
  */
 class Department extends Entity

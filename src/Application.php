@@ -17,7 +17,11 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Command\BacklogNextCommand;
 use App\Command\TestEmailCommand;
+use App\Command\TreeIntegrityAlertTestCommand;
+use App\Command\TreeIntegrityCheckCommand;
+use App\Command\ValidationReminderCommand;
 use App\Middleware\HostHeaderMiddleware;
 use Authentication\AuthenticationService;
 use Authentication\AuthenticationServiceInterface;
@@ -54,7 +58,9 @@ use Psr\Http\Message\ServerRequestInterface;
  *
  * @extends \Cake\Http\BaseApplication<\App\Application>
  */
-class Application extends BaseApplication implements AuthenticationServiceProviderInterface, AuthorizationServiceProviderInterface
+class Application extends BaseApplication implements
+    AuthenticationServiceProviderInterface,
+    AuthorizationServiceProviderInterface
 {
     /**
      * Load all the application configuration and bootstrap logic.
@@ -242,7 +248,11 @@ class Application extends BaseApplication implements AuthenticationServiceProvid
         $commands = parent::console($commands);
 
         // Enregistrement explicite de la commande
+        $commands->add('backlog next', BacklogNextCommand::class);
         $commands->add('test_email', TestEmailCommand::class);
+        $commands->add('validation remind', ValidationReminderCommand::class);
+        $commands->add('tree integrity alert-test', TreeIntegrityAlertTestCommand::class);
+        $commands->add('tree integrity check', TreeIntegrityCheckCommand::class);
 
         return $commands;
     }

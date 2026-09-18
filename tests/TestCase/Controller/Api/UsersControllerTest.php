@@ -7,11 +7,16 @@ use App\Model\Entity\User;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
+/**
+ * @link \App\Controller\Api\UsersController
+ */
 class UsersControllerTest extends TestCase
 {
     use IntegrationTestTrait;
 
-    /** @var array<string> */
+    /**
+     * @var array<string>
+     */
     protected array $fixtures = [
         'app.Users',
         'app.Roles',
@@ -53,7 +58,7 @@ class UsersControllerTest extends TestCase
         $this->get('/api/users/bulk-departments-assigned-users.json?page=1&size=20');
 
         $this->assertResponseOk();
-        $this->assertResponseContains('"data":[]');
+        $this->assertResponseRegExp('/"data"\\s*:\\s*\\[\\]/');
         $this->assertResponseContains('"last_page"');
     }
 
@@ -185,5 +190,4 @@ class UsersControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('Retour à la connexion');
     }
-
 }

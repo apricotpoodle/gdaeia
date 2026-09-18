@@ -263,6 +263,16 @@ return [
     ],
 
     /*
+     * Paramètres des alertes issues des diagnostics des arbres TreeBehavior.
+     * L'adresse destinataire doit être fournie par l'environnement de
+     * déploiement ; elle n'est pas versionnée avec l'application.
+     */
+    'TreeIntegrity' => [
+        'alertRecipient' => env('TREE_INTEGRITY_ALERT_RECIPIENT', ''),
+        'instanceName' => env('APP_INSTANCE_NAME', ''),
+    ],
+
+    /*
      * Connection information used by the ORM to connect
      * to your application's datastores.
      *
@@ -461,6 +471,13 @@ return [
         'ignoreAuthorization' => env('DEBUG_KIT_IGNORE_AUTHORIZATION', false),
     ],
 
+    'IdeHelper' => [
+        'assocsAsGenerics' => true,
+        'genericsInParam' => 'detailed',
+        'concreteEntitiesInParam' => 'strict',
+        'tableEntityQuery' => true,
+    ],
+
     /**
      * TestSuite configuration.
      *
@@ -471,6 +488,6 @@ return [
      */
     'TestSuite' => [
         'errorLevel' => null,
-        'fixtureStrategy' => null,
+        'fixtureStrategy' => \Cake\TestSuite\Fixture\TransactionStrategy::class,
     ],
 ];

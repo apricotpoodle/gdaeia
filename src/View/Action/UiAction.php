@@ -16,12 +16,14 @@ final readonly class UiAction
 
     /** Rendu par FormHelper::postLink(). */
     public const TYPE_POST_LINK = 'postLink';
+    /** Rendu par HtmlHelper::tag('button') pour les commandes API. */
+    public const TYPE_BUTTON = 'button';
 
     /**
      * @param self::TYPE_* $type Type de contrôle à rendre.
      * @param string $label Libellé textuel, toujours échappé par le Helper.
      * @param string|null $icon Classes Font Awesome facultatives.
-     * @param array|string $url Destination CakePHP.
+     * @param array<int|string, mixed>|string $url Destination CakePHP.
      * @param string $authorizationAction Action évaluée par la Policy.
      * @param mixed $resource Entité cible ou nom de table de la Policy.
      * @param array<string, mixed> $options Options HtmlHelper/FormHelper.

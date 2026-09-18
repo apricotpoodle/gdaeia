@@ -37,6 +37,18 @@ export function getApplicationformColumns() {
         ColumnsFactory.currency("grossremuneration", "Rémunération", { width: 100 }),
 
         // 9. Périodicité
-        ColumnsFactory.text("period.name", "Période", { width: 100 })
+        ColumnsFactory.text("period.name", "Période", { width: 100 }),
+
+        // 10. Une voix exprimée compte pour un rôle configuré, jamais pour un utilisateur.
+        {
+            title: 'Validation', field: 'applicationformstatuses', width: 115, headerSort: false,
+            formatter: (cell) => {
+                const status = cell.getValue()?.[0];
+                const percentage = Number(status?.valid_percentage || 0);
+                const label = status?.rejected ? 'Refusée' : status?.accepted ? 'Acceptée' : `${percentage} %`;
+                const color = status?.rejected ? 'danger' : status?.accepted ? 'success' : percentage > 0 ? 'primary' : 'secondary';
+                return `<span class="badge bg-${color}">${label}</span>`;
+            },
+        }
     ];
 }

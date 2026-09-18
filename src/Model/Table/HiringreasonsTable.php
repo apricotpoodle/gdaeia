@@ -9,20 +9,20 @@ use Cake\Validation\Validator;
 /**
  * Hiringreasons Model
  *
- * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationformsTable> $Applicationforms
  * @method \App\Model\Entity\Hiringreason newEmptyEntity()
- * @method \App\Model\Entity\Hiringreason newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Hiringreason> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Hiringreason get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Hiringreason findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Hiringreason patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Hiringreason> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Hiringreason|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Hiringreason saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Hiringreason>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Hiringreason>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Hiringreason>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Hiringreason> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Hiringreason>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Hiringreason>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Hiringreason>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Hiringreason> deleteManyOrFail(iterable $entities, array $options = [])
+ * @method \App\Model\Entity\Hiringreason newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Hiringreason> newEntities(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Hiringreason get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Hiringreason findOrCreate($search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Hiringreason patchEntity(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Hiringreason> patchEntities(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Hiringreason|false save(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Hiringreason saveOrFail(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Hiringreason>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Hiringreason>|false saveMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Hiringreason>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Hiringreason> saveManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Hiringreason>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Hiringreason>|false deleteMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Hiringreason>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Hiringreason> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class HiringreasonsTable extends AppTable

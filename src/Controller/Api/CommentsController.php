@@ -4,23 +4,26 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use Cake\Datasource\EntityInterface;
 use Cake\Http\Response;
-use App\Model\Table\CommentsTable;
 
 /**
  * Class CommentsController (API)
  *
  * Expose le CRUD des commentaires polymorphiques pour le front-end.
+ *
+ * @property \App\Model\Table\CommentsTable $Comments
  */
 class CommentsController extends AppController
 {
+    /** @inheritDoc */
     public function initialize(): void
     {
         parent::initialize();
         $this->viewBuilder()->setClassName('Json');
     }
 
-/**
+    /**
      * Endpoint : GET /api/comments.json?model=Applicationforms&foreign_key=12
      * Récupère le fil de discussion sécurisé et arborescent.
      */
@@ -34,8 +37,8 @@ class CommentsController extends AppController
 
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
-        
-        /** @var CommentsTable $commentsTable */
+
+        /** @var \App\Model\Table\CommentsTable $commentsTable */
         $commentsTable = $this->fetchTable('Comments');
 
         // 🚀 CHAÎNAGE DES FINDERS : visibleTo() + threaded()
@@ -72,18 +75,19 @@ class CommentsController extends AppController
         $comment = $commentsTable->newEmptyEntity();
 
         $data = $this->request->getData();
-        
+
         /** @var \App\Model\Entity\User $user */
         $user = $this->request->getAttribute('identity')->getOriginalData();
         $data['user_id'] = $user->id;
 
         $comment = $commentsTable->patchEntity($comment, $data);
+        /** @var \App\Model\Entity\Comment $comment */
 
         if ($commentsTable->save($comment)) {
             $comment = $commentsTable->get($comment->id, contain: ['Users']);
 
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
+                ->withStringBody((string)json_encode([
                     'success' => true,
                     'comment' => $comment,
                 ]));
@@ -99,9 +103,10 @@ class CommentsController extends AppController
     {
         $this->request->allowMethod(['post', 'put', 'patch']);
         $commentsTable = $this->fetchTable('Comments');
-        
+
         $comment = $commentsTable->get($id);
-        
+        /** @var \App\Model\Entity\Comment $comment */
+
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
 
@@ -109,7 +114,7 @@ class CommentsController extends AppController
         if (!$currentUser->issuperuser && $comment->user_id !== $currentUser->id) {
             return $this->response->withType('application/json')
                 ->withStatus(403)
-                ->withStringBody(json_encode([
+                ->withStringBody((string)json_encode([
                     'success' => false,
                     'message' => __('Vous n\'êtes pas autorisé à modifier ce commentaire.'),
                 ]));
@@ -123,7 +128,7 @@ class CommentsController extends AppController
             $comment = $commentsTable->get($comment->id, contain: ['Users']);
 
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode([
+                ->withStringBody((string)json_encode([
                     'success' => true,
                     'comment' => $comment,
                 ]));
@@ -142,6 +147,7 @@ class CommentsController extends AppController
         $commentsTable = $this->fetchTable('Comments');
 
         $comment = $commentsTable->get($id);
+        /** @var \App\Model\Entity\Comment $comment */
 
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
@@ -149,7 +155,7 @@ class CommentsController extends AppController
         if (!$currentUser->issuperuser && $comment->user_id !== $currentUser->id) {
             return $this->response->withType('application/json')
                 ->withStatus(403)
-                ->withStringBody(json_encode([
+                ->withStringBody((string)json_encode([
                     'success' => false,
                     'message' => __('Vous n\'êtes pas autorisé à supprimer ce commentaire.'),
                 ]));
@@ -157,12 +163,12 @@ class CommentsController extends AppController
 
         if ($commentsTable->delete($comment)) {
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => true]));
+                ->withStringBody((string)json_encode(['success' => true]));
         }
 
         return $this->response->withType('application/json')
             ->withStatus(400)
-            ->withStringBody(json_encode([
+            ->withStringBody((string)json_encode([
                 'success' => false,
                 'message' => __('Impossible de supprimer ce commentaire.'),
             ]));
@@ -171,10 +177,10 @@ class CommentsController extends AppController
     /**
      * Gestion centralisée des erreurs de validation
      */
-    private function handleValidationError(\Cake\Datasource\EntityInterface $entity): Response
+    private function handleValidationError(EntityInterface $entity): Response
     {
         $errors = $entity->getErrors();
-        $message = __("Données invalides.");
+        $message = __('Données invalides.');
 
         if (!empty($errors)) {
             $firstError = current(reset($errors));
@@ -183,6 +189,6 @@ class CommentsController extends AppController
 
         return $this->response->withType('application/json')
             ->withStatus(400)
-            ->withStringBody(json_encode(['success' => false, 'message' => $message]));
+            ->withStringBody((string)json_encode(['success' => false, 'message' => $message]));
     }
 }

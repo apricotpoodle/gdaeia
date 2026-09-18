@@ -9,20 +9,20 @@ use Cake\Validation\Validator;
 /**
  * Professionalcategories Model
  *
- * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationformsTable> $Applicationforms
  * @method \App\Model\Entity\Professionalcategory newEmptyEntity()
- * @method \App\Model\Entity\Professionalcategory newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Professionalcategory> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Professionalcategory get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Professionalcategory findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Professionalcategory patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Professionalcategory> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Professionalcategory|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Professionalcategory saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Professionalcategory>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Professionalcategory>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Professionalcategory>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Professionalcategory> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Professionalcategory>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Professionalcategory>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Professionalcategory>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Professionalcategory> deleteManyOrFail(iterable $entities, array $options = [])
+ * @method \App\Model\Entity\Professionalcategory newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Professionalcategory> newEntities(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Professionalcategory get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Professionalcategory findOrCreate($search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Professionalcategory patchEntity(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Professionalcategory> patchEntities(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Professionalcategory|false save(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Professionalcategory saveOrFail(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Professionalcategory>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Professionalcategory>|false saveMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Professionalcategory>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Professionalcategory> saveManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Professionalcategory>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Professionalcategory>|false deleteMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Professionalcategory>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Professionalcategory> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class ProfessionalcategoriesTable extends AppTable

@@ -26,19 +26,13 @@ class UsersController extends AppController
 {
     use EmailLoggerTrait;
 
-    /**
-     * Callback avant filtrage.
-     * Configure l'accès anonyme pour les actions de réinitialisation de mot de passe.
-     *
-     * @param \Cake\Event\EventInterface $event L'événement courant.
-     * @return void
-     */
+    /** @inheritDoc */
     public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
 
         $this->Authentication->allowUnauthenticated(['login', 'register', 'verify', 'forgotPassword', 'resetPassword']);
-        $this->Authorization->skipAuthorization(['login', 'register', 'verify', 'forgotPassword', 'resetPassword']);
+        $this->Authorization->skipAuthorization();
     }
 
     /**
@@ -56,7 +50,7 @@ class UsersController extends AppController
             return $this->Authentication->redirectAfterLogin($target);
         }
 
-        if ($this->request->is('post') && !$result->isValid()) {
+        if ($this->request->is('post') && !$result?->isValid()) {
             $this->Flash->error(__('Identifiant ou mot de passe invalide.'));
         }
 
@@ -72,7 +66,7 @@ class UsersController extends AppController
     {
         $this->Authentication->logout();
 
-        return $this->redirect(['controller' => 'Users', 'action' => 'login']);
+        return $this->redirect(['controller' => 'Users', 'action' => 'login']) ?? $this->response;
     }
 
     /**
@@ -117,6 +111,7 @@ class UsersController extends AppController
             'Roles',
             'UserDepartments' => ['Departments'],
         ]);
+        /** @var \App\Model\Entity\User $user */
 
         $this->Authorization->authorize($user, 'view');
 
@@ -128,7 +123,9 @@ class UsersController extends AppController
         $fieldSchema = $authService->getFieldSchema($identity, 'Users');
 
         // Récupération de l'arborescence des départements selon le périmètre de l'opérateur
-        $departmentsTree = $this->fetchTable('Departments')->findTreeSelectFormat($currentUser);
+        /** @var \App\Model\Table\DepartmentsTable $departmentsTable */
+        $departmentsTable = $this->fetchTable('Departments');
+        $departmentsTree = $departmentsTable->findTreeSelectFormat($currentUser);
 
         // Extraction des identifiants des départements rattachés sous forme d'IDs numériques
         $selectedDepartmentIds = [];
@@ -147,6 +144,7 @@ class UsersController extends AppController
      *
      * @return \Cake\Http\Response|null Redirection en cas de succès ou rendu du formulaire.
      */
+
     /**
      * Action Add (GET/POST /users/add)
      * Création d'un utilisateur et association avec son périmètre de départements.
@@ -169,6 +167,8 @@ class UsersController extends AppController
             $user = $this->Users->patchEntity($user, $rawParams, [
                 'associated' => ['UserDepartments'],
             ]);
+            /** @var \App\Model\Entity\User $user */
+            /** @var \App\Model\Entity\User $user */
 
             if ($this->Users->save($user)) {
                 $this->Flash->success(__('L\'utilisateur a été créé avec succès.'));
@@ -191,7 +191,9 @@ class UsersController extends AppController
             ->toArray();
 
         // Récupération de l'arborescence des départements autorisés
-        $departmentsTree = $this->fetchTable('Departments')->findTreeSelectFormat($currentUser);
+        /** @var \App\Model\Table\DepartmentsTable $departmentsTable */
+        $departmentsTable = $this->fetchTable('Departments');
+        $departmentsTree = $departmentsTable->findTreeSelectFormat($currentUser);
         $selectedDepartmentIds = []; // Vide par défaut lors d'une création
 
         $this->set(compact('user', 'roles', 'fieldSchema', 'departmentsTree', 'selectedDepartmentIds'));
@@ -218,7 +220,10 @@ class UsersController extends AppController
             // 🛠️ DÉBUT DES LOGS D'ANALYSE (CONTROLEUR WEB)
             // ==============================================================
             Log::debug("========== EDITION USER (WEB) #{$id} ==========");
-            Log::debug("1. [HTTP POST] Données brutes reçues pour user_departments : \n" . print_r($rawParams['user_departments'] ?? 'CLÉ ABSENTE', true));            // 💡 FIX : Gestion du cas "Tout décoché"
+            Log::debug(
+                "1. [HTTP POST] Données brutes reçues pour user_departments : \n"
+                . print_r($rawParams['user_departments'] ?? 'CLÉ ABSENTE', true),
+            );
 
             if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
                 $rawParams['user_departments'] = [];
@@ -227,20 +232,28 @@ class UsersController extends AppController
             $user = $this->Users->patchEntity($user, $rawParams, [
                 'associated' => ['UserDepartments'],
             ]);
+            /** @var \App\Model\Entity\User $user */
 
-            Log::debug("2. [ORM PATCH] Entité après hydratation (Que contient-elle ?) : \n" . print_r($user->user_departments, true));
+            Log::debug(
+                "2. [ORM PATCH] Entité après hydratation (Que contient-elle ?) : \n"
+                . print_r($user->user_departments, true),
+            );
 
             if ($user->hasErrors()) {
-                Log::error("🚨 [ORM ERRORS] L'entité User refuse l'enregistrement : \n" . print_r($user->getErrors(), true));
+                Log::error(
+                    "🚨 [ORM ERRORS] L'entité User refuse l'enregistrement : \n"
+                    . print_r($user->getErrors(), true),
+                );
             }
             if ($this->Users->save($user)) {
-                Log::debug("3. [ORM SAVE] Sauvegarde réussie en Base de données !");
+                Log::debug('3. [ORM SAVE] Sauvegarde réussie en Base de données !');
                 Log::debug("=========================================\n");
                 $this->Flash->success(__('L\'utilisateur #{0} a été mis à jour avec succès.', $user->id));
+
                 return $this->redirect(['action' => 'index']);
             }
 
-            Log::error("3. [ORM SAVE] Sauvegarde ÉCHOUÉE !");
+            Log::error('3. [ORM SAVE] Sauvegarde ÉCHOUÉE !');
             Log::debug("=========================================\n");
             // ==============================================================
             // 🛠️ FIN DES LOGS D'ANALYSE
@@ -261,7 +274,9 @@ class UsersController extends AppController
             ->toArray();
 
         // Arborescence complète disponible pour l'opérateur
-        $departmentsTree = $this->fetchTable('Departments')->findTreeSelectFormat($currentUser);
+        /** @var \App\Model\Table\DepartmentsTable $departmentsTable */
+        $departmentsTable = $this->fetchTable('Departments');
+        $departmentsTree = $departmentsTable->findTreeSelectFormat($currentUser);
 
         // Extraction des identifiants des départements déjà associés au format typé int
         $selectedDepartmentIds = [];
@@ -287,6 +302,7 @@ class UsersController extends AppController
         $this->request->allowMethod(['post', 'delete']);
 
         $user = $this->Users->get($id);
+        /** @var \App\Model\Entity\User $user */
         $this->Authorization->authorize($user, 'delete');
 
         $success = false;
@@ -309,7 +325,7 @@ class UsersController extends AppController
             return $this->response
                 ->withType('application/json')
                 ->withStatus($success ? 200 : 400)
-                ->withStringBody(json_encode([
+                ->withStringBody((string)json_encode([
                     'success' => $success,
                     'message' => $message,
                 ]));
@@ -336,7 +352,7 @@ class UsersController extends AppController
             $email = $this->request->getData('email');
 
             /** @var \App\Model\Entity\User|null $user */
-            $user = $this->Users->findByEmail($email)->first();
+            $user = $this->Users->find()->where(['email' => $email])->first();
 
             if ($user !== null) {
                 $token = bin2hex(random_bytes(32));
@@ -352,7 +368,9 @@ class UsersController extends AppController
                 }
             }
 
-            $this->Flash->success(__('Si cette adresse existe dans notre système, un email de réinitialisation vous a été envoyé.'));
+            $this->Flash->success(__(
+                'Si cette adresse existe dans notre système, un email de réinitialisation vous a été envoyé.',
+            ));
 
             return $this->redirect(['action' => 'login']);
         }
@@ -419,16 +437,19 @@ class UsersController extends AppController
     {
         // 1. Verrou : Interdiction d'usurper une identité si l'on est DÉJÀ en train d'en incarner une
         if ($this->Authentication->isImpersonating()) {
-            $this->Flash->error(__('Vous êtes déjà en mode usurpation d\'identité. Veuillez revenir à votre session d\'origine avant de réitérer.'));
+            $this->Flash->error(__(
+                'Vous êtes déjà en mode usurpation d\'identité. Veuillez revenir à votre session '
+                . 'd\'origine avant de réitérer.',
+            ));
 
             return $this->redirect(['action' => 'index']);
         }
 
-        /** @var Use $targerUser */
+        /** @var \App\Model\Entity\User $targetUser */
         $targetUser = $this->Users->get($id);
         $this->Authorization->authorize($targetUser, 'impersonate');
 
-        /** @var \Cake\Authorization\IdentityInterface $currentIdentity */
+        /** @var \Authentication\IdentityInterface $currentIdentity */
         $currentIdentity = $this->Authentication->getIdentity();
 
         // Injection des métadonnées d'impersonation sur l'entité cible
@@ -437,7 +458,7 @@ class UsersController extends AppController
 
         $this->Authentication->impersonate($targetUser);
 
-        $this->Flash->success(__('Vous êtes maintenant connecté en tant que {0}', $targetUser->displayName));
+        $this->Flash->success(__('Vous êtes maintenant connecté en tant que {0}', $targetUser->display_name));
 
         return $this->redirect('/');
     }
@@ -470,7 +491,9 @@ class UsersController extends AppController
     {
         $error = $this->findFirstValidationError($entity->getErrors());
         if ($error === null) {
-            return __('Impossible d\'enregistrer l\'utilisateur : le serveur n\'a pas retourné de détail de validation.');
+            return __(
+                'Impossible d\'enregistrer l\'utilisateur : le serveur n\'a pas retourné de détail de validation.',
+            );
         }
 
         [$field, $message] = $error;

@@ -5,7 +5,7 @@ namespace App\Model\Table;
 
 use App\Model\Entity\Role;
 use App\Model\Entity\User;
-use Cake\I18n\FrozenTime;
+use Cake\I18n\DateTime;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
@@ -13,27 +13,27 @@ use Cake\Validation\Validator;
 /**
  * Roles Model
  *
- * @property \App\Model\Table\ApplicationvalidationstepsTable&\Cake\ORM\Association\HasMany $Applicationvalidationsteps
- * @property \App\Model\Table\FieldAuthorizationsTable&\Cake\ORM\Association\HasMany $FieldAuthorizations
- * @property \App\Model\Table\RoleMenusTable&\Cake\ORM\Association\HasMany $RoleMenus
- * @property \App\Model\Table\UrdsTable&\Cake\ORM\Association\HasMany $Urds
- * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\HasMany $Users
- * @property \App\Model\Table\ValidationVisasTable&\Cake\ORM\Association\HasMany $ValidationVisas
- * @property \App\Model\Table\ValidationsTable&\Cake\ORM\Association\HasMany $Validations
- * @property \App\Model\Table\ValidationsequencesTable&\Cake\ORM\Association\HasMany $Validationsequences
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationvalidationstepsTable> $Applicationvalidationsteps
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\FieldAuthorizationsTable> $FieldAuthorizations
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\RoleMenusTable> $RoleMenus
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\UrdsTable> $Urds
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\UsersTable> $Users
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ValidationVisasTable> $ValidationVisas
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ValidationsTable> $Validations
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ValidationsequencesTable> $Validationsequences
  * @method \App\Model\Entity\Role newEmptyEntity()
- * @method \App\Model\Entity\Role newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Role> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Role get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Role findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Role patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Role> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Role|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Role saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Role>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Role> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Role>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Role> deleteManyOrFail(iterable $entities, array $options = [])
+ * @method \App\Model\Entity\Role newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Role> newEntities(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Role get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Role findOrCreate($search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Role patchEntity(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Role> patchEntities(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Role|false save(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Role saveOrFail(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Role>|false saveMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Role> saveManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Role>|false deleteMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Role>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Role> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class RolesTable extends AppTable
@@ -134,9 +134,9 @@ class RolesTable extends AppTable
     /**
      * Limite les rôles administrables depuis l'écran d'accès aux menus.
      *
-     * @param \Cake\ORM\Query\SelectQuery $query Requête à filtrer.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête à filtrer.
      * @param \App\Model\Entity\User $user Opérateur connecté.
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findRoleAccessVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
@@ -156,7 +156,7 @@ class RolesTable extends AppTable
      */
     public function softDelete(Role $role): bool
     {
-        $role->set('deleted', FrozenTime::now());
+        $role->set('deleted', DateTime::now());
 
         return (bool)$this->save($role);
     }

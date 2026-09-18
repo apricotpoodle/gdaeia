@@ -18,6 +18,8 @@ use Cake\ORM\Entity;
  * @property bool|null $active
  * @property bool|null $disabled
  * @property bool|null $dividor_before
+ * @property list<\App\Model\Entity\Menu> $children
+ * @property array<string, mixed> $grid_rights
  *
  * @property \App\Model\Entity\Menu $parent_menu
  * @property \App\Model\Entity\Menu[] $child_menus
