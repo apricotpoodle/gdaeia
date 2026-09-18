@@ -1,3 +1,15 @@
+<?php
+/**
+ * @var \App\View\AppView $this
+ * @var string $containerName
+ * @var string $hostName
+ * @var string $instanceName
+ * @var mixed $isTest
+ * @var string $issueCount
+ * @var string $reportedAt
+ * @var mixed $reports
+ */
+?>
 Bonjour,
 
 <?php if ($isTest): ?>

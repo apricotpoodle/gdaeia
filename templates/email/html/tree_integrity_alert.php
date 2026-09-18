@@ -1,3 +1,15 @@
+<?php
+/**
+ * @var \App\View\AppView $this
+ * @var mixed $containerName
+ * @var mixed $hostName
+ * @var mixed $instanceName
+ * @var mixed $isTest
+ * @var mixed $issueCount
+ * @var mixed $reportedAt
+ * @var mixed $reports
+ */
+?>
 <h1>Alerte d’intégrité des arbres</h1>
 <p>Bonjour,</p>
 <?php if ($isTest): ?>
