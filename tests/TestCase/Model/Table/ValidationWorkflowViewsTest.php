@@ -3,8 +3,8 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
-use Cake\Datasource\ConnectionManager;
 use Cake\Database\Exception\QueryException;
+use Cake\Datasource\ConnectionManager;
 use Cake\ORM\Locator\TableLocator;
 use Cake\ORM\Query\SelectQuery;
 use Cake\TestSuite\TestCase;
@@ -35,6 +35,7 @@ class ValidationWorkflowViewsTest extends TestCase
         'app.Validations',
         'app.Validationsequences',
         'app.Validationstatuses',
+        'app.ValidationWorkflowRuns',
     ];
 
     private TableLocator $tables;
@@ -176,7 +177,7 @@ class ValidationWorkflowViewsTest extends TestCase
             'reminder_count' => 0,
         ]);
         $this->assertSame(1, $connection->execute(
-            'SELECT COUNT(*) FROM applicationvalidationsteps WHERE validationstatus_id IS NULL'
+            'SELECT COUNT(*) FROM applicationvalidationsteps WHERE validationstatus_id IS NULL',
         )->fetchColumn(0));
 
         try {
