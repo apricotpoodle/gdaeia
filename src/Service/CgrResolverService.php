@@ -11,7 +11,7 @@ class CgrResolverService
      * Retourne la structure et les choix CGR pour un département donné.
      *
      * @param int $departmentId
-     * @return array{strategy: string, schema: array, options: array}
+     * @return array{strategy: string, schema: list<string>, options: array<string, list<array{code: string, label: string}>>}
      */
     public function getCgrConfigForDepartment(int $departmentId): array
     {
@@ -30,11 +30,15 @@ class CgrResolverService
         }
 
         // 1. Extraction et nettoyage du schéma de la stratégie
-        $rawDefinition = json_decode((string)$department->cgr_strategy->definition_json, true) ?? [];
+        $definition = $department->cgr_strategy->definition_json;
+        $rawDefinition = is_string($definition)
+            ? json_decode($definition, true) ?? []
+            : $definition;
 
         $schema = [];
         foreach ($rawDefinition as $item) {
-            $type = is_array($item) ? ($item['type'] ?? $item['code'] ?? '') : (string)$item;
+            $rawType = is_array($item) ? ($item['type'] ?? $item['code'] ?? '') : $item;
+            $type = is_string($rawType) ? $rawType : '';
             $cleanType = strtoupper(trim($type));
             if ($cleanType !== '') {
                 $schema[] = $cleanType;
@@ -42,6 +46,7 @@ class CgrResolverService
         }
 
         // 2. Récupération des codes avec des clés d'ORM propres (CgrCodes)
+        /** @var list<\App\Model\Entity\CgrCode> $codes */
         $codes = $cgrCodesTable->find()
             ->where([
                 'CgrCodes.department_id' => $departmentId,
