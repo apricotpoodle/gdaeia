@@ -10,22 +10,24 @@ use Cake\Validation\Validator;
 /**
  * CgrCodes Model
  *
- * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\BelongsTo $Departments
- * @property \App\Model\Table\CgrCodesTable&\Cake\ORM\Association\HasMany $CgrCodes
- * @method \App\Model\Entity\CgrCode newEmptyEntity()
- * @method \App\Model\Entity\CgrCode newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\CgrCode> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\CgrCode get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\CgrCode findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\CgrCode patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\CgrCode> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\CgrCode|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\CgrCode saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\CgrCode>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\CgrCode>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\CgrCode>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\CgrCode> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\CgrCode>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\CgrCode>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\CgrCode>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\CgrCode> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\DepartmentsTable> $Departments
+ * @method \App\Model\Entity\CgrCode newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrCode[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrCode get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\CgrCode findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\CgrCode>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrCode patchEntity(\App\Model\Entity\CgrCode $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrCode[] patchEntities(iterable<\App\Model\Entity\CgrCode> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrCode|false save(\App\Model\Entity\CgrCode $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\CgrCode saveOrFail(\App\Model\Entity\CgrCode $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\CgrCode>|false saveMany(iterable<\App\Model\Entity\CgrCode> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\CgrCode> saveManyOrFail(iterable<\App\Model\Entity\CgrCode> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\CgrCode>|false deleteMany(iterable<\App\Model\Entity\CgrCode> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\CgrCode> deleteManyOrFail(iterable<\App\Model\Entity\CgrCode> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
+ * @extends \Cake\ORM\Table<array{Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\CgrCode>
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\DepartmentsTable> $UsingDepartments
+ * @method bool delete(\App\Model\Entity\CgrCode $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\CgrCode $entity, array<string, mixed> $options = [])
  */
 class CgrCodesTable extends Table
 {

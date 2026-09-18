@@ -17,7 +17,7 @@ use Cake\ORM\Entity;
  *
  * @property \App\Model\Entity\Role $role
  * @property \App\Model\Entity\Menu $menu
- * @property \App\Model\Entity\Department $department
+ * @property \App\Model\Entity\Department|null $department
  */
 class RoleMenu extends Entity
 {

@@ -10,22 +10,24 @@ use Cake\Validation\Validator;
 /**
  * Urds Model
  *
- * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
- * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\BelongsTo $Roles
- * @property \App\Model\Table\DepartmentsTable&\Cake\ORM\Association\BelongsTo $Departments
- * @method \App\Model\Entity\Urd newEmptyEntity()
- * @method \App\Model\Entity\Urd newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Urd> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Urd get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Urd findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Urd patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Urd> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Urd|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Urd saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Urd>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Urd>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Urd>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Urd> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Urd>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Urd>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Urd>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Urd> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\UsersTable> $Users
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\RolesTable> $Roles
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\DepartmentsTable> $Departments
+ * @method \App\Model\Entity\Urd newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Urd[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Urd get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Urd findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\Urd>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Urd patchEntity(\App\Model\Entity\Urd $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Urd[] patchEntities(iterable<\App\Model\Entity\Urd> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Urd|false save(\App\Model\Entity\Urd $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Urd saveOrFail(\App\Model\Entity\Urd $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Urd>|false saveMany(iterable<\App\Model\Entity\Urd> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Urd> saveManyOrFail(iterable<\App\Model\Entity\Urd> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Urd>|false deleteMany(iterable<\App\Model\Entity\Urd> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Urd> deleteManyOrFail(iterable<\App\Model\Entity\Urd> $entities, array<string, mixed> $options = [])
+ * @extends \Cake\ORM\Table<array{}, \App\Model\Entity\Urd>
+ * @method bool delete(\App\Model\Entity\Urd $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\Urd $entity, array<string, mixed> $options = [])
  */
 class UrdsTable extends Table
 {

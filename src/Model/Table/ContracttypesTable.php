@@ -9,20 +9,20 @@ use Cake\Validation\Validator;
 /**
  * Contracttypes Model
  *
- * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationformsTable> $Applicationforms
  * @method \App\Model\Entity\Contracttype newEmptyEntity()
- * @method \App\Model\Entity\Contracttype newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Contracttype> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Contracttype get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Contracttype findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Contracttype patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Contracttype> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Contracttype|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Contracttype saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Contracttype>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Contracttype> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Contracttype>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Contracttype> deleteManyOrFail(iterable $entities, array $options = [])
+ * @method \App\Model\Entity\Contracttype newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Contracttype> newEntities(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Contracttype get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Contracttype findOrCreate($search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Contracttype patchEntity(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method array<\App\Model\Entity\Contracttype> patchEntities(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Contracttype|false save(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Contracttype saveOrFail(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Contracttype>|false saveMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Contracttype> saveManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Contracttype>|false deleteMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Contracttype> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class ContracttypesTable extends AppTable

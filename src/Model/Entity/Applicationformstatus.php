@@ -11,11 +11,11 @@ use Cake\ORM\Entity;
  * @property int $applicationform_id
  * @property int $has_validations
  * @property int $validationstatus_id
- * @property string|null $valid_percentage
+ * @property string $valid_percentage
  * @property int|null $current_sequence
- * @property int $en_cours
- * @property int $accepted
- * @property int $rejected
+ * @property int|null $en_cours
+ * @property int|null $accepted
+ * @property int|null $rejected
  *
  * @property \App\Model\Entity\Applicationform $applicationform
  * @property \App\Model\Entity\Validationstatus $validationstatus

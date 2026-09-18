@@ -19,7 +19,7 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\DateTime|null $modified
  *
  * @property \App\Model\Entity\Department $department
- * @property \App\Model\Entity\CgrCode[] $cgr_codes
+ * @property \App\Model\Entity\Department[] $using_departments
  */
 class CgrCode extends Entity
 {

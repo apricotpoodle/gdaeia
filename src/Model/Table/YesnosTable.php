@@ -9,20 +9,20 @@ use Cake\Validation\Validator;
 /**
  * Yesnos Model
  *
- * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
+ * @property \App\Model\Table\ApplicationformsTable $Applicationforms
  * @method \App\Model\Entity\Yesno newEmptyEntity()
- * @method \App\Model\Entity\Yesno newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\Yesno> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Yesno get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\Yesno findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\Yesno patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\Yesno> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\Yesno|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\Yesno saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\Yesno>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Yesno>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Yesno>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Yesno> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Yesno>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Yesno>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\Yesno>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\Yesno> deleteManyOrFail(iterable $entities, array $options = [])
+ * @method \App\Model\Entity\Yesno newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method list<\App\Model\Entity\Yesno> newEntities(list<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Yesno get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\Yesno findOrCreate(mixed $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Yesno patchEntity(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method list<\App\Model\Entity\Yesno> patchEntities(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Yesno|false save(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\Yesno saveOrFail(\Cake\Datasource\EntityInterface $entity, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Yesno>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Yesno>|false saveMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Yesno>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Yesno> saveManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Yesno>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Yesno>|false deleteMany(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
+ * @method iterable<\App\Model\Entity\Yesno>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Yesno> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
 class YesnosTable extends AppTable

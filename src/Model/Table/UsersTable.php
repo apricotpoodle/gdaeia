@@ -12,11 +12,27 @@ use Cake\Validation\Validator;
 /**
  * Users Model
  *
- * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\BelongsTo $Roles
- * @property \App\Model\Table\ApplicationformsTable&\Cake\ORM\Association\HasMany $Applicationforms
- * @property \App\Model\Table\UrdsTable&\Cake\ORM\Association\HasMany $Urds
- * @property \App\Model\Table\UserDepartmentsTable&\Cake\ORM\Association\HasMany $UserDepartments
- * @property \App\Model\Table\ValidationsTable&\Cake\ORM\Association\HasMany $Validations
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\RolesTable> $Roles
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationformsTable> $Applicationforms
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\UrdsTable> $Urds
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\UserDepartmentsTable> $UserDepartments
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ValidationsTable> $Validations
+ * @extends \Cake\ORM\Table<array{Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\User>
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\User>|false saveMany(iterable<\App\Model\Entity\User> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\User> saveManyOrFail(iterable<\App\Model\Entity\User> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\User>|false deleteMany(iterable<\App\Model\Entity\User> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\User> deleteManyOrFail(iterable<\App\Model\Entity\User> $entities, array<string, mixed> $options = [])
+ * @mixin \Cake\ORM\Behavior\TimestampBehavior
+ * @method \App\Model\Entity\User newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\User[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\User get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\User findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\User>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\User patchEntity(\App\Model\Entity\User $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\User[] patchEntities(iterable<\App\Model\Entity\User> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\User|false save(\App\Model\Entity\User $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\User saveOrFail(\App\Model\Entity\User $entity, array<string, mixed> $options = [])
+ * @method bool delete(\App\Model\Entity\User $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\User $entity, array<string, mixed> $options = [])
  */
 class UsersTable extends Table
 {
@@ -120,9 +136,9 @@ class UsersTable extends Table
     /**
      * Custom finder : Restreint la liste des utilisateurs à ceux visibles par l'opérateur.
      *
-     * @param \Cake\ORM\Query\SelectQuery $query
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query
      * @param \App\Model\Entity\User $user
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
@@ -140,15 +156,17 @@ class UsersTable extends Table
     /**
      * Restreint aux utilisateurs associés à tous les départements sélectionnés.
      *
-     * @param \Cake\ORM\Query\SelectQuery $query Requête à filtrer.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête à filtrer.
      * @param list<int> $departmentIds Départements explicitement sélectionnés.
      * @param \App\Model\Entity\User $user Opérateur connecté.
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findAssociatedWithDepartments(SelectQuery $query, array $departmentIds, User $user): SelectQuery
     {
         return $this->findVisibleTo($query, $user)
-            ->innerJoinWith('UserDepartments', function (SelectQuery $associationQuery) use ($departmentIds): SelectQuery {
+            ->innerJoinWith('UserDepartments', function (
+                SelectQuery $associationQuery,
+            ) use ($departmentIds): SelectQuery {
                 return $associationQuery->where(['UserDepartments.department_id IN' => $departmentIds]);
             })
             ->groupBy(['Users.id'])
@@ -158,10 +176,10 @@ class UsersTable extends Table
     /**
      * Restreint aux utilisateurs qui ne sont pas associés à tous les départements sélectionnés.
      *
-     * @param \Cake\ORM\Query\SelectQuery $query Requête à filtrer.
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête à filtrer.
      * @param list<int> $departmentIds Départements explicitement sélectionnés.
      * @param \App\Model\Entity\User $user Opérateur connecté.
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findNotAssociatedWithDepartments(SelectQuery $query, array $departmentIds, User $user): SelectQuery
     {

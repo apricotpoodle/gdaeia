@@ -43,9 +43,9 @@ class AppTable extends Table
      *
      * Utilisation : ->find('visibleTo', user: $currentUser)
      *
-     * @param \Cake\ORM\Query\SelectQuery $query
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query
      * @param \App\Model\Entity\User $user
-     * @return \Cake\ORM\Query\SelectQuery
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
@@ -61,8 +61,8 @@ class AppTable extends Table
      * Retourne un tableau clé-valeur filtré selon les droits de l'utilisateur.
      * Idéal pour hydrater les balises <select> des formulaires.
      *
-     * @param User $user L'utilisateur courant
-     * @return array
+     * @param \App\Model\Entity\User $user L'utilisateur courant
+     * @return array<int|string, mixed>
      */
     public function getVisibleList(User $user): array
     {
@@ -72,9 +72,9 @@ class AppTable extends Table
     /**
      * Custom finder qui combine 'visibleTo' et 'list'.
      *
-     * @param \Cake\ORM\Query\SelectQuery $query
-     * @param \App\Model\Entity\User $user
-     * @return \Cake\ORM\Query\SelectQuery
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query
+     * @param mixed ...$options Options transmis au finder `visibleTo`.
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
      */
     public function findVisibleList(SelectQuery $query, mixed ...$options): SelectQuery
     {

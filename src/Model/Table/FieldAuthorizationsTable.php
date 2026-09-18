@@ -10,21 +10,23 @@ use Cake\Validation\Validator;
 /**
  * FieldAuthorizations Model
  *
- * @property \App\Model\Table\RolesTable&\Cake\ORM\Association\BelongsTo $Roles
- * @method \App\Model\Entity\FieldAuthorization newEmptyEntity()
- * @method \App\Model\Entity\FieldAuthorization newEntity(array $data, array $options = [])
- * @method array<\App\Model\Entity\FieldAuthorization> newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\FieldAuthorization get(mixed $primaryKey, array|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
- * @method \App\Model\Entity\FieldAuthorization findOrCreate($search, ?callable $callback = null, array $options = [])
- * @method \App\Model\Entity\FieldAuthorization patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method array<\App\Model\Entity\FieldAuthorization> patchEntities(iterable $entities, array $data, array $options = [])
- * @method \App\Model\Entity\FieldAuthorization|false save(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method \App\Model\Entity\FieldAuthorization saveOrFail(\Cake\Datasource\EntityInterface $entity, array $options = [])
- * @method iterable<\App\Model\Entity\FieldAuthorization>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\FieldAuthorization>|false saveMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\FieldAuthorization>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\FieldAuthorization> saveManyOrFail(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\FieldAuthorization>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\FieldAuthorization>|false deleteMany(iterable $entities, array $options = [])
- * @method iterable<\App\Model\Entity\FieldAuthorization>|\Cake\Datasource\ResultSetInterface<\App\Model\Entity\FieldAuthorization> deleteManyOrFail(iterable $entities, array $options = [])
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\RolesTable> $Roles
+ * @method \App\Model\Entity\FieldAuthorization newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\FieldAuthorization[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\FieldAuthorization get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
+ * @method \App\Model\Entity\FieldAuthorization findOrCreate(\Cake\ORM\Query\SelectQuery<\App\Model\Entity\FieldAuthorization>|callable|array<string, mixed> $search, ?callable $callback = null, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\FieldAuthorization patchEntity(\App\Model\Entity\FieldAuthorization $entity, array<string, mixed> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\FieldAuthorization[] patchEntities(iterable<\App\Model\Entity\FieldAuthorization> $entities, array<array<string, mixed>> $data, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\FieldAuthorization|false save(\App\Model\Entity\FieldAuthorization $entity, array<string, mixed> $options = [])
+ * @method \App\Model\Entity\FieldAuthorization saveOrFail(\App\Model\Entity\FieldAuthorization $entity, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\FieldAuthorization>|false saveMany(iterable<\App\Model\Entity\FieldAuthorization> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\FieldAuthorization> saveManyOrFail(iterable<\App\Model\Entity\FieldAuthorization> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\FieldAuthorization>|false deleteMany(iterable<\App\Model\Entity\FieldAuthorization> $entities, array<string, mixed> $options = [])
+ * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\FieldAuthorization> deleteManyOrFail(iterable<\App\Model\Entity\FieldAuthorization> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
+ * @extends \Cake\ORM\Table<array{Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\FieldAuthorization>
+ * @method bool delete(\App\Model\Entity\FieldAuthorization $entity, array<string, mixed> $options = [])
+ * @method bool deleteOrFail(\App\Model\Entity\FieldAuthorization $entity, array<string, mixed> $options = [])
  */
 class FieldAuthorizationsTable extends Table
 {
@@ -91,7 +93,10 @@ class FieldAuthorizationsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['role_id', 'resource', 'field']), ['errorField' => 'role_id', 'message' => __('This combination of role_id, resource and field already exists')]);
+        $rules->add($rules->isUnique(['role_id', 'resource', 'field']), [
+            'errorField' => 'role_id',
+            'message' => __('This combination of role_id, resource and field already exists'),
+        ]);
         $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
 
         return $rules;
