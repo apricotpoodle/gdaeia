@@ -160,6 +160,39 @@ class UsersControllerTest extends TestCase
         $this->assertRedirectContains('/users');
     }
 
+    public function testLaConnexionNeSuitPasUnRetourDUsurpationSansSessionDUsurpation(): void
+    {
+        $this->get('/users/revert_identity');
+
+        $this->assertRedirectContains('/users/login?redirect=%2Fusers%2Frevert_identity');
+
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->get('/users/login?redirect=%2Fusers%2Frevert_identity');
+
+        $this->assertRedirect('/users/index');
+    }
+
+    public function testLaConnexionConserveUnRetourInterneApplicable(): void
+    {
+        $this->get('/users/bulk-departments');
+
+        $this->assertRedirectContains('/users/login?redirect=%2Fusers%2Fbulk-departments');
+
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->get('/users/login?redirect=%2Fusers%2Fbulk-departments');
+
+        $this->assertRedirect('/users/bulk-departments');
+    }
+
+    public function testLaConnexionIgnoreUnRetourExterne(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/users/login?redirect=https%3A%2F%2Fexample.test%2Fconnexion');
+
+        $this->assertRedirect('/users/index');
+    }
+
     public function testLeLienDAssociationDesDepartementsEstMasqueSansDroitDeCreation(): void
     {
         $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);

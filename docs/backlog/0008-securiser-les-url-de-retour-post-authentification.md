@@ -1,6 +1,6 @@
 # 0008 — Sécuriser les URL de retour post-authentification
 
-**Statut :** À planifier
+**Statut :** En cours
 
 **Priorité :** Moyenne
 
