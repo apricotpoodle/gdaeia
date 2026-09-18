@@ -5,6 +5,7 @@ namespace App\Policy;
 
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\User;
+use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Authorization\IdentityInterface;
 use Cake\ORM\TableRegistry;
 
@@ -89,32 +90,28 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
+        if ($user->get('issuperuser')) {
+            return true;
+        }
+
         if (!$this->canView($identity, $applicationform)) {
             return false;
         }
 
-        if ((int)$user->get('role_id') === User::ROLE_ADMIN || $user->get('issuperuser')) {
-            return true;
-        }
+        if ($this->hasWorkflow($applicationform)) {
+            if ((int)$applicationform->user_id === (int)$user->id) {
+                return false;
+            }
 
-        if ($this->hasActiveWorkflow($applicationform)) {
-            return TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->find()
-                ->innerJoinWith('ValidationWorkflowRuns', static function ($query) use ($applicationform) {
-                    return $query->where([
-                        'ValidationWorkflowRuns.applicationform_id' => $applicationform->id,
-                        'ValidationWorkflowRuns.state' => 'en_attente',
-                    ]);
-                })
-                ->where(['Applicationvalidationsteps.role_id' => $user->get('role_id')])
-                ->count() > 0;
+            return (new ApplicationformValidationWorkflow())->canEditDuringActiveStep($applicationform, $user);
         }
 
         return $applicationform->user_id === $user->id
             || in_array($user->get('role_id'), Applicationform::ALLOWED_ROLES_FOR_EDIT);
     }
 
-    /** Détermine si un cycle de validation est actif pour la demande. */
-    private function hasActiveWorkflow(Applicationform $applicationform): bool
+    /** Détermine si un cycle de validation existe pour la demande. */
+    private function hasWorkflow(Applicationform $applicationform): bool
     {
         if ($applicationform->id === null) {
             return false;
@@ -123,7 +120,6 @@ class ApplicationformPolicy extends AppPolicy
         return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
             ->where([
                 'applicationform_id' => $applicationform->id,
-                'state' => 'en_attente',
             ])
             ->count() > 0;
     }
@@ -186,8 +182,11 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        // Règle restrictive : Super Admin ou propriétaire de la demande
-        return $user->get('issuperuser') || $applicationform->user_id === $user->id;
+        if ($user->get('issuperuser')) {
+            return true;
+        }
+
+        return !$this->hasWorkflow($applicationform) && $applicationform->user_id === $user->id;
     }
 
     // =========================================================================

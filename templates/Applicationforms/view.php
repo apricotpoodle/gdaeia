@@ -51,7 +51,8 @@ $this->Html->script('views/Applicationforms/validation-workflow', ['type' => 'mo
         <div class="d-flex gap-2">
             <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index()) ?>
 
-            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::edit($applicationform)) ?>
+            <?php $isSuperuser = (bool)($identity?->getOriginalData()?->get('issuperuser') ?? false); ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::edit($applicationform, $isSuperuser)) ?>
 
             <?php if (($applicationform->validation_workflow_run ?? null) === null): ?>
                 <?= $this->Action->render(\App\View\Action\ApplicationformsActions::launchValidation($applicationform)) ?>
@@ -59,7 +60,7 @@ $this->Html->script('views/Applicationforms/validation-workflow', ['type' => 'mo
                 <?= $this->Action->render(\App\View\Action\ApplicationformsActions::resetValidation($applicationform)) ?>
             <?php endif; ?>
 
-            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::delete($applicationform)) ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::delete($applicationform, $isSuperuser)) ?>
         </div>
     </div>
 

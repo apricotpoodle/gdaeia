@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Service\Security\FieldAuthorizationService;
+use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
@@ -221,7 +222,7 @@ class ApplicationformsController extends AppController
 
         $success = false;
         try {
-            if ($this->Applicationforms->delete($applicationform)) {
+            if ((new ApplicationformValidationWorkflow())->deleteApplicationform($applicationform)) {
                 $message = __('La demande de recrutement #{0} a été supprimée avec succès.', $id);
                 $success = true;
             } else {

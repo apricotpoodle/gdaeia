@@ -17,6 +17,9 @@ class ApplicationformsControllerTest extends TestCase
 {
     use IntegrationTestTrait;
 
+    private const WORKFLOW_TEST_ID = 900_001;
+    private const RESET_TEST_RUN_ID = 900_002;
+
     protected array $fixtures = [
         'app.Applicationforms',
         'app.Departments',
@@ -210,12 +213,69 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('"errors":["Le d');
     }
 
+    /** Vérifie que le demandeur reste verrouillé dès la création du cycle. */
+    public function testLeDemandeurNePeutPasModifierUneDemandeAyantUnCycle(): void
+    {
+        $this->configureActiveWorkflowForEdit();
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => false, 'role_id' => User::ROLE_DEMANDEUR])]);
+        $this->enableCsrfToken();
+
+        $this->put('/api/applicationforms/1.json', ['jobtitle' => 'Modification interdite']);
+
+        $this->assertResponseCode(403);
+    }
+
+    /** Vérifie qu'un Admin visible ne bénéficie d'aucun droit d'édition général. */
+    public function testUnAdministrateurVisibleHorsEtapeActiveNePeutPasModifier(): void
+    {
+        $this->configureActiveWorkflowForEdit();
+        ConnectionManager::get('test')->update('users', ['role_id' => User::ROLE_ADMIN], ['id' => 2]);
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->put('/api/applicationforms/1.json', ['jobtitle' => 'Modification interdite']);
+
+        $this->assertResponseCode(403);
+    }
+
+    /** Vérifie qu'un Super Administrateur supprime atomiquement l'AF et son cycle. */
+    public function testLeSuperAdministrateurSupprimeLaDemandeEtSonCycle(): void
+    {
+        $this->configureActiveWorkflowForEdit();
+        $connection = ConnectionManager::get('test');
+        $connection->insert('validations', [
+            'id' => self::WORKFLOW_TEST_ID,
+            'applicationform_id' => 1,
+            'applicationvalidationstep_id' => self::WORKFLOW_TEST_ID,
+            'user_id' => 2,
+            'role_id' => 2,
+            'validationstatus_id' => null,
+            'validated' => '2026-09-18 10:00:00',
+            'is_proxy' => 0,
+            'created' => '2026-09-18 10:00:00',
+            'modified' => '2026-09-18 10:00:00',
+        ]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->delete('/api/applicationforms/1.json');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"success":true');
+        $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM applicationforms WHERE id = 1')->fetchColumn(0));
+        $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM validation_workflow_runs WHERE applicationform_id = 1')->fetchColumn(0));
+        $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM applicationvalidationsteps WHERE applicationform_id = 1')->fetchColumn(0));
+        $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM validations WHERE applicationform_id = 1')->fetchColumn(0));
+        $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM applicationvalidationsteps WHERE id = ' . self::WORKFLOW_TEST_ID)->fetchColumn(0));
+        $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM validations WHERE id = ' . self::WORKFLOW_TEST_ID)->fetchColumn(0));
+    }
+
     public function testUnAdministrateurPeutRemettreAZeroUnCycleExistant(): void
     {
         $connection = ConnectionManager::get('test');
         $now = '2026-09-17 12:00:00';
         $connection->insert('validation_workflow_runs', [
-            'id' => 901,
+            'id' => self::RESET_TEST_RUN_ID,
             'applicationform_id' => 1,
             'started_by_user_id' => 1,
             'state' => 'en_attente',
@@ -231,9 +291,9 @@ class ApplicationformsControllerTest extends TestCase
 
             $this->assertResponseOk();
             $this->assertResponseContains('"success":true');
-            $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM validation_workflow_runs WHERE id = 901')->fetchColumn(0));
+            $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM validation_workflow_runs WHERE id = ' . self::RESET_TEST_RUN_ID)->fetchColumn(0));
         } finally {
-            $connection->delete('validation_workflow_runs', ['id' => 901]);
+            $connection->delete('validation_workflow_runs', ['id' => self::RESET_TEST_RUN_ID]);
         }
     }
 
@@ -312,7 +372,7 @@ class ApplicationformsControllerTest extends TestCase
         $connection = ConnectionManager::get('test');
         $now = '2026-09-18 10:00:00';
         $connection->insert('validation_workflow_runs', [
-            'id' => 900,
+            'id' => self::WORKFLOW_TEST_ID,
             'applicationform_id' => 1,
             'started_by_user_id' => 1,
             'state' => 'en_attente',
@@ -321,25 +381,14 @@ class ApplicationformsControllerTest extends TestCase
             'modified' => $now,
         ]);
         $connection->insert('applicationvalidationsteps', [
-            'id' => 900,
+            'id' => self::WORKFLOW_TEST_ID,
             'applicationform_id' => 1,
-            'validation_workflow_run_id' => 900,
+            'validation_workflow_run_id' => self::WORKFLOW_TEST_ID,
             'validationsequence_id' => 1,
             'role_id' => 2,
             'sequence_number' => 1,
             'state' => 'en_attente',
             'reminder_count' => 0,
         ]);
-    }
-
-    /** Nettoie les tables du workflow non couvertes par les fixtures HTTP. */
-    protected function tearDown(): void
-    {
-        $connection = ConnectionManager::get('test');
-        $connection->delete('validations', ['applicationform_id' => 1]);
-        $connection->delete('applicationvalidationsteps', ['applicationform_id' => 1]);
-        $connection->delete('validation_workflow_runs', ['applicationform_id' => 1]);
-
-        parent::tearDown();
     }
 }

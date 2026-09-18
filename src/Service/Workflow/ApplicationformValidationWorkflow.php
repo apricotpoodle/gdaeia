@@ -23,6 +23,7 @@ final class ApplicationformValidationWorkflow
     private Table $users;
     private Table $validations;
     private Table $settings;
+    private Table $applicationforms;
 
     /** Initialise les tables utilisées par le workflow. */
     public function __construct()
@@ -35,6 +36,7 @@ final class ApplicationformValidationWorkflow
         $this->users = $locator->get('Users');
         $this->validations = $locator->get('Validations');
         $this->settings = $locator->get('WorkflowSettings');
+        $this->applicationforms = $locator->get('Applicationforms');
     }
 
     /** @return array{issues: list<string>, recipients: list<\App\Model\Entity\User>, run: object|null} */
@@ -129,34 +131,74 @@ final class ApplicationformValidationWorkflow
     public function reset(Applicationform $applicationform): array
     {
         return $this->runs->getConnection()->transactional(function () use ($applicationform): array {
-            /** @var \App\Model\Entity\ValidationWorkflowRun|null $run */
-            $run = $this->runs->find()
-                ->select(['id'])
-                ->where(['applicationform_id' => $applicationform->id])
-                ->first();
-            if ($run === null) {
+            return $this->purgeRun($applicationform, true);
+        });
+    }
+
+    /**
+     * Supprime une demande et, si nécessaire, son cycle dans une même transaction.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform Demande à supprimer.
+     * @return array{validations: int, steps: int, runs: int} Lignes de workflow supprimées.
+     */
+    public function deleteApplicationform(Applicationform $applicationform): array
+    {
+        return $this->runs->getConnection()->transactional(function () use ($applicationform): array {
+            $deleted = $this->purgeRun($applicationform, false);
+            $deleted['validations'] += $this->validations->deleteAll([
+                'applicationform_id' => $applicationform->id,
+            ]);
+            $deleted['steps'] += $this->steps->deleteAll([
+                'applicationform_id' => $applicationform->id,
+            ]);
+            if (!$this->applicationforms->delete($applicationform)) {
+                throw new RuntimeException(__('Impossible de supprimer la demande de recrutement.'));
+            }
+
+            unset($deleted['run_id']);
+
+            return $deleted;
+        });
+    }
+
+    /**
+     * Purge les données exclusivement rattachées à l'exécution de la demande.
+     *
+     * @return array{run_id: int|null, validations: int, steps: int, runs: int}
+     */
+    private function purgeRun(Applicationform $applicationform, bool $required): array
+    {
+        /** @var \App\Model\Entity\ValidationWorkflowRun|null $run */
+        $run = $this->runs->find()
+            ->select(['id'])
+            ->where(['applicationform_id' => $applicationform->id])
+            ->first();
+        if ($run === null) {
+            if ($required) {
                 throw new RuntimeException(__('Aucun cycle de validation ne peut être remis à zéro.'));
             }
 
-            $stepIds = $this->steps->find()
-                ->select(['id'])
-                ->where(['validation_workflow_run_id' => $run->id])
-                ->all()
-                ->extract('id')
-                ->toList();
-            $deletedValidations = $stepIds === []
-                ? 0
-                : $this->validations->deleteAll(['applicationvalidationstep_id IN' => $stepIds]);
-            $deletedSteps = $this->steps->deleteAll(['validation_workflow_run_id' => $run->id]);
-            $deletedRuns = $this->runs->deleteAll(['id' => $run->id]);
+            return ['run_id' => null, 'validations' => 0, 'steps' => 0, 'runs' => 0];
+        }
 
-            return [
-                'run_id' => (int)$run->id,
-                'validations' => $deletedValidations,
-                'steps' => $deletedSteps,
-                'runs' => $deletedRuns,
-            ];
-        });
+        $stepIds = $this->steps->find()
+            ->select(['id'])
+            ->where(['validation_workflow_run_id' => $run->id])
+            ->all()
+            ->extract('id')
+            ->toList();
+        $deletedValidations = $stepIds === []
+            ? 0
+            : $this->validations->deleteAll(['applicationvalidationstep_id IN' => $stepIds]);
+        $deletedSteps = $this->steps->deleteAll(['validation_workflow_run_id' => $run->id]);
+        $deletedRuns = $this->runs->deleteAll(['id' => $run->id]);
+
+        return [
+            'run_id' => (int)$run->id,
+            'validations' => $deletedValidations,
+            'steps' => $deletedSteps,
+            'runs' => $deletedRuns,
+        ];
     }
 
     /** @return array{state: string, nextRecipients: list<\App\Model\Entity\User>, final: bool} */
@@ -281,6 +323,32 @@ final class ApplicationformValidationWorkflow
         }
         foreach ($this->eligibleUsers($applicationform, (int)$step->role_id) as $eligible) {
             if ((int)$eligible->id === (int)$user->id) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /** Vérifie l'éligibilité d'édition sur une étape effectivement active. */
+    public function canEditDuringActiveStep(Applicationform $applicationform, User $user): bool
+    {
+        /** @var \App\Model\Entity\ValidationWorkflowRun|null $run */
+        $run = $this->runs->find()->where([
+            'applicationform_id' => $applicationform->id,
+            'state' => ValidationWorkflowRun::STATE_PENDING,
+        ])->first();
+        if ($run === null) {
+            return false;
+        }
+
+        /** @var iterable<\App\Model\Entity\Applicationvalidationstep> $steps */
+        $steps = $this->steps->find()->where([
+            'validation_workflow_run_id' => $run->id,
+            'state' => 'en_attente',
+        ])->all();
+        foreach ($steps as $step) {
+            if ($this->canVoteStep($step, $applicationform, $user, (int)$user->role_id === User::ROLE_ADMIN)) {
                 return true;
             }
         }

@@ -26,7 +26,7 @@ final class ApplicationformsActions
      * @param \App\Model\Entity\Applicationform $applicationform Demande à modifier.
      * @return \App\View\Action\UiAction Commande d'édition contextuelle.
      */
-    public static function edit(Applicationform $applicationform): UiAction
+    public static function edit(Applicationform $applicationform, bool $requiresConfirmation = false): UiAction
     {
         return new UiAction(
             UiAction::TYPE_LINK,
@@ -35,7 +35,12 @@ final class ApplicationformsActions
             ['action' => 'edit', $applicationform->id],
             'edit',
             $applicationform,
-            ['class' => 'btn btn-sm btn-primary'],
+            [
+                'class' => 'btn btn-sm btn-primary',
+                'confirm' => $requiresConfirmation
+                    ? __('Vous allez modifier une demande en cours de validation. Confirmez-vous cette opération ?')
+                    : null,
+            ],
         );
     }
 
@@ -60,7 +65,7 @@ final class ApplicationformsActions
      * @param \App\Model\Entity\Applicationform $applicationform Demande à supprimer.
      * @return \App\View\Action\UiAction Commande POST de suppression contextuelle.
      */
-    public static function delete(Applicationform $applicationform): UiAction
+    public static function delete(Applicationform $applicationform, bool $requiresConfirmation = false): UiAction
     {
         return new UiAction(
             UiAction::TYPE_POST_LINK,
@@ -70,7 +75,13 @@ final class ApplicationformsActions
             'delete',
             $applicationform,
             [
-                'confirm' => __('⚠️ Supprimer la demande n° {0} ?', $applicationform->id),
+                'confirm' => $requiresConfirmation
+                    ? __(
+                        '⚠️ La demande n° {0}, ses votes, ses étapes et son cycle seront définitivement supprimés. '
+                        . 'Confirmez-vous cette opération ?',
+                        $applicationform->id,
+                    )
+                    : __('⚠️ Supprimer la demande n° {0} ?', $applicationform->id),
                 'class' => 'btn btn-sm btn-outline-danger',
             ],
         );

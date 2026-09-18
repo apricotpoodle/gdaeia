@@ -38,6 +38,11 @@ class ActionHelper extends Helper
         }
 
         $options = ['escape' => false] + $action->options;
+        if ($action->type === UiAction::TYPE_LINK && isset($options['confirm'])) {
+            $confirmation = (string)$options['confirm'];
+            unset($options['confirm']);
+            $options['onclick'] = 'return confirm(' . json_encode($confirmation) . ');';
+        }
         $label = $action->icon === null
             ? h($action->label)
             : sprintf('<i class="fa-solid %s me-1" aria-hidden="true"></i>%s', h($action->icon), h($action->label));

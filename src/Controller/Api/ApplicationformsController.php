@@ -477,6 +477,31 @@ class ApplicationformsController extends AppController
     }
 
     /**
+     * Supprime une demande et son cycle éventuel pour un Super Administrateur.
+     *
+     * @param string $id Identifiant de la demande.
+     * @return \Cake\Http\Response Réponse JSON.
+     */
+    public function delete(string $id): Response
+    {
+        $this->request->allowMethod(['delete']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'delete');
+
+        try {
+            $deleted = (new ApplicationformValidationWorkflow())->deleteApplicationform($applicationform);
+
+            return $this->workflowResponse(
+                true,
+                __('La demande et son éventuel cycle de validation ont été supprimés.'),
+                $deleted,
+            );
+        } catch (RuntimeException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 409);
+        }
+    }
+
+    /**
      * Gestion centralisée des erreurs de validation
      *
      * @param \Cake\Datasource\EntityInterface $entity
