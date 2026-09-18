@@ -13,9 +13,7 @@ Les statuts utilisés sont : `À planifier`, `Prêt`, `En cours`, `Bloqué` et `
 - [0001 — Mettre en place un gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) — priorité moyenne.
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
 - [0002 — Mutualiser la présentation des erreurs de validation](0002-mutualiser-la-presentation-des-erreurs-validation.md) — priorité moyenne.
-- [0005 — Moderniser l'appel TreeBehavior::recover() des menus](0005-moderniser-lappel-treebehavior-recover-des-menus.md) — priorité moyenne.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute.
-- [0008 — Sécuriser les URL de retour post-authentification](0008-securiser-les-url-de-retour-post-authentification.md) — priorité moyenne.
 
 ## Migration vers un gestionnaire de tickets
 
