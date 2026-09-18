@@ -17,6 +17,19 @@ permissions:
 jobs:
   testsuite:
     runs-on: ubuntu-24.04
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: daetf2_test
+          MYSQL_ROOT_PASSWORD: test-ci
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -ptest-ci"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
     strategy:
       fail-fast: false
       matrix:
@@ -35,7 +48,7 @@ jobs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ matrix.php-version }}
-        extensions: mbstring, intl, pdo_sqlite
+        extensions: mbstring, intl, pdo_mysql
         ini-values: zend.assertions=1
         coverage: none
 
@@ -51,7 +64,8 @@ jobs:
     - name: Run PHPUnit
       run: vendor/bin/phpunit
       env:
-        DATABASE_TEST_URL: sqlite://./testdb.sqlite
+        DATABASE_TEST_URL: mysql://root:test-ci@127.0.0.1:3306/daetf2_test?encoding=utf8mb4
+        SECURITY_SALT: ${{ secrets.SECURITY_SALT }}
 
   coding-standard:
     name: Coding Standard & Static Analysis
@@ -78,4 +92,4 @@ jobs:
       if: always()
       run: phpstan
       env:
-        SECURITY_SALT: f76f1c8475585c46c6acd3ddcb8f5e0f15de524637bb4080a08c4afe7cfc9144
+        SECURITY_SALT: ${{ secrets.SECURITY_SALT }}
