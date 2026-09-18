@@ -1,8 +1,19 @@
 # 0009 — Remettre l’application en conformité PHP_CodeSniffer
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Haute
+
+## Prompt Codex
+
+Reprends la remise en conformité PHP_CodeSniffer. Lis `AGENTS.md`, puis ce
+ticket et l’ADR 0053. Vérifie `git status` à la racine et dans `app/`, puis
+exécute `make cs.check`. Isole un petit lot cohérent de fichiers qui ne
+chevauche pas des modifications locales existantes ; corrige uniquement le
+style, les imports, les PHPDoc et les signatures sans changer le comportement
+métier, le schéma, les routes ou les contrats API. Exécute les tests adaptés
+au lot, `make test.style`, `make cs.check` et `make stan`. Ne crée ni branche,
+ni commit, ni pull request sans accord explicite.
 
 ## Contexte
 
