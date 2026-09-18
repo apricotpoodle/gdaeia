@@ -45,9 +45,7 @@ class UsersController extends AppController
         $result = $this->Authentication->getResult();
 
         if ($result && $result->isValid()) {
-            $target = $this->Authentication->getLoginRedirect() ?? '/users/index';
-
-            return $this->Authentication->redirectAfterLogin($target);
+            return $this->redirect($this->getPostAuthenticationRedirect());
         }
 
         if ($this->request->is('post') && !$result?->isValid()) {
@@ -55,6 +53,27 @@ class UsersController extends AppController
         }
 
         return null;
+    }
+
+    /**
+     * Détermine une destination applicable après une authentification réussie.
+     *
+     * Le composant Authentication valide déjà le caractère local de l'URL.
+     * Les routes dont le sens dépend d'un état de session sont ensuite
+     * remplacées par une destination sûre lorsque cet état est absent.
+     *
+     * @return string URL locale de destination.
+     */
+    private function getPostAuthenticationRedirect(): string
+    {
+        $target = $this->Authentication->getLoginRedirect() ?? '/users/index';
+        $path = parse_url($target, PHP_URL_PATH);
+
+        if ($path === '/users/revert_identity' && !$this->Authentication->isImpersonating()) {
+            return '/users/index';
+        }
+
+        return $target;
     }
 
     /**
