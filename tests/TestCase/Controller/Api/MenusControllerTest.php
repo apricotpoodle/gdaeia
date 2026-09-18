@@ -7,6 +7,9 @@ use App\Model\Entity\User;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
+/**
+ * @link \App\Controller\Api\MenusController
+ */
 class MenusControllerTest extends TestCase
 {
     use IntegrationTestTrait;

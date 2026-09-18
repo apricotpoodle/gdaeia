@@ -7,6 +7,9 @@ use App\Model\Entity\User;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
+/**
+ * @link \App\Controller\Api\RolesController
+ */
 class RolesControllerTest extends TestCase
 {
     use IntegrationTestTrait;
@@ -62,6 +65,6 @@ class RolesControllerTest extends TestCase
         $this->get('/api/roles.json');
 
         $this->assertResponseOk();
-        $this->assertResponseContains('"data":[]');
+        $this->assertResponseRegExp('/"data"\\s*:\\s*\\[\\]/');
     }
 }

@@ -18,7 +18,7 @@ use Throwable;
  * @class MenusController
  * @description Contrôleur d'API distribuant l'arborescence filtrée selon les rôles.
  * Compatible PHPStan Niveau 8+.
- * * @property \App\Model\Table\MenusTable $Menus
+ * @property \App\Model\Table\MenusTable $Menus
  */
 class MenusController extends AppController
 {
@@ -34,17 +34,11 @@ class MenusController extends AppController
         $this->viewBuilder()->setClassName('Json');
     }
 
-    /**
-     * Événement de cycle de vie exécuté avant le routage de l'action.
-     * Exempte l'action d'autorisation d'infrastructure globale.
-     *
-     * @param \Cake\Event\EventInterface $event L'événement en cours.
-     * @return \Cake\Http\Response|null|void
-     */
+    /** @inheritDoc */
     public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
-        $this->Authorization->skipAuthorization(['index']);
+        $this->Authorization->skipAuthorization();
     }
 
     /**
@@ -68,6 +62,7 @@ class MenusController extends AppController
         $rightsFormatter = $this->createGridRightsFormatter(['moveUp', 'moveDown']);
 
         // 3. Application récursive des droits pour la vue en arbre de Tabulator
+        /** @var iterable<int, \App\Model\Entity\Menu> $menus */
         $data = $this->formatMenuTreeWithRights($menus, $rightsFormatter);
 
         $this->set([
@@ -256,11 +251,13 @@ class MenusController extends AppController
             ->where(['Menus.id IN' => $selectedMenuIds])
             ->all()
             ->toList();
+        /** @var list<\App\Model\Entity\Menu> $selectedMenus */
 
         $allMenus = $this->Menus->find('roleAccessVisibleTo', user: $user)
             ->select(['id', 'lft', 'rght'])
             ->all()
             ->toList();
+        /** @var list<\App\Model\Entity\Menu> $allMenus */
         $menuIds = [];
         foreach ($allMenus as $menu) {
             foreach ($selectedMenus as $selectedMenu) {
@@ -335,16 +332,16 @@ class MenusController extends AppController
     private function jsonSuccess(array $data): Response
     {
         return $this->response->withType('application/json')
-            ->withStringBody(json_encode(['success' => true] + $data));
+            ->withStringBody((string)json_encode(['success' => true] + $data));
     }
 
     /**
      * Parcourt l'arborescence pour injecter dynamiquement 'grid_rights'
      * et s'assurer que chaque nœud porte son ID.
      *
-     * @param iterable $menus
+     * @param iterable<int, \App\Model\Entity\Menu> $menus
      * @param callable $rightsFormatter
-     * @return array
+     * @return list<\App\Model\Entity\Menu>
      */
     private function formatMenuTreeWithRights(iterable $menus, callable $rightsFormatter): array
     {
@@ -377,7 +374,7 @@ class MenusController extends AppController
         /** @var \App\Model\Entity\User|null $user */
         $user = $this->getRequest()->getAttribute('identity')?->getOriginalData();
 
-        /** @var \Cake\ORM\Query\SelectQuery $query */
+        /** @var \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Menu> $query */
         $query = $this->Menus->find('threaded')
             ->where(['Menus.active' => true])
             ->orderBy(['Menus.lft' => 'ASC']);
@@ -394,7 +391,7 @@ class MenusController extends AppController
                 if ($roleId !== null) {
                     $roleMenusTable = TableRegistry::getTableLocator()->get('RoleMenus');
 
-                    /** @var \Cake\ORM\Query\SelectQuery $allowedMenuIdsQuery */
+                    /** @var \Cake\ORM\Query\SelectQuery<\App\Model\Entity\RoleMenu> $allowedMenuIdsQuery */
                     $allowedMenuIdsQuery = $roleMenusTable->find()
                         ->select(['menu_id'])
                         ->where(['role_id' => $roleId]);

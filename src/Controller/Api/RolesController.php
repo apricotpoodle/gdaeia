@@ -10,7 +10,11 @@ use App\Service\DataGrid\TabulatorAdapter;
 use Cake\Datasource\EntityInterface;
 use Cake\Http\Response;
 
-/** API JSON du référentiel des rôles. */
+/**
+ * API JSON du référentiel des rôles.
+ *
+ * @property \App\Model\Table\RolesTable $Roles
+ */
 class RolesController extends AppController
 {
     /** @return void */
@@ -103,7 +107,12 @@ class RolesController extends AppController
     /** @return \App\Model\Entity\Role */
     private function getActiveRole(string $id): Role
     {
-        return $this->Roles->find('visibleTo', user: $this->getOperator())->where(['Roles.id' => $id])->firstOrFail();
+        /** @var \App\Model\Entity\Role $role */
+        $role = $this->Roles->find('visibleTo', user: $this->getOperator())
+            ->where(['Roles.id' => $id])
+            ->firstOrFail();
+
+        return $role;
     }
 
     /** @return \App\Model\Entity\User */
@@ -124,7 +133,7 @@ class RolesController extends AppController
     /** @param array<string, mixed> $data @return \Cake\Http\Response */
     private function jsonSuccess(array $data = [], ?string $message = null): Response
     {
-        return $this->response->withType('application/json')->withStringBody(json_encode([
+        return $this->response->withType('application/json')->withStringBody((string)json_encode([
             'success' => true,
             'message' => $message,
         ] + $data));
@@ -133,7 +142,7 @@ class RolesController extends AppController
     /** @param array<string, mixed> $errors @return \Cake\Http\Response */
     private function jsonError(string $message, array $errors = []): Response
     {
-        return $this->response->withType('application/json')->withStatus(400)->withStringBody(json_encode([
+        return $this->response->withType('application/json')->withStatus(400)->withStringBody((string)json_encode([
             'success' => false,
             'message' => $message,
             'errors' => $errors,

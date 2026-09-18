@@ -33,10 +33,10 @@ class FieldAuthorizationsController extends AppController
     /**
      * Bypass propre du middleware strict pour l'action index
      */
-    public function beforeFilter(EventInterface $event) : void
+    public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
-        $this->Authorization->skipAuthorization(['index']);
+        $this->Authorization->skipAuthorization();
     }
 
     /**
@@ -62,7 +62,7 @@ class FieldAuthorizationsController extends AppController
         // 4. Pagination
         $paginatedData = $this->paginate($query, [
             'limit' => (int)($queryParams['size'] ?? 20),
-            'page'  => (int)($queryParams['page'] ?? 1),
+            'page' => (int)($queryParams['page'] ?? 1),
             'sortableFields' => [],
         ]);
 
@@ -121,7 +121,7 @@ class FieldAuthorizationsController extends AppController
 
         if ($this->FieldAuthorizations->save($fieldAuthorization)) {
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => true]));
+                ->withStringBody((string)json_encode(['success' => true]));
         }
 
         return $this->handleValidationError($fieldAuthorization);
@@ -147,7 +147,7 @@ class FieldAuthorizationsController extends AppController
 
         if ($this->FieldAuthorizations->save($fieldAuthorization)) {
             return $this->response->withType('application/json')
-                ->withStringBody(json_encode(['success' => true]));
+                ->withStringBody((string)json_encode(['success' => true]));
         }
 
         return $this->handleValidationError($fieldAuthorization);
@@ -168,6 +168,6 @@ class FieldAuthorizationsController extends AppController
 
         return $this->response->withType('application/json')
             ->withStatus(400)
-            ->withStringBody(json_encode(['success' => false, 'message' => $message]));
+            ->withStringBody((string)json_encode(['success' => false, 'message' => $message]));
     }
 }
