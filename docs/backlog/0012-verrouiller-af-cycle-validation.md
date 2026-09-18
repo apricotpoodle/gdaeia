@@ -1,6 +1,6 @@
 # 0012 — Verrouiller une AF pendant son cycle de validation
 
-**Statut :** Prêt
+**Statut :** Terminé
 
 **Priorité :** Haute
 

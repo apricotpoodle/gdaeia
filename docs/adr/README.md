@@ -67,6 +67,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0056** | Remise à zéro exceptionnelle d’un cycle de validation | **Accepté** | [`0056-remise-a-zero-cycle-validation.md`](./0056-remise-a-zero-cycle-validation.md) |
 | **ADR 0057** | Point d’entrée fiche pour la réinitialisation d’un cycle | **Accepté** | [`0057-point-entree-fiche-reinitialisation-cycle.md`](./0057-point-entree-fiche-reinitialisation-cycle.md) |
 | **ADR 0058** | Séparation du paramétrage global du workflow | **Accepté** | [`0058-separation-parametrage-global-workflow.md`](./0058-separation-parametrage-global-workflow.md) |
+| **ADR 0059** | Validation locale avant partage | **Accepté** | [`0059-validation-locale-avant-partage.md`](./0059-validation-locale-avant-partage.md) |
 
 ---
 
