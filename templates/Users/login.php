@@ -18,8 +18,6 @@
                 <p class="text-muted small">Système de validation et gestion des demandes d'embauche</p>
             </div>
 
-            <?= $this->Flash->render() ?>
-
             <?= $this->Form->create(null, ['class' => 'needs-validation']) ?>
 
             <div class="mb-3">

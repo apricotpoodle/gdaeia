@@ -6,6 +6,7 @@ namespace App\Test\TestCase\Controller\Api;
 use App\Model\Entity\User;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use DateTime;
 
 /**
  * @link \App\Controller\Api\UsersController
@@ -222,5 +223,55 @@ class UsersControllerTest extends TestCase
         $this->get('/users/forgot-password');
         $this->assertResponseOk();
         $this->assertResponseContains('Retour à la connexion');
+    }
+
+    public function testLeFormulaireWebAfficheLeChampInvalideDeLUtilisateur(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/users/edit/2', ['email' => '']);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Champ « Adresse courriel » :');
+    }
+
+    public function testLApiPresenteLesErreursDeValidationDeLUtilisateur(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/users/edit/2.json', ['email' => '']);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('Champ « Adresse courriel » :');
+        $this->assertResponseContains('"field":"email","label":"Adresse courriel","reason":');
+    }
+
+    public function testLaCreationApiRetourneLesErreursExploitablesParLeFormulaire(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/users/add.json', ['email' => '', 'password' => 'mot-de-passe', 'role_id' => 1]);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"success":false');
+        $this->assertResponseContains('"message":"Champ « Adresse courriel » :');
+        $this->assertResponseContains('"field":"email","label":"Adresse courriel","reason":');
+    }
+
+    public function testLaReinitialisationAfficheUneErreurDeMotDePasseExplicite(): void
+    {
+        $this->getTableLocator()->get('Users')->updateAll([
+            'token' => 'jeton-de-test',
+            'token_expires' => new DateTime('+1 day'),
+        ], ['id' => 2]);
+        $this->enableCsrfToken();
+
+        $this->post('/users/reset-password/jeton-de-test', ['password' => '']);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Champ « Mot de passe » :');
     }
 }

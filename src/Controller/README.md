@@ -6,6 +6,12 @@ Conformément à notre architecture (Fat Models, Skinny Controllers), ces classe
 ## Architecture Hybride
 Certaines actions, comme la suppression (`delete`), sont hybrides : elles détectent si la requête est XHR/AJAX pour renvoyer du JSON (négociation de contenu), ou effectuent une redirection standard avec un message Flash le cas échéant.
 
+## Erreurs des formulaires Web
+
+Après un échec de sauvegarde, les contrôleurs Web appellent `AppController::flashValidationErrors()` avec l'entité et sa ressource ORM. Cette méthode utilise `ValidationErrorPresenter` pour produire un message Flash par champ invalide, avec tous ses motifs distincts. Les formulaires liés à l'entité conservent les erreurs CakePHP près des contrôles.
+
+Une sauvegarde échouée sans erreur d'entité reçoit un message générique. Le parcours de demande de réinitialisation du mot de passe garde son message uniforme, qu'une adresse soit connue ou non.
+
 ## Redirections post-authentification
 
 `UsersController` ne suit que les URL de retour locales validées par le composant
@@ -15,3 +21,4 @@ absent après la connexion.
 
 ## ADRs Associés
 * [ADR 0046 : Standardisation du CRUD hybride](../../docs/adr/0046-standardisation-crud-field-authorizations.md)
+* [ADR 0060 : Un message Flash par champ invalide](../../docs/adr/0060-un-flash-par-champ-invalide-web.md)

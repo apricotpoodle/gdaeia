@@ -7,7 +7,6 @@ use App\Controller\AppController;
 use App\Model\Entity\ValidationCommentTemplate;
 use App\Model\Table\ValidationCommentTemplatesTable;
 use App\Service\DataGrid\TabulatorAdapter;
-use Cake\Datasource\EntityInterface;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Response;
 
@@ -41,7 +40,7 @@ class WorkflowSettingsController extends AppController
         $setting ??= $settings->newEntity(['name' => 'validation.default_due_hours']);
         $setting->set('value', (string)$hours);
         if (!$settings->save($setting)) {
-            return $this->jsonError(__('Impossible d’enregistrer le délai global.'));
+            return $this->validationErrorResponse($setting, 'WorkflowSettings');
         }
 
         return $this->jsonSuccess(['default_due_hours' => $hours]);
@@ -119,7 +118,7 @@ class WorkflowSettingsController extends AppController
         ValidationCommentTemplatesTable $table,
     ): Response {
         if (!$table->save($template)) {
-            return $this->validationError($template);
+            return $this->validationErrorResponse($template, 'ValidationCommentTemplates');
         }
 
         return $this->jsonSuccess(['template' => $template]);
@@ -151,11 +150,5 @@ class WorkflowSettingsController extends AppController
                 'message' => $message,
                 'errors' => $errors,
             ], JSON_UNESCAPED_UNICODE));
-    }
-
-    /** Retourne les erreurs ORM conformément au contrat des erreurs de validation API. */
-    private function validationError(EntityInterface $entity): Response
-    {
-        return $this->jsonError(__('Le formulaire contient des données invalides.'), $entity->getErrors(), 422);
     }
 }

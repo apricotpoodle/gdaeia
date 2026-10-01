@@ -158,32 +158,48 @@ class MenusController extends AppController
         }
 
         $roleMenus = $this->fetchTable('RoleMenus');
-        $created = $roleMenus->getConnection()->transactional(function () use ($roleMenus, $roleId, $menuIds): int {
-            $existingMenuIds = $roleMenus->find()
-                ->select(['menu_id'])
-                ->where([
-                    'role_id' => $roleId,
-                    'menu_id IN' => $menuIds,
-                ])
-                ->all()
-                ->extract('menu_id')
-                ->map(fn($id): int => (int)$id)
-                ->toList();
-            $missingMenuIds = array_values(array_diff($menuIds, $existingMenuIds));
+        /** @var \App\Model\Entity\RoleMenu|null $invalidRoleMenu */
+        $invalidRoleMenu = null;
+        try {
+            $created = $roleMenus->getConnection()->transactional(function () use (
+                $roleMenus,
+                $roleId,
+                $menuIds,
+                &$invalidRoleMenu,
+            ): int {
+                $existingMenuIds = $roleMenus->find()
+                    ->select(['menu_id'])
+                    ->where([
+                        'role_id' => $roleId,
+                        'menu_id IN' => $menuIds,
+                    ])
+                    ->all()
+                    ->extract('menu_id')
+                    ->map(fn($id): int => (int)$id)
+                    ->toList();
+                $missingMenuIds = array_values(array_diff($menuIds, $existingMenuIds));
 
-            foreach ($missingMenuIds as $menuId) {
-                $roleMenu = $roleMenus->newEntity([
-                    'role_id' => $roleId,
-                    'menu_id' => $menuId,
-                    'department_id' => null,
-                ]);
-                if (!$roleMenus->save($roleMenu)) {
-                    throw new RuntimeException(__('Impossible d’enregistrer une association de rôle.'));
+                foreach ($missingMenuIds as $menuId) {
+                    $roleMenu = $roleMenus->newEntity([
+                        'role_id' => $roleId,
+                        'menu_id' => $menuId,
+                        'department_id' => null,
+                    ]);
+                    if (!$roleMenus->save($roleMenu)) {
+                        $invalidRoleMenu = $roleMenu;
+                        throw new RuntimeException(__('Impossible d’enregistrer une association de rôle.'));
+                    }
                 }
+
+                return count($missingMenuIds);
+            });
+        } catch (RuntimeException $exception) {
+            if ($invalidRoleMenu === null) {
+                throw $exception;
             }
 
-            return count($missingMenuIds);
-        });
+            return $this->validationErrorResponse($invalidRoleMenu, 'RoleMenus');
+        }
 
         return $this->jsonSuccess(['associations_created' => $created]);
     }

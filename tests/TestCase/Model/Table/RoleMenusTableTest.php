@@ -89,4 +89,19 @@ class RoleMenusTableTest extends TestCase
         $this->assertFalse($this->RoleMenus->save($roleMenu));
         $this->assertArrayHasKey('menu_id', $roleMenu->getErrors());
     }
+
+    public function testUnDoublonDAssociationRecoitUnMotifFrancais(): void
+    {
+        $roleMenu = $this->RoleMenus->newEntity([
+            'role_id' => 1,
+            'menu_id' => 1,
+            'department_id' => 1,
+        ]);
+
+        $this->assertFalse($this->RoleMenus->save($roleMenu));
+        $this->assertContains(
+            'Cette option de menu est déjà associée à ce rôle et à ce département.',
+            $roleMenu->getError('role_id'),
+        );
+    }
 }

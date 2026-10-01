@@ -62,6 +62,17 @@ class MenusControllerTest extends TestCase
         $this->assertSession('Vous n’êtes pas autorisé à administrer les menus.', 'Flash.flash.0.message');
     }
 
+    public function testLeFormulaireWebAfficheLeChampInvalideDuMenu(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/menus/add', ['name' => str_repeat('M', 256), 'url' => '/menu']);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Champ « Nom du menu » :');
+    }
+
     /** Vérifie que l'attribution couvre aussi les descendants du menu sélectionné. */
     public function testLApiAttribueUnRoleAuMenuSelectionne(): void
     {

@@ -91,4 +91,20 @@ class FieldAuthorizationsTableTest extends TestCase
         $this->assertFalse($this->FieldAuthorizations->save($authorization));
         $this->assertArrayHasKey('role_id', $authorization->getErrors());
     }
+
+    public function testUnDoublonDAutorisationRecoitUnMotifFrancais(): void
+    {
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => 1,
+            'resource' => 'Lorem ipsum dolor sit amet',
+            'field' => 'Lorem ipsum dolor sit amet',
+            'access_level' => 'EDIT',
+        ]);
+
+        $this->assertFalse($this->FieldAuthorizations->save($authorization));
+        $this->assertContains(
+            'Une autorisation existe déjà pour ce rôle, cette ressource et ce champ.',
+            $authorization->getError('role_id'),
+        );
+    }
 }

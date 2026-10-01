@@ -93,21 +93,22 @@ class RolesTable extends AppTable
         $validator
             ->scalar('code')
             ->maxLength('code', 16)
-            ->requirePresence('code', 'create')
-            ->notEmptyString('code')
+            ->requirePresence('code', 'create', __('Ce champ est obligatoire.'))
+            ->notEmptyString('code', __('Ce champ est obligatoire.'))
             ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
             ->scalar('name')
             ->maxLength('name', 64)
-            ->requirePresence('name', 'create')
-            ->notEmptyString('name')
+            ->requirePresence('name', 'create', __('Ce champ est obligatoire.'))
+            ->notEmptyString('name', __('Ce champ est obligatoire.'))
             ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
             ->scalar('sort')
             ->maxLength('sort', 64)
-            ->notEmptyString('sort');
+            ->requirePresence('sort', 'create', __('Ce champ est obligatoire.'))
+            ->notEmptyString('sort', __('Ce champ est obligatoire.'));
 
         $validator
             ->dateTime('deleted')

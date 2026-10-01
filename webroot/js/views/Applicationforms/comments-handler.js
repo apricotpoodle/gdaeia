@@ -18,18 +18,20 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: formData
         })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erreur serveur (' + response.status + ')');
+        .then(async response => {
+            const isJson = response.headers.get('content-type')?.includes('application/json');
+            const data = isJson ? await response.json() : null;
+            if (!response.ok || data?.success === false) {
+                throw new Error(data?.message || 'Impossible d\'enregistrer le commentaire.');
             }
-            return response.json();
+            return data;
         })
         .then(data => {
-            if (data.success) {
+            if (data?.success) {
                 // Rechargement pour afficher le nouveau commentaire dans le fil
                 window.location.reload();
             } else {
-                alert(data.message || 'Impossible d\'enregistrer le commentaire.');
+                alert(data?.message || 'Impossible d\'enregistrer le commentaire.');
             }
         })
         .catch(err => {

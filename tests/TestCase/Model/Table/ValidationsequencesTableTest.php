@@ -93,6 +93,22 @@ class ValidationsequencesTableTest extends TestCase
         $this->assertArrayHasKey('role_id', $sequence->getErrors());
     }
 
+    public function testUnDoublonDeSequenceRecoitUnMotifFrancais(): void
+    {
+        $sequence = $this->Validationsequences->newEntity([
+            'department_id' => 1,
+            'name' => 'Autre séquence',
+            'role_id' => 1,
+            'sequence' => 1,
+        ]);
+
+        $this->assertFalse($this->Validationsequences->save($sequence));
+        $this->assertContains(
+            'Ce rôle possède déjà une séquence de validation pour ce département.',
+            $sequence->getError('department_id'),
+        );
+    }
+
     /** Le libellé technique peut rester vide, mais une étape est numérotée à partir de 1. */
     public function testLeLibellePeutEtreVideEtLaSequenceDoitEtrePositive(): void
     {

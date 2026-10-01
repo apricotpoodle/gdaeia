@@ -17,9 +17,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\ValidationErrorPresenter;
 use Cake\Controller\Controller;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
+use Cake\Http\Response;
 
 /**
  * Application Controller
@@ -30,9 +32,78 @@ use Cake\Event\EventInterface;
  * @link https://book.cakephp.org/5/en/controllers.html#the-app-controller
  * @property \Authentication\Controller\Component\AuthenticationComponent $Authentication
  * @property \Authorization\Controller\Component\AuthorizationComponent $Authorization
+ * @property \Cake\Controller\Component\FlashComponent $Flash
  */
 class AppController extends Controller
 {
+    /**
+     * Affiche un message Flash par champ invalide, ou un échec sans détail ORM.
+     *
+     * @param \Cake\Datasource\EntityInterface $entity Entité dont la sauvegarde a échoué.
+     * @param string $resource Nom de la ressource ORM pour les libellés des champs.
+     * @return void
+     */
+    protected function flashValidationErrors(EntityInterface $entity, string $resource): void
+    {
+        if ($entity->getErrors() === []) {
+            $this->Flash->error(__('Impossible d’enregistrer les données. Veuillez réessayer.'));
+
+            return;
+        }
+
+        $presentation = (new ValidationErrorPresenter())->present($entity, $resource);
+        /** @var array<string, array{label: string, reasons: list<string>}> $messagesByField */
+        $messagesByField = [];
+        foreach ($presentation['errors'] as $error) {
+            $field = $error['field'];
+            $messagesByField[$field] ??= ['label' => $error['label'], 'reasons' => []];
+            if (!in_array($error['reason'], $messagesByField[$field]['reasons'], true)) {
+                $messagesByField[$field]['reasons'][] = $error['reason'];
+            }
+        }
+
+        if ($messagesByField === []) {
+            $this->Flash->error(__('Impossible d’enregistrer les données. Veuillez réessayer.'));
+
+            return;
+        }
+
+        foreach ($messagesByField as $details) {
+            $this->Flash->error(__(
+                'Champ « {0} » : {1}',
+                $details['label'],
+                implode(' ', $details['reasons']),
+            ));
+        }
+    }
+
+    /**
+     * Retourne le contrat API de validation, ou un échec technique sans erreur ORM.
+     *
+     * @param \Cake\Datasource\EntityInterface $entity Entité dont la sauvegarde a échoué.
+     * @param string $resource Ressource ORM utilisée pour les libellés.
+     * @return \Cake\Http\Response Réponse JSON.
+     */
+    protected function validationErrorResponse(EntityInterface $entity, string $resource): Response
+    {
+        if ($entity->getErrors() === []) {
+            return $this->response->withType('application/json')->withStatus(500)
+                ->withStringBody((string)json_encode([
+                    'success' => false,
+                    'message' => __('Impossible d’enregistrer les données. Veuillez réessayer.'),
+                ], JSON_UNESCAPED_UNICODE));
+        }
+
+        $presentation = (new ValidationErrorPresenter())->present($entity, $resource);
+
+        return $this->response->withType('application/json')->withStatus(422)
+            ->withStringBody((string)json_encode([
+                'success' => false,
+                'message' => $presentation['summary'],
+                'errors' => $presentation['errors'],
+            ], JSON_UNESCAPED_UNICODE));
+    }
+
     /**
      * Initialization hook method.
      *

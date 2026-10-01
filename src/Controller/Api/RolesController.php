@@ -7,7 +7,6 @@ use App\Controller\AppController;
 use App\Model\Entity\Role;
 use App\Model\Entity\User;
 use App\Service\DataGrid\TabulatorAdapter;
-use Cake\Datasource\EntityInterface;
 use Cake\Http\Response;
 
 /**
@@ -66,7 +65,7 @@ class RolesController extends AppController
             return $this->jsonSuccess(['id' => $role->id], __('Le rôle a été créé avec succès.'));
         }
 
-        return $this->validationError($role);
+        return $this->validationErrorResponse($role, 'Roles');
     }
 
     /** Modifie un rôle non socle. */
@@ -81,7 +80,7 @@ class RolesController extends AppController
             return $this->jsonSuccess(message: __('Le rôle a été mis à jour avec succès.'));
         }
 
-        return $this->validationError($role);
+        return $this->validationErrorResponse($role, 'Roles');
     }
 
     /** Désactive logiquement un rôle non socle. */
@@ -122,12 +121,6 @@ class RolesController extends AppController
         $user = $this->request->getAttribute('identity')->getOriginalData();
 
         return $user;
-    }
-
-    /** @param \Cake\Datasource\EntityInterface $entity @return \Cake\Http\Response */
-    private function validationError(EntityInterface $entity): Response
-    {
-        return $this->jsonError(__('Le formulaire contient des données invalides.'), $entity->getErrors());
     }
 
     /** @param array<string, mixed> $data @return \Cake\Http\Response */

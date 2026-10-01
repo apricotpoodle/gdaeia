@@ -467,7 +467,7 @@ export class TabulatorBuilder {
                         currentTable.clearHeaderFilter();
                         currentTable.clearSort();
                         if (typeof FlashManager !== 'undefined') {
-                            FlashManager.info("Filtres et tris réinitialisés.", 3000);
+                            FlashManager.info("Filtres et tris réinitialisés.");
                         }
                     }
 

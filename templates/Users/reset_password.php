@@ -16,8 +16,6 @@
                 <p class="text-muted small mb-0"><?= __('Saisissez et confirmez votre nouveau mot de passe de sécurité') ?></p>
             </div>
 
-            <?= $this->Flash->render() ?>
-
             <?= $this->Form->create() ?>
 
             <div class="mb-3">

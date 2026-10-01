@@ -6,7 +6,6 @@ namespace App\Controller\Api;
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
-use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\ORM\TableRegistry;
@@ -124,7 +123,7 @@ class FieldAuthorizationsController extends AppController
                 ->withStringBody((string)json_encode(['success' => true]));
         }
 
-        return $this->handleValidationError($fieldAuthorization);
+        return $this->validationErrorResponse($fieldAuthorization, 'FieldAuthorizations');
     }
 
     /**
@@ -150,24 +149,6 @@ class FieldAuthorizationsController extends AppController
                 ->withStringBody((string)json_encode(['success' => true]));
         }
 
-        return $this->handleValidationError($fieldAuthorization);
-    }
-
-    /**
-     * Gestion centralisée des erreurs de validation
-     */
-    private function handleValidationError(EntityInterface $entity): Response
-    {
-        $errors = $entity->getErrors();
-        $message = __('Le formulaire contient des données invalides.');
-
-        if (!empty($errors)) {
-            $firstError = current(reset($errors));
-            $message = (string)$firstError;
-        }
-
-        return $this->response->withType('application/json')
-            ->withStatus(400)
-            ->withStringBody((string)json_encode(['success' => false, 'message' => $message]));
+        return $this->validationErrorResponse($fieldAuthorization, 'FieldAuthorizations');
     }
 }

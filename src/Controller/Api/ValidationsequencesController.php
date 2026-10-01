@@ -113,9 +113,11 @@ class ValidationsequencesController extends AppController
             throw new NotFoundException(__('Le rôle validateur est introuvable ou inactif.'));
         }
 
+        /** @var \App\Model\Entity\Validationsequence|null $invalidSequence */
+        $invalidSequence = null;
         try {
             $created = $this->Validationsequences->getConnection()->transactional(
-                function () use ($departmentIds, $roleId, $sequence): int {
+                function () use ($departmentIds, $roleId, $sequence, &$invalidSequence): int {
                     $existing = $this->Validationsequences->find()
                     ->where(['department_id IN' => $departmentIds, 'role_id' => $roleId])
                     ->all()->indexBy('department_id')->toArray();
@@ -130,6 +132,7 @@ class ValidationsequencesController extends AppController
                                 'name' => '',
                                 ]);
                                 if (!$this->Validationsequences->save($existing[$departmentId])) {
+                                    $invalidSequence = $existing[$departmentId];
                                     throw new RuntimeException(__(
                                         'Impossible de réactiver la séquence de validation.',
                                     ));
@@ -145,6 +148,7 @@ class ValidationsequencesController extends AppController
                         'name' => '',
                         ]);
                         if (!$this->Validationsequences->save($entity)) {
+                            $invalidSequence = $entity;
                             throw new RuntimeException(__('Impossible d’enregistrer la séquence de validation.'));
                         }
                         $created++;
@@ -154,7 +158,13 @@ class ValidationsequencesController extends AppController
                     return $created;
                 },
             );
-        } catch (BadRequestException | RuntimeException $exception) {
+        } catch (BadRequestException $exception) {
+            return $this->jsonError($exception->getMessage());
+        } catch (RuntimeException $exception) {
+            if ($invalidSequence !== null) {
+                return $this->validationErrorResponse($invalidSequence, 'Validationsequences');
+            }
+
             return $this->jsonError($exception->getMessage());
         }
 
