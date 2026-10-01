@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Policy;
 
 use App\Model\Entity\FieldAuthorization;
-use App\Model\Entity\User;
 use Authorization\IdentityInterface;
 
 /**
@@ -12,21 +11,8 @@ use Authorization\IdentityInterface;
  *
  * Politiques d'accès pour la gestion de la sécurité des champs.
  */
-class FieldAuthorizationPolicy
+class FieldAuthorizationPolicy extends AppPolicy
 {
-    /**
-     * Extraire l'utilisateur connecté depuis l'identité.
-     *
-     * @param \Authorization\IdentityInterface $identity
-     * @return \App\Model\Entity\User|null
-     */
-    private function getValidUser(IdentityInterface $identity): ?User
-    {
-        $user = $identity->getOriginalData();
-
-        return $user instanceof User ? $user : null;
-    }
-
     /**
      * Autorisation pour la liste (index)
      *
@@ -35,10 +21,7 @@ class FieldAuthorizationPolicy
      */
     public function canIndex(IdentityInterface $identity): bool
     {
-        $user = $this->getValidUser($identity);
-        $result = $user !== null && (bool)$user->get('issuperuser');
-        // dd($result);
-        return $result;
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -50,9 +33,7 @@ class FieldAuthorizationPolicy
      */
     public function canView(IdentityInterface $identity, FieldAuthorization $record): bool
     {
-        $user = $this->getValidUser($identity);
-
-        return $user !== null && (bool)$user->get('issuperuser');
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -63,9 +44,7 @@ class FieldAuthorizationPolicy
      */
     public function canAdd(IdentityInterface $identity): bool
     {
-        $user = $this->getValidUser($identity);
-
-        return $user !== null && (bool)$user->get('issuperuser');
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -77,9 +56,7 @@ class FieldAuthorizationPolicy
      */
     public function canEdit(IdentityInterface $identity, FieldAuthorization $record): bool
     {
-        $user = $this->getValidUser($identity);
-
-        return $user !== null && (bool)$user->get('issuperuser');
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -91,8 +68,6 @@ class FieldAuthorizationPolicy
      */
     public function canDelete(IdentityInterface $identity, FieldAuthorization $record): bool
     {
-        $user = $this->getValidUser($identity);
-
-        return $user !== null && (bool)$user->get('issuperuser');
+        return $this->isSuperUser($identity);
     }
 }
