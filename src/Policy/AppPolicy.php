@@ -27,4 +27,15 @@ abstract class AppPolicy
 
         return $user instanceof User ? $user : null;
     }
+
+    /**
+     * Indique si l'identité correspond à un superadministrateur.
+     *
+     * @param \Authorization\IdentityInterface $identity Identité à vérifier.
+     * @return bool Vrai si l'utilisateur valide possède le statut superadministrateur.
+     */
+    protected function isSuperUser(IdentityInterface $identity): bool
+    {
+        return $this->getValidUser($identity)?->isSuperUser() ?? false;
+    }
 }

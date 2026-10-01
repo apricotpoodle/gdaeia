@@ -8,7 +8,6 @@ declare(strict_types=1);
 namespace App\Policy;
 
 use App\Model\Entity\User;
-use App\Policy\Trait\ImpersonationCheckTrait;
 use Authorization\IdentityInterface;
 
 /**
@@ -16,8 +15,6 @@ use Authorization\IdentityInterface;
  */
 class UserPolicy extends AppPolicy
 {
-    use ImpersonationCheckTrait;
-
     /**
      * Check if $user can list Users
      *

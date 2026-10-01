@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Policy;
 
 use App\Model\Entity\Menu;
-use App\Model\Entity\User;
 use Authorization\IdentityInterface;
 
 /**
@@ -12,34 +11,8 @@ use Authorization\IdentityInterface;
  *
  * Politiques d'accès pour la gestion de l'arborescence des menus.
  */
-class MenuPolicy
+class MenuPolicy extends AppPolicy
 {
-    /**
-     * Extraire l'utilisateur connecté depuis l'identité (Principe DRY).
-     *
-     * @param \Authorization\IdentityInterface $identity
-     * @return \App\Model\Entity\User|null
-     */
-    private function getValidUser(IdentityInterface $identity): ?User
-    {
-        $user = $identity->getOriginalData();
-
-        return $user instanceof User ? $user : null;
-    }
-
-    /**
-     * Détermine si l'utilisateur possède les droits d'administration globaux.
-     *
-     * @param \Authorization\IdentityInterface $identity
-     * @return bool
-     */
-    private function isAdmin(IdentityInterface $identity): bool
-    {
-        $user = $this->getValidUser($identity);
-
-        return $user !== null && (bool)$user->get('issuperuser');
-    }
-
     /**
      * Autorisation pour la liste (index)
      *
@@ -48,7 +21,7 @@ class MenuPolicy
      */
     public function canIndex(IdentityInterface $identity): bool
     {
-        return $this->isAdmin($identity);
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -59,7 +32,7 @@ class MenuPolicy
      */
     public function canRoleAccess(IdentityInterface $identity): bool
     {
-        return $this->isAdmin($identity);
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -71,7 +44,7 @@ class MenuPolicy
      */
     public function canView(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isAdmin($identity);
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -83,7 +56,7 @@ class MenuPolicy
      */
     public function canAdd(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isAdmin($identity);
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -95,7 +68,7 @@ class MenuPolicy
      */
     public function canEdit(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isAdmin($identity);
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -107,7 +80,7 @@ class MenuPolicy
      */
     public function canDelete(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isAdmin($identity);
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -119,7 +92,7 @@ class MenuPolicy
      */
     public function canMoveUp(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isAdmin($identity);
+        return $this->isSuperUser($identity);
     }
 
     /**
@@ -131,6 +104,6 @@ class MenuPolicy
      */
     public function canMoveDown(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isAdmin($identity);
+        return $this->isSuperUser($identity);
     }
 }
