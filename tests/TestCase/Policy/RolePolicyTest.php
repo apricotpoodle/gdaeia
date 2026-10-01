@@ -29,4 +29,16 @@ class RolePolicyTest extends TestCase
         $this->assertFalse($policy->canEdit($superAdministrator, $baseRole));
         $this->assertFalse($policy->canDelete($superAdministrator, $baseRole));
     }
+
+    public function testToutesLesActionsSontRefuseesSansSuperUtilisateur(): void
+    {
+        $policy = new RolePolicy();
+        $role = new Role(['base' => false]);
+        $operator = new User(['issuperuser' => false]);
+
+        $this->assertFalse($policy->canView($operator, $role));
+        $this->assertFalse($policy->canAdd($operator, $role));
+        $this->assertFalse($policy->canEdit($operator, $role));
+        $this->assertFalse($policy->canDelete($operator, $role));
+    }
 }
