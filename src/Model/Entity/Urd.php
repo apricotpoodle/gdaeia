@@ -35,4 +35,11 @@ class Urd extends Entity
         'role' => true,
         'department' => true,
     ];
+
+    public const FIELD_USER_ID = 'user_id';
+    public const FIELD_ROLE_ID = 'role_id';
+    public const FIELD_DEPARTMENT_ID = 'department_id';
+    public const FIELD_USER = 'user';
+    public const FIELD_ROLE = 'role';
+    public const FIELD_DEPARTMENT = 'department';
 }

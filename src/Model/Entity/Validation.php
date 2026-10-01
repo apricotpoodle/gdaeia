@@ -55,4 +55,22 @@ class Validation extends Entity
         'role' => true,
         'validationstatus' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_APPLICATIONFORM_ID = 'applicationform_id';
+    public const FIELD_USER_ID = 'user_id';
+    public const FIELD_ROLE_ID = 'role_id';
+    public const FIELD_VALIDATED = 'validated';
+    public const FIELD_VALIDATIONSTATUS_ID = 'validationstatus_id';
+    public const FIELD_OBS = 'obs';
+    public const FIELD_DELETED = 'deleted';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_APPLICATIONFORM = 'applicationform';
+    public const FIELD_USER = 'user';
+    public const FIELD_ROLE = 'role';
+    public const FIELD_VALIDATIONSTATUS = 'validationstatus';
+    public const FIELD_APPLICATIONVALIDATIONSTEP_ID = 'applicationvalidationstep_id';
+    public const FIELD_IS_PROXY = 'is_proxy';
+    public const FIELD_APPLICATIONVALIDATIONSTEP = 'applicationvalidationstep';
 }

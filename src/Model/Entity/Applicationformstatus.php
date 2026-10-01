@@ -43,4 +43,15 @@ class Applicationformstatus extends Entity
         'applicationform' => true,
         'validationstatus' => true,
     ];
+
+    public const FIELD_APPLICATIONFORM_ID = 'applicationform_id';
+    public const FIELD_HAS_VALIDATIONS = 'has_validations';
+    public const FIELD_VALIDATIONSTATUS_ID = 'validationstatus_id';
+    public const FIELD_VALID_PERCENTAGE = 'valid_percentage';
+    public const FIELD_CURRENT_SEQUENCE = 'current_sequence';
+    public const FIELD_EN_COURS = 'en_cours';
+    public const FIELD_ACCEPTED = 'accepted';
+    public const FIELD_REJECTED = 'rejected';
+    public const FIELD_APPLICATIONFORM = 'applicationform';
+    public const FIELD_VALIDATIONSTATUS = 'validationstatus';
 }

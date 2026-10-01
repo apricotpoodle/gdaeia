@@ -192,4 +192,26 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
 
         return $hasher->hash($password);
     }
+
+    public const FIELD_ID = 'id';
+    public const FIELD_FIRSTNAME = 'firstname';
+    public const FIELD_LASTNAME = 'lastname';
+    public const FIELD_EMAIL = 'email';
+    public const FIELD_USERNAME = 'username';
+    public const FIELD_TOKEN = 'token';
+    public const FIELD_ROLE_ID = 'role_id';
+    public const FIELD_ROLE = 'role';
+    public const FIELD_USER_DEPARTMENTS = 'user_departments';
+    public const FIELD_ISSUPERUSER = 'issuperuser';
+    public const FIELD_AUTHORIZATION = 'authorization';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_FULL_NAME = 'full_name';
+    public const FIELD_DISPLAY_NAME = 'display_name';
+    public const FIELD_PASSWORD = 'password';
+    public const FIELD_TOKEN_EXPIRES = 'token_expires';
+    public const FIELD_DELETED = 'deleted';
+    public const FIELD_APPLICATIONFORMS = 'applicationforms';
+    public const FIELD_URDS = 'urds';
+    public const FIELD_VALIDATIONS = 'validations';
 }

@@ -40,4 +40,14 @@ class RoleMenu extends Entity
         'menu' => true,
         'department' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_ROLE_ID = 'role_id';
+    public const FIELD_MENU_ID = 'menu_id';
+    public const FIELD_DEPARTMENT_ID = 'department_id';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_ROLE = 'role';
+    public const FIELD_MENU = 'menu';
+    public const FIELD_DEPARTMENT = 'department';
 }

@@ -40,4 +40,14 @@ class Budgetfeature extends Entity
         'modified' => true,
         'applicationforms' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_BASE = 'base';
+    public const FIELD_CODE = 'code';
+    public const FIELD_NAME = 'name';
+    public const FIELD_SORT = 'sort';
+    public const FIELD_DELETED = 'deleted';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_APPLICATIONFORMS = 'applicationforms';
 }

@@ -38,4 +38,13 @@ class FieldAuthorization extends Entity
         'modified' => true,
         'role' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_ROLE_ID = 'role_id';
+    public const FIELD_RESOURCE = 'resource';
+    public const FIELD_FIELD = 'field';
+    public const FIELD_ACCESS_LEVEL = 'access_level';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_ROLE = 'role';
 }

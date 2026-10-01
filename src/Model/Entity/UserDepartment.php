@@ -36,4 +36,12 @@ class UserDepartment extends Entity
         'user' => true,
         'department' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_USER_ID = 'user_id';
+    public const FIELD_DEPARTMENT_ID = 'department_id';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_USER = 'user';
+    public const FIELD_DEPARTMENT = 'department';
 }

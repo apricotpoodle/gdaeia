@@ -38,4 +38,13 @@ class EmailLog extends Entity
         'modified' => true,
         'email_recipients' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_SUBJECT = 'subject';
+    public const FIELD_CONTENT_TEXT = 'content_text';
+    public const FIELD_CONTENT_HTML = 'content_html';
+    public const FIELD_ERROR_MESSAGE = 'error_message';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_EMAIL_RECIPIENTS = 'email_recipients';
 }

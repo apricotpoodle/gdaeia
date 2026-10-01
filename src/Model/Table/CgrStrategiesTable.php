@@ -64,6 +64,7 @@ class CgrStrategiesTable extends Table
             ->maxLength('code', 32)
             ->requirePresence('code', 'create')
             ->notEmptyString('code')
+            /** @link validateUnique() */
             ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator

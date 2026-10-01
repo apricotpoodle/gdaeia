@@ -50,4 +50,20 @@ class Menu extends Entity
         'child_menus' => true,
         'role_menus' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_PARENT_ID = 'parent_id';
+    public const FIELD_LFT = 'lft';
+    public const FIELD_RGHT = 'rght';
+    public const FIELD_LEVEL = 'level';
+    public const FIELD_NAME = 'name';
+    public const FIELD_URL = 'url';
+    public const FIELD_ACTIVE = 'active';
+    public const FIELD_DISABLED = 'disabled';
+    public const FIELD_DIVIDOR_BEFORE = 'dividor_before';
+    public const FIELD_CHILDREN = 'children';
+    public const FIELD_GRID_RIGHTS = 'grid_rights';
+    public const FIELD_PARENT_MENU = 'parent_menu';
+    public const FIELD_CHILD_MENUS = 'child_menus';
+    public const FIELD_ROLE_MENUS = 'role_menus';
 }

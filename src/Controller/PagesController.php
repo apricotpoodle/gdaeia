@@ -32,6 +32,7 @@ use Cake\View\Exception\MissingTemplateException;
  */
 class PagesController extends AppController
 {
+    protected ?string $defaultTable = '';
     /**
      * Displays a view
      *

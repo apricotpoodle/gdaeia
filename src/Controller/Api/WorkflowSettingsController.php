@@ -11,6 +11,9 @@ use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Response;
 
 /** API du paramétrage global et des commentaires prédéfinis du workflow. */
+/**
+ * @property \App\Model\Table\WorkflowSettingsTable $WorkflowSettings
+ */
 class WorkflowSettingsController extends AppController
 {
     /** @return void */

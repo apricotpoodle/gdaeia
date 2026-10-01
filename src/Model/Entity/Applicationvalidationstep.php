@@ -66,4 +66,28 @@ class Applicationvalidationstep extends Entity
         'validationstatus' => true,
         'validationsequence' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_APPLICATIONFORM_ID = 'applicationform_id';
+    public const FIELD_ROLE_ID = 'role_id';
+    public const FIELD_VALIDATIONSTATUS_ID = 'validationstatus_id';
+    public const FIELD_COMMENT = 'comment';
+    public const FIELD_VALIDATIONSEQUENCE_ID = 'validationsequence_id';
+    public const FIELD_VALIDATION_WORKFLOW_RUN_ID = 'validation_workflow_run_id';
+    public const FIELD_SEQUENCE_NUMBER = 'sequence_number';
+    public const FIELD_STATE = 'state';
+    public const FIELD_DUE_AT = 'due_at';
+    public const FIELD_ACTIVATED_AT = 'activated_at';
+    public const FIELD_COMPLETED_AT = 'completed_at';
+    public const FIELD_REMINDER_COUNT = 'reminder_count';
+    public const FIELD_LAST_REMINDED_AT = 'last_reminded_at';
+    public const FIELD_DELETED = 'deleted';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_APPLICATIONFORM = 'applicationform';
+    public const FIELD_ROLE = 'role';
+    public const FIELD_VALIDATIONSTATUS = 'validationstatus';
+    public const FIELD_VALIDATIONSEQUENCE = 'validationsequence';
+    public const FIELD_VALIDATION_WORKFLOW_RUN = 'validation_workflow_run';
+    public const FIELD_VALIDATION = 'validation';
 }

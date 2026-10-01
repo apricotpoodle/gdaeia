@@ -32,7 +32,6 @@ use Cake\Http\Response;
  * @link https://book.cakephp.org/5/en/controllers.html#the-app-controller
  * @property \Authentication\Controller\Component\AuthenticationComponent $Authentication
  * @property \Authorization\Controller\Component\AuthorizationComponent $Authorization
- * @property \Cake\Controller\Component\FlashComponent $Flash
  */
 class AppController extends Controller
 {

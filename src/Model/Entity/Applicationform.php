@@ -163,4 +163,46 @@ class Applicationform extends AppEntity
         // 3. Fallback neutre (Meilleure pratique industrielle)
         return '-';
     }
+
+    public const FIELD_ID = 'id';
+    public const FIELD_DEPARTMENT_ID = 'department_id';
+    public const FIELD_USER_ID = 'user_id';
+    public const FIELD_CGR = 'cgr';
+    public const FIELD_CONTRACTTYPE_ID = 'contracttype_id';
+    public const FIELD_HIRINGREASON_ID = 'hiringreason_id';
+    public const FIELD_REASONFORREPLACEMENT = 'reasonforreplacement';
+    public const FIELD_BUDGETFEATURE_ID = 'budgetfeature_id';
+    public const FIELD_JOBTITLE = 'jobtitle';
+    public const FIELD_PROFESSIONALCATEGORY_ID = 'professionalcategory_id';
+    public const FIELD_WORKTIME_ID = 'worktime_id';
+    public const FIELD_WORKINGTIMEDISTRIBUTION = 'workingtimedistribution';
+    public const FIELD_GROSSREMUNERATION = 'grossremuneration';
+    public const FIELD_PERIOD_ID = 'period_id';
+    public const FIELD_QUALIFICATION = 'qualification';
+    public const FIELD_BEGIN_AT = 'begin_at';
+    public const FIELD_END_AT = 'end_at';
+    public const FIELD_APPLICANTNAME = 'applicantname';
+    public const FIELD_YESNO_ID = 'yesno_id';
+    public const FIELD_COLLABORATOR_ID = 'collaborator_id';
+    public const FIELD_ARCHIVED = 'archived';
+    public const FIELD_DELETED = 'deleted';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_DEPARTMENT = 'department';
+    public const FIELD_USER = 'user';
+    public const FIELD_CONTRACTTYPE = 'contracttype';
+    public const FIELD_HIRINGREASON = 'hiringreason';
+    public const FIELD_BUDGETFEATURE = 'budgetfeature';
+    public const FIELD_PROFESSIONALCATEGORY = 'professionalcategory';
+    public const FIELD_WORKTIME = 'worktime';
+    public const FIELD_PERIOD = 'period';
+    public const FIELD_YESNO = 'yesno';
+    public const FIELD_APPLICATIONFORMSTATUSES = 'applicationformstatuses';
+    public const FIELD_APPLICATIONVALIDATIONSTEPS = 'applicationvalidationsteps';
+    public const FIELD_CURRENTVALIDATIONROLES = 'currentvalidationroles';
+    public const FIELD_VALIDATION_VISAS = 'validation_visas';
+    public const FIELD_VALIDATIONS = 'validations';
+    public const FIELD_VALIDATION_WORKFLOW_RUN = 'validation_workflow_run';
+    public const FIELD_COMMENTS = 'comments';
+    public const FIELD_CANDIDATE_NAME = 'candidate_name';
 }

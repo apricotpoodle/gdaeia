@@ -45,4 +45,16 @@ class Currentvalidationrole extends Entity
         'department' => true,
         'validationstatus' => true,
     ];
+
+    public const FIELD_APPLICATIONFORM_ID = 'applicationform_id';
+    public const FIELD_DEPARTMENT_ID = 'department_id';
+    public const FIELD_VALIDATOR_ROLE_ID = 'validator_role_id';
+    public const FIELD_VALIDATION_SEQUENCE = 'validation_sequence';
+    public const FIELD_VALIDATIONSTATUS_ID = 'validationstatus_id';
+    public const FIELD_EN_COURS = 'en_cours';
+    public const FIELD_ACCEPTED = 'accepted';
+    public const FIELD_REJECTED = 'rejected';
+    public const FIELD_APPLICATIONFORM = 'applicationform';
+    public const FIELD_DEPARTMENT = 'department';
+    public const FIELD_VALIDATIONSTATUS = 'validationstatus';
 }

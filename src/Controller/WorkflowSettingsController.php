@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 /** Affiche le paramétrage global du workflow de validation. */
+/**
+ * @property \App\Model\Table\WorkflowSettingsTable $WorkflowSettings
+ */
 class WorkflowSettingsController extends AppController
 {
     /** @return void */

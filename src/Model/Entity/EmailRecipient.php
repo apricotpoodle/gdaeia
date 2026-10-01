@@ -30,4 +30,9 @@ class EmailRecipient extends Entity
         'recipient_email' => true,
         'email_log' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_EMAIL_LOG_ID = 'email_log_id';
+    public const FIELD_RECIPIENT_EMAIL = 'recipient_email';
+    public const FIELD_EMAIL_LOG = 'email_log';
 }

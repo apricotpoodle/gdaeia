@@ -37,4 +37,17 @@ class Comment extends Entity
         'child_comments' => true,
         'user' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_PARENT_ID = 'parent_id';
+    public const FIELD_MODEL = 'model';
+    public const FIELD_FOREIGN_KEY = 'foreign_key';
+    public const FIELD_TYPE = 'type';
+    public const FIELD_CONTENT = 'content';
+    public const FIELD_USER_ID = 'user_id';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_PARENT_COMMENT = 'parent_comment';
+    public const FIELD_CHILD_COMMENTS = 'child_comments';
+    public const FIELD_USER = 'user';
 }

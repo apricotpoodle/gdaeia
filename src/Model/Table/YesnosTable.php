@@ -65,6 +65,7 @@ class YesnosTable extends AppTable
             ->maxLength('code', 16)
             ->requirePresence('code', 'create')
             ->notEmptyString('code')
+            /** @link validateUnique() */
             ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
@@ -72,6 +73,7 @@ class YesnosTable extends AppTable
             ->maxLength('name', 32)
             ->requirePresence('name', 'create')
             ->notEmptyString('name')
+            /** @link validateUnique() */
             ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator

@@ -42,4 +42,15 @@ class Validationstatus extends Entity
         'currentvalidationroles' => true,
         'validations' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_CODE = 'code';
+    public const FIELD_NAME = 'name';
+    public const FIELD_DELETED = 'deleted';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_APPLICATIONFORMSTATUSES = 'applicationformstatuses';
+    public const FIELD_APPLICATIONVALIDATIONSTEPS = 'applicationvalidationsteps';
+    public const FIELD_CURRENTVALIDATIONROLES = 'currentvalidationroles';
+    public const FIELD_VALIDATIONS = 'validations';
 }

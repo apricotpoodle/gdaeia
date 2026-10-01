@@ -54,4 +54,21 @@ class Role extends Entity
         'validations' => true,
         'validationsequences' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_BASE = 'base';
+    public const FIELD_CODE = 'code';
+    public const FIELD_NAME = 'name';
+    public const FIELD_SORT = 'sort';
+    public const FIELD_DELETED = 'deleted';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_APPLICATIONVALIDATIONSTEPS = 'applicationvalidationsteps';
+    public const FIELD_FIELD_AUTHORIZATIONS = 'field_authorizations';
+    public const FIELD_ROLE_MENUS = 'role_menus';
+    public const FIELD_URDS = 'urds';
+    public const FIELD_USERS = 'users';
+    public const FIELD_VALIDATION_VISAS = 'validation_visas';
+    public const FIELD_VALIDATIONS = 'validations';
+    public const FIELD_VALIDATIONSEQUENCES = 'validationsequences';
 }

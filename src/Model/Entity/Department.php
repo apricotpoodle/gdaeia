@@ -69,4 +69,29 @@ class Department extends Entity
         'cgr_strategy' => true,
         'applicationforms' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_PARENT_ID = 'parent_id';
+    public const FIELD_CGR_CODE_ID = 'cgr_code_id';
+    public const FIELD_LFT = 'lft';
+    public const FIELD_RGHT = 'rght';
+    public const FIELD_LEVEL = 'level';
+    public const FIELD_BASE = 'base';
+    public const FIELD_CODE = 'code';
+    public const FIELD_NAME = 'name';
+    public const FIELD_SORT = 'sort';
+    public const FIELD_DEPARTMENT_TYPE_ID = 'department_type_id';
+    public const FIELD_CGR_STRATEGY_ID = 'cgr_strategy_id';
+    public const FIELD_DEFAULT_CGR = 'default_cgr';
+    public const FIELD_CURRENT_MANAGER_ID = 'current_manager_id';
+    public const FIELD_DELETED = 'deleted';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_PARENT_DEPARTMENT = 'parent_department';
+    public const FIELD_CHILD_DEPARTMENTS = 'child_departments';
+    public const FIELD_DEFAULT_CGR_CODE = 'default_cgr_code';
+    public const FIELD_OWNED_CGR_CODES = 'owned_cgr_codes';
+    public const FIELD_CGR_STRATEGY = 'cgr_strategy';
+    public const FIELD_MANAGER = 'manager';
+    public const FIELD_APPLICATIONFORMS = 'applicationforms';
 }

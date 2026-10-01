@@ -41,4 +41,14 @@ class ValidationVisa extends Entity
         'applicationform' => true,
         'role' => true,
     ];
+
+    public const FIELD_APPLICATIONFORM_ID = 'applicationform_id';
+    public const FIELD_SEQUENCE = 'sequence';
+    public const FIELD_ROLE_ID = 'role_id';
+    public const FIELD_OP_NAME = 'op_name';
+    public const FIELD_ROLE_NAME = 'role_name';
+    public const FIELD_STATUS_NAME = 'status_name';
+    public const FIELD_VALIDATED_AT = 'validated_at';
+    public const FIELD_APPLICATIONFORM = 'applicationform';
+    public const FIELD_ROLE = 'role';
 }

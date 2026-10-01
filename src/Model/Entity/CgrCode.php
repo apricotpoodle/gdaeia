@@ -44,4 +44,16 @@ class CgrCode extends Entity
         'department' => true,
         'cgr_codes' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_DEPARTMENT_ID = 'department_id';
+    public const FIELD_TYPE = 'type';
+    public const FIELD_CODE = 'code';
+    public const FIELD_LABEL = 'label';
+    public const FIELD_ACTIVE = 'active';
+    public const FIELD_IS_SYSTEM = 'is_system';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_DEPARTMENT = 'department';
+    public const FIELD_USING_DEPARTMENTS = 'using_departments';
 }

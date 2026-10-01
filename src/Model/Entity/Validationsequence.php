@@ -49,4 +49,18 @@ class Validationsequence extends Entity
         'role' => true,
         'applicationvalidationsteps' => true,
     ];
+
+    public const FIELD_ID = 'id';
+    public const FIELD_DEPARTMENT_ID = 'department_id';
+    public const FIELD_NAME = 'name';
+    public const FIELD_DESCRIPTION = 'description';
+    public const FIELD_ROLE_ID = 'role_id';
+    public const FIELD_SEQUENCE = 'sequence';
+    public const FIELD_REMINDER_DELAY_HOURS = 'reminder_delay_hours';
+    public const FIELD_DELETED = 'deleted';
+    public const FIELD_MODIFIED = 'modified';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_DEPARTMENT = 'department';
+    public const FIELD_ROLE = 'role';
+    public const FIELD_APPLICATIONVALIDATIONSTEPS = 'applicationvalidationsteps';
 }

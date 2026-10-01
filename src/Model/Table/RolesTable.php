@@ -95,6 +95,7 @@ class RolesTable extends AppTable
             ->maxLength('code', 16)
             ->requirePresence('code', 'create', __('Ce champ est obligatoire.'))
             ->notEmptyString('code', __('Ce champ est obligatoire.'))
+            /** @link validateUnique() */
             ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
@@ -102,6 +103,7 @@ class RolesTable extends AppTable
             ->maxLength('name', 64)
             ->requirePresence('name', 'create', __('Ce champ est obligatoire.'))
             ->notEmptyString('name', __('Ce champ est obligatoire.'))
+            /** @link validateUnique() */
             ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
