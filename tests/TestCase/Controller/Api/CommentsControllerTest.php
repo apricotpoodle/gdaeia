@@ -44,4 +44,16 @@ class CommentsControllerTest extends TestCase
         $this->assertResponseCode(403);
         $this->assertResponseContains('"success":false');
     }
+
+    public function testLApiPresenteLesErreursDeValidationDuCommentaire(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/comments/add.json', ['model' => 'Applicationforms', 'foreign_key' => 1, 'content' => '']);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('Champ « Contenu » :');
+        $this->assertResponseContains('"field":"content","label":"Contenu","reason":');
+    }
 }

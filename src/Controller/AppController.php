@@ -21,6 +21,7 @@ use App\Service\ValidationErrorPresenter;
 use Cake\Controller\Controller;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
+use Cake\Http\Response;
 
 /**
  * Application Controller
@@ -48,6 +49,33 @@ class AppController extends Controller
         }
 
         return (new ValidationErrorPresenter())->present($entity, $resource)['summary'];
+    }
+
+    /**
+     * Retourne le contrat API de validation, ou un échec technique sans erreur ORM.
+     *
+     * @param \Cake\Datasource\EntityInterface $entity Entité dont la sauvegarde a échoué.
+     * @param string $resource Ressource ORM utilisée pour les libellés.
+     * @return \Cake\Http\Response Réponse JSON.
+     */
+    protected function validationErrorResponse(EntityInterface $entity, string $resource): Response
+    {
+        if ($entity->getErrors() === []) {
+            return $this->response->withType('application/json')->withStatus(500)
+                ->withStringBody((string)json_encode([
+                    'success' => false,
+                    'message' => __('Impossible d’enregistrer les données. Veuillez réessayer.'),
+                ], JSON_UNESCAPED_UNICODE));
+        }
+
+        $presentation = (new ValidationErrorPresenter())->present($entity, $resource);
+
+        return $this->response->withType('application/json')->withStatus(422)
+            ->withStringBody((string)json_encode([
+                'success' => false,
+                'message' => $presentation['summary'],
+                'errors' => $presentation['errors'],
+            ], JSON_UNESCAPED_UNICODE));
     }
 
     /**

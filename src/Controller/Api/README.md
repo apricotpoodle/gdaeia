@@ -2,6 +2,15 @@
 
 Ce répertoire regroupe les contrôleurs d'API exposant les ressources au format JSON.
 
+## Erreurs de validation
+
+Les mutations refusées avec des erreurs d'entité appellent `AppController::validationErrorResponse()`.
+La réponse HTTP 422 contient `{success: false, message, errors}` : `message` décrit le premier
+champ et chaque entrée de `errors` contient son chemin technique complet, son libellé français
+et son motif. Le service `ValidationErrorPresenter` partage ces libellés avec les formulaires Web.
+Une sauvegarde échouée sans erreur ORM reçoit une réponse technique HTTP 500 ; les erreurs de
+requête, de droit et de règle métier gardent leurs réponses propres.
+
 ## Contrôleurs disponibles
 
 * **`UsersController`** : Exposition paginée des utilisateurs pour Tabulator, création et schéma de champs.

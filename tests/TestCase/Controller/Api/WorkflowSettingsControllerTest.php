@@ -91,6 +91,7 @@ class WorkflowSettingsControllerTest extends TestCase
 
         $this->assertResponseCode(422);
         $this->assertResponseContains('"success":false');
-        $this->assertResponseContains('"errors"');
+        $this->assertResponseContains('Champ « Décision » :');
+        $this->assertResponseContains('"field":"decision","label":"Décision","reason":');
     }
 }

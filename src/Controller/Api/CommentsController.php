@@ -4,7 +4,6 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
-use Cake\Datasource\EntityInterface;
 use Cake\Http\Response;
 
 /**
@@ -93,7 +92,7 @@ class CommentsController extends AppController
                 ]));
         }
 
-        return $this->handleValidationError($comment);
+        return $this->validationErrorResponse($comment, 'Comments');
     }
 
     /**
@@ -134,7 +133,7 @@ class CommentsController extends AppController
                 ]));
         }
 
-        return $this->handleValidationError($comment);
+        return $this->validationErrorResponse($comment, 'Comments');
     }
 
     /**
@@ -172,23 +171,5 @@ class CommentsController extends AppController
                 'success' => false,
                 'message' => __('Impossible de supprimer ce commentaire.'),
             ]));
-    }
-
-    /**
-     * Gestion centralisée des erreurs de validation
-     */
-    private function handleValidationError(EntityInterface $entity): Response
-    {
-        $errors = $entity->getErrors();
-        $message = __('Données invalides.');
-
-        if (!empty($errors)) {
-            $firstError = current(reset($errors));
-            $message = (string)$firstError;
-        }
-
-        return $this->response->withType('application/json')
-            ->withStatus(400)
-            ->withStringBody((string)json_encode(['success' => false, 'message' => $message]));
     }
 }

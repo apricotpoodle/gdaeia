@@ -87,6 +87,19 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('Champ « Intitulé du poste » :');
     }
 
+    public function testLApiPresenteLesErreursDeValidationDeLaDemande(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/edit/1.json', ['jobtitle' => '']);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"success":false');
+        $this->assertResponseContains('Champ « Intitulé du poste » :');
+        $this->assertResponseContains('"field":"jobtitle","label":"Intitulé du poste","reason":');
+    }
+
     /** Vérifie que le créateur peut lancer un cycle configuré. */
     public function testLeCreateurPeutLancerLeCycleDeValidation(): void
     {

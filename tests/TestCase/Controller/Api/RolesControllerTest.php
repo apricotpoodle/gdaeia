@@ -78,4 +78,16 @@ class RolesControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('Champ « Code » :');
     }
+
+    public function testLApiPresenteLesErreursDeValidationDuRole(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/roles.json', ['code' => '', 'name' => 'Nouveau rôle', 'sort' => 'nouveau']);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('Champ « Code » :');
+        $this->assertResponseContains('"field":"code","label":"Code","reason":');
+    }
 }
