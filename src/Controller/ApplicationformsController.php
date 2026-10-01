@@ -5,7 +5,6 @@ namespace App\Controller;
 
 use App\Service\Security\FieldAuthorizationService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
-use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Exception;
@@ -93,7 +92,7 @@ class ApplicationformsController extends AppController
 
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error($this->formatApplicationformValidationError($applicationform));
+            $this->Flash->error($this->validationErrorSummary($applicationform, 'Applicationforms'));
         }
 
         // Récupération des données de référence et de sécurité (ADR 0042 / 0046)
@@ -166,7 +165,7 @@ class ApplicationformsController extends AppController
                 return $this->redirect(['action' => 'index']);
             }
 
-            $this->Flash->error($this->formatApplicationformValidationError($applicationform));
+            $this->Flash->error($this->validationErrorSummary($applicationform, 'Applicationforms'));
         }
 
         // 4. Chargement des listes pour le rendu du formulaire
@@ -249,79 +248,5 @@ class ApplicationformsController extends AppController
         }
 
         return $this->redirect(['action' => 'index']);
-    }
-
-    /**
-     * Produit un message de validation immédiatement exploitable dans l'interface Web.
-     *
-     * @param \Cake\Datasource\EntityInterface $entity Entité dont la sauvegarde a échoué.
-     * @return string
-     */
-    private function formatApplicationformValidationError(EntityInterface $entity): string
-    {
-        $error = $this->findFirstValidationError($entity->getErrors());
-        if ($error === null) {
-            return __('Impossible d\'enregistrer la demande : le serveur n\'a pas retourné de détail de validation.');
-        }
-
-        [$field, $message] = $error;
-
-        return __('Champ « {0} » : {1}', $this->getApplicationformFieldLabel($field), $message);
-    }
-
-    /**
-     * Extrait la première erreur en préservant le champ métier qui la porte.
-     *
-     * @param array<string, mixed> $errors Erreurs produites par l'ORM CakePHP.
-     * @param string|null $rootField Champ racine pour les associations imbriquées.
-     * @return array{0: string, 1: string}|null
-     */
-    private function findFirstValidationError(array $errors, ?string $rootField = null): ?array
-    {
-        foreach ($errors as $field => $details) {
-            $currentRootField = $rootField ?? (string)$field;
-            if (is_string($details)) {
-                return [$currentRootField, $details];
-            }
-
-            if (is_array($details)) {
-                $error = $this->findFirstValidationError($details, $currentRootField);
-                if ($error !== null) {
-                    return $error;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    /**
-     * Retourne le libellé fonctionnel d'un champ de demande de recrutement.
-     *
-     * @param string $field Nom technique du champ.
-     * @return string
-     */
-    private function getApplicationformFieldLabel(string $field): string
-    {
-        return [
-            'department_id' => __('Département'),
-            'user_id' => __('Créateur de la demande'),
-            'cgr' => __('Code CGR'),
-            'contracttype_id' => __('Type de contrat'),
-            'hiringreason_id' => __('Motif de recrutement'),
-            'reasonforreplacement' => __('Précision du motif'),
-            'budgetfeature_id' => __('Imputation budgétaire'),
-            'jobtitle' => __('Intitulé du poste'),
-            'professionalcategory_id' => __('Catégorie professionnelle'),
-            'worktime_id' => __('Temps de travail'),
-            'workingtimedistribution' => __('Répartition du temps de travail'),
-            'grossremuneration' => __('Rémunération brute'),
-            'period_id' => __('Périodicité'),
-            'qualification' => __('Qualification'),
-            'begin_at' => __('Date de début'),
-            'end_at' => __('Date de fin'),
-            'applicantname' => __('Nom du candidat'),
-            'yesno_id' => __('Champ Oui/Non'),
-        ][$field] ?? $field;
     }
 }

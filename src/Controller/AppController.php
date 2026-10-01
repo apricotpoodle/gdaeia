@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\ValidationErrorPresenter;
 use Cake\Controller\Controller;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
@@ -33,6 +34,22 @@ use Cake\Event\EventInterface;
  */
 class AppController extends Controller
 {
+    /**
+     * Présente une erreur de validation ou un échec de sauvegarde sans détail ORM.
+     *
+     * @param \Cake\Datasource\EntityInterface $entity Entité dont la sauvegarde a échoué.
+     * @param string $resource Nom de la ressource ORM pour les libellés des champs.
+     * @return string Message destiné au Flash Web.
+     */
+    protected function validationErrorSummary(EntityInterface $entity, string $resource): string
+    {
+        if ($entity->getErrors() === []) {
+            return __('Impossible d’enregistrer les données. Veuillez réessayer.');
+        }
+
+        return (new ValidationErrorPresenter())->present($entity, $resource)['summary'];
+    }
+
     /**
      * Initialization hook method.
      *

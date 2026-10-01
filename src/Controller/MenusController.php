@@ -77,7 +77,7 @@ class MenusController extends AppController
 
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('Impossible de créer le menu.'));
+            $this->Flash->error($this->validationErrorSummary($menu, 'Menus'));
         }
 
         // $parentMenus = $this->Menus->ParentMenus->find('treeList', spacer: '— ')->toArray();
@@ -104,7 +104,7 @@ class MenusController extends AppController
 
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error(__('Erreur lors de la mise à jour.'));
+            $this->Flash->error($this->validationErrorSummary($menu, 'Menus'));
         }
 
         // $parentMenus = $this->Menus->ParentMenus->find('treeList', spacer: '— ')->toArray();

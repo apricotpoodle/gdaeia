@@ -76,6 +76,17 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('Nouvelle demande');
     }
 
+    public function testLeFormulaireWebAfficheLeChampInvalideDeLaDemande(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/applicationforms/edit/1', ['jobtitle' => '']);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Champ « Intitulé du poste » :');
+    }
+
     /** Vérifie que le créateur peut lancer un cycle configuré. */
     public function testLeCreateurPeutLancerLeCycleDeValidation(): void
     {

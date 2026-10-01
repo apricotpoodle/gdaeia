@@ -67,4 +67,15 @@ class RolesControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseRegExp('/"data"\\s*:\\s*\\[\\]/');
     }
+
+    public function testLeFormulaireWebAfficheLeChampInvalideDuRole(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/roles/add', ['code' => '', 'name' => 'Nouveau rôle', 'sort' => 'nouveau']);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Champ « Code » :');
+    }
 }
