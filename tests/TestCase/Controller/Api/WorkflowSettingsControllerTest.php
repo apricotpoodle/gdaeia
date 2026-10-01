@@ -94,4 +94,24 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->assertResponseContains('Champ « Décision » :');
         $this->assertResponseContains('"field":"decision","label":"Décision","reason":');
     }
+
+    public function testLaModificationDUnCommentairePredefiniRetourneUneErreurExploitable(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $template = $this->getTableLocator()->get('ValidationCommentTemplates')->newEntity([
+            'decision' => 'refuser',
+            'label' => 'Budget',
+            'content' => 'Budget insuffisant.',
+            'position' => 1,
+            'active' => true,
+        ]);
+        $this->getTableLocator()->get('ValidationCommentTemplates')->saveOrFail($template);
+
+        $this->post('/api/workflow-settings/comment-templates/' . $template->id . '.json', ['label' => '']);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"message":"Champ « Libellé » :');
+        $this->assertResponseContains('"field":"label","label":"Libellé","reason":');
+    }
 }

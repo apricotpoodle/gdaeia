@@ -68,6 +68,12 @@ L'API renvoie ce JSON avec HTTP 422 uniquement pour une validation d'entité. `f
 - Traduire à la source les messages de règles d'unicité encore en anglais dans les Tables `FieldAuthorizations`, `RoleMenus` et `Validationsequences`.
 - Les scripts de création des demandes et utilisateurs, d'édition des demandes et des paramètres du workflow lisent déjà `message` après un échec HTTP. `Applicationforms/applicationform-comments.js` le lit aussi. `Applicationforms/comments-handler.js` affiche seulement le code HTTP ; si ce script est conservé ou raccordé à une page, lui faire lire `message`. Aucun script examiné ne lit `errors` ni ne teste spécifiquement le statut `400`.
 
+## Session 5 — Vérification des clients et des parcours fonctionnels
+
+Les clients de création et d'édition des demandes, de création des utilisateurs, des commentaires, des paramètres du workflow, des associations rôle-menu et des séquences affichent `message` pour toute réponse HTTP en échec, y compris 422. Aucun de ces clients ne dépend du statut 400 ni de la forme interne de `errors`. Le script conservé `Applicationforms/comments-handler.js`, actuellement non chargé par un template, lit désormais aussi le message JSON avant d'afficher une erreur.
+
+Les tests HTTP couvrent les réponses 422 des routes de création des demandes et utilisateurs, d'ajout et d'édition des commentaires et de création et modification des commentaires prédéfinis. Ils vérifient le message et les champs structurés utiles aux clients. Le test d'édition des commentaires a également révélé un contrôle d'autorisation manuel qui n'était pas signalé au composant CakePHP ; la route applique désormais ce contrôle sans produire d'erreur 500, et un test garantit qu'un autre utilisateur reçoit toujours HTTP 403.
+
 ## Critères d'acceptation
 
 - Un unique service est utilisé par les contrôleurs Web et API concernés.

@@ -101,6 +101,8 @@ class CommentsController extends AppController
     public function edit(string $id): ?Response
     {
         $this->request->allowMethod(['post', 'put', 'patch']);
+        // Le contrôle d'auteur ou de super-administrateur est effectué ci-dessous.
+        $this->Authorization->skipAuthorization();
         $commentsTable = $this->fetchTable('Comments');
 
         $comment = $commentsTable->get($id);

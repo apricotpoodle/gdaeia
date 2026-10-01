@@ -248,6 +248,19 @@ class UsersControllerTest extends TestCase
         $this->assertResponseContains('"field":"email","label":"Adresse courriel","reason":');
     }
 
+    public function testLaCreationApiRetourneLesErreursExploitablesParLeFormulaire(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/users/add.json', ['email' => '', 'password' => 'mot-de-passe', 'role_id' => 1]);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"success":false');
+        $this->assertResponseContains('"message":"Champ « Adresse courriel » :');
+        $this->assertResponseContains('"field":"email","label":"Adresse courriel","reason":');
+    }
+
     public function testLaReinitialisationAfficheUneErreurDeMotDePasseExplicite(): void
     {
         $this->getTableLocator()->get('Users')->updateAll([

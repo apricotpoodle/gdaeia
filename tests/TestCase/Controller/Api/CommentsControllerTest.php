@@ -45,6 +45,18 @@ class CommentsControllerTest extends TestCase
         $this->assertResponseContains('"success":false');
     }
 
+    public function testUnOperateurNePeutPasModifierLeCommentaireDAutrui(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/comments/edit/1.json', ['content' => 'Modification refusée']);
+
+        $this->assertResponseCode(403);
+        $this->assertResponseContains('"success":false');
+        $this->assertSame('Commentaire protege', $this->getTableLocator()->get('Comments')->get(1)->content);
+    }
+
     public function testLApiPresenteLesErreursDeValidationDuCommentaire(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
@@ -54,6 +66,18 @@ class CommentsControllerTest extends TestCase
 
         $this->assertResponseCode(422);
         $this->assertResponseContains('Champ « Contenu » :');
+        $this->assertResponseContains('"field":"content","label":"Contenu","reason":');
+    }
+
+    public function testLaModificationApiRetourneLeMessageEtLeChampDuCommentaire(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/comments/edit/1.json', ['content' => '']);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"message":"Champ « Contenu » :');
         $this->assertResponseContains('"field":"content","label":"Contenu","reason":');
     }
 }
