@@ -1,7 +1,7 @@
 # ADR 0061 : Gestion unifiée des notifications Flash Web
 
 **Date :** 01 Octobre 2026
-**Statut :** Proposé
+**Statut :** Accepté
 **Dépendances :** [ADR 0027](./0027-gestion-messages-flash-dynamiques.md), [ADR 0030](./0030-modernisation-scripts-modules-es6.md), [ADR 0060](./0060-un-flash-par-champ-invalide-web.md)
 
 ## Contexte

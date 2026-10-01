@@ -1,7 +1,7 @@
 # ADR 0060 : Un message Flash par champ invalide dans les formulaires Web
 
 **Date :** 01 Octobre 2026
-**Statut :** Proposé
+**Statut :** Accepté
 **Dépendance :** [ADR 0052 : Présentation unifiée des erreurs de validation Web et API](./0052-presentation-unifiee-erreurs-validation-web-api.md)
 
 ## Contexte
