@@ -100,7 +100,7 @@ class RoleMenusTable extends Table
             ['allowMultipleNulls' => true],
         ), [
             'errorField' => 'role_id',
-            'message' => __('This combination of role_id, menu_id and department_id already exists'),
+            'message' => __('Cette option de menu est déjà associée à ce rôle et à ce département.'),
         ]);
         $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
         $rules->add($rules->existsIn(['menu_id'], 'Menus'), ['errorField' => 'menu_id']);

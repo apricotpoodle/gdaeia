@@ -1,11 +1,11 @@
 # 0013 — Mutualiser la présentation des erreurs de validation
 
-**Statut :** En cours
+**Statut :** Terminé
 **Priorité :** Moyenne
 
 ## Contexte
 
-Les contrôleurs Web et API présentent déjà les erreurs de validation en français avec le champ concerné. Leur implémentation reste transitoirement dupliquée.
+Au début du chantier, les contrôleurs Web et API présentaient les erreurs de validation par des implémentations locales dupliquées.
 
 ## Objectif
 
@@ -73,6 +73,12 @@ L'API renvoie ce JSON avec HTTP 422 uniquement pour une validation d'entité. `f
 Les clients de création et d'édition des demandes, de création des utilisateurs, des commentaires, des paramètres du workflow, des associations rôle-menu et des séquences affichent `message` pour toute réponse HTTP en échec, y compris 422. Aucun de ces clients ne dépend du statut 400 ni de la forme interne de `errors`. Le script conservé `Applicationforms/comments-handler.js`, actuellement non chargé par un template, lit désormais aussi le message JSON avant d'afficher une erreur.
 
 Les tests HTTP couvrent les réponses 422 des routes de création des demandes et utilisateurs, d'ajout et d'édition des commentaires et de création et modification des commentaires prédéfinis. Ils vérifient le message et les champs structurés utiles aux clients. Le test d'édition des commentaires a également révélé un contrôle d'autorisation manuel qui n'était pas signalé au composant CakePHP ; la route applique désormais ce contrôle sans produire d'erreur 500, et un test garantit qu'un autre utilisateur reçoit toujours HTTP 403.
+
+## Session 6 — Validation et clôture
+
+Les messages des règles d'unicité des Tables `FieldAuthorizations`, `RoleMenus`, `Validationsequences` et `UserDepartments` sont rédigés en français à la source. Le libellé « Utilisateur » couvre aussi le chemin imbriqué `user_departments.*.user_id`. Quatre tests d'intégration MySQL vérifient les motifs de doublon.
+
+La revue finale confirme l'utilisation du service commun dans les parcours Web et API recensés, l'absence de dépendance des clients JavaScript au statut 400 et le maintien des réponses distinctes pour les refus métier, les requêtes invalides et les échecs techniques. Les critères d'acceptation sont couverts. Validation locale : 43 tests unitaires, 75 tests HTTP, 86 tests d'intégration ORM et 214 tests dans la suite complète ; PHPStan, style PHP et tests, syntaxe JavaScript et contrôle du diff réussis.
 
 ## Critères d'acceptation
 

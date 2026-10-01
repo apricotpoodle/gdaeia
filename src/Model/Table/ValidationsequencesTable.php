@@ -115,7 +115,7 @@ class ValidationsequencesTable extends Table
     {
         $rules->add($rules->isUnique(['department_id', 'role_id']), [
             'errorField' => 'department_id',
-            'message' => __('This combination of department_id and role_id already exists'),
+            'message' => __('Ce rôle possède déjà une séquence de validation pour ce département.'),
         ]);
         $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
         $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);

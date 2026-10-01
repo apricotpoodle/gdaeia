@@ -90,7 +90,7 @@ class UserDepartmentsTable extends Table
     {
         $rules->add($rules->isUnique(['user_id', 'department_id']), [
             'errorField' => 'user_id',
-            'message' => __('This combination of user_id and department_id already exists'),
+            'message' => __('Cet utilisateur est déjà associé à ce département.'),
         ]);
         $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
         $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);

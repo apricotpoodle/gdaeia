@@ -95,7 +95,7 @@ class FieldAuthorizationsTable extends Table
     {
         $rules->add($rules->isUnique(['role_id', 'resource', 'field']), [
             'errorField' => 'role_id',
-            'message' => __('This combination of role_id, resource and field already exists'),
+            'message' => __('Une autorisation existe déjà pour ce rôle, cette ressource et ce champ.'),
         ]);
         $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
 

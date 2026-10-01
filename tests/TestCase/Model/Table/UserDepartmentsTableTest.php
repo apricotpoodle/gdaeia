@@ -87,6 +87,20 @@ class UserDepartmentsTableTest extends TestCase
         $this->assertArrayHasKey('user_id', $userDepartment->getErrors());
     }
 
+    public function testUnDoublonDeDepartementRecoitUnMotifFrancais(): void
+    {
+        $userDepartment = $this->UserDepartments->newEntity([
+            'user_id' => 1,
+            'department_id' => 1,
+        ]);
+
+        $this->assertFalse($this->UserDepartments->save($userDepartment));
+        $this->assertContains(
+            'Cet utilisateur est déjà associé à ce département.',
+            $userDepartment->getError('user_id'),
+        );
+    }
+
     public function testAjouteLesAssociationsAbsentesSansDupliquerLesExistantes(): void
     {
         $createdCount = $this->UserDepartments->getConnection()->transactional(

@@ -31,6 +31,7 @@ final class ValidationErrorPresenter
             'yesno_id' => 'Champ Oui/Non',
         ],
         'Users' => [
+            'user_id' => 'Utilisateur',
             'email' => 'Adresse courriel',
             'username' => "Nom d'utilisateur",
             'password' => 'Mot de passe',
