@@ -12,7 +12,7 @@ Les statuts utilisés sont : `À planifier`, `Prêt`, `En cours`, `Bloqué` et `
 
 - [0001 — Mettre en place un gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) — priorité moyenne.
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
-- [0002 — Mutualiser la présentation des erreurs de validation](0002-mutualiser-la-presentation-des-erreurs-validation.md) — priorité moyenne.
+- [0013 — Mutualiser la présentation des erreurs de validation](0013-mutualiser-la-presentation-des-erreurs-validation.md) — priorité moyenne.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute.
 
 ## Migration vers un gestionnaire de tickets
