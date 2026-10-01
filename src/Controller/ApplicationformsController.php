@@ -92,7 +92,7 @@ class ApplicationformsController extends AppController
 
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error($this->validationErrorSummary($applicationform, 'Applicationforms'));
+            $this->flashValidationErrors($applicationform, 'Applicationforms');
         }
 
         // Récupération des données de référence et de sécurité (ADR 0042 / 0046)
@@ -165,7 +165,7 @@ class ApplicationformsController extends AppController
                 return $this->redirect(['action' => 'index']);
             }
 
-            $this->Flash->error($this->validationErrorSummary($applicationform, 'Applicationforms'));
+            $this->flashValidationErrors($applicationform, 'Applicationforms');
         }
 
         // 4. Chargement des listes pour le rendu du formulaire

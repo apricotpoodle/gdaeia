@@ -4,6 +4,7 @@
  */
 
 import { TabulatorFactory } from '/js/core/Tabulator/TabulatorFactory.js';
+import { FlashManager } from '/js/core/FlashManager.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const gridId = '#menus-grid';
@@ -15,22 +16,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 2. Jeton CSRF (CakePHP 5)[cite: 1, 2]
     const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content') || '';
-
-    // Notification visuelle générique (Toast)
-    const showNotification = (message, type = 'success') => {
-        const alertBox = document.createElement('div');
-        alertBox.className = `alert alert-${type} alert-dismissible fade show position-fixed top-0 end-0 m-3 z-3 shadow-sm`;
-        alertBox.role = 'alert';
-        alertBox.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        `;
-        document.body.appendChild(alertBox);
-
-        setTimeout(() => {
-            alertBox.remove();
-        }, 3000);
-    };
 
     // 3. Traitement AJAX pour les actions de modification d'arbre (moveUp, moveDown)
     const moveMenuNode = async (action, id) => {
@@ -48,17 +33,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const result = await response.json();
             if (result.success) {
-                showNotification(result.message || 'Le menu a été déplacé avec succès.', 'success');
+                FlashManager.show(result.message || 'Le menu a été déplacé avec succès.', 'success');
                 const table = Tabulator.findTable(gridId)[0];
                 if (table) {
                     table.setData();
                 }
             } else {
-                showNotification(result.message || 'Impossible de déplacer ce menu.', 'warning');
+                FlashManager.show(result.message || 'Impossible de déplacer ce menu.', 'warning');
             }
         } catch (error) {
             console.error('[AJAX Menu] Erreur réseau :', error);
-            showNotification('Erreur réseau lors du déplacement.', 'danger');
+            FlashManager.show('Erreur réseau lors du déplacement.', 'danger');
         }
     };
 
@@ -80,17 +65,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const result = await response.json();
             if (result.success) {
-                showNotification(result.message || 'Le menu a été supprimé avec succès.', 'success');
+                FlashManager.show(result.message || 'Le menu a été supprimé avec succès.', 'success');
                 const table = Tabulator.findTable(gridId)[0];
                 if (table) {
                     table.setData();
                 }
             } else {
-                showNotification(result.message || 'Impossible de supprimer ce menu.', 'danger');
+                FlashManager.show(result.message || 'Impossible de supprimer ce menu.', 'danger');
             }
         } catch (error) {
             console.error('[AJAX Delete] Erreur réseau :', error);
-            showNotification('Erreur réseau lors de la suppression.', 'danger');
+            FlashManager.show('Erreur réseau lors de la suppression.', 'danger');
         }
     };
 

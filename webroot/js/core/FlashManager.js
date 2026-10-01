@@ -1,65 +1,154 @@
-// ==============================================================================
-// Fichier : webroot/js/core/FlashManager.js
-// Rôle : Gestionnaire de notifications Flash dynamiques (Etanchéité Module ES6)
-// ==============================================================================
+const DEFAULT_DURATION_MS = 5000;
+const DISMISS_ANIMATION_MS = 150;
+const STORAGE_KEY = 'gdaetf2.flash-toasts';
+const TYPES = new Set(['primary', 'secondary', 'success', 'danger', 'warning', 'info', 'light', 'dark']);
 
-/**
- * @class FlashManager
- * @description Générateur dynamique de messages Flash (Toasts/Alerts) basés sur Bootstrap 5.
- * Ne nécessite aucun conteneur HTML préexistant (généré à la volée).
- */
+/** Gère les toasts rendus par CakePHP et les notifications JavaScript. */
 export class FlashManager {
+    static #initialized = false;
+    static #pendingServer = [];
 
-    /**
-     * Crée ou récupère le conteneur flottant pour les alertes.
-     * @private
-     * @returns {HTMLElement}
-     */
     static #getContainer() {
-        let container = document.getElementById('dynamic-flash-container');
+        let container = document.getElementById('flash-container');
         if (!container) {
             container = document.createElement('div');
-            container.id = 'dynamic-flash-container';
-            // Positionnement Bootstrap : Fixé en haut à droite, au-dessus de tout (z-index élevé)
-            container.className = 'position-fixed top-0 end-0 p-3';
-            container.style.zIndex = '1055';
+            container.id = 'flash-container';
+            container.className = 'flash-container';
             document.body.appendChild(container);
         }
+
         return container;
     }
 
-    /**
-     * Affiche un message Flash.
-     * @param {string} message - Le texte ou HTML à afficher.
-     * @param {string} type - Variant Bootstrap ('success', 'danger', 'warning', 'info').
-     * @param {number} duration - Durée d'affichage en millisecondes (0 = infini).
-     */
-    static show(message, type = 'success', duration = 5000) {
-        const container = this.#getContainer();
-        const alert = document.createElement('div');
+    static #variant(type) {
+        const variant = type === 'error' ? 'danger' : type;
 
-        // Classes Bootstrap 5 pour une alerte avec animation d'apparition
-        alert.className = `alert alert-${type} alert-dismissible fade show shadow-sm d-flex align-items-center`;
-        alert.innerHTML = `
-            <div>${message}</div>
-            <button type="button" class="btn-close ms-auto" data-bs-dismiss="alert" aria-label="Fermer"></button>
-        `;
+        return TYPES.has(variant) ? variant : 'primary';
+    }
 
-        container.appendChild(alert);
+    static #createToast(message, type) {
+        const variant = this.#variant(type);
+        const toast = document.createElement('div');
+        toast.className = `toast flash-toast flash-toast--${variant} show`;
+        toast.setAttribute('data-flash-type', variant);
+        toast.setAttribute('role', variant === 'danger' || variant === 'warning' ? 'alert' : 'status');
+        toast.setAttribute('aria-live', variant === 'danger' || variant === 'warning' ? 'assertive' : 'polite');
+        toast.setAttribute('aria-atomic', 'true');
 
-        // Auto-destruction propre (DOM Garbage Collection)
-        if (duration > 0) {
-            setTimeout(() => {
-                alert.classList.remove('show');
-                // Attente de la fin de l'animation CSS avant suppression physique
-                setTimeout(() => alert.remove(), 150);
-            }, duration);
+        const body = document.createElement('div');
+        body.className = 'flash-toast__body';
+        body.innerHTML = message;
+
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.className = 'flash-toast__close';
+        close.setAttribute('aria-label', 'Fermer');
+        close.textContent = '×';
+
+        toast.append(body, close);
+
+        return toast;
+    }
+
+    static #readPending(pathname, now) {
+        try {
+            const stored = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '[]');
+            if (!Array.isArray(stored)) return [];
+
+            return stored.filter(flash =>
+                flash &&
+                typeof flash.id === 'string' &&
+                typeof flash.bodyHtml === 'string' &&
+                TYPES.has(flash.type) &&
+                flash.path === pathname &&
+                Number.isFinite(flash.expiresAt) &&
+                flash.expiresAt > now
+            );
+        } catch {
+            return [];
         }
     }
 
-    // Raccourcis sémantiques restaurés (Syntactic sugar)
-    static success(msg, duration = 5000) { this.show(`<i class="fas fa-check-circle me-2"></i>${msg}`, 'success', duration); }
-    static error(msg, duration = 7000) { this.show(`<i class="fas fa-exclamation-triangle me-2"></i>${msg}`, 'danger', duration); }
-    static warning(msg, duration = 5000) { this.show(`<i class="fas fa-exclamation-circle me-2"></i>${msg}`, 'warning', duration); }
-    static info(msg, duration = 5000) { this.show(`<i class="fas fa-info-circle me-2"></i>${msg}`, 'info', duration); }
+    static #savePending() {
+        try {
+            if (this.#pendingServer.length === 0) {
+                sessionStorage.removeItem(STORAGE_KEY);
+            } else {
+                sessionStorage.setItem(STORAGE_KEY, JSON.stringify(this.#pendingServer));
+            }
+        } catch {
+            // Le toast reste visible si le stockage de session est indisponible.
+        }
+    }
+
+    static #activate(toast, duration, id = null) {
+        let dismissed = false;
+        let timerId;
+
+        const dismiss = () => {
+            if (dismissed) return;
+            dismissed = true;
+            if (timerId !== undefined) clearTimeout(timerId);
+
+            if (id !== null) {
+                this.#pendingServer = this.#pendingServer.filter(flash => flash.id !== id);
+                this.#savePending();
+            }
+
+            toast.classList.add('flash-toast--hiding');
+            setTimeout(() => toast.remove(), DISMISS_ANIMATION_MS);
+        };
+
+        toast.querySelector('.flash-toast__close')?.addEventListener('click', dismiss);
+        if (duration > 0) timerId = setTimeout(dismiss, duration);
+    }
+
+    /** Initialise les Flash CakePHP et rétablit ceux qui n'ont pas expiré. */
+    static init() {
+        if (this.#initialized) return;
+        this.#initialized = true;
+
+        const container = this.#getContainer();
+        const pathname = window.location.pathname;
+        const now = Date.now();
+        const current = [...container.querySelectorAll('.flash-toast[data-flash-source="server"]')]
+            .map((toast, index) => ({
+                toast,
+                flash: {
+                    id: `${now}-${index}-${Math.random().toString(36).slice(2)}`,
+                    bodyHtml: toast.querySelector('.flash-toast__body')?.innerHTML || '',
+                    type: this.#variant(toast.getAttribute('data-flash-type')),
+                    path: pathname,
+                    expiresAt: now + DEFAULT_DURATION_MS
+                }
+            }));
+        const restored = this.#readPending(pathname, now)
+            .map(flash => ({ toast: this.#createToast(flash.bodyHtml, flash.type), flash }));
+
+        container.prepend(...restored.map(({ toast }) => toast));
+        const toasts = [...restored, ...current];
+        this.#pendingServer = toasts.map(({ flash }) => flash);
+        this.#savePending();
+
+        for (const { toast, flash } of toasts) {
+            this.#activate(toast, Math.max(1, flash.expiresAt - Date.now()), flash.id);
+        }
+    }
+
+    /**
+     * Affiche un toast dynamique. Le message peut contenir du HTML de confiance.
+     * @param {string} message Contenu du message.
+     * @param {string} type Variante visuelle.
+     * @param {number} duration Durée en millisecondes (0 = permanent).
+     */
+    static show(message, type = 'success', duration = DEFAULT_DURATION_MS) {
+        const toast = this.#createToast(message, type);
+        this.#getContainer().appendChild(toast);
+        this.#activate(toast, duration);
+    }
+
+    static success(message, duration = DEFAULT_DURATION_MS) { this.show(message, 'success', duration); }
+    static error(message, duration = DEFAULT_DURATION_MS) { this.show(message, 'danger', duration); }
+    static warning(message, duration = DEFAULT_DURATION_MS) { this.show(message, 'warning', duration); }
+    static info(message, duration = DEFAULT_DURATION_MS) { this.show(message, 'info', duration); }
 }

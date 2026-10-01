@@ -32,23 +32,49 @@ use Cake\Http\Response;
  * @link https://book.cakephp.org/5/en/controllers.html#the-app-controller
  * @property \Authentication\Controller\Component\AuthenticationComponent $Authentication
  * @property \Authorization\Controller\Component\AuthorizationComponent $Authorization
+ * @property \Cake\Controller\Component\FlashComponent $Flash
  */
 class AppController extends Controller
 {
     /**
-     * Présente une erreur de validation ou un échec de sauvegarde sans détail ORM.
+     * Affiche un message Flash par champ invalide, ou un échec sans détail ORM.
      *
      * @param \Cake\Datasource\EntityInterface $entity Entité dont la sauvegarde a échoué.
      * @param string $resource Nom de la ressource ORM pour les libellés des champs.
-     * @return string Message destiné au Flash Web.
+     * @return void
      */
-    protected function validationErrorSummary(EntityInterface $entity, string $resource): string
+    protected function flashValidationErrors(EntityInterface $entity, string $resource): void
     {
         if ($entity->getErrors() === []) {
-            return __('Impossible d’enregistrer les données. Veuillez réessayer.');
+            $this->Flash->error(__('Impossible d’enregistrer les données. Veuillez réessayer.'));
+
+            return;
         }
 
-        return (new ValidationErrorPresenter())->present($entity, $resource)['summary'];
+        $presentation = (new ValidationErrorPresenter())->present($entity, $resource);
+        /** @var array<string, array{label: string, reasons: list<string>}> $messagesByField */
+        $messagesByField = [];
+        foreach ($presentation['errors'] as $error) {
+            $field = $error['field'];
+            $messagesByField[$field] ??= ['label' => $error['label'], 'reasons' => []];
+            if (!in_array($error['reason'], $messagesByField[$field]['reasons'], true)) {
+                $messagesByField[$field]['reasons'][] = $error['reason'];
+            }
+        }
+
+        if ($messagesByField === []) {
+            $this->Flash->error(__('Impossible d’enregistrer les données. Veuillez réessayer.'));
+
+            return;
+        }
+
+        foreach ($messagesByField as $details) {
+            $this->Flash->error(__(
+                'Champ « {0} » : {1}',
+                $details['label'],
+                implode(' ', $details['reasons']),
+            ));
+        }
     }
 
     /**

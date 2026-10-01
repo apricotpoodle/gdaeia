@@ -24,6 +24,8 @@
     <?= $this->Html->meta('icon') ?>
 
     <?= $this->Html->css(['normalize.min', 'milligram.min', 'fonts', 'cake']) ?>
+    <?= $this->Html->css('flash') ?>
+    <?= $this->Html->script('app', ['type' => 'module']) ?>
 
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>
@@ -31,7 +33,7 @@
 </head>
 <body>
     <div class="error-container">
-        <?= $this->Flash->render() ?>
+        <?= $this->element('flash/container') ?>
         <?= $this->fetch('content') ?>
         <?= $this->Html->link(__('Back'), 'javascript:history.back()') ?>
     </div>

@@ -193,7 +193,7 @@ class UsersController extends AppController
 
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error($this->validationErrorSummary($user, 'Users'));
+            $this->flashValidationErrors($user, 'Users');
         }
 
         $identity = $this->request->getAttribute('identity');
@@ -277,7 +277,7 @@ class UsersController extends AppController
             // 🛠️ FIN DES LOGS D'ANALYSE
             // ==============================================================
 
-            $this->Flash->error($this->validationErrorSummary($user, 'Users'));
+            $this->flashValidationErrors($user, 'Users');
         }
 
         $identity = $this->request->getAttribute('identity');
@@ -437,7 +437,7 @@ class UsersController extends AppController
 
                 return $this->redirect(['action' => 'login']);
             }
-            $this->Flash->error($this->validationErrorSummary($user, 'Users'));
+            $this->flashValidationErrors($user, 'Users');
         }
 
         $this->set(compact('token'));

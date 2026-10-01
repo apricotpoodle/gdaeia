@@ -8,7 +8,7 @@ Certaines actions, comme la suppression (`delete`), sont hybrides : elles détec
 
 ## Erreurs des formulaires Web
 
-Après un échec de sauvegarde, les contrôleurs Web appellent `AppController::validationErrorSummary()` avec l'entité et sa ressource ORM. Cette méthode utilise `ValidationErrorPresenter` pour produire un message Flash qui nomme le premier champ invalide et son motif. Les formulaires liés à l'entité conservent les erreurs CakePHP près des contrôles.
+Après un échec de sauvegarde, les contrôleurs Web appellent `AppController::flashValidationErrors()` avec l'entité et sa ressource ORM. Cette méthode utilise `ValidationErrorPresenter` pour produire un message Flash par champ invalide, avec tous ses motifs distincts. Les formulaires liés à l'entité conservent les erreurs CakePHP près des contrôles.
 
 Une sauvegarde échouée sans erreur d'entité reçoit un message générique. Le parcours de demande de réinitialisation du mot de passe garde son message uniforme, qu'une adresse soit connue ou non.
 
@@ -21,3 +21,4 @@ absent après la connexion.
 
 ## ADRs Associés
 * [ADR 0046 : Standardisation du CRUD hybride](../../docs/adr/0046-standardisation-crud-field-authorizations.md)
+* [ADR 0060 : Un message Flash par champ invalide](../../docs/adr/0060-un-flash-par-champ-invalide-web.md)

@@ -16,8 +16,6 @@
                 <p class="text-muted small mb-0"><?= __('Saisissez votre email pour recevoir un lien de réinitialisation') ?></p>
             </div>
 
-            <?= $this->Flash->render() ?>
-
             <?= $this->Form->create() ?>
 
             <div class="mb-4">

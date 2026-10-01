@@ -42,7 +42,7 @@ class RolesController extends AppController
 
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error($this->validationErrorSummary($role, 'Roles'));
+            $this->flashValidationErrors($role, 'Roles');
         }
 
         $this->set(compact('role'));
@@ -63,7 +63,7 @@ class RolesController extends AppController
 
                 return $this->redirect(['action' => 'index']);
             }
-            $this->Flash->error($this->validationErrorSummary($role, 'Roles'));
+            $this->flashValidationErrors($role, 'Roles');
         }
 
         $this->set(compact('role'));

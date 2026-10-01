@@ -2,6 +2,7 @@
 
 **Date :** 11 Septembre 2026
 **Statut :** Accepté
+**Évolution du rendu Web :** [ADR 0060](./0060-un-flash-par-champ-invalide-web.md) remplace le point 4 ci-dessous.
 **Dépendances :**
 * [ADR 0045 : Administration CRUD de la sécurité des champs](./0045-gestion-crud-field-authorizations.md)
 * [ADR 0051 : Français comme langue applicative par défaut](./0051-francais-langue-applicative-par-defaut.md)
