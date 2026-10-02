@@ -12,30 +12,30 @@ class ValidationCommentTemplatePolicy extends AppPolicy
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\ValidationCommentTemplate $template @return bool */
     public function canView(IdentityInterface $identity, ValidationCommentTemplate $template): bool
     {
-        return $this->canIndex($identity, $template);
+        return $this->isSuperUser($identity);
     }
 
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\ValidationCommentTemplate $template @return bool */
     public function canIndex(IdentityInterface $identity, ValidationCommentTemplate $template): bool
     {
-        return (bool)$this->getValidUser($identity)?->get('issuperuser');
+        return $this->isSuperUser($identity);
     }
 
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\ValidationCommentTemplate $template @return bool */
     public function canAdd(IdentityInterface $identity, ValidationCommentTemplate $template): bool
     {
-        return $this->canIndex($identity, $template);
+        return $this->isSuperUser($identity);
     }
 
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\ValidationCommentTemplate $template @return bool */
     public function canEdit(IdentityInterface $identity, ValidationCommentTemplate $template): bool
     {
-        return $this->canIndex($identity, $template);
+        return $this->isSuperUser($identity);
     }
 
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\ValidationCommentTemplate $template @return bool */
     public function canDelete(IdentityInterface $identity, ValidationCommentTemplate $template): bool
     {
-        return $this->canIndex($identity, $template);
+        return $this->isSuperUser($identity);
     }
 }

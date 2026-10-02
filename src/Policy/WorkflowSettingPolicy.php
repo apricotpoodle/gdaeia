@@ -12,12 +12,12 @@ class WorkflowSettingPolicy extends AppPolicy
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\WorkflowSetting $setting @return bool */
     public function canIndex(IdentityInterface $identity, WorkflowSetting $setting): bool
     {
-        return (bool)$this->getValidUser($identity)?->get('issuperuser');
+        return $this->isSuperUser($identity);
     }
 
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\WorkflowSetting $setting @return bool */
     public function canManage(IdentityInterface $identity, WorkflowSetting $setting): bool
     {
-        return $this->canIndex($identity, $setting);
+        return $this->isSuperUser($identity);
     }
 }
