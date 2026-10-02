@@ -53,9 +53,11 @@ function voteControls(step, requirements, templates) {
     )).join('');
 
     return '<div class="mt-2 border-top pt-2">'
-        + '<label class="form-label" for="validation-decision-' + id + '">Décision</label>'
-        + '<select class="form-select form-select-sm mb-2 validation-decision" id="validation-decision-' + id + '" data-step-id="' + id + '">'
-        + '<option value="accepter">Accepter' + proxyLabel + '</option><option value="refuser">Refuser' + proxyLabel + '</option></select>'
+        + '<span class="form-label d-block">Décision</span>'
+        + '<div class="btn-group w-100 mb-2 validation-decision-group" role="group" aria-label="Décision de validation" data-step-id="' + id + '" data-decision="accepter">'
+        + '<button type="button" class="btn btn-lg btn-success validation-decision-button" data-decision="accepter" aria-pressed="true">Accepter' + proxyLabel + '</button>'
+        + '<button type="button" class="btn btn-lg btn-outline-danger validation-decision-button" data-decision="refuser" aria-pressed="false">Refuser' + proxyLabel + '</button>'
+        + '</div>'
         + '<label class="form-label" for="validation-template-' + id + '">Commentaire prédéfini</label>'
         + '<select class="form-select form-select-sm mb-2 validation-template" id="validation-template-' + id + '" data-step-id="' + id + '"><option value="">Saisie libre</option>' + templateOptions + '</select>'
         + '<label class="form-label" for="validation-comment-' + id + '">Commentaire de vote</label>'
@@ -64,14 +66,27 @@ function voteControls(step, requirements, templates) {
         + '</div>';
 }
 
-function updateTemplateOptions(stepId) {
-    const decision = root.querySelector('#validation-decision-' + stepId)?.value;
+function updateTemplateOptions(stepId, decision) {
     const select = root.querySelector('#validation-template-' + stepId);
     if (!select) return;
     select.querySelectorAll('option[data-decision]').forEach((option) => {
         option.hidden = option.dataset.decision !== decision;
     });
     select.value = '';
+}
+
+function updateDecisionButtons(group, decision) {
+    group.dataset.decision = decision;
+    group.querySelectorAll('.validation-decision-button').forEach((button) => {
+        const selected = button.dataset.decision === decision;
+        const accepter = button.dataset.decision === 'accepter';
+        button.classList.toggle('btn-success', accepter && selected);
+        button.classList.toggle('btn-outline-success', accepter && !selected);
+        button.classList.toggle('btn-danger', !accepter && selected);
+        button.classList.toggle('btn-outline-danger', !accepter && !selected);
+        button.setAttribute('aria-pressed', selected ? 'true' : 'false');
+    });
+    updateTemplateOptions(group.dataset.stepId, decision);
 }
 
 function activateValidationTabFromUrl() {
@@ -98,8 +113,11 @@ async function render() {
     const requirements = data.commentRequirements || { accepter: false, refuser: true };
     const templates = data.commentTemplates || { accepter: [], refuser: [] };
     const steps = data.steps.map((step) => {
-        const dueAt = step.due_at
+        const dueAt = step.state === 'en_attente' && step.due_at
             ? '<small class="text-muted">Échéance : ' + escape(new Date(step.due_at).toLocaleString('fr-FR')) + '</small>'
+            : '';
+        const completedAt = ['acceptee', 'refusee'].includes(step.state) && step.completed_at
+            ? '<small class="text-muted">Vote enregistré le ' + escape(new Date(step.completed_at).toLocaleString('fr-FR')) + '</small>'
             : '';
         const comment = step.comment
             ? '<p class="mb-0 mt-2"><small>Commentaire : ' + escape(step.comment) + '</small></p>'
@@ -109,7 +127,7 @@ async function render() {
             + '<div class="d-flex justify-content-between align-items-start gap-2">'
             + '<span>Séquence ' + escape(step.sequence_number) + ' — ' + escape(step.role?.name || 'Rôle') + '</span>'
             + '<strong>' + escape(stateLabels[step.state] || step.state) + '</strong></div>'
-            + dueAt + comment + voteControls(step, requirements, templates) + '</li>';
+            + dueAt + completedAt + comment + voteControls(step, requirements, templates) + '</li>';
     }).join('');
     root.innerHTML = '<div class="mb-3"><p class="mb-1"><strong>État : '
         + escape(stateLabels[data.run.state] || data.run.state)
@@ -118,9 +136,11 @@ async function render() {
         + progress.percentage + '%">' + progress.percentage + '%</div></div><small class="text-muted">'
         + progress.completed + ' rôle(s) ayant voté sur ' + progress.total + '</small></div><ul class="list-group">'
         + steps + '</ul>';
-    root.querySelectorAll('.validation-decision').forEach((select) => {
-        updateTemplateOptions(select.dataset.stepId);
-        select.addEventListener('change', () => updateTemplateOptions(select.dataset.stepId));
+    root.querySelectorAll('.validation-decision-group').forEach((group) => {
+        updateDecisionButtons(group, group.dataset.decision || 'accepter');
+        group.querySelectorAll('.validation-decision-button').forEach((button) => button.addEventListener('click', () => {
+            updateDecisionButtons(group, button.dataset.decision);
+        }));
     });
     root.querySelectorAll('.validation-template').forEach((select) => select.addEventListener('change', () => {
         const stepId = select.dataset.stepId;
@@ -130,7 +150,7 @@ async function render() {
     }));
     root.querySelectorAll('.vote').forEach((button) => button.addEventListener('click', async () => {
         const stepId = Number(button.dataset.stepId);
-        const decision = root.querySelector('#validation-decision-' + stepId)?.value || 'accepter';
+        const decision = root.querySelector('.validation-decision-group[data-step-id="' + stepId + '"]')?.dataset.decision || 'accepter';
         const comment = root.querySelector('#validation-comment-' + stepId)?.value.trim() || '';
         if (requirements[decision] && comment === '') {
             window.alert(decision === 'refuser'

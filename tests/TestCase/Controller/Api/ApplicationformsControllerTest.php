@@ -219,6 +219,32 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('"errors":["Un commentaire est obligatoire');
     }
 
+    /** Un validateur ordinaire ne voit que l'étape correspondant à son rôle. */
+    public function testLEtatDeValidationEstLimiteALEtapeDuValidateur(): void
+    {
+        $this->configureVisibilityWorkflow();
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
+
+        $this->get('/api/applicationforms/1/validation.json');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Validateur de test');
+        $this->assertResponseNotContains('Second validateur');
+    }
+
+    /** Un super-utilisateur conserve la vision de toutes les étapes du cycle. */
+    public function testLeSuperUtilisateurVoitToutesLesEtapesDeValidation(): void
+    {
+        $this->configureVisibilityWorkflow();
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/api/applicationforms/1/validation.json');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Validateur de test');
+        $this->assertResponseContains('Second validateur');
+    }
+
     /** Vérifie qu'un rôle du cycle peut modifier la demande et laisse une trace d'audit. */
     public function testUnValidateurDuCyclePeutModifierLaDemandeAvecUnCommentaireDAudit(): void
     {
@@ -386,6 +412,82 @@ class ApplicationformsControllerTest extends TestCase
             ]);
         }
         $connection->update('validationsequences', ['role_id' => 2], ['id' => 1]);
+    }
+
+    /** Prépare deux étapes afin de vérifier le filtrage de l'état par utilisateur. */
+    private function configureVisibilityWorkflow(): void
+    {
+        $this->configureVotableWorkflow();
+        $connection = ConnectionManager::get('test');
+        $now = '2026-09-18 10:00:00';
+        $connection->insert('roles', [
+            'id' => 3,
+            'base' => 0,
+            'code' => 'val-2',
+            'name' => 'Second validateur',
+            'sort' => 'Second validateur',
+            'deleted' => null,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->insert('users', [
+            'id' => 3,
+            'username' => 'second-validateur',
+            'email' => 'second-validateur@example.test',
+            'password' => 'mot-de-passe-de-test',
+            'firstname' => 'Second',
+            'lastname' => 'Validateur',
+            'token' => null,
+            'issuperuser' => 0,
+            'role_id' => 3,
+            'token_expires' => null,
+            'deleted' => null,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->insert('user_departments', [
+            'id' => 3,
+            'user_id' => 3,
+            'department_id' => 1,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->insert('validationsequences', [
+            'id' => 2,
+            'department_id' => 1,
+            'role_id' => 3,
+            'sequence' => 2,
+            'reminder_delay_hours' => 12,
+            'deleted' => null,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->insert('validation_workflow_runs', [
+            'id' => self::WORKFLOW_TEST_ID,
+            'applicationform_id' => 1,
+            'started_by_user_id' => 1,
+            'state' => 'en_attente',
+            'started_at' => $now,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        foreach (
+            [
+                [self::WORKFLOW_TEST_ID, 1, 2],
+                [self::WORKFLOW_TEST_ID + 1, 2, 3],
+            ] as [$id, $sequenceId, $roleId]
+        ) {
+            $connection->insert('applicationvalidationsteps', [
+                'id' => $id,
+                'applicationform_id' => 1,
+                'validation_workflow_run_id' => self::WORKFLOW_TEST_ID,
+                'validationsequence_id' => $sequenceId,
+                'role_id' => $roleId,
+                'sequence_number' => $roleId === 2 ? 1 : 2,
+                'state' => 'en_attente',
+                'reminder_count' => 0,
+            ]);
+        }
     }
 
     /** Lance directement le cycle préparé afin d'isoler la requête HTTP de vote. */

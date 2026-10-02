@@ -2,6 +2,11 @@
 
 use function Cake\Core\env;
 
+$emailUsername = env('EMAIL_USERNAME', env('MAIL_USERNAME', null));
+$emailPassword = env('EMAIL_PASSWORD', env('MAIL_PASSWORD', null));
+$emailUsername = in_array(strtolower(trim((string)$emailUsername)), ['', 'null'], true) ? null : $emailUsername;
+$emailPassword = in_array(strtolower(trim((string)$emailPassword)), ['', 'null'], true) ? null : $emailPassword;
+
 /*
  * Local configuration file to provide any overrides to your app.php configuration.
  * Copy and save this file as app_local.php and make changes as required.
@@ -86,12 +91,15 @@ return [
      */
     'EmailTransport' => [
         'default' => [
-            'host' => 'localhost',
-            'port' => 25,
-            'username' => null,
-            'password' => null,
+            'className' => 'Cake\\Mailer\\Transport\\SmtpTransport',
+            'host' => env('EMAIL_HOST', env('MAIL_HOST', 'mailpit')),
+            'port' => (int)env('EMAIL_PORT', env('MAIL_PORT', 1025)),
+            'timeout' => 30,
+            'username' => $emailUsername,
+            'password' => $emailPassword,
             'client' => null,
-            'url' => env('EMAIL_TRANSPORT_DEFAULT_URL', null),
+            'tls' => false,
+            'keepAlive' => false,
         ],
     ],
 ];
