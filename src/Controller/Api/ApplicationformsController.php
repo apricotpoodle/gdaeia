@@ -560,10 +560,17 @@ class ApplicationformsController extends AppController
                 'ValidationWorkflowRuns',
                 'Comments',
                 'Comments' => ['Users'], // Charge le fil de discussion et ses auteurs
+            ])
+            ->leftJoinWith('Applicationformstatuses')
+            ->enableAutoFields(true)
+            ->select([
+                'validation_status' => 'Applicationformstatuses.validationstatus_id',
             ]);
 
         // 2. Application des tris et filtres Tabulator
-        $query = $adapter->adaptRequest($this->request, $query);
+        $query = $adapter->adaptRequest($this->request, $query, [
+            'validation_status' => 'Applicationformstatuses.validationstatus_id',
+        ]);
 
         // 3. Pagination native
         try {

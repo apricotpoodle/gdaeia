@@ -41,12 +41,31 @@ export function getApplicationformColumns() {
 
         // 10. Une voix exprimée compte pour un rôle configuré, jamais pour un utilisateur.
         {
-            title: 'Validation', field: 'applicationformstatuses', width: 115, headerSort: false,
+            title: 'Validation', field: 'validation_status', width: 115,
+            sorter: 'number',
+            headerSortTristate: true,
+            headerFilter: 'list',
+            headerFilterFunc: '=',
+            headerFilterParams: {
+                values: {
+                    '': 'Toutes',
+                    '1': 'Non lancée',
+                    '2': 'En cours',
+                    '4': 'Acceptée',
+                    '5': 'Refusée',
+                    '6': 'Annulée',
+                },
+            },
             formatter: (cell) => {
-                const status = cell.getValue()?.[0];
+                const statuses = cell.getRow().getData().applicationformstatuses || [];
+                const status = statuses.find((item) => item.en_cours)
+                    || statuses[statuses.length - 1]
+                    || statuses[0];
                 const percentage = Number(status?.valid_percentage || 0);
-                const label = status?.rejected ? 'Refusée' : status?.accepted ? 'Acceptée' : `${percentage} %`;
-                const color = status?.rejected ? 'danger' : status?.accepted ? 'success' : percentage > 0 ? 'primary' : 'secondary';
+                const isAccepted = Boolean(status?.accepted) && percentage >= 100;
+                const hasProgress = percentage < 100;
+                const label = status?.rejected ? 'Refusée' : hasProgress ? `${percentage} %` : isAccepted ? 'Acceptée' : `${percentage} %`;
+                const color = status?.rejected ? 'danger' : hasProgress ? (percentage > 0 ? 'primary' : 'secondary') : isAccepted ? 'success' : 'secondary';
                 return `<span class="badge bg-${color}">${label}</span>`;
             },
         }
