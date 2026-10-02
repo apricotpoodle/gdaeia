@@ -39,6 +39,8 @@ class ApplicationformsControllerTest extends TestCase
         'app.Applicationvalidationsteps',
         'app.Validations',
         'app.Comments',
+        'app.WorkflowSettings',
+        'app.ValidationCommentTemplates',
     ];
 
     public function testLApiDesDemandesRedirigeUnVisiteurVersLaConnexion(): void

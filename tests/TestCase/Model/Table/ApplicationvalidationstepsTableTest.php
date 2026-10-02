@@ -68,12 +68,10 @@ class ApplicationvalidationstepsTableTest extends TestCase
             'role_id' => -1,
             'validationstatus_id' => 'invalide',
             'validationsequence_id' => 1,
-            'comment' => str_repeat('a', 101),
         ]);
 
         $this->assertArrayHasKey('role_id', $step->getErrors());
         $this->assertArrayHasKey('validationstatus_id', $step->getErrors());
-        $this->assertArrayHasKey('comment', $step->getErrors());
     }
 
     /**

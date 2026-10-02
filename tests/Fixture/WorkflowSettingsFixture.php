@@ -15,13 +15,29 @@ class WorkflowSettingsFixture extends TestFixture
 
     public function init(): void
     {
-        $this->records = [[
-            'id' => 1,
-            'name' => 'validation.default_due_hours',
-            'value' => '72',
-            'created' => '2026-09-16 12:00:00',
-            'modified' => '2026-09-16 12:00:00',
-        ]];
+        $this->records = [
+            [
+                'id' => 1,
+                'name' => 'validation.default_due_hours',
+                'value' => '72',
+                'created' => '2026-09-16 12:00:00',
+                'modified' => '2026-09-16 12:00:00',
+            ],
+            [
+                'id' => 2,
+                'name' => 'validation.comment_required.accept',
+                'value' => '0',
+                'created' => '2026-09-16 12:00:00',
+                'modified' => '2026-09-16 12:00:00',
+            ],
+            [
+                'id' => 3,
+                'name' => 'validation.comment_required.reject',
+                'value' => '1',
+                'created' => '2026-09-16 12:00:00',
+                'modified' => '2026-09-16 12:00:00',
+            ],
+        ];
 
         parent::init();
     }

@@ -96,11 +96,6 @@ class ApplicationvalidationstepsTable extends Table
             ->allowEmptyString('validationstatus_id');
 
         $validator
-            ->scalar('comment')
-            ->maxLength('comment', 100)
-            ->allowEmptyString('comment');
-
-        $validator
             ->nonNegativeInteger('validationsequence_id')
             ->notEmptyString('validationsequence_id');
 

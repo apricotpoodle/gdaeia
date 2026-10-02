@@ -34,6 +34,20 @@ final class WorkflowSettingsActions
         );
     }
 
+    /** Enregistre les règles d'obligation de commentaire. */
+    public static function saveCommentRequirements(): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_BUTTON,
+            __('Enregistrer'),
+            'fa-floppy-disk',
+            '#',
+            'manage',
+            'WorkflowSettings',
+            ['class' => 'btn btn-primary', 'id' => 'save-validation-comment-requirements'],
+        );
+    }
+
     /** Enregistre un commentaire prédéfini depuis l’écran de paramétrage. */
     public static function saveCommentTemplate(): UiAction
     {

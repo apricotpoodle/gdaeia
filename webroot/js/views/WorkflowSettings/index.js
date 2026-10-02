@@ -54,6 +54,27 @@ async function loadDefaultDueHours() {
     document.querySelector('#validation-default-due-hours').value = payload.data.default_due_hours;
 }
 
+async function saveCommentRequirements() {
+    const requirements = {
+        accepter: document.querySelector('#validation-comment-required-accept').checked,
+        refuser: document.querySelector('#validation-comment-required-reject').checked,
+    };
+    await readJson(await fetch('/api/workflow-settings/comment-requirements.json', {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify(requirements),
+    }), 'Impossible d’enregistrer les obligations de commentaire.');
+    FlashManager.success('Obligations de commentaire enregistrées.');
+}
+
+async function loadCommentRequirements() {
+    const payload = await readJson(await fetch('/api/workflow-settings/comment-requirements.json', {
+        headers: { Accept: 'application/json' },
+    }), 'Impossible de charger les obligations de commentaire.');
+    document.querySelector('#validation-comment-required-accept').checked = payload.comment_requirements.accepter;
+    document.querySelector('#validation-comment-required-reject').checked = payload.comment_requirements.refuser;
+}
+
 globalTabulatorObserver.subscribe(`${tableSelector}:action:create`, () => {
     resetForm();
     form.classList.remove('d-none');
@@ -99,5 +120,9 @@ document.querySelector('#save-validation-comment-template')?.addEventListener('c
 document.querySelector('#save-validation-default-due-hours')?.addEventListener('click', () => {
     saveDefaultDueHours().catch((error) => FlashManager.error(error.message));
 });
+document.querySelector('#save-validation-comment-requirements')?.addEventListener('click', () => {
+    saveCommentRequirements().catch((error) => FlashManager.error(error.message));
+});
 document.querySelector('#cancel-validation-comment-template')?.addEventListener('click', resetForm);
 loadDefaultDueHours().catch((error) => FlashManager.error(error.message));
+loadCommentRequirements().catch((error) => FlashManager.error(error.message));
