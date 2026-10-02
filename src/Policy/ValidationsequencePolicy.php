@@ -20,5 +20,4 @@ class ValidationsequencePolicy extends AppPolicy
     {
         return $this->isSuperUser($identity);
     }
-
 }

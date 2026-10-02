@@ -9,24 +9,21 @@ Afin de ne pas polluer les contrôleurs avec des logiques de formatage de courri
 2. **Mailers Métiers (ex: `UserMailer.php`)** : Classes enfants définissant les méthodes spécifiques à un domaine (ex: `forgotPassword`, `welcomeEmail`). Elles injectent les variables (`setViewVars`) et définissent le template à utiliser.
 
 ## Convention d'Utilisation
-Les mailers doivent être appelés de manière asynchrone ou au sein de blocs `try/catch` dans les contrôleurs pour ne pas paralyser le cycle de réponse HTTP en cas de défaillance du relais SMTP.
+
+Les mailers sont appelés via `AppMailer::safeSend()`. Cette méthode journalise
+chaque succès et chaque échec dans `logs/email.log`, avec l'action, les
+destinataires et le sujet du message. Elle retourne `true` si le transport a
+accepté le courriel et `false` en cas d'échec SMTP, sans interrompre le
+traitement métier.
 
 ```php
 use App\Mailer\UserMailer;
 
 // ...
 
-try {
-// Instanciation et Envoi
 $mailer = new UserMailer();
-$mailer->send('forgotPassword', [$user]);
-} catch (\Throwable $th) {
-    $this->log("Échec de l'envoi SMTP pour {$email} : " . $th->getMessage(), 'error');
-    // Selon la politique de sécurité, on peut choisir d'avertir ou non l'utilisateur
-    // d'une panne SMTP, mais généralement on simule un succès pour ne pas fuiter
-    // l'existence (ou non) de l'adresse email.
+$sent = $mailer->safeSend('forgotPassword', [$user]);
+if (!$sent) {
+    // Le détail technique est journalisé dans logs/email.log.
 }
-
-end;
 ```
-
