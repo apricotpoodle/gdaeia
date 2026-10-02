@@ -11,6 +11,15 @@ Nous adoptons un flux de travail itératif et standardisé basé sur les étapes
 ### Étape 1 : Isolation (Branche Feature)
 * Tout nouveau développement, correction de bug ou refactorisation doit s'effectuer dans une branche dédiée (ex: `feature/nom-de-la-fonctionnalite`, `fix/description-du-bug`), créée à partir de la branche `main` à jour.
 * Le développement direct sur `main` est strictement interdit.
+* Cette règle s'applique également aux changements de documentation, aux ADRs
+  et aux interventions réalisées par un agent IA.
+* Avant toute écriture, l'état du dépôt et la branche active doivent être
+  vérifiés. Les modifications préexistantes doivent être identifiées,
+  préservées et ne doivent pas être mélangées à la nouvelle tâche sans décision
+  explicite.
+* Les branches de documentation suivent le préfixe `docs/`; les branches de
+  fonctionnalité, correction et refactoring suivent respectivement les
+  préfixes `feature/`, `fix/` et `refactor/`.
 
 ### Étape 2 : Ingénierie et Qualité du Code (Le "Standard de Fer")
 La production de code doit respecter simultanément les principes suivants :
@@ -37,3 +46,10 @@ La production de code doit respecter simultanément les principes suivants :
 
 **Négatives :**
 * **Courbe d'apprentissage et vélocité** : La rigueur imposée (typage strict, réflexion sur les patterns avant de coder) peut ralentir la phase initiale de développement, bien que ce temps soit largement récupéré lors des phases de maintenance.
+
+## 4. Consigne opérationnelle pour les agents
+
+Le fichier `AGENTS.md` à la racine du dépôt reprend la checklist applicable
+avant toute modification. Il impose notamment la vérification de la branche,
+la préservation des changements existants et la restitution du nom de la
+branche au moment de la livraison.
