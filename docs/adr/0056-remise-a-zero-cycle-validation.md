@@ -12,7 +12,7 @@ L’ADR 0055 qualifie l’exécution d’un cycle de validation d’immuable. En
 
 1. Une action de grille `resetValidation` est visible uniquement pour un administrateur qui peut voir la demande et lorsqu’un cycle existe.
 2. L’API n’accepte qu’une requête POST autorisée et protégée par CSRF.
-3. Une transaction efface, dans l’ordre des dépendances, les votes liés aux étapes du cycle, les étapes, puis l’exécution de workflow. Les données de la demande et les validations historiques étrangères au cycle sont conservées.
+3. Une transaction efface, dans l’ordre des dépendances, les votes liés aux étapes du cycle (y compris leurs commentaires `validations.obs`), les étapes, puis l’exécution de workflow. Les données de la demande et les validations historiques étrangères au cycle sont conservées.
 4. L’opération retourne le décompte des lignes supprimées afin que l’interface puisse confirmer le résultat. Les courriels déjà remis ne peuvent pas être retirés des boîtes de réception.
 
 ## Justification

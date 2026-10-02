@@ -21,9 +21,12 @@ grille Tabulator ni traitement distant, contrairement aux conventions des ADR
 1. L’URL `/validationsequences` est limitée aux affectations département,
    rôle, ordre et délai propre à une séquence.
 2. L’écran `/workflow-settings` devient le point d’entrée dédié au délai par
-   défaut et aux commentaires prédéfinis du workflow.
+   défaut, aux commentaires prédéfinis et aux règles d’obligation de
+   commentaire du workflow.
 3. Son API est placée sous `/api/workflow-settings`. Elle expose le délai à
-   `GET|POST /default-due-hours.json`, ainsi qu’une grille distante à
+   `GET|POST /default-due-hours.json`, les paramètres booléens
+   `validation.comment_required.accept` et
+   `validation.comment_required.reject`, ainsi qu’une grille distante à
    `GET /comment-templates.json` et les mutations POST de création,
    modification et suppression des commentaires.
 4. Les routes précédemment exposées sous `/api/validationsequences` pour ces
@@ -35,6 +38,13 @@ grille Tabulator ni traitement distant, contrairement aux conventions des ADR
 6. L’écran, chaque lecture et chaque mutation restent protégés côté serveur
    par les Policies du domaine. Les commandes de navigation et les actions
    visibles dans les templates passent par une fabrique `UiAction` dédiée.
+7. Les valeurs par défaut des obligations sont `false` pour une acceptation et
+   `true` pour un refus. Elles sont contrôlées côté serveur au moment du vote.
+   Aucune colonne n’est ajoutée à `validation_workflow_runs` : une modification
+   du paramétrage s’applique aussi aux cycles en cours.
+8. Un modèle sélectionné dans l’interface préremplit le champ libre de vote.
+   Le validateur peut modifier ou remplacer le texte ; seul le commentaire
+   final est enregistré dans `validations.obs`, sans identifiant de modèle.
 
 ## Justification
 
@@ -42,6 +52,10 @@ Cette séparation donne à chaque écran une responsabilité unique et évite de
 faire porter à la configuration locale des séquences des paramètres globaux.
 La grille distante réutilise les abstractions existantes, conserve le tri et
 le filtrage côté serveur et évite une implémentation JavaScript ad hoc.
+
+Les modèles accélèrent la saisie sans devenir une dépendance de l’historique :
+le vote conserve le texte effectivement soumis, indépendamment des
+modifications ou suppressions ultérieures du catalogue.
 
 La suppression directe des anciennes routes maintient une surface API claire :
 aucun client du dépôt ne les consomme hors de la page qui est déplacée. Les
@@ -57,6 +71,8 @@ constitue pas une autorisation.
   volume de données important.
 * Les conventions de grilles, de commandes d’interface et d’autorisation sont
   appliquées de façon homogène.
+* L’obligation de commenter peut évoluer sans déploiement applicatif.
+* Le commentaire final du vote possède une source de vérité unique.
 
 ### Négatives
 
@@ -64,3 +80,5 @@ constitue pas une autorisation.
   les paramètres globaux.
 * Les consommateurs non référencés des anciennes routes devront adopter la
   nouvelle API.
+* Un changement de paramétrage s’applique immédiatement aux cycles déjà en
+  cours ; la règle historique n’est pas figée par cycle.

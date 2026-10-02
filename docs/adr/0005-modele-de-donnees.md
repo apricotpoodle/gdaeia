@@ -12,12 +12,15 @@ L'architecture est divisée en 5 grands domaines fonctionnels :
 ### 1. Cœur Métier (Les Demandes)
 C'est le centre de gravité de l'application.
 * `applicationforms` : Table principale stockant les demandes d'emploi/recrutement.
-* `validations` & `applicationvalidationsteps` : Stockage des visas posés sur une demande.
+* `validations` & `applicationvalidationsteps` : Stockage des visas posés sur une demande ; le commentaire final d'un vote est stocké dans `validations.obs`.
+* `comments` : Fil de commentaires généraux polymorphique rattaché à une demande.
 
 ### 2. Moteur de Workflow (Configuration)
 Définit les règles de validation avant même qu'une demande ne soit créée.
 * `validationsequences` : Définit l'ordre de validation (séquence) requis pour chaque département et rôle.
 * `validationstatuses` : Dictionnaire des états (Brouillon, En attente, Validé, Rejeté...).
+* `workflow_settings` : Paramètres globaux du workflow, dont l'obligation de commenter par décision.
+* `validation_comment_templates` : Catalogue de textes proposés pour accélérer la saisie des votes ; le modèle utilisé n'est pas référencé dans l'historique du vote.
 
 ### 3. Gestion des Accès et de l'Organisation (ACL)
 * `users`, `roles`, `departments` : La trinité classique de la gestion d'organisation.

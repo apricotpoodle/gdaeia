@@ -4,7 +4,7 @@ Ce répertoire contient la couche d'accès aux données (ORM CakePHP).
 
 ## Filtres et Recherches
 * **`ApplicationformsTable`** : Intègre le Behavior `FriendsOfCake/Search` avec un filtre callback configuré en `MATCH() AGAINST() IN BOOLEAN MODE` sur l'index FULLTEXT multi-colonnes (`jobtitle`, `applicantname`, `qualification`, `reasonforreplacement`).
-* **`WorkflowSettingsTable`** et **`ValidationCommentTemplatesTable`** : Portent respectivement les délais globaux et le catalogue administrable des commentaires de validation.
+* **`WorkflowSettingsTable`** et **`ValidationCommentTemplatesTable`** : Portent respectivement les paramètres globaux du workflow, dont l'obligation de commenter par décision, et le catalogue administrable des commentaires prédéfinis. Le modèle sélectionné préremplit le champ libre ; seul le texte final du vote est conservé dans `validations.obs`.
 
 ## Erreurs de validation
 
