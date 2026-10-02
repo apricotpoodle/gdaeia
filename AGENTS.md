@@ -1,46 +1,58 @@
-# Instructions for contributors and agents
+# Instructions pour les contributeurs et les agents
 
-## Git branch isolation
+## Isolation par branche Git
 
-Before modifying any file:
+Avant de modifier un fichier :
 
-1. Inspect the repository with `rtk git status --short --branch`.
-2. Never modify `main` directly.
-3. When the worktree is clean, create a dedicated branch before editing:
-   - `docs/...` for documentation and ADR changes;
-   - `feature/...` for feature work;
-   - `fix/...` for bug fixes;
-   - `refactor/...` for refactoring.
-4. When pre-existing changes are present, identify them and preserve them. Do
-   not reset, stash, overwrite, or mix them into the new task without an
-   explicit decision.
-5. Verify the active branch again before the first write.
+1. Inspecter le dépôt avec `rtk git status --short --branch`.
+2. Ne jamais modifier directement `main`.
+3. Lorsque l'arbre de travail est propre, créer une branche dédiée avant toute
+   modification :
+   - `docs/...` pour la documentation et les ADRs ;
+   - `feature/...` pour une fonctionnalité ;
+   - `fix/...` pour une correction ;
+   - `refactor/...` pour un refactoring.
+4. Lorsque des modifications préexistantes sont présentes, les identifier et
+   les préserver. Ne jamais les réinitialiser, les mettre de côté, les écraser
+   ou les mélanger à la nouvelle tâche sans décision explicite.
+5. Vérifier à nouveau la branche active avant la première écriture.
 
-This rule applies to human contributors and AI agents, including
-documentation-only changes. At handoff, report the branch name and the files
-changed by the task.
+Cette règle s'applique aux contributeurs humains et aux agents IA, y compris
+pour les changements documentaires. Lors de la livraison, indiquer le nom de
+la branche et les fichiers modifiés dans le cadre de la tâche.
 
-## Command convention
+## Convention d'exécution des commandes
 
-Shell commands must use the `rtk` prefix as described by the repository
-instructions.
+Les commandes shell doivent utiliser le préfixe `rtk`, conformément aux
+instructions du dépôt.
 
-## Commit messages
+## Messages de commit
 
-Before each commit, verify that the message:
+Chaque commit doit toujours être atomique : il ne porte que sur une seule
+intention cohérente et ne mélange jamais des changements fonctionnels,
+documentaires ou techniques sans rapport. Les sujets distincts doivent être
+répartis dans des commits distincts.
 
-- follows Conventional Commits;
-- uses a scope when it adds useful precision;
-- contains a description written in French;
-- covers only the atomic changes staged for that commit.
+Toute demande de création d'un commit, qu'elle provienne d'un humain ou d'un
+agent IA, nécessite la validation explicite de l'opérateur humain avant
+d'exécuter `git commit`. Préparer les changements indexés et proposer le
+message complet ne constitue pas cette validation.
 
-Use this format:
+Avant chaque commit, vérifier que le message :
+
+- respecte la norme Conventional Commits ;
+- utilise un scope lorsqu'il apporte une précision utile ;
+- contient une description rédigée en français ;
+- couvre uniquement les changements atomiques indexés pour ce commit ;
+- ne mélange pas plusieurs intentions ou sujets indépendants.
+
+Utiliser le format suivant :
 
 ```text
 <type>(<scope>): <description en français>
 ```
 
-Usual types are:
+Les types usuels sont :
 
 - `feat` : fonctionnalité ;
 - `fix` : correction ;
@@ -49,11 +61,11 @@ Usual types are:
 - `test` : tests ;
 - `chore` : maintenance.
 
-Example:
+Exemple :
 
 ```text
 docs(git): formaliser les règles d’isolation des branches
 ```
 
-The commit type and structure can be checked automatically, but the French
-wording remains a manual review requirement.
+Le type et la structure du commit peuvent être contrôlés automatiquement, mais
+la rédaction française reste une exigence de revue manuelle.
