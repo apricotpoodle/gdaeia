@@ -5,7 +5,7 @@
 
 import { TabulatorBuilder } from './TabulatorBuilder.js';
 import { ColumnsFactory } from './ColumnsFactory.js'; // inutile à terme car définitions des colonnes déléguée *-columns.js
-import { getApplicationformColumns } from '../../views/Applicationforms/applicationform-columns.js';
+import { getApplicationformColumns } from '../../views/Applicationforms/applicationform-columns.js?v=20261002150000';
 import { getMenusColumns } from '../../views/Menus/menus-columns.js';
 
 /**

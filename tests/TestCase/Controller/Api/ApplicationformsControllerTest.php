@@ -59,6 +59,40 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertHeaderContains('Content-Type', 'application/json');
     }
 
+    public function testLApiFiltreEtTrieLesDemandesSurLeStatutDeValidation(): void
+    {
+        ConnectionManager::get('test')->update('applicationforms', ['deleted' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $query = http_build_query([
+            'filters' => [[
+                'field' => 'validation_status',
+                'type' => '=',
+                'value' => '1',
+            ]],
+            'sorters' => [[
+                'field' => 'validation_status',
+                'dir' => 'desc',
+            ]],
+        ]);
+        $this->get('/api/applicationforms.json?' . $query);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"id": 1');
+
+        $query = http_build_query([
+            'filters' => [[
+                'field' => 'validation_status',
+                'type' => '=',
+                'value' => '2',
+            ]],
+        ]);
+        $this->get('/api/applicationforms.json?' . $query);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"data": []');
+    }
+
     public function testUnOperateurSansDepartementNeVoitAucuneDemande(): void
     {
         $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);

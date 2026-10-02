@@ -26,9 +26,10 @@ class TabulatorAdapter
      *
      * @param \Cake\Http\ServerRequest $request L'objet requête HTTP courant.
      * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query La requête ORM initiale.
+     * @param array<string, string> $fieldMap Correspondance entre champs JSON et champs ORM.
      * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> La requête ORM modifiée.
      */
-    public function adaptRequest(ServerRequest $request, SelectQuery $query): SelectQuery
+    public function adaptRequest(ServerRequest $request, SelectQuery $query, array $fieldMap = []): SelectQuery
     {
         $queryParams = $request->getQueryParams();
         $mainAlias = $query->getRepository()->getAlias();
@@ -40,7 +41,7 @@ class TabulatorAdapter
                 $direction = strtoupper($sorter['dir'] ?? 'ASC');
 
                 if (is_string($field) && in_array($direction, ['ASC', 'DESC'], true)) {
-                    $ormField = $this->resolveOrmField($field, $mainAlias);
+                    $ormField = $this->resolveOrmField($field, $mainAlias, $fieldMap);
                     $query->orderBy([$ormField => $direction]);
                 }
             }
@@ -58,7 +59,7 @@ class TabulatorAdapter
 
                 // On autorise les chaînes non vides OU les tableaux (pour le filtre Date Range)
                 if (is_string($field) && ($value !== '' || $dateRange !== null)) {
-                    $ormField = $this->resolveOrmField($field, $mainAlias);
+                    $ormField = $this->resolveOrmField($field, $mainAlias, $fieldMap);
 
                     // 🛡️ INTERCEPTION : Gestion spécifique du filtre "Date Range" (Plage de dates)
                     if (
@@ -75,7 +76,7 @@ class TabulatorAdapter
                     //
                     // Conserver ce test même si c'est censé être traité dans le front end
                     // Car on peut craindre un petit malin modifiant l'url = en like
-                    if (strtolower($field) === 'id') {
+                    if (in_array(strtolower($field), ['id', 'validation_status'], true)) {
                         $query->where([$ormField => (int)$value]);
                         continue; // On passe au filtre suivant
                     }
@@ -148,10 +149,15 @@ class TabulatorAdapter
      *
      * @param string $field Le champ envoyé par Tabulator (ex: "id" ou "role.name")
      * @param string $mainAlias L'alias de la table principale
+     * @param array<string, string> $fieldMap Correspondance entre champs JSON et champs ORM.
      * @return string Le champ sécurisé pour l'ORM (ex: "Users.id" ou "Roles.name")
      */
-    private function resolveOrmField(string $field, string $mainAlias): string
+    private function resolveOrmField(string $field, string $mainAlias, array $fieldMap = []): string
     {
+        if (isset($fieldMap[$field])) {
+            return $fieldMap[$field];
+        }
+
         if (strpos($field, '.') === false) {
             return $mainAlias . '.' . $field;
         }

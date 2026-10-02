@@ -43,6 +43,31 @@ class TabulatorAdapterTest extends TestCase
         ], $whereCalls);
     }
 
+    public function testLaRequeteUtiliseLeMappingDUnChampMetier(): void
+    {
+        $query = $this->queryForAlias('Applicationforms');
+        $query->expects($this->once())->method('orderBy')
+            ->with(['Applicationformstatuses.validationstatus_id' => 'DESC'])
+            ->willReturnSelf();
+        $query->expects($this->once())->method('where')
+            ->with(['Applicationformstatuses.validationstatus_id' => 5])
+            ->willReturnSelf();
+        $request = new ServerRequest([
+            'query' => [
+                'sorters' => [['field' => 'validation_status', 'dir' => 'desc']],
+                'filters' => [[
+                    'field' => 'validation_status',
+                    'type' => 'like',
+                    'value' => '5',
+                ]],
+            ],
+        ]);
+
+        (new TabulatorAdapter())->adaptRequest($request, $query, [
+            'validation_status' => 'Applicationformstatuses.validationstatus_id',
+        ]);
+    }
+
     public function testLaRequeteTraduitUneBorneInferieureDePlageDeDates(): void
     {
         $query = $this->queryForAlias('Users');
