@@ -181,6 +181,21 @@ class ApplicationformsController extends AppController
             ->all()
             ->toList();
         $isProxy = (int)$actor->role_id === User::ROLE_ADMIN;
+        $isSuperUser = $actor->isSuperUser();
+        $visibleSteps = $isSuperUser
+            ? $rawSteps
+            : array_values(array_filter(
+                $rawSteps,
+                function ($step) use ($workflow, $applicationform, $actor, $isProxy): bool {
+                    if ((int)$step->role_id === (int)$actor->role_id) {
+                        return true;
+                    }
+
+                    return $isProxy
+                        && $step->state === 'en_attente'
+                        && $workflow->canVoteStep($step, $applicationform, $actor, true);
+                },
+            ));
         $steps = array_map(function ($step) use ($workflow, $applicationform, $actor, $isProxy): array {
             $canVote = $step->state === 'en_attente'
                 && $workflow->canVoteStep($step, $applicationform, $actor, $isProxy);
@@ -199,15 +214,16 @@ class ApplicationformsController extends AppController
                 'can_vote' => $canVote,
                 'is_proxy_vote' => $canVote && $isProxy,
             ];
-        }, $rawSteps);
+        }, $visibleSteps);
+        $progressSteps = $isSuperUser ? $rawSteps : $visibleSteps;
         $completedSteps = count(array_filter(
-            $rawSteps,
+            $progressSteps,
             static fn($step): bool => in_array($step->state, ['acceptee', 'refusee'], true),
         ));
         $progress = [
             'completed' => $completedSteps,
-            'total' => count($rawSteps),
-            'percentage' => $rawSteps === [] ? 0 : (int)round(100 * $completedSteps / count($rawSteps)),
+            'total' => count($progressSteps),
+            'percentage' => $progressSteps === [] ? 0 : (int)round(100 * $completedSteps / count($progressSteps)),
         ];
         $this->set(compact('run', 'steps', 'progress', 'commentRequirements', 'commentTemplates'));
         $this->viewBuilder()->setOption('serialize', [
