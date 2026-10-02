@@ -23,6 +23,7 @@ class ApplicationformValidationWorkflowServiceTest extends TestCase
         'app.ValidationWorkflowRuns',
         'app.Applicationvalidationsteps',
         'app.Validations',
+        'app.WorkflowSettings',
     ];
 
     protected function setUp(): void
@@ -98,6 +99,38 @@ class ApplicationformValidationWorkflowServiceTest extends TestCase
             ->count());
         $persistedStep = TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->get($step->id);
         $this->assertSame(3, (int)$persistedStep->validationstatus_id);
+    }
+
+    public function testUneAcceptationSansCommentaireEstAutoriseeParDefaut(): void
+    {
+        [$applicationform, $actor, $workflow] = $this->workflowContext();
+        $started = $workflow->start($applicationform, $actor);
+        $step = TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->find()
+            ->where(['validation_workflow_run_id' => $started['run']->id])
+            ->firstOrFail();
+
+        $workflow->vote($applicationform, $actor, (int)$step->id, true, '', false);
+
+        $this->assertSame(1, TableRegistry::getTableLocator()->get('Validations')->find()
+            ->where(['applicationvalidationstep_id' => $step->id, 'obs IS' => null])
+            ->count());
+    }
+
+    public function testUneAcceptationPeutDevenirObligatoireSansModifierLeCode(): void
+    {
+        TableRegistry::getTableLocator()->get('WorkflowSettings')->updateAll(
+            ['value' => '1'],
+            ['name' => 'validation.comment_required.accept'],
+        );
+        [$applicationform, $actor, $workflow] = $this->workflowContext();
+        $started = $workflow->start($applicationform, $actor);
+        $step = TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->find()
+            ->where(['validation_workflow_run_id' => $started['run']->id])
+            ->firstOrFail();
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Un commentaire est obligatoire lors d’une acceptation.');
+        $workflow->vote($applicationform, $actor, (int)$step->id, true, '', false);
     }
 
     public function testUnRefusSansCommentaireNEnregistreAucunVote(): void

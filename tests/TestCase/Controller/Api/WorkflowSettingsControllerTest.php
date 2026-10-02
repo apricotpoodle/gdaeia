@@ -69,6 +69,30 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->assertSame(0, $templates->find()->count());
     }
 
+    public function testUnSuperAdministrateurConfigureLObligationDeCommentaireParDecision(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->get('/api/workflow-settings/comment-requirements.json');
+        $this->assertResponseOk();
+        $this->assertResponseContains('"accepter":false');
+        $this->assertResponseContains('"refuser":true');
+
+        $this->post('/api/workflow-settings/comment-requirements.json', [
+            'accepter' => true,
+            'refuser' => false,
+        ]);
+        $this->assertResponseOk();
+        $this->assertResponseContains('"accepter":true');
+        $this->assertResponseContains('"refuser":false');
+
+        $settings = $this->getTableLocator()->get('WorkflowSettings');
+        $this->assertSame('1', $settings->find()->where(['name' => 'validation.comment_required.accept'])->firstOrFail()->value);
+        $this->assertSame('0', $settings->find()->where(['name' => 'validation.comment_required.reject'])->firstOrFail()->value);
+    }
+
     public function testUnSuperAdministrateurAccedeALecranDeParametrageGlobal(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);

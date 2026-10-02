@@ -23,7 +23,6 @@ class ApplicationvalidationstepsFixture extends TestFixture
                 'applicationform_id' => 1,
                 'role_id' => 1,
                 'validationstatus_id' => 1,
-                'comment' => 'Lorem ipsum dolor sit amet',
                 'validationsequence_id' => 1,
                 'deleted' => '2026-07-03 09:01:25',
                 'modified' => 1783069285,

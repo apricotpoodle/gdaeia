@@ -39,6 +39,34 @@ final class ApplicationformValidationWorkflow
         $this->applicationforms = $locator->get('Applicationforms');
     }
 
+    /** @return array{accepter: bool, refuser: bool} Règles courantes d'obligation de commentaire. */
+    public function commentRequirements(): array
+    {
+        return [
+            'accepter' => $this->settingBoolean('validation.comment_required.accept', false),
+            'refuser' => $this->settingBoolean('validation.comment_required.reject', true),
+        ];
+    }
+
+    /** Retourne une valeur booléenne de paramétrage avec son défaut métier. */
+    private function settingBoolean(string $name, bool $default): bool
+    {
+        $setting = $this->settings->find()->where(['name' => $name])->first();
+        if ($setting === null) {
+            return $default;
+        }
+
+        $value = strtolower(trim((string)$setting->get('value')));
+        if (in_array($value, ['1', 'true', 'yes', 'on'], true)) {
+            return true;
+        }
+        if (in_array($value, ['0', 'false', 'no', 'off', ''], true)) {
+            return false;
+        }
+
+        return $default;
+    }
+
     /** @return array{issues: list<string>, recipients: list<\App\Model\Entity\User>, run: object|null} */
     public function start(Applicationform $applicationform, User $actor): array
     {
@@ -242,13 +270,16 @@ final class ApplicationformValidationWorkflow
             ) {
                 throw new RuntimeException(__('Vous n’êtes pas autorisé à voter pour cette étape.'));
             }
-            if (!$approved && trim($comment) === '') {
-                throw new RuntimeException(__('Un commentaire est obligatoire lors d’un refus.'));
+            $finalComment = trim($comment);
+            $decision = $approved ? 'accepter' : 'refuser';
+            if ($this->commentRequirements()[$decision] && $finalComment === '') {
+                throw new RuntimeException($approved
+                    ? __('Un commentaire est obligatoire lors d’une acceptation.')
+                    : __('Un commentaire est obligatoire lors d’un refus.'));
             }
             $step->state = $approved ? 'acceptee' : 'refusee';
             $step->validationstatus_id = $approved ? 3 : 5;
             $step->completed_at = DateTime::now();
-            $step->comment = trim($comment) ?: null;
             if (!$this->steps->save($step)) {
                 throw new RuntimeException(__('Impossible d’enregistrer le vote.'));
             }
@@ -256,7 +287,7 @@ final class ApplicationformValidationWorkflow
                 'applicationform_id' => $applicationform->id, 'applicationvalidationstep_id' => $step->id,
                 'user_id' => $actor->id, 'role_id' => $step->role_id, 'validated' => DateTime::now(),
                 'validationstatus_id' => $approved ? 3 : 5,
-                'obs' => trim($comment) ?: null, 'is_proxy' => $isProxy,
+                'obs' => $finalComment ?: null, 'is_proxy' => $isProxy,
             ]);
             if (!$this->validations->save($validation)) {
                 throw new RuntimeException(__('Impossible de tracer le vote.'));

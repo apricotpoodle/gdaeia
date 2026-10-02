@@ -26,7 +26,8 @@ grille Tabulator ni traitement distant, contrairement aux conventions des ADR
 3. Son API est placée sous `/api/workflow-settings`. Elle expose le délai à
    `GET|POST /default-due-hours.json`, les paramètres booléens
    `validation.comment_required.accept` et
-   `validation.comment_required.reject`, ainsi qu’une grille distante à
+   `validation.comment_required.reject` via
+   `GET|POST /comment-requirements.json`, ainsi qu’une grille distante à
    `GET /comment-templates.json` et les mutations POST de création,
    modification et suppression des commentaires.
 4. Les routes précédemment exposées sous `/api/validationsequences` pour ces
@@ -45,6 +46,9 @@ grille Tabulator ni traitement distant, contrairement aux conventions des ADR
 8. Un modèle sélectionné dans l’interface préremplit le champ libre de vote.
    Le validateur peut modifier ou remplacer le texte ; seul le commentaire
    final est enregistré dans `validations.obs`, sans identifiant de modèle.
+9. L’état de validation expose les règles courantes et les modèles actifs au
+   validateur ; l’API d’administration n’est pas utilisée pour alimenter
+   l’écran de vote.
 
 ## Justification
 

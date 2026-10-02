@@ -158,9 +158,24 @@ class ApplicationformsController extends AppController
         /** @var \App\Model\Entity\User $actor */
         $actor = $this->request->getAttribute('identity')->getOriginalData();
         $workflow = new ApplicationformValidationWorkflow();
+        $commentRequirements = $workflow->commentRequirements();
+        $commentTemplates = ['accepter' => [], 'refuser' => []];
+        $templates = $this->fetchTable('ValidationCommentTemplates')->find()
+            ->select(['decision', 'label', 'content', 'position'])
+            ->where(['active' => true])
+            ->orderByAsc('decision')
+            ->orderByAsc('position')
+            ->all();
+        foreach ($templates as $template) {
+            $decision = (string)$template->get('decision');
+            $commentTemplates[$decision][] = [
+                'label' => (string)$template->get('label'),
+                'content' => (string)$template->get('content'),
+            ];
+        }
         /** @var list<\App\Model\Entity\Applicationvalidationstep> $rawSteps */
         $rawSteps = $run === null ? [] : $this->fetchTable('Applicationvalidationsteps')->find()
-            ->contain(['Roles'])
+            ->contain(['Roles', 'Validations'])
             ->where(['validation_workflow_run_id' => $run->id])
             ->orderByAsc('sequence_number')
             ->all()
@@ -176,7 +191,7 @@ class ApplicationformsController extends AppController
                 'state' => (string)$step->state,
                 'due_at' => $step->due_at,
                 'completed_at' => $step->completed_at,
-                'comment' => $step->comment,
+                'comment' => $step->validation?->obs,
                 'role' => [
                     'id' => (int)$step->role_id,
                     'name' => (string)($step->role->name ?? __('Rôle n°{0}', $step->role_id)),
@@ -194,8 +209,10 @@ class ApplicationformsController extends AppController
             'total' => count($rawSteps),
             'percentage' => $rawSteps === [] ? 0 : (int)round(100 * $completedSteps / count($rawSteps)),
         ];
-        $this->set(compact('run', 'steps', 'progress'));
-        $this->viewBuilder()->setOption('serialize', ['run', 'steps', 'progress']);
+        $this->set(compact('run', 'steps', 'progress', 'commentRequirements', 'commentTemplates'));
+        $this->viewBuilder()->setOption('serialize', [
+            'run', 'steps', 'progress', 'commentRequirements', 'commentTemplates',
+        ]);
     }
 
     /**

@@ -49,6 +49,50 @@ class WorkflowSettingsController extends AppController
         return $this->jsonSuccess(['default_due_hours' => $hours]);
     }
 
+    /** Lit ou met à jour l'obligation de commentaire par décision. */
+    public function commentRequirements(): ?Response
+    {
+        $this->request->allowMethod(['get', 'post']);
+        /** @var \App\Model\Table\WorkflowSettingsTable $settings */
+        $settings = $this->fetchTable('WorkflowSettings');
+        $this->Authorization->authorize($settings->newEmptyEntity(), 'manage');
+        $defaults = [
+            'accepter' => false,
+            'refuser' => true,
+        ];
+        $names = [
+            'accepter' => 'validation.comment_required.accept',
+            'refuser' => 'validation.comment_required.reject',
+        ];
+        $requirements = [];
+        foreach ($names as $decision => $name) {
+            $setting = $settings->find()->where(['name' => $name])->first();
+            $requirements[$decision] = $setting === null
+                ? $defaults[$decision]
+                : $this->parseBoolean($setting->get('value'), $defaults[$decision]);
+        }
+
+        if ($this->request->is('get')) {
+            return $this->jsonSuccess(['comment_requirements' => $requirements]);
+        }
+
+        $data = $this->request->getData();
+        $requirements = [
+            'accepter' => $this->parseBoolean($data['accepter'] ?? null, $defaults['accepter']),
+            'refuser' => $this->parseBoolean($data['refuser'] ?? null, $defaults['refuser']),
+        ];
+        foreach ($names as $decision => $name) {
+            $setting = $settings->find()->where(['name' => $name])->first()
+                ?? $settings->newEntity(['name' => $name]);
+            $setting->set('value', $requirements[$decision] ? '1' : '0');
+            if (!$settings->save($setting)) {
+                return $this->validationErrorResponse($setting, 'WorkflowSettings');
+            }
+        }
+
+        return $this->jsonSuccess(['comment_requirements' => $requirements]);
+    }
+
     /** Retourne le catalogue de commentaires sous le contrat distant Tabulator. */
     public function commentTemplates(): void
     {
@@ -135,6 +179,28 @@ class WorkflowSettingsController extends AppController
         }
 
         return (int)$value;
+    }
+
+    /** Convertit une valeur JSON/formulaire en booléen avec une valeur de repli. */
+    private function parseBoolean(mixed $value, bool $default): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_int($value) || is_float($value)) {
+            return (bool)$value;
+        }
+        if (is_string($value)) {
+            $normalized = strtolower(trim($value));
+            if (in_array($normalized, ['1', 'true', 'yes', 'on'], true)) {
+                return true;
+            }
+            if (in_array($normalized, ['0', 'false', 'no', 'off', ''], true)) {
+                return false;
+            }
+        }
+
+        return $default;
     }
 
     /** @param array<string, mixed> $data Données de succès. @return \Cake\Http\Response Réponse JSON. */

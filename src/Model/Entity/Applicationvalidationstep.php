@@ -12,7 +12,6 @@ use Cake\ORM\Entity;
  * @property int $applicationform_id
  * @property int $role_id
  * @property int|null $validationstatus_id
- * @property string|null $comment
  * @property int $validationsequence_id
  * @property int|null $validation_workflow_run_id
  * @property int|null $sequence_number
@@ -48,7 +47,6 @@ class Applicationvalidationstep extends Entity
         'applicationform_id' => true,
         'role_id' => true,
         'validationstatus_id' => true,
-        'comment' => true,
         'validationsequence_id' => true,
         'validation_workflow_run_id' => true,
         'sequence_number' => true,
@@ -71,7 +69,6 @@ class Applicationvalidationstep extends Entity
     public const FIELD_APPLICATIONFORM_ID = 'applicationform_id';
     public const FIELD_ROLE_ID = 'role_id';
     public const FIELD_VALIDATIONSTATUS_ID = 'validationstatus_id';
-    public const FIELD_COMMENT = 'comment';
     public const FIELD_VALIDATIONSEQUENCE_ID = 'validationsequence_id';
     public const FIELD_VALIDATION_WORKFLOW_RUN_ID = 'validation_workflow_run_id';
     public const FIELD_SEQUENCE_NUMBER = 'sequence_number';

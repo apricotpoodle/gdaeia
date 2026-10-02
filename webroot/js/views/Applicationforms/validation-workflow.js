@@ -42,19 +42,36 @@ function escape(value) {
     return node.innerHTML;
 }
 
-function voteControls(step) {
+function voteControls(step, requirements, templates) {
     if (!step.can_vote) {
         return '';
     }
     const proxyLabel = step.is_proxy_vote ? ' par suppléance' : '';
     const id = escape(step.id);
+    const templateOptions = ['accepter', 'refuser'].flatMap((decision) => templates[decision].map((template) =>
+        '<option value="' + escape(template.content) + '" data-decision="' + decision + '">' + escape(template.label) + '</option>'
+    )).join('');
 
     return '<div class="mt-2 border-top pt-2">'
-        + '<label class="form-label visually-hidden" for="validation-comment-' + id + '">Commentaire de vote</label>'
-        + '<textarea class="form-control form-control-sm mb-2" id="validation-comment-' + id + '" rows="2" placeholder="Commentaire' + proxyLabel + ' (obligatoire en cas de refus)"></textarea>'
-        + '<button class="btn btn-sm btn-success vote" data-decision="accepter" data-step-id="' + id + '">Accepter' + proxyLabel + '</button>'
-        + '<button class="btn btn-sm btn-danger vote ms-1" data-decision="refuser" data-step-id="' + id + '">Refuser' + proxyLabel + '</button>'
+        + '<label class="form-label" for="validation-decision-' + id + '">Décision</label>'
+        + '<select class="form-select form-select-sm mb-2 validation-decision" id="validation-decision-' + id + '" data-step-id="' + id + '">'
+        + '<option value="accepter">Accepter' + proxyLabel + '</option><option value="refuser">Refuser' + proxyLabel + '</option></select>'
+        + '<label class="form-label" for="validation-template-' + id + '">Commentaire prédéfini</label>'
+        + '<select class="form-select form-select-sm mb-2 validation-template" id="validation-template-' + id + '" data-step-id="' + id + '"><option value="">Saisie libre</option>' + templateOptions + '</select>'
+        + '<label class="form-label" for="validation-comment-' + id + '">Commentaire de vote</label>'
+        + '<textarea class="form-control form-control-sm mb-2" id="validation-comment-' + id + '" rows="3" placeholder="Commentaire' + proxyLabel + '"></textarea>'
+        + '<button class="btn btn-sm btn-primary vote" data-step-id="' + id + '">Enregistrer le vote' + proxyLabel + '</button>'
         + '</div>';
+}
+
+function updateTemplateOptions(stepId) {
+    const decision = root.querySelector('#validation-decision-' + stepId)?.value;
+    const select = root.querySelector('#validation-template-' + stepId);
+    if (!select) return;
+    select.querySelectorAll('option[data-decision]').forEach((option) => {
+        option.hidden = option.dataset.decision !== decision;
+    });
+    select.value = '';
 }
 
 function activateValidationTabFromUrl() {
@@ -78,6 +95,8 @@ async function render() {
         return;
     }
     const progress = data.progress || { completed: 0, total: 0, percentage: 0 };
+    const requirements = data.commentRequirements || { accepter: false, refuser: true };
+    const templates = data.commentTemplates || { accepter: [], refuser: [] };
     const steps = data.steps.map((step) => {
         const dueAt = step.due_at
             ? '<small class="text-muted">Échéance : ' + escape(new Date(step.due_at).toLocaleString('fr-FR')) + '</small>'
@@ -90,7 +109,7 @@ async function render() {
             + '<div class="d-flex justify-content-between align-items-start gap-2">'
             + '<span>Séquence ' + escape(step.sequence_number) + ' — ' + escape(step.role?.name || 'Rôle') + '</span>'
             + '<strong>' + escape(stateLabels[step.state] || step.state) + '</strong></div>'
-            + dueAt + comment + voteControls(step) + '</li>';
+            + dueAt + comment + voteControls(step, requirements, templates) + '</li>';
     }).join('');
     root.innerHTML = '<div class="mb-3"><p class="mb-1"><strong>État : '
         + escape(stateLabels[data.run.state] || data.run.state)
@@ -99,12 +118,24 @@ async function render() {
         + progress.percentage + '%">' + progress.percentage + '%</div></div><small class="text-muted">'
         + progress.completed + ' rôle(s) ayant voté sur ' + progress.total + '</small></div><ul class="list-group">'
         + steps + '</ul>';
+    root.querySelectorAll('.validation-decision').forEach((select) => {
+        updateTemplateOptions(select.dataset.stepId);
+        select.addEventListener('change', () => updateTemplateOptions(select.dataset.stepId));
+    });
+    root.querySelectorAll('.validation-template').forEach((select) => select.addEventListener('change', () => {
+        const stepId = select.dataset.stepId;
+        const option = select.selectedOptions[0];
+        const textarea = root.querySelector('#validation-comment-' + stepId);
+        if (textarea && option?.dataset.decision) textarea.value = option.value;
+    }));
     root.querySelectorAll('.vote').forEach((button) => button.addEventListener('click', async () => {
-        const decision = button.dataset.decision;
         const stepId = Number(button.dataset.stepId);
+        const decision = root.querySelector('#validation-decision-' + stepId)?.value || 'accepter';
         const comment = root.querySelector('#validation-comment-' + stepId)?.value.trim() || '';
-        if (decision === 'refuser' && comment === '') {
-            window.alert('Un commentaire est obligatoire lors d’un refus.');
+        if (requirements[decision] && comment === '') {
+            window.alert(decision === 'refuser'
+                ? 'Un commentaire est obligatoire lors d’un refus.'
+                : 'Un commentaire est obligatoire lors d’une acceptation.');
 
             return;
         }

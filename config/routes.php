@@ -104,6 +104,7 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/validationsequences/update-sequence', ['controller' => 'Validationsequences', 'action' => 'updateSequence', '_ext' => 'json']);
         $builder->connect('/validationsequences/update-delay', ['controller' => 'Validationsequences', 'action' => 'updateDelay', '_ext' => 'json']);
         $builder->connect('/workflow-settings/default-due-hours', ['controller' => 'WorkflowSettings', 'action' => 'defaultDueHours', '_ext' => 'json']);
+        $builder->connect('/workflow-settings/comment-requirements', ['controller' => 'WorkflowSettings', 'action' => 'commentRequirements', '_ext' => 'json']);
         $builder->connect('/workflow-settings/comment-templates', ['controller' => 'WorkflowSettings', 'action' => 'commentTemplates', '_ext' => 'json']);
         $builder->connect('/workflow-settings/comment-templates/create', ['controller' => 'WorkflowSettings', 'action' => 'createCommentTemplate', '_ext' => 'json']);
         $builder->connect('/workflow-settings/comment-templates/{id}', ['controller' => 'WorkflowSettings', 'action' => 'updateCommentTemplate', '_ext' => 'json'], ['pass' => ['id']]);

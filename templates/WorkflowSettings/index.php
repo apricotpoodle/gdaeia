@@ -31,6 +31,25 @@ $this->Html->script('views/WorkflowSettings/index.js', ['type' => 'module', 'blo
         </div>
     </section>
 
+    <section class="card mb-4">
+        <div class="card-body">
+            <h4 class="h6"><?= __('Obligation de commentaire lors d’un vote') ?></h4>
+            <div class="row align-items-center g-2">
+                <div class="col-md-5 form-check form-switch">
+                    <input class="form-check-input" id="validation-comment-required-accept" type="checkbox">
+                    <label class="form-check-label" for="validation-comment-required-accept"><?= __('Commentaire obligatoire pour une acceptation') ?></label>
+                </div>
+                <div class="col-md-5 form-check form-switch">
+                    <input class="form-check-input" id="validation-comment-required-reject" type="checkbox">
+                    <label class="form-check-label" for="validation-comment-required-reject"><?= __('Commentaire obligatoire pour un refus') ?></label>
+                </div>
+                <div class="col-md-2 text-md-end">
+                    <?= $this->Action->render(WorkflowSettingsActions::saveCommentRequirements()) ?>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="card">
         <div class="card-body">
             <h4 class="h6"><?= __('Commentaires prédéfinis') ?></h4>
