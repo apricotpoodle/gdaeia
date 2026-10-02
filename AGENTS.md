@@ -24,3 +24,36 @@ changed by the task.
 
 Shell commands must use the `rtk` prefix as described by the repository
 instructions.
+
+## Commit messages
+
+Before each commit, verify that the message:
+
+- follows Conventional Commits;
+- uses a scope when it adds useful precision;
+- contains a description written in French;
+- covers only the atomic changes staged for that commit.
+
+Use this format:
+
+```text
+<type>(<scope>): <description en français>
+```
+
+Usual types are:
+
+- `feat` : fonctionnalité ;
+- `fix` : correction ;
+- `docs` : documentation ;
+- `refactor` : refactorisation ;
+- `test` : tests ;
+- `chore` : maintenance.
+
+Example:
+
+```text
+docs(git): formaliser les règles d’isolation des branches
+```
+
+The commit type and structure can be checked automatically, but the French
+wording remains a manual review requirement.
