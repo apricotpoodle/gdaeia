@@ -5,7 +5,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 
 ---
 
-## Index Général des Décisions d'Architecture (ADR 0001 à 0061)
+## Index Général des Décisions d'Architecture (ADR 0001 à 0062)
 
 | Référence | Sujet Technique / Décision | Statut | Fichier Source |
 | :--- | :--- | :---: | :--- |
@@ -70,6 +70,8 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0059** | Validation locale avant partage | **Accepté** | [`0059-validation-locale-avant-partage.md`](./0059-validation-locale-avant-partage.md) |
 | **ADR 0060** | Un message Flash par champ invalide dans les formulaires Web | **Accepté** | [`0060-un-flash-par-champ-invalide-web.md`](./0060-un-flash-par-champ-invalide-web.md) |
 | **ADR 0061** | Gestion unifiée des notifications Flash Web | **Accepté** | [`0061-gestion-unifiee-notifications-flash.md`](./0061-gestion-unifiee-notifications-flash.md) |
+| **ADR 0062** | Export PDF sécurisé des DAE | **Accepté** | [`0062-export-pdf-applicationform.md`](./0062-export-pdf-applicationform.md) |
+| **ADR 0063** | Outrepassement des validations bloquantes du workflow | **Proposé** | [`0063-outrepassement-validations-workflow.md`](./0063-outrepassement-validations-workflow.md) |
 
 ---
 

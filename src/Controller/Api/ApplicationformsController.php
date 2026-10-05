@@ -90,21 +90,25 @@ class ApplicationformsController extends AppController
             return $this->workflowResponse(false, __('Étape de validation invalide.'), [], 422);
         }
         $workflow = new ApplicationformValidationWorkflow();
-        $isProxy = (int)$actor->role_id === 1;
+        $isProxy = filter_var(
+            $this->request->getData('override', false),
+            FILTER_VALIDATE_BOOLEAN,
+        );
+        $comment = (string)$this->request->getData('comment');
         try {
             $result = $workflow->vote(
                 $applicationform,
                 $actor,
                 $stepId,
                 $approved,
-                (string)$this->request->getData('comment'),
+                $comment,
                 $isProxy,
             );
             foreach ($result['nextRecipients'] as $recipient) {
                 (new ValidationWorkflowMailer())->safeSend('validationStep', [$recipient, $applicationform]);
             }
             if ($result['final']) {
-                $this->sendFinalResult($applicationform, $result['state'], (string)$this->request->getData('comment'));
+                $this->sendFinalResult($applicationform, $result['state'], $result['comment']);
             }
 
             return $this->workflowResponse(true, __('Votre vote a été enregistré.'), [
@@ -180,25 +184,22 @@ class ApplicationformsController extends AppController
             ->orderByAsc('sequence_number')
             ->all()
             ->toList();
-        $isProxy = (int)$actor->role_id === User::ROLE_ADMIN;
         $isSuperUser = $actor->isSuperUser();
         $visibleSteps = $isSuperUser
             ? $rawSteps
             : array_values(array_filter(
                 $rawSteps,
-                function ($step) use ($workflow, $applicationform, $actor, $isProxy): bool {
+                function ($step) use ($workflow, $actor): bool {
                     if ((int)$step->role_id === (int)$actor->role_id) {
                         return true;
                     }
 
-                    return $isProxy
-                        && $step->state === 'en_attente'
-                        && $workflow->canVoteStep($step, $applicationform, $actor, true);
+                    return $workflow->canOverrideStep($step, $actor);
                 },
             ));
-        $steps = array_map(function ($step) use ($workflow, $applicationform, $actor, $isProxy): array {
-            $canVote = $step->state === 'en_attente'
-                && $workflow->canVoteStep($step, $applicationform, $actor, $isProxy);
+        $steps = array_map(function ($step) use ($workflow, $applicationform, $actor): array {
+            $canVoteNormally = $workflow->canVoteStep($step, $applicationform, $actor, false);
+            $canOverride = $workflow->canOverrideStep($step, $actor);
 
             return [
                 'id' => (int)$step->id,
@@ -211,8 +212,9 @@ class ApplicationformsController extends AppController
                     'id' => (int)$step->role_id,
                     'name' => (string)($step->role->name ?? __('Rôle n°{0}', $step->role_id)),
                 ],
-                'can_vote' => $canVote,
-                'is_proxy_vote' => $canVote && $isProxy,
+                'can_vote' => $canVoteNormally || $canOverride,
+                'can_override' => $canOverride,
+                'is_proxy_vote' => !$canVoteNormally && $canOverride,
             ];
         }, $visibleSteps);
         $progressSteps = $isSuperUser ? $rawSteps : $visibleSteps;

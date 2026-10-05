@@ -46,7 +46,7 @@ function voteControls(step, requirements, templates) {
     if (!step.can_vote) {
         return '';
     }
-    const proxyLabel = step.is_proxy_vote ? ' par suppléance' : '';
+    const proxyLabel = step.is_proxy_vote ? ' par outrepassement' : '';
     const id = escape(step.id);
     const templateOptions = ['accepter', 'refuser'].flatMap((decision) => templates[decision].map((template) =>
         '<option value="' + escape(template.content) + '" data-decision="' + decision + '">' + escape(template.label) + '</option>'
@@ -162,7 +162,13 @@ async function render() {
         try {
             await request('/api/applicationforms/' + id + '/validation/vote.json', {
                 method: 'POST',
-                body: JSON.stringify({ step_id: stepId, decision, comment, _csrfToken: token }),
+                body: JSON.stringify({
+                    step_id: stepId,
+                    decision,
+                    comment,
+                    override: Boolean(data.steps.find((step) => Number(step.id) === stepId)?.is_proxy_vote),
+                    _csrfToken: token,
+                }),
             });
             await render();
         } catch (error) {

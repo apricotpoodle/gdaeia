@@ -200,6 +200,71 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('"final":true');
     }
 
+    /** Vérifie qu'un Admin peut outrepasser une étape et obtient un commentaire d'audit. */
+    public function testUnAdministrateurPeutOutrepasserUneEtapeAvecUnCommentaireAutomatique(): void
+    {
+        $this->configureVotableWorkflow();
+        $stepId = $this->startVotableWorkflow();
+
+        $this->session(['Auth' => new User([
+            'id' => 1,
+            'email' => 'admin@example.test',
+            'issuperuser' => true,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->enableCsrfToken();
+        $this->post('/api/applicationforms/1/validation/vote.json', [
+            'step_id' => $stepId,
+            'decision' => 'accepter',
+            'comment' => '',
+            'override' => true,
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"success":true');
+        $validation = ConnectionManager::get('test')->execute(
+            'SELECT role_id, is_proxy, obs FROM validations WHERE applicationvalidationstep_id = ' . $stepId,
+        )->fetch('assoc');
+        $this->assertSame(2, (int)$validation['role_id']);
+        $this->assertSame(1, (int)$validation['is_proxy']);
+        $this->assertMatchesRegularExpression(
+            '/^outrepassé par admin@example\.test à \d{2}\/\d{2}\/\d{4} \d{2}:\d{2}$/',
+            (string)$validation['obs'],
+        );
+    }
+
+    /** Vérifie qu'une étape à venir outrepassée n'active pas la suite du cycle. */
+    public function testLeDepassementDUneEtapeBloqueeNeDeclenchePasUneChaine(): void
+    {
+        $this->configureVisibilityWorkflow();
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationvalidationsteps', ['state' => 'a_venir'], ['id' => self::WORKFLOW_TEST_ID + 1]);
+
+        $this->session(['Auth' => new User([
+            'id' => 1,
+            'email' => 'admin@example.test',
+            'issuperuser' => true,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->enableCsrfToken();
+        $this->post('/api/applicationforms/1/validation/vote.json', [
+            'step_id' => self::WORKFLOW_TEST_ID + 1,
+            'decision' => 'accepter',
+            'override' => true,
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertSame('en_attente', $connection->execute(
+            'SELECT state FROM validation_workflow_runs WHERE id = ' . self::WORKFLOW_TEST_ID,
+        )->fetchColumn(0));
+        $this->assertSame('en_attente', $connection->execute(
+            'SELECT state FROM applicationvalidationsteps WHERE id = ' . self::WORKFLOW_TEST_ID,
+        )->fetchColumn(0));
+        $this->assertSame('acceptee', $connection->execute(
+            'SELECT state FROM applicationvalidationsteps WHERE id = ' . (self::WORKFLOW_TEST_ID + 1),
+        )->fetchColumn(0));
+    }
+
     /** Vérifie que l'API refuse un refus dépourvu de commentaire. */
     public function testLApiExigeUnCommentairePourUnRefus(): void
     {
