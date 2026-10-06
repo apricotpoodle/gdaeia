@@ -62,6 +62,17 @@ class DomainActionsTest extends TestCase
         $this->assertSame(['action' => 'view', 12], $action->url);
     }
 
+    /** Vérifie que l'action PDF est ouverte dans un nouvel onglet et protégée. */
+    public function testLePdfDeDemandeEstUneCommandeProtegeeDansUnNouvelOnglet(): void
+    {
+        $applicationform = new Applicationform(['id' => 12]);
+        $action = ApplicationformsActions::viewPdf($applicationform);
+
+        $this->assertSame('viewpdf', $action->authorizationAction);
+        $this->assertSame(['action' => 'viewpdf', 12], $action->url);
+        $this->assertSame('_blank', $action->options['target']);
+    }
+
     /** Vérifie le contrat de la commande de lancement du cycle de validation. */
     public function testLeLancementDeValidationEstUneCommandeProtegeeDeDomaine(): void
     {

@@ -62,6 +62,29 @@ final class ApplicationformsActions
     }
 
     /**
+     * Commande d'ouverture du PDF dans un nouvel onglet.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform Demande à exporter.
+     * @return \App\View\Action\UiAction Commande protégée par la Policy.
+     */
+    public static function viewPdf(Applicationform $applicationform): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_LINK,
+            __('Ouvrir le PDF'),
+            'fa-file-pdf',
+            ['action' => 'viewpdf', $applicationform->id],
+            'viewpdf',
+            $applicationform,
+            [
+                'class' => 'btn btn-sm btn-outline-warning',
+                'target' => '_blank',
+                'rel' => 'noopener',
+            ],
+        );
+    }
+
+    /**
      * @param \App\Model\Entity\Applicationform $applicationform Demande à supprimer.
      * @return \App\View\Action\UiAction Commande POST de suppression contextuelle.
      */

@@ -590,7 +590,7 @@ class ApplicationformsController extends AppController
         }
 
         // 4. Droits dynamiques de la grille
-        $rightsFormatter = $this->createGridRightsFormatter(['launchValidation', 'resetValidation']);
+        $rightsFormatter = $this->createGridRightsFormatter(['launchValidation', 'resetValidation', 'viewpdf']);
 
         // 5. Rendu structuré pour Tabulator
         $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);
