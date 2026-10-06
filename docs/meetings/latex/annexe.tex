@@ -1,0 +1,215 @@
+\section{Annexe — droits, migration et duplication}
+
+Cette annexe accompagne la note de préparation de la rencontre. Elle sert de support de discussion et doit être complétée après validation métier.
+
+\subsection{Légende de la matrice}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{0.8\textwidth}{>{\centering\arraybackslash}p{1.2cm}Y}
+\toprule
+\rowcolor{bleuDAE}
+\tableauTitre{Code} & \tableauTitre{Signification} \\
+\midrule
+— & Aucun accès ou donnée non applicable. \\
+V & Consultation. \\
+M & Modification. \\
+M* & Modification conditionnelle : uniquement avant lancement, dans le périmètre autorisé ou pendant l'étape prévue. \\
+A & Administration complète, sous réserve de la visibilité et de la Policy serveur. \\
+\bottomrule
+\end{tabularx}
+\caption{Légende des niveaux de droits utilisés dans les matrices.}
+\label{tab:legende-droits}
+\end{table}
+
+La matrice utilise volontairement des noms d'objets métier compréhensibles en réunion. Les noms techniques des colonnes restent une préoccupation d'implémentation et ne constituent pas le vocabulaire fonctionnel proposé.
+
+\subsection{Synthèse par zone fonctionnelle}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.2\textwidth}CCCY}
+\toprule
+\rowcolor{bleuDAE}
+\tableauTitre{Zone} & \tableauTitre{Demandeur} & \tableauTitre{Valideurs} & \tableauTitre{Administrateur} & \tableauTitre{Proposition} \\
+\midrule
+Administration de la demande & M* & V & A & Le demandeur prépare l'identité de la demande ; l'administrateur intervient seulement dans son périmètre. \\
+Contrat et recrutement & M* & V & A & Les données sont saisies avant lancement et consultées ensuite par les validateurs. \\
+Rémunération et financement & M* & V & A & Les valideurs concernés contrôlent les montants et le financement. \\
+Informations réservées & — ou M* & V & A & Les accès doivent être explicitement validés, car ces informations sont sensibles. \\
+Commentaires & M* & M* & A & Les commentaires généraux et les commentaires de validation restent distincts. \\
+\bottomrule
+\end{tabularx}
+\caption{Synthèse des droits par zone fonctionnelle.}
+\label{tab:synthese-zones}
+\end{table}
+
+\subsection{Matrice détaillée proposée}
+
+Les rôles de validation sont regroupés lorsque leur droit est identique. La réunion peut ensuite ajouter une exception propre à un rôle.
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\rowcolors{2}{bleuClairDAE!55}{white}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}p{0.22\textwidth}*{5}{>{\centering\arraybackslash}p{1.35cm}}>{\centering\arraybackslash}X}
+\toprule
+\rowcolor{bleuDAE}
+\tableauTitre{Objet métier de la DAE} & \tableauTitre{Demandeur avant lancement} & \tableauTitre{Pôle} & \tableauTitre{RRH / DRH} & \tableauTitre{Contrôle de gestion} & \tableauTitre{Direction} & \tableauTitre{Administrateur} \\
+\midrule
+Service demandeur & M* & V & V & V & V & A \\
+Personne demandeuse & V & V & V & V & V & A \\
+Type de contrat & M* & V & V & V & V & A \\
+Motif de recrutement & M* & V & V & — & V & A \\
+Motif de remplacement & M* & V & V & — & V & A \\
+Source de financement & M* & V & V & M* & V & A \\
+Intitulé du poste & M* & V & V & — & V & A \\
+Catégorie professionnelle & M* & V & V & — & V & A \\
+Temps de travail & M* & V & V & — & V & A \\
+Répartition du temps & M* & V & V & — & V & A \\
+Rémunération brute & M* & V & V & M* & V & A \\
+Périodicité de rémunération & M* & V & V & M* & V & A \\
+Qualification requise & M* & V & V & — & V & A \\
+Date de début prévue & M* & V & V & — & V & A \\
+Date de fin prévue & M* & V & V & — & V & A \\
+Candidat ou collaborateur & M* & V & V & — & V & A \\
+Indicateur de remplacement & M* & V & V & — & V & A \\
+Informations réservées RH & — & — & M* & — & V & A \\
+Commentaire général & M* & M* & M* & M* & M* & A \\
+Décision de validation & — & M* & M* & M* & M* & A selon procédure \\
+État et historique du circuit & V & V & V & V & V & A \\
+Dates d'audit et d'archivage & — & — & — & — & — & A \\
+\bottomrule
+\end{tabularx}
+\caption{Matrice détaillée proposée des droits par objet métier et par rôle.}
+\label{tab:matrice-detaillee}
+\end{table}
+
+\begin{tcolorbox}[enhanced,colback=orangeClairDAE,colframe=orangeDAE,boxrule=0.6pt,arc=1.5mm]
+\surligneOrange{Points à confirmer :} le demandeur peut-il modifier une DAE après son lancement ? Un valideur peut-il corriger une donnée ? Les informations réservées RH sont-elles nécessaires dans la première version ? Le contrôle de gestion peut-il modifier un montant ? Le candidat doit-il être visible par tous les validateurs ? Les administrateurs ont-ils tous le même niveau d'accès ?
+\end{tcolorbox}
+
+\subsection{Cycle détaillé et états proposés}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.2\textwidth}p{0.2\textwidth}Yp{0.2\textwidth}}
+\toprule
+\rowcolor{bleuDAE}
+\tableauTitre{État métier} & \tableauTitre{Qui agit ?} & \tableauTitre{Actions possibles} & \tableauTitre{Passage suivant} \\
+\midrule
+Brouillon & Demandeur, administrateur habilité & Créer, modifier, enregistrer, supprimer avant lancement. & Lancement ou abandon. \\
+En attente de lancement & Demandeur & Vérifier et lancer. & Première séquence. \\
+En cours de validation & Valideurs de la séquence & Consulter, accepter, refuser avec commentaire. & Séquence suivante, refus ou relance. \\
+En retard & Valideurs concernés, administrateur habilité & Valider, relancer, suppléer après échéance. & Suite normale du circuit. \\
+Acceptée & Utilisateurs autorisés en consultation & Consulter, exporter, archiver selon règle. & Archivage logique. \\
+Refusée & Utilisateurs autorisés en consultation & Consulter le motif, éventuellement dupliquer. & Archivage logique. \\
+Archivée & Utilisateurs autorisés & Consulter, exporter, dupliquer. & Nouvelle DAE indépendante. \\
+\bottomrule
+\end{tabularx}
+\caption{Cycle détaillé et états proposés d'une DAE.}
+\label{tab:cycle-detaille}
+\end{table}
+
+Le lancement crée un instantané des séquences et des rôles applicables au service. Les votes sont rattachés à cet instantané afin qu'une modification ultérieure de la configuration ne réécrive pas l'historique.
+
+\subsection{Plan de reprise des anciennes tables}
+
+\subsubsection{Inventaire à demander}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.2\textwidth}Yp{0.3\textwidth}}
+\toprule
+\rowcolor{bleuDAE}
+\tableauTitre{Domaine historique} & \tableauTitre{Informations recherchées} & \tableauTitre{Contrôle attendu} \\
+\midrule
+Comptes & Identifiant, nom, prénom, courriel, statut, dates. & Un compte cible par personne, sans doublon non justifié. \\
+Rôles & Code, libellé, rôle principal, historique éventuel. & Chaque rôle est rapproché d'un rôle cible ou placé en anomalie. \\
+Services & Code, libellé, hiérarchie, état. & Les services actifs sont rapprochés ; les services supprimés sont conservés comme historique si nécessaire. \\
+Affectations & Utilisateur, service, période, service principal éventuel. & Tous les rattachements utiles sont repris, pas uniquement le service principal. \\
+DAE & Demandeur, service, données métier, état, dates. & Chaque DAE est rattachée à un utilisateur et à un service cible. \\
+Validations & Étape, rôle, personne, décision, date, commentaire. & L'historique est conservé sans être transformé en votes actifs. \\
+\bottomrule
+\end{tabularx}
+\caption{Données à inventorier lors de la reprise historique.}
+\label{tab:inventaire-reprise}
+\end{table}
+
+\subsubsection{Règles de rapprochement proposées}
+
+\begin{enumerate}
+  \item Rapprocher automatiquement par identifiant historique lorsque la correspondance est fiable.
+  \item À défaut, utiliser le courriel normalisé.
+  \item À défaut, utiliser nom et prénom avec contrôle manuel.
+  \item Ne jamais fusionner automatiquement deux personnes uniquement sur le nom.
+  \item Signaler les utilisateurs sans rôle, les rôles inconnus et les services sans équivalent.
+  \item Conserver un rapport des décisions manuelles de rapprochement.
+  \item Rendre la migration rejouable sans créer de doublons.
+\end{enumerate}
+
+\subsubsection{Contrôles avant mise en production}
+
+\begin{itemize}
+  \item nombre d'utilisateurs source et cible ;
+  \item nombre de doublons fusionnés et de rapprochements manuels ;
+  \item nombre d'utilisateurs par rôle ;
+  \item nombre de rattachements par service ;
+  \item nombre de DAE par état ;
+  \item nombre de DAE sans demandeur ou service ;
+  \item échantillon de DAE contrôlé par un référent métier ;
+  \item vérification que les anciennes validations sont consultables mais ne relancent aucun circuit.
+\end{itemize}
+
+\subsection{Règles de duplication}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.28\textwidth}Y}
+\toprule
+\rowcolor{bleuDAE}
+\tableauTitre{Objet métier} & \tableauTitre{Règle} \\
+\midrule
+Référentiels actifs & Copier la référence si elle existe encore et est active. \\
+Données de recrutement & Copier pour éviter la ressaisie. \\
+Demandeur & Remplacer par l'utilisateur qui déclenche la duplication. \\
+Service & Copier s'il est actif et visible par le nouvel utilisateur ; sinon demander une nouvelle sélection. \\
+Candidat ou collaborateur & Copier seulement après validation de la pertinence métier. \\
+Commentaires & Ne pas copier. \\
+Votes et visas & Ne pas copier. \\
+Étapes de validation & Ne pas copier ; elles seront recréées au prochain lancement. \\
+États, dates d'audit et archivage & Réinitialiser. \\
+\bottomrule
+\end{tabularx}
+\caption{Règles proposées pour la duplication d'une DAE.}
+\label{tab:regles-duplication}
+\end{table}
+
+\subsubsection{Garanties attendues}
+
+\begin{itemize}
+  \item la DAE source reste inchangée ;
+  \item la nouvelle DAE est un brouillon ;
+  \item aucune validation ne peut être considérée comme acquise par héritage ;
+  \item les champs obligatoires sont contrôlés comme lors d'une création normale ;
+  \item les références inactives sont signalées plutôt que copiées silencieusement ;
+  \item l'opération est journalisée avec l'identifiant de la DAE source et de la nouvelle DAE.
+\end{itemize}
+
+\subsection{Livrables après la réunion}
+
+Après validation des points métier, préparer séparément :
+
+\begin{enumerate}
+  \item une table de correspondance entre l'ancienne base et le modèle cible ;
+  \item une migration de reprise testable et rejouable ;
+  \item la configuration initiale des autorisations par rôle ;
+  \item les règles d'archivage et de conservation ;
+  \item la spécification de la duplication ;
+  \item les ADR nécessaires si une décision modifie l'architecture acceptée.
+\end{enumerate}
