@@ -58,6 +58,12 @@ return function (RouteBuilder $routes): void {
         // $builder->connect('/', ['controller' => 'Pages', 'action' => 'display', 'home']);
         $builder->connect('/', ['controller' => 'Applicationforms', 'action' => 'index']);
 
+        // Export PDF protégé par ApplicationformPolicy::canViewpdf().
+        $builder->connect('/applicationforms/viewpdf/{id}', [
+            'controller' => 'Applicationforms',
+            'action' => 'viewpdf',
+        ], ['pass' => ['id']]);
+
         /*
          * ...and connect the rest of 'Pages' controller's URLs.
          */
@@ -119,6 +125,7 @@ return function (RouteBuilder $routes): void {
         $builder->resources('FieldAuthorizations');
         $builder->resources('Applicationforms');
         $builder->resources('Comments');
+
         $builder->fallbacks();
     });
 

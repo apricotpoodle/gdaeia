@@ -50,6 +50,7 @@ $this->Html->script('views/Applicationforms/validation-workflow', ['type' => 'mo
         <!-- Actions contextuelles (soumises aux Policies via $identity) -->
         <div class="d-flex gap-2">
             <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index()) ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::viewPdf($applicationform)) ?>
 
             <?php $isSuperuser = (bool)($identity?->getOriginalData()?->get('issuperuser') ?? false); ?>
             <?= $this->Action->render(\App\View\Action\ApplicationformsActions::edit($applicationform, $isSuperuser)) ?>

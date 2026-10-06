@@ -59,6 +59,21 @@ class ApplicationformPolicy extends AppPolicy
     }
 
     /**
+     * Autorisation de produire le PDF d'une demande.
+     *
+     * La production reprend exactement le périmètre de consultation de la
+     * fiche afin qu'un lien direct ne permette pas de contourner la Policy.
+     *
+     * @param \Authorization\IdentityInterface $identity Identité courante.
+     * @param \App\Model\Entity\Applicationform $applicationform Demande ciblée.
+     * @return bool Vrai si la fiche peut être exportée.
+     */
+    public function canViewpdf(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        return $this->canView($identity, $applicationform);
+    }
+
+    /**
      * Autorisation pour l'ajout (add)
      *
      * @param \Authorization\IdentityInterface $identity

@@ -142,6 +142,20 @@ class ApplicationformPolicyTest extends TestCase
         $this->assertTrue($this->policy->canVoteValidation($owner, $applicationform));
     }
 
+    /** Vérifie que l'export PDF reprend strictement le périmètre de la fiche. */
+    public function testLePdfEstAutoriseExactementCommeLaConsultation(): void
+    {
+        $applicationform = new Applicationform(['user_id' => 10]);
+        $owner = $this->identity(new User(['id' => 10, 'role_id' => User::ROLE_DEMANDEUR]));
+        $foreign = $this->identity(new User(['id' => 11, 'role_id' => User::ROLE_DEMANDEUR]));
+
+        $this->assertSame(
+            $this->policy->canView($owner, $applicationform),
+            $this->policy->canViewpdf($owner, $applicationform),
+        );
+        $this->assertFalse($this->policy->canViewpdf($foreign, $applicationform));
+    }
+
     public function testLesRequetesDePerimetreEtDeWorkflowSontEvaluees(): void
     {
         $visible = new Applicationform(['id' => 1001, 'user_id' => 10, 'department_id' => 1]);

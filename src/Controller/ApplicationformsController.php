@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\Pdf\ApplicationformPdfService;
 use App\Service\Security\FieldAuthorizationService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Event\EventInterface;
@@ -66,6 +67,31 @@ class ApplicationformsController extends AppController
         }
 
         $this->set(compact('applicationform', 'departmentPath'));
+    }
+
+    /**
+     * Produit le PDF sécurisé d'une DAE (GET /applicationforms/viewpdf/{id}).
+     *
+     * @param string $id Identifiant de la demande.
+     * @return \Cake\Http\Response Réponse PDF inline.
+     */
+    public function viewpdf(string $id): Response
+    {
+        $applicationform = $this->Applicationforms->get($id, contain: [
+            'Departments', 'Contracttypes', 'Hiringreasons', 'Budgetfeatures',
+            'Professionalcategories', 'Worktimes', 'Periods',
+        ]);
+        $this->Authorization->authorize($applicationform, 'viewpdf');
+        $identity = $this->request->getAttribute('identity');
+        $content = (new ApplicationformPdfService())->generate($applicationform, $identity);
+
+        return $this->response
+            ->withType('application/pdf')
+            ->withHeader(
+                'Content-Disposition',
+                sprintf('inline; filename="dae-%s.pdf"', $applicationform->id),
+            )
+            ->withStringBody($content);
     }
 
     /**

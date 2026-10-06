@@ -9,3 +9,13 @@ Le chemin `field` conserve les associations et leurs indices, par exemple `user_
 Les contrôleurs Web utilisent `summary` dans le message Flash via `AppController::validationErrorSummary()`. Les API utilisent `summary` comme `message` et `errors` dans une réponse HTTP 422 via `AppController::validationErrorResponse()` lorsque `getErrors()` contient une erreur de validation. Un échec de sauvegarde sans erreur d'entité reçoit une réponse technique distincte.
 
 Voir le [ticket 0013](../../docs/backlog/0013-mutualiser-la-presentation-des-erreurs-validation.md) et l'[ADR 0052](../../docs/adr/0052-presentation-unifiee-erreurs-validation-web-api.md) pour le contrat complet.
+
+## Production PDF des DAE
+
+`Pdf/ApplicationformPdfService` génère le document PDF d'une DAE avec mPDF.
+Le service reçoit l'identité courante, réutilise la matrice
+`FieldAuthorizations` et ne rend que les champs autorisés. Le cycle de
+validation est lu depuis ses étapes immuables ; ses statuts sont affichés
+avec un libellé et un renforcement par couleur. L'action Web
+`/applicationforms/viewpdf/{id}` est protégée par `ApplicationformPolicy` et
+retourne le document inline avec un nom `dae-{id}.pdf`.
