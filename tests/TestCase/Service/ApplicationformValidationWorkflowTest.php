@@ -52,16 +52,18 @@ class ApplicationformValidationWorkflowTest extends TestCase
         $this->assertNull($result['run']);
     }
 
-    public function testLaSuppleanceEstReserveeAUnAdministrateurApresEcheance(): void
+    public function testUnAdministrateurPeutOutrepasserUneEtapeActiveOuBloquee(): void
     {
         $workflow = new ApplicationformValidationWorkflow();
         $applicationform = new Applicationform(['department_id' => 8]);
         $expiredStep = new Applicationvalidationstep([
             'role_id' => 3,
+            'state' => 'en_attente',
             'due_at' => DateTime::now()->subSeconds(1),
         ]);
         $futureStep = new Applicationvalidationstep([
             'role_id' => 3,
+            'state' => 'a_venir',
             'due_at' => DateTime::now()->addSeconds(1),
         ]);
 
@@ -71,11 +73,17 @@ class ApplicationformValidationWorkflowTest extends TestCase
             new User(['role_id' => User::ROLE_ADMIN]),
             true,
         ));
-        $this->assertFalse($workflow->canVoteStep(
+        $this->assertTrue($workflow->canVoteStep(
             $futureStep,
             $applicationform,
             new User(['role_id' => User::ROLE_ADMIN]),
             true,
+        ));
+        $this->assertFalse($workflow->canVoteStep(
+            new Applicationvalidationstep(['role_id' => 3, 'state' => 'a_venir']),
+            $applicationform,
+            new User(['role_id' => User::ROLE_ADMIN]),
+            false,
         ));
         $this->assertFalse($workflow->canVoteStep(
             $expiredStep,

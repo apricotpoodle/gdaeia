@@ -229,7 +229,7 @@ final class ApplicationformValidationWorkflow
         ];
     }
 
-    /** @return array{state: string, nextRecipients: list<\App\Model\Entity\User>, final: bool} */
+    /** @return array{state: string, nextRecipients: list<\App\Model\Entity\User>, final: bool, comment: string} */
     public function vote(
         Applicationform $applicationform,
         User $actor,
@@ -254,11 +254,12 @@ final class ApplicationformValidationWorkflow
             if ($run === null) {
                 throw new RuntimeException(__('Aucun cycle actif ne permet ce vote.'));
             }
+            $stepStates = $isProxy ? ['en_attente', 'a_venir'] : ['en_attente'];
             /** @var \App\Model\Entity\Applicationvalidationstep|null $step */
             $step = $this->steps->find()->where([
                 'id' => $stepId,
                 'validation_workflow_run_id' => $run->id,
-                'state' => 'en_attente',
+                'state IN' => $stepStates,
             ])->first();
             if (
                 $step === null || !$this->canVoteStep(
@@ -271,6 +272,13 @@ final class ApplicationformValidationWorkflow
                 throw new RuntimeException(__('Vous n’êtes pas autorisé à voter pour cette étape.'));
             }
             $finalComment = trim($comment);
+            if ($isProxy && $finalComment === '') {
+                $finalComment = sprintf(
+                    'outrepassé par %s à %s',
+                    (string)$actor->email,
+                    DateTime::now()->format('d/m/Y H:i'),
+                );
+            }
             $decision = $approved ? 'accepter' : 'refuser';
             if ($this->commentRequirements()[$decision] && $finalComment === '') {
                 throw new RuntimeException($approved
@@ -301,17 +309,26 @@ final class ApplicationformValidationWorkflow
                     'state IN' => ['en_attente', 'a_venir'],
                 ]);
 
-                return ['state' => $run->state, 'nextRecipients' => [], 'final' => true];
+                return ['state' => $run->state, 'nextRecipients' => [], 'final' => true, 'comment' => $finalComment];
             }
             $sequence = (int)$step->sequence_number;
             if (
                 $this->steps->find()->where([
                 'validation_workflow_run_id' => $run->id,
                 'sequence_number' => $sequence,
-                'state' => 'en_attente',
+                'state IN' => ['en_attente', 'a_venir'],
                 ])->count() > 0
             ) {
-                return ['state' => $run->state, 'nextRecipients' => [], 'final' => false];
+                return ['state' => $run->state, 'nextRecipients' => [], 'final' => false, 'comment' => $finalComment];
+            }
+            if (
+                $this->steps->find()->where([
+                    'validation_workflow_run_id' => $run->id,
+                    'sequence_number <' => $sequence,
+                    'state IN' => ['en_attente', 'a_venir'],
+                ])->count() > 0
+            ) {
+                return ['state' => $run->state, 'nextRecipients' => [], 'final' => false, 'comment' => $finalComment];
             }
             /** @var \App\Model\Entity\Applicationvalidationstep|null $next */
             $next = $this->steps->find()->where([
@@ -323,7 +340,7 @@ final class ApplicationformValidationWorkflow
                 $run->finished_at = DateTime::now();
                 $this->runs->saveOrFail($run);
 
-                return ['state' => $run->state, 'nextRecipients' => [], 'final' => true];
+                return ['state' => $run->state, 'nextRecipients' => [], 'final' => true, 'comment' => $finalComment];
             }
             /** @var \App\Model\Entity\Validationsequence $nextSequence */
             $nextSequence = $this->sequences->get($next->validationsequence_id);
@@ -338,7 +355,12 @@ final class ApplicationformValidationWorkflow
                 'state' => 'a_venir',
             ]);
 
-            return ['state' => $run->state, 'nextRecipients' => $this->recipientsForCurrentRun($run), 'final' => false];
+            return [
+                'state' => $run->state,
+                'nextRecipients' => $this->recipientsForCurrentRun($run),
+                'final' => false,
+                'comment' => $finalComment,
+            ];
         });
     }
 
@@ -350,7 +372,10 @@ final class ApplicationformValidationWorkflow
         bool $asProxy,
     ): bool {
         if ($asProxy) {
-            return (int)$user->get('role_id') === 1 && $step->due_at !== null && $step->due_at <= DateTime::now();
+            return $this->canOverrideStep($step, $user);
+        }
+        if ($step->state !== 'en_attente') {
+            return false;
         }
         foreach ($this->eligibleUsers($applicationform, (int)$step->role_id) as $eligible) {
             if ((int)$eligible->id === (int)$user->id) {
@@ -359,6 +384,15 @@ final class ApplicationformValidationWorkflow
         }
 
         return false;
+    }
+
+    /** Vérifie si un administrateur peut outrepasser une étape bloquante. */
+    public function canOverrideStep(
+        Applicationvalidationstep $step,
+        User $user,
+    ): bool {
+        return ($user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN))
+            && in_array($step->state, ['en_attente', 'a_venir'], true);
     }
 
     /** Vérifie l'éligibilité d'édition sur une étape effectivement active. */
@@ -379,7 +413,7 @@ final class ApplicationformValidationWorkflow
             'state' => 'en_attente',
         ])->all();
         foreach ($steps as $step) {
-            if ($this->canVoteStep($step, $applicationform, $user, (int)$user->role_id === User::ROLE_ADMIN)) {
+            if ($this->canVoteStep($step, $applicationform, $user, false)) {
                 return true;
             }
         }

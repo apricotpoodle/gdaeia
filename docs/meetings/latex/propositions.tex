@@ -1,0 +1,192 @@
+\section{Préparation de la rencontre}
+
+\textbf{Objet :} proposer un cadre fonctionnel à valider avec les personnes demandant la fabrication de l'application.
+
+\textbf{Statut :} document de travail. Les propositions marquées \etatAValider{} ne constituent pas encore des décisions.
+
+\subsection{Objectifs de la rencontre}
+
+La rencontre doit permettre de confirmer :
+
+\begin{itemize}
+  \item les rôles des personnes qui créent, instruisent, valident et administrent une DAE ;
+  \item les informations visibles ou modifiables selon chaque rôle ;
+  \item le cycle complet d'une DAE, y compris les refus, les délais et les relances ;
+  \item la politique de conservation et d'archivage ;
+  \item la stratégie de reprise des utilisateurs, rôles, services et anciennes demandes ;
+  \item le comportement attendu pour créer une nouvelle DAE à partir d'une DAE existante.
+\end{itemize}
+
+Les choix techniques déjà présents dans l'application — autorisation serveur, droits au niveau des objets métier, workflow par séquences et séparation des commentaires — servent de base, mais ne remplacent pas la validation métier.
+
+\subsection{Rôles proposés}
+
+Les intitulés suivants correspondent aux rôles actuellement représentés dans l'application. Ils doivent être confirmés avec les utilisateurs :
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.27\textwidth}Y}
+\toprule
+\rowcolor{bleuDAE}
+\tableauTitre{Rôle proposé} & \tableauTitre{Responsabilité principale} \\
+\midrule
+Administrateur & Administrer les utilisateurs, les référentiels, les droits et, si nécessaire, intervenir sur une DAE visible. \\
+Demandeur & Créer une DAE, la compléter et la lancer dans le circuit. \\
+Valideur de pôle & Examiner la cohérence opérationnelle de la demande. \\
+Valideur RRH & Examiner les aspects ressources humaines. \\
+Valideur DRH & Effectuer la validation RH de niveau supérieur. \\
+Valideur contrôle de gestion & Vérifier le financement et les éléments budgétaires. \\
+Valideur direction & Rendre la décision finale lorsque le circuit le prévoit. \\
+\bottomrule
+\end{tabularx}
+\caption{Rôles proposés et responsabilités principales.}
+\label{tab:roles-proposes}
+\end{table}
+
+Un même utilisateur peut être rattaché à plusieurs services. Son rôle principal et son périmètre de services doivent être distingués : le rôle détermine ce qu'il peut faire, le service détermine quelles données il peut voir.
+
+\subsection{Proposition de droits}
+
+La proposition détaillée figure dans l'annexe. Le principe recommandé est le suivant :
+
+\begin{itemize}
+  \item le demandeur peut modifier sa DAE tant qu'elle n'est pas lancée ;
+  \item les valideurs consultent les données nécessaires à leur décision et ne modifient pas les données du demandeur, sauf règle explicitement validée ;
+  \item l'administrateur peut intervenir selon sa visibilité sur la DAE, mais toute intervention est tracée ;
+  \item les informations d'audit, les votes et les étapes du workflow ne sont jamais modifiables comme de simples champs de formulaire ;
+  \item le contrôle serveur est obligatoire, même lorsqu'un champ est masqué ou désactivé dans l'interface.
+\end{itemize}
+
+\begin{tcolorbox}[enhanced,colback=vertClairDAE,colframe=vertDAE,boxrule=0.6pt,arc=1.5mm]
+\recommande{} : présenter les droits pendant la réunion avec des noms d'objets métier compréhensibles, et réserver les identifiants techniques à la documentation d'implémentation.
+\end{tcolorbox}
+
+\subsection{Cycle proposé d'une DAE}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{0.94\textwidth}{>{\bfseries}p{0.24\textwidth}Y}
+\toprule
+\rowcolor{bleuDAE}
+\tableauTitre{État} & \tableauTitre{Évolution proposée} \\
+\midrule
+Brouillon & Modification par le demandeur avant lancement. \\
+Lancement du circuit & Copie de la configuration applicable au service. \\
+Validation séquence par séquence & Chaque rôle examine et décide selon son étape. \\
+Refusée & Un refus motivé clôt immédiatement le circuit. \\
+Acceptée & Toutes les séquences prévues ont été acceptées. \\
+Archivée & La DAE reste consultable en lecture seule selon la règle de conservation. \\
+\bottomrule
+\end{tabularx}
+\caption{Cycle proposé et évolution des états d'une DAE.}
+\label{tab:cycle-synthetique}
+\end{table}
+
+\subsubsection{Règles proposées}
+
+\begin{enumerate}
+  \item Le demandeur crée et enregistre la DAE comme brouillon.
+  \item Le demandeur lance le circuit ; un administrateur peut le faire à sa place s'il voit la DAE.
+  \item Au lancement, les étapes et rôles du service sont copiés dans l'exécution du circuit. Une modification ultérieure du paramétrage ne change pas le circuit déjà lancé.
+  \item Chaque rôle de la séquence doit accepter avant l'ouverture de la séquence suivante.
+  \item Un refus motivé clôt le circuit.
+  \item Les relances sont envoyées lorsque le délai configuré est dépassé.
+  \item Un administrateur habilité peut suppléer un rôle après expiration de son délai.
+  \item Les commentaires généraux de la DAE restent séparés des commentaires de décision.
+\end{enumerate}
+
+\subsection{Visibilité et archivage — décision attendue}
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{\textwidth}{>{\bfseries}p{0.25\textwidth}Yp{0.18\textwidth}}
+\toprule
+\rowcolor{bleuDAE}
+\tableauTitre{Option} & \tableauTitre{Effet} & \tableauTitre{Avis} \\
+\midrule
+Conservation visible en permanence & Toutes les DAE restent dans la liste, avec filtres par état. & Simple, mais la liste peut devenir difficile à exploiter. \\
+Archivage logique configurable & Après une durée validée, la DAE reste consultable en lecture seule dans les archives. & \recommande{} \\
+\bottomrule
+\end{tabularx}
+\caption{Options de visibilité et d'archivage des DAE.}
+\label{tab:options-archivage}
+\end{table}
+
+\begin{tcolorbox}[enhanced,colback=orangeClairDAE,colframe=orangeDAE,boxrule=0.6pt,arc=1.5mm]
+\surligneOrange{Questions à trancher :} après combien de temps une DAE acceptée, refusée ou abandonnée est-elle archivée ? Les DAE refusées suivent-elles la même durée ? Qui peut consulter les archives ? Une DAE archivée peut-elle être désarchivée, ou seulement dupliquée ? Existe-t-il une durée légale ou métier de conservation ?
+\end{tcolorbox}
+
+La suppression physique est déconseillée : elle ferait perdre l'historique et rendrait les contrôles ultérieurs plus difficiles.
+
+\subsection{Reprise des anciennes données}
+
+Le dépôt ne contient pas le schéma de l'ancienne application. La migration doit donc commencer par une phase d'inventaire et de rapprochement, et non par un mapping définitif supposé.
+
+La démarche proposée est :
+
+\begin{enumerate}
+  \item obtenir un export ou un accès en lecture à l'ancienne base ;
+  \item inventorier les utilisateurs, rôles, services, rattachements, DAE et historiques de validation ;
+  \item dédoublonner les utilisateurs par courriel, identifiant historique puis nom et prénom ;
+  \item rapprocher les anciens rôles des rôles cibles ;
+  \item reprendre l'ensemble des rattachements d'un utilisateur à ses services ;
+  \item produire un rapport des correspondances incertaines ou impossibles ;
+  \item importer d'abord dans un environnement de test ;
+  \item contrôler les volumes, les doublons, les utilisateurs sans rôle et les services disparus ;
+  \item valider le résultat avant la reprise en production.
+\end{enumerate}
+
+Les mots de passe, comptes inactifs et données personnelles particulières feront l'objet d'une décision spécifique. Les secrets ne doivent pas être exportés dans les fichiers de migration ou de documentation.
+
+\subsection{Duplication d'une DAE existante}
+
+La fonction proposée est : \surligneBleu{« Créer une nouvelle DAE à partir de cette DAE »}.
+
+Elle crée une nouvelle demande indépendante, dans l'état brouillon, appartenant à l'utilisateur courant. Elle ne relance jamais automatiquement l'ancien circuit et ne copie aucun vote.
+
+\textbf{À copier, sous réserve que les références soient encore actives :}
+
+\begin{itemize}
+  \item service concerné ; type de contrat ; motif de recrutement ; motif de remplacement ; financement ;
+  \item intitulé du poste ; catégorie professionnelle ; temps de travail et répartition ;
+  \item rémunération et périodicité ; qualification ; indicateurs métier ;
+  \item candidat ou collaborateur, uniquement si cette information reste pertinente.
+\end{itemize}
+
+\textbf{À réinitialiser ou laisser vide :}
+
+\begin{itemize}
+  \item identifiant de la DAE et demandeur, remplacé par l'utilisateur courant ;
+  \item dates de création et de modification ; état de validation ; étapes, visas et votes ;
+  \item commentaires généraux et commentaires de décision ; date d'archivage ; date de suppression ;
+  \item résultat du précédent circuit.
+\end{itemize}
+
+Si une référence copiée est inactive ou supprimée, elle doit être laissée vide et signalée au demandeur pour ressaisie.
+
+\subsection{Décisions à obtenir pendant la rencontre}
+
+\begin{itemize}
+  \item confirmer les rôles et leurs intitulés métier ;
+  \item valider la matrice des droits objet par objet ;
+  \item confirmer qui peut lancer une DAE au nom du demandeur ;
+  \item confirmer les délais, relances et règles de suppléance ;
+  \item choisir la politique et la durée d'archivage ;
+  \item confirmer les données à reprendre dans les anciennes DAE ;
+  \item confirmer les données à recopier ou remettre à zéro lors d'une duplication ;
+  \item identifier les règles de conservation imposées par le métier ou la réglementation.
+\end{itemize}
+
+\subsection{Références dans l'application}
+
+\begin{itemize}
+  \item ADR 0042 — autorisation au niveau du champ ;
+  \item ADR 0048 — cinq zones fonctionnelles de la DAE ;
+  \item ADR 0050 — périmètres hiérarchiques des utilisateurs ;
+  \item ADR 0055 — workflow de validation ;
+  \item ADR 0056 — remise à zéro exceptionnelle d'un cycle ;
+  \item ADR 0062 — export PDF sécurisé des DAE.
+\end{itemize}

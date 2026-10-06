@@ -1,0 +1,325 @@
+% !TeX program = lualatex
+% Compilation : lualatex choix-bibliotheque-pdf.tex
+\documentclass[11pt,a4paper]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{french}
+\setotherlanguage{english}
+\setmainfont{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{DejaVu Sans Mono}
+
+\usepackage[a4paper,top=2.1cm,bottom=2.1cm,left=2.1cm,right=2.1cm]{geometry}
+\usepackage{microtype}
+\usepackage[table]{xcolor}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+\usepackage{pdflscape}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{titlesec}
+\usepackage{hyperref}
+
+\definecolor{bleuDAE}{HTML}{174A73}
+\definecolor{bleuClairDAE}{HTML}{EAF3F8}
+\definecolor{vertDAE}{HTML}{2E7D5B}
+\definecolor{vertClairDAE}{HTML}{EAF6F0}
+\definecolor{orangeDAE}{HTML}{B76419}
+\definecolor{orangeClairDAE}{HTML}{FFF1E3}
+\definecolor{rougeDAE}{HTML}{9B3155}
+\definecolor{grisTexteDAE}{HTML}{40464D}
+\definecolor{grisFondDAE}{HTML}{F4F6F7}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=bleuDAE,
+  urlcolor=bleuDAE,
+  pdftitle={Aide à la décision — Bibliothèque PDF},
+  pdfauthor={Projet GDAETF2},
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45em}
+\setlist[itemize]{leftmargin=*,itemsep=0.2em,topsep=0.2em}
+\setlist[enumerate]{leftmargin=*,itemsep=0.25em,topsep=0.2em}
+\titleformat{\section}{\Large\bfseries\color{bleuDAE}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{bleuDAE}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{grisTexteDAE}}{\thesubsubsection}{0.6em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{grisTexteDAE}{Projet GDAETF2 — Aide à la décision}}
+\fancyhead[R]{\small\textcolor{grisTexteDAE}{Bibliothèque PDF}}
+\fancyfoot[C]{\small\textcolor{grisTexteDAE}{\thepage\,/\,\pageref{LastPage}}}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{Z}{>{\centering\arraybackslash}p{1.25cm}}
+\newcommand{\recommande}{\textcolor{vertDAE}{\textbf{Recommandé}}}
+\newcommand{\alternative}{\textcolor{orangeDAE}{\textbf{Alternative}}}
+\newcommand{\note}[1]{\begin{tcolorbox}[enhanced,colback=bleuClairDAE,colframe=bleuDAE,boxrule=0.6pt,arc=1.5mm]#1\end{tcolorbox}}
+
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{1.4cm}
+  {\Large\textcolor{bleuDAE}{PROJET GDAETF2}\par}
+  \vspace{1.1cm}
+  {\Huge\bfseries\textcolor{bleuDAE}{Aide à la décision}\par}
+  \vspace{0.35cm}
+  {\LARGE\textcolor{grisTexteDAE}{Choix d'une bibliothèque PDF}\par}
+  \vspace{1.2cm}
+  \begin{tcolorbox}[enhanced,colback=bleuClairDAE,colframe=bleuDAE,boxrule=0.8pt,arc=2mm,width=0.88\textwidth]
+    Comparaison des solutions utilisables avec CakePHP 5.3 pour préparer l'export PDF sécurisé des DAE prévu par l'ADR 0062.
+  \end{tcolorbox}
+  \vfill
+  {\large\textcolor{vertDAE}{Choix recommandé : mPDF}\par}
+  \vspace{0.3cm}
+  {\small Document préparatoire — 6 octobre 2026\par}
+\end{titlepage}
+
+\tableofcontents
+\clearpage
+
+\section{Objet et contexte}
+
+Ce document prépare le choix de la bibliothèque de génération PDF pour
+l'application CakePHP 5.3. Le dépôt impose PHP \texttt{>= 8.2}, une génération
+côté serveur, des dépendances hébergées dans l'environnement de l'application
+et l'absence de conversion réalisée dans le navigateur.
+
+L'\href{run:../../adr/0062-export-pdf-applicationform.md}{ADR 0062}
+prévoit notamment :
+
+\begin{itemize}
+  \item une route protégée \texttt{/applicationforms/viewpdf/\{id\}} ;
+  \item un service dédié et un gabarit de présentation local ;
+  \item la réutilisation de la Policy et des \texttt{FieldAuthorizations} ;
+  \item un tableau du cycle de validation, avec les statuts Accepté, Refusé et En attente ;
+  \item un type MIME \texttt{application/pdf} et un nom de fichier explicite.
+\end{itemize}
+
+Le PDF ne doit donc pas constituer une seconde source de vérité pour les droits
+ni nécessiter de modification du schéma de données.
+
+\section{Critères de décision}
+
+Les critères ci-dessous sont pondérés selon le besoin de l'application.
+
+\begin{table}[htbp]
+\centering
+\small
+\begin{tabularx}{0.9\textwidth}{>{\bfseries}p{0.34\textwidth}Z Y}
+\toprule
+\rowcolor{bleuDAE}
+\textcolor{white}{Critère} & \textcolor{white}{Poids} & \textcolor{white}{Interprétation} \\
+\midrule
+Compatibilité PHP / CakePHP & 20\,\% & Installation et utilisation cohérentes avec PHP 8.2 et CakePHP 5.3. \\
+Fidélité HTML / CSS & 20\,\% & Capacité à utiliser un gabarit local sans réécrire toute la mise en page. \\
+Mise en page paginée & 15\,\% & Sauts de page, en-têtes, pieds de page et tableaux multipages. \\
+Tables et workflow & 15\,\% & Rendu lisible du tableau des étapes et des votes. \\
+Déploiement Docker & 15\,\% & Absence de binaire ou de runtime externe à maintenir. \\
+Performance & 5\,\% & Temps de génération et consommation mémoire raisonnables. \\
+Maintenance & 5\,\% & Pérennité du projet et clarté de son écosystème. \\
+Testabilité & 5\,\% & Facilité de tester le contenu, la réponse HTTP et le rendu. \\
+\bottomrule
+\end{tabularx}
+\caption{Critères et pondération.}
+\label{tab:criteres}
+\end{table}
+
+La note de chaque solution est comprise entre 1 (défavorable) et 5
+(excellent). Le score final est la moyenne pondérée des notes.
+
+\section{Bibliothèques candidates}
+
+\subsection{mPDF — \texttt{mpdf/mpdf}}
+
+Bibliothèque PHP pure, conçue pour produire des documents paginés à partir
+d'un sous-ensemble HTML/CSS. Elle convient particulièrement aux rapports, aux
+tableaux, aux en-têtes et pieds de page, ainsi qu'aux documents comportant du
+contenu français et des polices configurées localement.
+
+\textbf{Forces :} pagination métier, tableaux, en-têtes, pieds de page,
+intégration Composer et absence de dépendance système.
+
+\textbf{Limites :} le support du CSS moderne n'est pas celui d'un navigateur
+et la consommation mémoire doit être mesurée sur les DAE les plus volumineuses.
+
+\subsection{Dompdf — \texttt{dompdf/dompdf}}
+
+Bibliothèque PHP pure avec une intégration rapide pour un gabarit HTML/CSS
+classique. Elle est adaptée à un document composé de blocs et de tableaux
+simples.
+
+\textbf{Forces :} simplicité, déploiement léger, API accessible et bon choix
+pour un premier prototype.
+
+\textbf{Limites :} support limité de Flexbox/Grid et contrôle moins prévisible
+des mises en page complexes ou des sauts de page.
+
+\subsection{TCPDF — \texttt{tecnickcom/tcpdf}}
+
+Bibliothèque PHP pure robuste, particulièrement adaptée lorsque le document
+est construit par programmation avec un contrôle précis des coordonnées et des
+éléments PDF.
+
+\textbf{Forces :} contrôle bas niveau, stabilité et faible dépendance à HTML.
+
+\textbf{Limites :} le gabarit HTML prévu par l'ADR 0062 serait moins naturel à
+exploiter et la mise en page demanderait davantage de code spécifique.
+
+\subsection{wkhtmltopdf — \texttt{knplabs/knp-snappy}}
+
+Solution fondée sur un binaire externe convertissant HTML/CSS via un moteur
+WebKit. Le paquet PHP sert d'adaptateur, mais le binaire doit être installé et
+maintenu dans l'image Docker.
+
+\textbf{Forces :} très bon rendu du HTML/CSS classique et réutilisation de
+pages proches de l'affichage navigateur.
+
+\textbf{Limites :} moteur WebKit ancien, installation système, gestion des
+processus et surface opérationnelle plus importantes.
+
+\subsection{Browsershot — \texttt{spatie/browsershot}}
+
+Solution pilotant Chromium via Node.js. Elle offre un rendu très proche d'un
+navigateur moderne.
+
+\textbf{Forces :} excellent support CSS moderne et rendu fidèle.
+
+\textbf{Limites :} ajout de Node.js et Chromium, image Docker plus lourde,
+temps de démarrage et exploitation plus complexes pour un document métier.
+
+\subsection{WeasyPrint}
+
+Moteur de composition PDF orienté documents imprimés, généralement utilisé via
+Python et un processus externe depuis PHP.
+
+\textbf{Forces :} modèle paginé et CSS d'impression de qualité.
+
+\textbf{Limites :} absence d'intégration PHP native et ajout d'une chaîne
+Python à l'exploitation CakePHP.
+
+\subsection{FPDF — \texttt{setasign/fpdf}}
+
+Bibliothèque légère de construction PDF programmatique.
+
+\textbf{Forces :} simplicité, contrôle et faible empreinte.
+
+\textbf{Limites :} aucune conversion HTML ; le positionnement, les retours à la
+ligne et la pagination devraient être développés dans le service.
+
+\begin{landscape}
+\section{Matrice de décision}
+
+\small
+\begin{table}[htbp]
+\centering
+\setlength{\tabcolsep}{3.5pt}
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{0.22\linewidth}*{6}{>{\centering\arraybackslash}X}}
+\toprule
+\rowcolor{bleuDAE}
+\textcolor{white}{Critère} & \textcolor{white}{mPDF} & \textcolor{white}{Dompdf} & \textcolor{white}{TCPDF} & \textcolor{white}{wkhtmltopdf} & \textcolor{white}{Browsershot} & \textcolor{white}{WeasyPrint} \\
+\midrule
+Compatibilité PHP / CakePHP & 5 & 5 & 5 & 4 & 3 & 2 \\
+Fidélité HTML / CSS & 4 & 3 & 2 & 5 & 5 & 5 \\
+Mise en page paginée & 5 & 3 & 4 & 4 & 4 & 5 \\
+Tables et workflow & 5 & 4 & 3 & 4 & 4 & 5 \\
+Déploiement Docker & 5 & 5 & 5 & 2 & 1 & 1 \\
+Performance & 3 & 4 & 4 & 3 & 2 & 3 \\
+Maintenance & 4 & 4 & 4 & 3 & 4 & 4 \\
+Testabilité & 4 & 4 & 4 & 3 & 3 & 3 \\
+\midrule
+\rowcolor{vertClairDAE}
+\textbf{Score pondéré / 5} & \textbf{4,55} & \textbf{3,95} & \textbf{3,65} & \textbf{3,65} & \textbf{3,25} & \textbf{3,65} \\
+\bottomrule
+\end{tabularx}
+\caption{Matrice de décision pondérée.}
+\label{tab:matrice}
+\end{table}
+
+\vspace{0.4cm}
+\begin{tabularx}{\linewidth}{>{\bfseries}p{0.23\linewidth}Y}
+\toprule
+\rowcolor{bleuDAE}
+\textcolor{white}{Solution} & \textcolor{white}{Lecture de la décision} \\
+\midrule
+mPDF & Meilleur compromis pour le besoin complet : documents paginés, tables, PHP pur et déploiement Docker simple. \\
+Dompdf & Alternative raisonnable si le gabarit reste simple et si le prototype confirme la pagination. \\
+TCPDF / FPDF & À réserver à un document entièrement programmatique, sans dépendre d'un gabarit HTML. \\
+wkhtmltopdf / Browsershot / WeasyPrint & À réserver à un besoin fort de fidélité navigateur ou CSS d'impression justifiant des dépendances externes. \\
+\bottomrule
+\end{tabularx}
+\end{landscape}
+
+\section{Recommandation}
+
+\note{\recommande{} de retenir \texttt{mpdf/mpdf} pour l'implantation, sous
+réserve d'un prototype de rendu avec une DAE représentative. \texttt{dompdf/dompdf}
+doit rester l'alternative si le gabarit retenu n'utilise que du HTML/CSS simple.}
+
+mPDF respecte le mieux la combinaison des contraintes suivantes :
+
+\begin{itemize}
+  \item bibliothèque installable via Composer et exécutable en PHP pur ;
+  \item absence de binaire ou de runtime externe dans le conteneur ;
+  \item bonne prise en charge des tableaux et de la pagination ;
+  \item séparation claire entre le service de collecte sécurisée et le gabarit ;
+  \item tests possibles sans navigateur ni service distant.
+\end{itemize}
+
+Le choix ne dispense pas de vérifier les versions disponibles au moment de
+l'ajout dans Composer, ni de mesurer la consommation mémoire sur les documents
+les plus longs.
+
+\section{Architecture d'intégration proposée}
+
+La bibliothèque ne doit pas être appelée directement par le contrôleur au-delà
+de l'orchestration HTTP. L'architecture cible est :
+
+\begin{enumerate}
+  \item \texttt{ApplicationformsController}\\
+        \texttt{::viewpdf()} charge la DAE et applique
+        \texttt{ApplicationformPolicy} avant tout rendu ;
+  \item un service dédié collecte les données visibles pour l'identité courante,
+        en réutilisant les autorisations existantes ;
+  \item un gabarit local prépare le contenu HTML du document ;
+  \item un adaptateur PDF encapsule mPDF et retourne le contenu binaire ;
+  \item la réponse CakePHP définit \texttt{application/pdf}, le nom du fichier
+        et l'ouverture dans un nouvel onglet côté interface.
+\end{enumerate}
+
+Aucune table, vue SQL ou migration n'est nécessaire pour produire le PDF.
+
+\section{Plan de validation avant implantation}
+
+\begin{enumerate}
+  \item Ajouter un prototype avec une DAE comportant toutes les zones visibles.
+  \item Vérifier les champs autorisés et l'absence réelle des champs interdits.
+  \item Vérifier les trois statuts du workflow et les commentaires autorisés.
+  \item Vérifier les sauts de page, l'en-tête, le pied de page et le tableau multipage.
+  \item Vérifier les accents, les polices, les montants et les dates en français.
+  \item Mesurer le temps de génération et la mémoire sur une DAE volumineuse.
+  \item Ajouter les tests unitaires du service et les tests HTTP de la réponse PDF.
+  \item Documenter le choix définitif dans l'ADR approprié avant d'ajouter la dépendance Composer.
+\end{enumerate}
+
+\section{Conclusion}
+
+Pour la première version, mPDF offre le meilleur équilibre entre qualité de
+document métier, intégration PHP, déploiement et testabilité. Dompdf constitue
+une alternative valable si le prototype montre que les exigences de pagination
+restent simples. Les moteurs fondés sur un navigateur ou un processus externe
+ne sont justifiés que par un besoin de rendu qui ne pourrait pas être couvert
+par une bibliothèque PHP pure.
+
+\end{document}

@@ -1,0 +1,122 @@
+% !TeX program = lualatex
+\documentclass[11pt,a4paper]{article}
+
+% Compilation recommandée : lualatex main.tex
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{french}
+\setotherlanguage{english}
+\setmainfont{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}
+\setmonofont{DejaVu Sans Mono}
+
+\usepackage[a4paper,top=2.2cm,bottom=2.2cm,left=2.2cm,right=2.2cm]{geometry}
+\usepackage{microtype}
+\usepackage{siunitx}
+\sisetup{
+  locale = FR,
+  group-separator = {\,},
+  group-minimum-digits = 4,
+}
+\usepackage[table]{xcolor}
+\usepackage{soul}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{enumitem}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{titlesec}
+\usepackage{hyperref}
+
+\definecolor{bleuDAE}{HTML}{174A73}
+\definecolor{bleuClairDAE}{HTML}{EAF3F8}
+\definecolor{vertDAE}{HTML}{2E7D5B}
+\definecolor{vertClairDAE}{HTML}{EAF6F0}
+\definecolor{orangeDAE}{HTML}{B76419}
+\definecolor{orangeClairDAE}{HTML}{FFF1E3}
+\definecolor{roseDAE}{HTML}{9B3155}
+\definecolor{roseClairDAE}{HTML}{FBEAF0}
+\definecolor{grisTexteDAE}{HTML}{40464D}
+\definecolor{grisFondDAE}{HTML}{F4F6F7}
+
+% Commandes de surlignage réutilisables dans les deux inclusions.
+\newcommand{\surligneJaune}[1]{\begingroup\sethlcolor{yellow!45}\hl{#1}\endgroup}
+\newcommand{\surligneBleu}[1]{\begingroup\sethlcolor{bleuClairDAE}\hl{#1}\endgroup}
+\newcommand{\surligneVert}[1]{\begingroup\sethlcolor{vertClairDAE}\hl{#1}\endgroup}
+\newcommand{\surligneOrange}[1]{\begingroup\sethlcolor{orangeClairDAE}\hl{#1}\endgroup}
+\newcommand{\surligneRose}[1]{\begingroup\sethlcolor{roseClairDAE}\hl{#1}\endgroup}
+
+\newcommand{\etatAValider}{\textcolor{orangeDAE}{\textbf{À valider}}}
+\newcommand{\recommande}{\textcolor{vertDAE}{\textbf{Recommandé}}}
+\newcommand{\objetMetier}[1]{\textcolor{bleuDAE}{\textbf{#1}}}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=bleuDAE,
+  urlcolor=bleuDAE,
+  pdftitle={Préparation de la rencontre - Application DAE},
+  pdfauthor={Projet GDAETF2},
+}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.45em}
+\setlist[itemize]{leftmargin=*,itemsep=0.2em,topsep=0.2em}
+\setlist[enumerate]{leftmargin=*,itemsep=0.25em,topsep=0.25em}
+
+\titleformat{\section}{\Large\bfseries\color{bleuDAE}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{bleuDAE}}{\thesubsection}{0.6em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries\color{grisTexteDAE}}{\thesubsubsection}{0.6em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\textcolor{grisTexteDAE}{Rencontre métier — Application DAE}}
+\fancyhead[R]{\small\textcolor{grisTexteDAE}{Document de travail}}
+\fancyfoot[C]{\small\textcolor{grisTexteDAE}{\thepage\,/\,\pageref{LastPage}}}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{C}{>{\centering\arraybackslash}p{1.35cm}}
+\newcommand{\tableauTitre}[1]{\textcolor{white}{\textbf{#1}}}
+\newcommand{\celluleAValider}{\cellcolor{orangeClairDAE}\etatAValider}
+
+\begin{document}
+
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+  {\Large\textcolor{bleuDAE}{PROJET GDAETF2}\par}
+  \vspace{1.2cm}
+  {\Huge\bfseries\textcolor{bleuDAE}{Préparation de la rencontre}\par}
+  \vspace{0.35cm}
+  {\LARGE\textcolor{grisTexteDAE}{Application DAE}\par}
+  \vspace{1.2cm}
+  \begin{tcolorbox}[
+    enhanced,
+    colback=bleuClairDAE,
+    colframe=bleuDAE,
+    boxrule=0.8pt,
+    arc=2mm,
+    width=0.88\textwidth,
+  ]
+  Ce document propose un cadre fonctionnel pour discuter des droits par rôle et par objet métier, du cycle de validation, de la reprise des anciennes données et de la duplication des DAE.
+  \end{tcolorbox}
+  \vfill
+  {\large\textcolor{grisTexteDAE}{Document de travail — décisions métier à confirmer}\par}
+  \vspace{0.35cm}
+  {\small 6 octobre 2026\par}
+\end{titlepage}
+
+\tableofcontents
+\clearpage
+
+\include{propositions}
+
+\clearpage
+\include{annexe}
+
+\end{document}
