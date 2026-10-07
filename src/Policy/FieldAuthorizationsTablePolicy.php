@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Policy;
 
-use App\Model\Entity\User;
 use App\Model\Table\FieldAuthorizationsTable;
 use Authorization\IdentityInterface;
 
@@ -24,8 +23,6 @@ class FieldAuthorizationsTablePolicy extends AppPolicy
      */
     public function canIndex(IdentityInterface $identity, FieldAuthorizationsTable $table): bool
     {
-        $user = $this->getValidUser($identity);
-
-        return $user !== null && (int)$user->get('role_id') !== User::ROLE_ADMIN;
+        return $this->isSuperUser($identity);
     }
 }

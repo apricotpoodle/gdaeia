@@ -24,7 +24,7 @@
             <div class="col-md-12">
                 <?= $this->Form->control('jobtitle', [
                     'id' => 'jobtitle',
-                    'label' => ['text' => __('Intitulé du poste'), 'class' => 'form-label fs-7 fw-medium'],
+                    'label' => ['text' => $this->FieldMetadata->label('Applicationforms', 'jobtitle'), 'class' => 'form-label fs-7 fw-medium'],
                     'class' => 'form-control form-control-sm',
                     'placeholder' => __('Saisir l\'intitulé du poste...'),
                     'required' => true,
@@ -36,7 +36,7 @@
             <div class="col-md-6 collaborator-select-wrapper">
                 <?= $this->Form->control('collaborator_id', [
                     'id' => 'collaborator-id',
-                    'label' => ['text' => __('Collaborateur interne pressenti'), 'class' => 'form-label fs-7 fw-medium'],
+                    'label' => ['text' => $this->FieldMetadata->label('Applicationforms', 'collaborator_id'), 'class' => 'form-label fs-7 fw-medium'],
                     'options' => $collaborators ?? [],
                     'empty' => __('--- Candidat externe / Saisie libre ---'),
                     'class' => 'form-select form-select-sm',
@@ -48,7 +48,7 @@
             <div class="col-md-6">
                 <?= $this->Form->control('applicantname', [
                     'id' => 'applicantname',
-                    'label' => ['text' => __('Intitulé / Nom du candidat'), 'class' => 'form-label fs-7 fw-medium'],
+                    'label' => ['text' => $this->FieldMetadata->label('Applicationforms', 'applicantname'), 'class' => 'form-label fs-7 fw-medium'],
                     'class' => 'form-control form-control-sm',
                     'placeholder' => __('Saisir le nom du candidat...'),
                     'disabled' => !$canEditAdmin
@@ -57,7 +57,7 @@
 
             <!-- Sélection du Département -->
             <div class="col-md-12">
-                <label class="form-label fs-7 fw-medium"><?= __('Département') ?></label>
+                <label class="form-label fs-7 fw-medium"><?= $this->FieldMetadata->label('Applicationforms', 'department_id') ?></label>
                 <!-- Le composant visuel Treeselect s'accroche ici : -->
                 <div id="department-tree-select"></div>
 
@@ -68,7 +68,7 @@
             <!-- Saisie dynamique du Code CGR -->
             <div class="col-md-12 mt-2">
                 <label class="form-label fs-7 fw-medium text-primary">
-                    <i class="fa-solid fa-sitemap me-1"></i> <?= __('Code CGR') ?>
+                    <i class="fa-solid fa-sitemap me-1"></i> <?= $this->FieldMetadata->label('Applicationforms', 'cgr') ?>
                 </label>
 
                 <!-- 1. Conteneur vide où le JavaScript injectera les select (Secteur, Axe, etc.) -->

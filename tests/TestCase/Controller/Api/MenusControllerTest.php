@@ -18,6 +18,7 @@ class MenusControllerTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
+        'app.FieldDefinitions',
         'app.Menus',
         'app.Roles',
         'app.RoleMenus',

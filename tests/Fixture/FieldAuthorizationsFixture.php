@@ -21,8 +21,8 @@ class FieldAuthorizationsFixture extends TestFixture
             [
                 'id' => 1,
                 'role_id' => 1,
-                'resource' => 'Lorem ipsum dolor sit amet',
-                'field' => 'Lorem ipsum dolor sit amet',
+                'resource' => 'Applicationforms',
+                'field' => 'jobtitle',
                 'access_level' => 'Lorem ipsum dolor ',
                 'created' => 1783069289,
                 'modified' => 1783069289,

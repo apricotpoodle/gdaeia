@@ -15,6 +15,7 @@ class CommentsControllerTest extends TestCase
     use IntegrationTestTrait;
 
     protected array $fixtures = [
+        'app.FieldDefinitions',
         'app.Comments',
         'app.Users',
     ];

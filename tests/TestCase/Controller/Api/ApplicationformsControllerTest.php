@@ -21,6 +21,7 @@ class ApplicationformsControllerTest extends TestCase
     private const RESET_TEST_RUN_ID = 900_002;
 
     protected array $fixtures = [
+        'app.FieldDefinitions',
         'app.Applicationforms',
         'app.Departments',
         'app.Users',

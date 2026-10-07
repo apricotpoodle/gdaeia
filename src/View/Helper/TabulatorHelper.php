@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\View\Helper;
 
+use App\Service\Metadata\FieldMetadataService;
 use Cake\ORM\TableRegistry;
 use Cake\View\Helper;
 use Throwable;
@@ -42,11 +43,14 @@ class TabulatorHelper extends Helper
         }
 
         // 5. Rendu du composant HTML porteur des métadonnées structurelles
+        $metadata = (new FieldMetadataService())->all($controllerName);
+
         return sprintf(
-            '<div id="%s" data-controller="%s" data-can-create="%s"></div>',
+            '<div id="%s" data-controller="%s" data-can-create="%s" data-field-metadata="%s"></div>',
             h($htmlId),
             h(strtolower($controllerName)),
             $canCreate ? 'true' : 'false',
+            h((string)json_encode($metadata, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)),
         );
     }
 }

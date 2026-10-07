@@ -170,26 +170,40 @@ export class TabulatorFactory {
     static createFieldAuthorizationsGrid(selector = "#fieldauthorizations-grid") {
         return this._createActionGrid(selector)
             .setAjaxSource('/api/field-authorizations.json')
-            .setController('field_authorizations')
+            .setController('field-authorizations')
             .setHeight('calc(100vh - 240px)')
+            .addOptions({ editTriggerEvent: 'dblclick' })
             .setColumns([
-                { title: 'ID', field: 'id', width: 70 },
-                {
-                    title: 'Rôle',
-                    field: 'role.name',
-                    formatter: (cell) => cell.getRow().getData().role?.name || 'N/A'
-                },
-                { title: 'Ressource', field: 'resource', headerFilter: 'input' },
-                { title: 'Champ', field: 'field', headerFilter: 'input' },
-                {
-                    title: 'Niveau d\'Accès',
-                    field: 'access_level',
+                ColumnsFactory.id({ visible: true }),
+                ColumnsFactory.text('role.name', 'Rôle', {
+                    formatter: (cell) => cell.getRow().getData().role?.name || 'N/A',
+                }),
+                ColumnsFactory.text('resource', 'Ressource'),
+                ColumnsFactory.text('field', 'Champ', {
+                    formatter: (cell) => cell.getRow().getData().field_label || cell.getValue(),
+                    tooltip: (cell) => {
+                        const data = cell.getRow().getData();
+                        return data.field_description
+                            ? `${data.field_description} (${data.resource}.${data.field})`
+                            : `${data.resource}.${data.field}`;
+                    },
+                }),
+                ColumnsFactory.select('access_level', 'Niveau d\'accès', {
+                    EDIT: 'Modification',
+                    VIEW: 'Lecture seule',
+                    NONE: 'Aucun accès',
+                }, {
                     formatter: (cell) => {
-                        const val = cell.getValue();
-                        const classes = { 'EDIT': 'bg-success', 'VIEW': 'bg-info text-dark', 'NONE': 'bg-danger' };
-                        return `<span class="badge ${classes[val] || 'bg-secondary'}">${val || 'N/A'}</span>`;
-                    }
-                }
+                        const value = cell.getValue();
+                        const classes = {
+                            EDIT: 'bg-success',
+                            VIEW: 'bg-info text-dark',
+                            NONE: 'bg-danger',
+                        };
+
+                        return `<span class="badge ${classes[value] || 'bg-secondary'}">${value || 'N/A'}</span>`;
+                    },
+                }),
             ])
             .setWithActions(['edit', 'delete'])
             .build();
@@ -202,13 +216,14 @@ export class TabulatorFactory {
      * @returns {Tabulator} L'instance finale de la grille Tabulator.
      */
     static createApplicationformsGrid(selector = "#applicationforms-table") {
+        const metadata = JSON.parse(document.querySelector(selector)?.dataset.fieldMetadata || '{}');
         return this._createActionGrid(selector)
             .setAjaxSource('/api/applicationforms.json')
             // 💡 SUPPRESSION DE fitColumns : On autorise le comportement fitDataFill
             .setLayout("fitDataFill")
             .setController('applicationforms')
             .setHeight("calc(100vh - 180px)")
-            .setColumns(getApplicationformColumns())
+            .setColumns(getApplicationformColumns(metadata))
             .setWithActions(['view', 'viewpdf', 'edit', 'launchValidation', 'resetValidation', 'delete'])
             .build();
     }

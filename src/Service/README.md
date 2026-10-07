@@ -10,6 +10,8 @@ Les contrôleurs Web utilisent `summary` dans le message Flash via `AppControlle
 
 Voir le [ticket 0013](../../docs/backlog/0013-mutualiser-la-presentation-des-erreurs-validation.md) et l'[ADR 0052](../../docs/adr/0052-presentation-unifiee-erreurs-validation-web-api.md) pour le contrat complet.
 
+Le référentiel SQL field_definitions est initialisé par migration avec les libellés métier estimés lors de sa création. Il est volontairement en lecture seule dans l’interface ; une correction de libellé doit être portée par une migration ultérieure.
+
 ## Production PDF des DAE
 
 `Pdf/ApplicationformPdfService` génère le document PDF d'une DAE avec mPDF.

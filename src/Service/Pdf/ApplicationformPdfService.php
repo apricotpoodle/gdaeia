@@ -5,9 +5,9 @@ namespace App\Service\Pdf;
 
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\Applicationvalidationstep;
+use App\Service\Metadata\FieldMetadataService;
 use App\Service\Security\FieldAuthorizationService;
 use Authorization\IdentityInterface;
-use Cake\I18n\DateInterface;
 use Cake\ORM\TableRegistry;
 use DateTimeInterface;
 use Mpdf\Mpdf;
@@ -16,6 +16,11 @@ use Mpdf\Output\Destination;
 /** Produit le PDF sécurisé d'une demande de recrutement. */
 final class ApplicationformPdfService
 {
+    /** @param \App\Service\Metadata\FieldMetadataService|null $metadata Fournisseur de métadonnées injectable. */
+    public function __construct(private readonly ?FieldMetadataService $metadata = null)
+    {
+    }
+
     /**
      * Génère un document PDF en appliquant les droits de la fiche et du workflow.
      *
@@ -26,6 +31,7 @@ final class ApplicationformPdfService
     public function generate(Applicationform $applicationform, IdentityInterface $identity): string
     {
         $schema = (new FieldAuthorizationService())->getFieldSchema($identity, 'Applicationforms');
+        /** @var list<\App\Model\Entity\Applicationvalidationstep> $steps */
         $steps = TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->find()
             ->contain(['Roles', 'Validations' => ['Users', 'Validationstatuses']])
             ->where(['Applicationvalidationsteps.applicationform_id' => $applicationform->id])
@@ -58,30 +64,64 @@ final class ApplicationformPdfService
         IdentityInterface $identity,
     ): string {
         $rows = [];
+        $metadata = $this->metadata ?? new FieldMetadataService();
         $fields = [
-            'jobtitle' => ['Intitulé du poste', $applicationform->jobtitle],
-            'department' => [
-                'Service / département',
-                $applicationform->department?->name ?? $applicationform->department?->code,
+            'jobtitle' => [$metadata->label('Applicationforms', 'jobtitle'), $applicationform->jobtitle],
+            'department_id' => [
+                $metadata->label('Applicationforms', 'department_id'),
+                $applicationform->department->name ?? $applicationform->department->code,
             ],
-            'begin_at' => ['Date de début', $this->formatDate($applicationform->begin_at)],
-            'end_at' => ['Date de fin', $this->formatDate($applicationform->end_at)],
-            'candidate_name' => ['Candidat / collaborateur', $applicationform->candidate_name],
-            'contracttype' => [
-                'Type de contrat',
-                $applicationform->contracttype?->name ?? $applicationform->contracttype?->code,
+            'begin_at' => [
+                $metadata->label('Applicationforms', 'begin_at'),
+                $this->formatDate($applicationform->begin_at),
             ],
-            'hiringreason' => ['Motif de recrutement', $applicationform->hiringreason?->name],
-            'professionalcategory' => ['Catégorie professionnelle', $applicationform->professionalcategory?->name],
-            'worktime' => ['Temps de travail', $applicationform->worktime?->name],
-            'cgr' => ['Code CGR', $applicationform->cgr],
-            'budgetfeature' => ['Caractéristique budgétaire', $applicationform->budgetfeature?->name],
-            'grossremuneration' => ['Rémunération brute', $applicationform->grossremuneration],
-            'period' => ['Périodicité', $applicationform->period?->name],
-            'qualification' => ['Qualification', $applicationform->qualification],
-            'reasonforreplacement' => ['Motif de remplacement', $applicationform->reasonforreplacement],
+            'end_at' => [
+                $metadata->label('Applicationforms', 'end_at'),
+                $this->formatDate($applicationform->end_at),
+            ],
+            'candidate_name' => [
+                $metadata->label('Applicationforms', 'candidate_name'),
+                $applicationform->candidate_name,
+            ],
+            'contracttype_id' => [
+                $metadata->label('Applicationforms', 'contracttype_id'),
+                $applicationform->contracttype->name ?? $applicationform->contracttype->code,
+            ],
+            'hiringreason_id' => [
+                $metadata->label('Applicationforms', 'hiringreason_id'),
+                $applicationform->hiringreason->name,
+            ],
+            'professionalcategory_id' => [
+                $metadata->label('Applicationforms', 'professionalcategory_id'),
+                $applicationform->professionalcategory->name,
+            ],
+            'worktime_id' => [
+                $metadata->label('Applicationforms', 'worktime_id'),
+                $applicationform->worktime->name,
+            ],
+            'cgr' => [$metadata->label('Applicationforms', 'cgr'), $applicationform->cgr],
+            'budgetfeature_id' => [
+                $metadata->label('Applicationforms', 'budgetfeature_id'),
+                $applicationform->budgetfeature->name,
+            ],
+            'grossremuneration' => [
+                $metadata->label('Applicationforms', 'grossremuneration'),
+                $applicationform->grossremuneration,
+            ],
+            'period_id' => [
+                $metadata->label('Applicationforms', 'period_id'),
+                $applicationform->period->name,
+            ],
+            'qualification' => [
+                $metadata->label('Applicationforms', 'qualification'),
+                $applicationform->qualification,
+            ],
+            'reasonforreplacement' => [
+                $metadata->label('Applicationforms', 'reasonforreplacement'),
+                $applicationform->reasonforreplacement,
+            ],
             'workingtimedistribution' => [
-                'Répartition du temps de travail',
+                $metadata->label('Applicationforms', 'workingtimedistribution'),
                 $applicationform->workingtimedistribution,
             ],
         ];
@@ -145,14 +185,21 @@ final class ApplicationformPdfService
             default => ['En attente', 'pending'],
         };
         $validation = $step->validation ?? null;
-        $operator = $validation?->user?->display_name ?? $validation?->user?->email ?? '-';
-        $date = $validation?->validated ?? $step->completed_at;
-        $comment = $identity->can('viewZoneCommentaires', $applicationform) ? ($validation?->obs ?? '') : '';
+        $operator = '-';
+        $date = $step->completed_at;
+        $comment = '';
+        if ($validation !== null) {
+            $operator = $validation->user->display_name ?? $validation->user->email ?? '-';
+            $date = $validation->validated ?? $date;
+            $comment = $identity->can('viewZoneCommentaires', $applicationform)
+                ? ($validation->obs ?? '')
+                : '';
+        }
 
         return sprintf(
             '<tr><td>%s</td><td>%s</td><td>%s</td><td class="state %s">%s</td><td>%s</td><td>%s</td></tr>',
             $this->escape((string)($step->sequence_number ?? '-')),
-            $this->escape((string)($step->role?->name ?? '-')),
+            $this->escape((string)($step->role->name ?? '-')),
             $this->escape((string)$operator),
             $status[1],
             $status[0],
@@ -164,9 +211,6 @@ final class ApplicationformPdfService
     /** Formate une date selon la présentation française du document. */
     private function formatDate(mixed $date): string
     {
-        if ($date instanceof DateInterface) {
-            return $date->format('d/m/Y');
-        }
         if ($date instanceof DateTimeInterface) {
             return $date->format('d/m/Y');
         }

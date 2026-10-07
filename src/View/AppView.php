@@ -26,6 +26,7 @@ use Cake\View\View;
  * @link https://book.cakephp.org/5/en/views.html#the-app-view
  * @property \App\View\Helper\TabulatorHelper $Tabulator
  * @property \App\View\Helper\ActionHelper $Action
+ * @property \App\View\Helper\FieldMetadataHelper $FieldMetadata
  */
 class AppView extends View
 {
@@ -49,6 +50,7 @@ class AppView extends View
         // 2. Chargement global des Helpers d'infrastructure et d'actions autorisées.
         $this->loadHelper('Tabulator');
         $this->loadHelper('Action');
+        $this->loadHelper('FieldMetadata');
         // 3. Injection de l'objet $identity dans toutes les vues (.php)
         $identity = $this->getRequest()->getAttribute('identity');
         $this->set('identity', $identity);
