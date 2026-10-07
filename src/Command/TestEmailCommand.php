@@ -4,11 +4,14 @@ declare(strict_types=1);
 namespace App\Command;
 
 use App\Mailer\UserMailer;
+use App\Model\Entity\User;
 use Cake\Command\Command;
 use Cake\Console\Arguments;
+use Cake\Console\CommandFactoryInterface;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Cake\ORM\TableRegistry;
+use Closure;
 
 /**
  * Commande de test pour l'infrastructure d'envoi de courriels.
@@ -16,6 +19,42 @@ use Cake\ORM\TableRegistry;
  */
 class TestEmailCommand extends Command
 {
+    /**
+     * @var \Closure(string): \App\Model\Entity\User
+     */
+    private readonly Closure $createUser;
+
+    /**
+     * @var \Closure(\App\Model\Entity\User): bool
+     */
+    private readonly Closure $sendEmail;
+
+    /**
+     * @param \Cake\Console\CommandFactoryInterface|null $factory Fabrique CakePHP.
+     * @param \Closure(string): \App\Model\Entity\User|null $createUser Fabrique d’utilisateur injectable.
+     * @param \Closure(\App\Model\Entity\User): bool|null $sendEmail Expéditeur injectable.
+     */
+    public function __construct(
+        ?CommandFactoryInterface $factory = null,
+        ?Closure $createUser = null,
+        ?Closure $sendEmail = null,
+    ) {
+        parent::__construct($factory);
+        $this->createUser = $createUser ?? static function (string $email): User {
+            $usersTable = TableRegistry::getTableLocator()->get('Users');
+
+            return $usersTable->newEntity([
+                'email' => $email,
+                'firstname' => 'John',
+                'lastname' => 'Doe',
+                'token' => 'TEST-TOKEN-123456789',
+            ]);
+        };
+        $this->sendEmail = $sendEmail ?? static function ($user): bool {
+            return (new UserMailer())->safeSend('forgotPassword', [$user]);
+        };
+    }
+
     /**
      * Configure les options et arguments de la commande.
      *
@@ -46,18 +85,10 @@ class TestEmailCommand extends Command
         $io->info("Préparation du courriel de test (forgotPassword) pour : {$email}");
 
         // Simulation d'une entité User (Skinny Controller / Command logic)
-        $usersTable = TableRegistry::getTableLocator()->get('Users');
-        $dummyUser = $usersTable->newEntity([
-            'email' => $email,
-            'firstname' => 'John',
-            'lastname' => 'Doe',
-            'token' => 'TEST-TOKEN-123456789',
-        ]);
-
-        $mailer = new UserMailer();
+        $dummyUser = ($this->createUser)($email);
 
         // Utilisation de la méthode sécurisée de notre AppMailer
-        if ($mailer->safeSend('forgotPassword', [$dummyUser])) {
+        if (($this->sendEmail)($dummyUser)) {
             $io->success('Succès : Le courriel a été accepté par le relais SMTP.');
 
             return static::CODE_SUCCESS;

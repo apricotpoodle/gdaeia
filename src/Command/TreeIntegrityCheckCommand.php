@@ -7,15 +7,56 @@ use App\Service\TreeIntegrityAlertService;
 use App\Service\TreeIntegrityChecker;
 use Cake\Command\Command;
 use Cake\Console\Arguments;
+use Cake\Console\CommandFactoryInterface;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 use Cake\Core\Configure;
 use Cake\ORM\TableRegistry;
+use Closure;
 use InvalidArgumentException;
 
 /** Vérifie, sans modifier les données, les arbres TreeBehavior de l'application. */
 final class TreeIntegrityCheckCommand extends Command
 {
+    /**
+     * @var \Closure(string|null): list<array<string, mixed>>
+     */
+    private readonly Closure $checkTrees;
+
+    /**
+     * @var \Closure(): list<string>
+     */
+    private readonly Closure $configurationErrors;
+
+    /**
+     * @var \Closure(list<array<string, mixed>>): bool
+     */
+    private readonly Closure $sendAlert;
+
+    /**
+     * @param \Cake\Console\CommandFactoryInterface|null $factory Fabrique CakePHP.
+     * @param \Closure(string|null): list<array<string, mixed>>|null $checkTrees Contrôle injectable.
+     * @param \Closure(): list<string>|null $configurationErrors Validateur injectable.
+     * @param \Closure(list<array<string, mixed>>): bool|null $sendAlert Expéditeur injectable.
+     */
+    public function __construct(
+        ?CommandFactoryInterface $factory = null,
+        ?Closure $checkTrees = null,
+        ?Closure $configurationErrors = null,
+        ?Closure $sendAlert = null,
+    ) {
+        parent::__construct($factory);
+        $this->checkTrees = $checkTrees ?? static function (?string $tableName): array {
+            return (new TreeIntegrityChecker(TableRegistry::getTableLocator()))->check($tableName);
+        };
+        $this->configurationErrors = $configurationErrors ?? static function (): array {
+            return (new TreeIntegrityAlertService())->configurationErrors();
+        };
+        $this->sendAlert = $sendAlert ?? static function (array $reports): bool {
+            return (new TreeIntegrityAlertService())->send($reports);
+        };
+    }
+
     /**
      * Configure le filtrage de table et les formats de rapport disponibles.
      *
@@ -54,8 +95,7 @@ final class TreeIntegrityCheckCommand extends Command
         }
         $tableName = $args->getOption('table');
         try {
-            $checker = new TreeIntegrityChecker(TableRegistry::getTableLocator());
-            $reports = $checker->check(is_string($tableName) ? $tableName : null);
+            $reports = ($this->checkTrees)(is_string($tableName) ? $tableName : null);
         } catch (InvalidArgumentException $exception) {
             $io->error($exception->getMessage());
 
@@ -110,8 +150,7 @@ final class TreeIntegrityCheckCommand extends Command
      */
     private function sendIntegrityAlert(array $reports, ConsoleIo $io, bool $displayStatus): void
     {
-        $alertService = new TreeIntegrityAlertService();
-        $errors = $alertService->configurationErrors();
+        $errors = ($this->configurationErrors)();
         if ($errors !== []) {
             if ($displayStatus) {
                 foreach ($errors as $error) {
@@ -127,9 +166,7 @@ final class TreeIntegrityCheckCommand extends Command
             static fn(array $report): bool => $report['success'] === false,
         ));
         $recipient = (string)Configure::read('TreeIntegrity.alertRecipient', '');
-        if (
-            $alertService->send($failedReports)
-        ) {
+        if (($this->sendAlert)($failedReports)) {
             if ($displayStatus) {
                 $io->warning(__('Alerte d’intégrité envoyée à {0}.', $recipient));
             }
@@ -150,7 +187,7 @@ final class TreeIntegrityCheckCommand extends Command
      */
     private function checkAlertConfiguration(ConsoleIo $io): int
     {
-        $errors = (new TreeIntegrityAlertService())->configurationErrors();
+        $errors = ($this->configurationErrors)();
         if ($errors === []) {
             $io->success(__('Configuration des alertes TreeBehavior valide.'));
 
