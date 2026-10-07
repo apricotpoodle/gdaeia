@@ -93,8 +93,12 @@ class UserDepartmentsTable extends Table
             'errorField' => UserDepartment::FIELD_USER_ID,
             'message' => __('Cet utilisateur est déjà associé à ce département.'),
         ]);
-        $rules->add($rules->existsIn([UserDepartment::FIELD_USER_ID], 'Users'), ['errorField' => UserDepartment::FIELD_USER_ID]);
-        $rules->add($rules->existsIn([UserDepartment::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => UserDepartment::FIELD_DEPARTMENT_ID]);
+        $rules->add($rules->existsIn([UserDepartment::FIELD_USER_ID], 'Users'), [
+            'errorField' => UserDepartment::FIELD_USER_ID,
+        ]);
+        $rules->add($rules->existsIn([UserDepartment::FIELD_DEPARTMENT_ID], 'Departments'), [
+            'errorField' => UserDepartment::FIELD_DEPARTMENT_ID,
+        ]);
 
         return $rules;
     }

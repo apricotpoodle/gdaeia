@@ -119,7 +119,9 @@ class ApplicationvalidationstepsTable extends Table
         $rules->add($rules->existsIn([Applicationvalidationstep::FIELD_APPLICATIONFORM_ID], 'Applicationforms'), [
             'errorField' => Applicationvalidationstep::FIELD_APPLICATIONFORM_ID,
         ]);
-        $rules->add($rules->existsIn([Applicationvalidationstep::FIELD_ROLE_ID], 'Roles'), ['errorField' => Applicationvalidationstep::FIELD_ROLE_ID]);
+        $rules->add($rules->existsIn([Applicationvalidationstep::FIELD_ROLE_ID], 'Roles'), [
+            'errorField' => Applicationvalidationstep::FIELD_ROLE_ID,
+        ]);
         $rules->add($rules->existsIn([Applicationvalidationstep::FIELD_VALIDATIONSTATUS_ID], 'Validationstatuses'), [
             'errorField' => Applicationvalidationstep::FIELD_VALIDATIONSTATUS_ID,
             'allowNullableNulls' => true,

@@ -77,7 +77,9 @@ class CommentsTable extends AppTable
     /** @inheritDoc */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn([Comment::FIELD_PARENT_ID], 'ParentComments'), ['errorField' => Comment::FIELD_PARENT_ID]);
+        $rules->add($rules->existsIn([Comment::FIELD_PARENT_ID], 'ParentComments'), [
+            'errorField' => Comment::FIELD_PARENT_ID,
+        ]);
         $rules->add($rules->existsIn([Comment::FIELD_USER_ID], 'Users'), ['errorField' => Comment::FIELD_USER_ID]);
 
         return $rules;

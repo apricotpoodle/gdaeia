@@ -109,7 +109,9 @@ class ValidationVisasTable extends Table
         $rules->add($rules->existsIn([ValidationVisa::FIELD_APPLICATIONFORM_ID], 'Applicationforms'), [
             'errorField' => ValidationVisa::FIELD_APPLICATIONFORM_ID,
         ]);
-        $rules->add($rules->existsIn([ValidationVisa::FIELD_ROLE_ID], 'Roles'), ['errorField' => ValidationVisa::FIELD_ROLE_ID]);
+        $rules->add($rules->existsIn([ValidationVisa::FIELD_ROLE_ID], 'Roles'), [
+            'errorField' => ValidationVisa::FIELD_ROLE_ID,
+        ]);
 
         return $rules;
     }

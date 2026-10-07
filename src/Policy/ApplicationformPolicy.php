@@ -48,7 +48,10 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        if ($user->get(User::FIELD_ISSUPERUSER) || $applicationform->get(Applicationform::FIELD_USER_ID) === $user->get(User::FIELD_ID)) {
+        if (
+            $user->get(User::FIELD_ISSUPERUSER)
+            || $applicationform->get(Applicationform::FIELD_USER_ID) === $user->get(User::FIELD_ID)
+        ) {
             return true;
         }
         if ($applicationform->get(Applicationform::FIELD_DEPARTMENT_ID) === null) {
@@ -58,7 +61,9 @@ class ApplicationformPolicy extends AppPolicy
         return TableRegistry::getTableLocator()->get('UserDepartments')->find()
             ->where([
                 'UserDepartments.' . UserDepartment::FIELD_USER_ID => $user->get(User::FIELD_ID),
-                'UserDepartments.' . UserDepartment::FIELD_DEPARTMENT_ID => $applicationform->get(Applicationform::FIELD_DEPARTMENT_ID),
+                'UserDepartments.' . UserDepartment::FIELD_DEPARTMENT_ID => $applicationform->get(
+                    Applicationform::FIELD_DEPARTMENT_ID,
+                ),
             ])
             ->count() > 0;
     }
@@ -165,7 +170,10 @@ class ApplicationformPolicy extends AppPolicy
         if (
             $user === null
             || !$this->canView($identity, $applicationform)
-            || ($applicationform->get(Applicationform::FIELD_USER_ID) !== $user->get(User::FIELD_ID) && (int)$user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN)
+            || (
+                $applicationform->get(Applicationform::FIELD_USER_ID) !== $user->get(User::FIELD_ID)
+                && (int)$user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN
+            )
         ) {
             return false;
         }
@@ -175,7 +183,9 @@ class ApplicationformPolicy extends AppPolicy
         }
 
         return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
-            ->where([ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID)])
+            ->where([
+                ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID),
+            ])
             ->count() === 0;
     }
 
@@ -186,13 +196,18 @@ class ApplicationformPolicy extends AppPolicy
         if (
             $user === null
             || !$this->canView($identity, $applicationform)
-            || ((int)$user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN && !$user->get(User::FIELD_ISSUPERUSER))
+            || (
+                (int)$user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN
+                && !$user->get(User::FIELD_ISSUPERUSER)
+            )
         ) {
             return false;
         }
 
         return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
-            ->where([ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID)])
+            ->where([
+                ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID),
+            ])
             ->count() === 1;
     }
 

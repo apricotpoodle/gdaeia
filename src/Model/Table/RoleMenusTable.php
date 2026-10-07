@@ -103,9 +103,15 @@ class RoleMenusTable extends Table
             'errorField' => RoleMenu::FIELD_ROLE_ID,
             'message' => __('Cette option de menu est déjà associée à ce rôle et à ce département.'),
         ]);
-        $rules->add($rules->existsIn([RoleMenu::FIELD_ROLE_ID], 'Roles'), ['errorField' => RoleMenu::FIELD_ROLE_ID]);
-        $rules->add($rules->existsIn([RoleMenu::FIELD_MENU_ID], 'Menus'), ['errorField' => RoleMenu::FIELD_MENU_ID]);
-        $rules->add($rules->existsIn([RoleMenu::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => RoleMenu::FIELD_DEPARTMENT_ID]);
+        $rules->add($rules->existsIn([RoleMenu::FIELD_ROLE_ID], 'Roles'), [
+            'errorField' => RoleMenu::FIELD_ROLE_ID,
+        ]);
+        $rules->add($rules->existsIn([RoleMenu::FIELD_MENU_ID], 'Menus'), [
+            'errorField' => RoleMenu::FIELD_MENU_ID,
+        ]);
+        $rules->add($rules->existsIn([RoleMenu::FIELD_DEPARTMENT_ID], 'Departments'), [
+            'errorField' => RoleMenu::FIELD_DEPARTMENT_ID,
+        ]);
 
         return $rules;
     }

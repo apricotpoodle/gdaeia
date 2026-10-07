@@ -251,7 +251,9 @@ class ApplicationformsTable extends Table
                         return true;
                     }
 
-                    return strtotime((string)$value) >= strtotime((string)$context['data'][Applicationform::FIELD_BEGIN_AT]);
+                    return strtotime((string)$value) >= strtotime(
+                        (string)$context['data'][Applicationform::FIELD_BEGIN_AT],
+                    );
                 },
                 'message' => __('La date de fin doit être strictement supérieure à la date de début.'),
             ])
@@ -266,7 +268,9 @@ class ApplicationformsTable extends Table
                     // Récupération du type de contrat
                     $contracttypesTable = TableRegistry::getTableLocator()->get('Contracttypes');
                     /** @var \App\Model\Entity\Contracttype|null $contractType */
-                    $contractType = $contracttypesTable->find()->where([Contracttype::FIELD_ID => $contractTypeId])->first();
+                    $contractType = $contracttypesTable->find()
+                        ->where([Contracttype::FIELD_ID => $contractTypeId])
+                        ->first();
 
                     if (!$contractType) {
                         return true;
@@ -321,17 +325,33 @@ class ApplicationformsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn([Applicationform::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => Applicationform::FIELD_DEPARTMENT_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_USER_ID], 'Users'), ['errorField' => Applicationform::FIELD_USER_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_CONTRACTTYPE_ID], 'Contracttypes'), ['errorField' => Applicationform::FIELD_CONTRACTTYPE_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_HIRINGREASON_ID], 'Hiringreasons'), ['errorField' => Applicationform::FIELD_HIRINGREASON_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_BUDGETFEATURE_ID], 'Budgetfeatures'), ['errorField' => Applicationform::FIELD_BUDGETFEATURE_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_DEPARTMENT_ID], 'Departments'), [
+            'errorField' => Applicationform::FIELD_DEPARTMENT_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_USER_ID], 'Users'), [
+            'errorField' => Applicationform::FIELD_USER_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_CONTRACTTYPE_ID], 'Contracttypes'), [
+            'errorField' => Applicationform::FIELD_CONTRACTTYPE_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_HIRINGREASON_ID], 'Hiringreasons'), [
+            'errorField' => Applicationform::FIELD_HIRINGREASON_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_BUDGETFEATURE_ID], 'Budgetfeatures'), [
+            'errorField' => Applicationform::FIELD_BUDGETFEATURE_ID,
+        ]);
         $rules->add($rules->existsIn([Applicationform::FIELD_PROFESSIONALCATEGORY_ID], 'Professionalcategories'), [
             'errorField' => Applicationform::FIELD_PROFESSIONALCATEGORY_ID,
         ]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_WORKTIME_ID], 'Worktimes'), ['errorField' => Applicationform::FIELD_WORKTIME_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_PERIOD_ID], 'Periods'), ['errorField' => Applicationform::FIELD_PERIOD_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_YESNO_ID], 'Yesnos'), ['errorField' => Applicationform::FIELD_YESNO_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_WORKTIME_ID], 'Worktimes'), [
+            'errorField' => Applicationform::FIELD_WORKTIME_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_PERIOD_ID], 'Periods'), [
+            'errorField' => Applicationform::FIELD_PERIOD_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_YESNO_ID], 'Yesnos'), [
+            'errorField' => Applicationform::FIELD_YESNO_ID,
+        ]);
 
         return $rules;
     }

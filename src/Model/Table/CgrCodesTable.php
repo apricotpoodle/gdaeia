@@ -112,7 +112,9 @@ class CgrCodesTable extends Table
             'errorField' => CgrCode::FIELD_DEPARTMENT_ID,
             'message' => __('Cette combinaison de département, type et code existe déjà.'),
         ]);
-        $rules->add($rules->existsIn([CgrCode::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => CgrCode::FIELD_DEPARTMENT_ID]);
+        $rules->add($rules->existsIn([CgrCode::FIELD_DEPARTMENT_ID], 'Departments'), [
+            'errorField' => CgrCode::FIELD_DEPARTMENT_ID,
+        ]);
 
         return $rules;
     }

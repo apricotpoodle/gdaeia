@@ -90,12 +90,20 @@ class ValidationsequencesTable extends Table
 
         $validator
             ->integer(Validationsequence::FIELD_SEQUENCE)
-            ->greaterThanOrEqual(Validationsequence::FIELD_SEQUENCE, 1, __('Le numéro de séquence doit être supérieur ou égal à 1.'))
+            ->greaterThanOrEqual(
+                Validationsequence::FIELD_SEQUENCE,
+                1,
+                __('Le numéro de séquence doit être supérieur ou égal à 1.'),
+            )
             ->notEmptyString(Validationsequence::FIELD_SEQUENCE);
 
         $validator
             ->nonNegativeInteger(Validationsequence::FIELD_REMINDER_DELAY_HOURS)
-            ->greaterThan(Validationsequence::FIELD_REMINDER_DELAY_HOURS, 0, __('Le délai doit être un entier positif.'))
+            ->greaterThan(
+                Validationsequence::FIELD_REMINDER_DELAY_HOURS,
+                0,
+                __('Le délai doit être un entier positif.'),
+            )
             ->allowEmptyString(Validationsequence::FIELD_REMINDER_DELAY_HOURS);
 
         $validator
@@ -114,12 +122,19 @@ class ValidationsequencesTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique([Validationsequence::FIELD_DEPARTMENT_ID, Validationsequence::FIELD_ROLE_ID]), [
+        $rules->add($rules->isUnique([
+            Validationsequence::FIELD_DEPARTMENT_ID,
+            Validationsequence::FIELD_ROLE_ID,
+        ]), [
             'errorField' => Validationsequence::FIELD_DEPARTMENT_ID,
             'message' => __('Ce rôle possède déjà une séquence de validation pour ce département.'),
         ]);
-        $rules->add($rules->existsIn([Validationsequence::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => Validationsequence::FIELD_DEPARTMENT_ID]);
-        $rules->add($rules->existsIn([Validationsequence::FIELD_ROLE_ID], 'Roles'), ['errorField' => Validationsequence::FIELD_ROLE_ID]);
+        $rules->add($rules->existsIn([Validationsequence::FIELD_DEPARTMENT_ID], 'Departments'), [
+            'errorField' => Validationsequence::FIELD_DEPARTMENT_ID,
+        ]);
+        $rules->add($rules->existsIn([Validationsequence::FIELD_ROLE_ID], 'Roles'), [
+            'errorField' => Validationsequence::FIELD_ROLE_ID,
+        ]);
 
         return $rules;
     }

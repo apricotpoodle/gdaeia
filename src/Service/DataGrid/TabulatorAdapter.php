@@ -167,11 +167,15 @@ class TabulatorAdapter
         $validEnd = $endDate !== false && $endDate->format('Y-m-d') === $end;
 
         if (!$validStart || !$validEnd) {
-            throw new UnprocessableContentException(__('Les dates de la plage doivent respecter le format AAAA-MM-JJ.'));
+            throw new UnprocessableContentException(
+                __('Les dates de la plage doivent respecter le format AAAA-MM-JJ.'),
+            );
         }
 
         if ($startDate > $endDate) {
-            throw new UnprocessableContentException(__('La date de début doit être antérieure ou égale à la date de fin.'));
+            throw new UnprocessableContentException(
+                __('La date de début doit être antérieure ou égale à la date de fin.'),
+            );
         }
     }
 

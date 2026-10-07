@@ -185,7 +185,11 @@ class ApplicationformsController extends AppController
         /** @var list<\App\Model\Entity\Applicationvalidationstep> $rawSteps */
         $rawSteps = $run === null ? [] : $this->fetchTable('Applicationvalidationsteps')->find()
             ->contain(['Roles', 'Validations'])
-            ->where([Applicationvalidationstep::FIELD_VALIDATION_WORKFLOW_RUN_ID => $run->get(ValidationWorkflowRun::FIELD_ID)])
+            ->where([
+                Applicationvalidationstep::FIELD_VALIDATION_WORKFLOW_RUN_ID => $run->get(
+                    ValidationWorkflowRun::FIELD_ID,
+                ),
+            ])
             ->orderByAsc('sequence_number')
             ->all()
             ->toList();
@@ -195,7 +199,10 @@ class ApplicationformsController extends AppController
             : array_values(array_filter(
                 $rawSteps,
                 function ($step) use ($workflow, $actor): bool {
-                    if ((int)$step->get(Applicationvalidationstep::FIELD_ROLE_ID) === (int)$actor->get(User::FIELD_ROLE_ID)) {
+                    if (
+                        (int)$step->get(Applicationvalidationstep::FIELD_ROLE_ID)
+                        === (int)$actor->get(User::FIELD_ROLE_ID)
+                    ) {
                         return true;
                     }
 
@@ -215,7 +222,10 @@ class ApplicationformsController extends AppController
                 'comment' => $step->validation?->obs,
                 'role' => [
                     'id' => (int)$step->get(Applicationvalidationstep::FIELD_ROLE_ID),
-                    'name' => (string)($step->role?->get(Role::FIELD_NAME) ?? __('Rôle n°{0}', $step->get(Applicationvalidationstep::FIELD_ROLE_ID))),
+                    'name' => (string)($step->role?->get(Role::FIELD_NAME) ?? __(
+                        'Rôle n°{0}',
+                        $step->get(Applicationvalidationstep::FIELD_ROLE_ID),
+                    )),
                 ],
                 'can_vote' => $canVoteNormally || $canOverride,
                 'can_override' => $canOverride,
@@ -267,7 +277,10 @@ class ApplicationformsController extends AppController
      */
     private function sendFinalResult(Applicationform $applicationform, string $state, ?string $comment): void
     {
-        $loaded = $this->Applicationforms->get($applicationform->get(Applicationform::FIELD_ID), contain: ['Users', 'Departments' => ['Managers']]);
+        $loaded = $this->Applicationforms->get(
+            $applicationform->get(Applicationform::FIELD_ID),
+            contain: ['Users', 'Departments' => ['Managers']],
+        );
         $recipients = [$loaded->user];
         if ($loaded->department->manager !== null) {
             $recipients[] = $loaded->department->manager;
@@ -507,7 +520,9 @@ class ApplicationformsController extends AppController
         if (
             $activeRun !== null
             && isset($filteredData['department_id'])
-            && (int)$filteredData[Applicationform::FIELD_DEPARTMENT_ID] !== (int)$applicationform->get(Applicationform::FIELD_DEPARTMENT_ID)
+            && (int)$filteredData[Applicationform::FIELD_DEPARTMENT_ID] !== (int)$applicationform->get(
+                Applicationform::FIELD_DEPARTMENT_ID,
+            )
         ) {
             return $this->workflowResponse(
                 false,
@@ -630,7 +645,12 @@ class ApplicationformsController extends AppController
         }
 
         // 4. Droits dynamiques de la grille
-        $rightsFormatter = $this->createGridRightsFormatter(['launchValidation', 'resetValidation', 'viewpdf', 'duplicate']);
+        $rightsFormatter = $this->createGridRightsFormatter([
+            'launchValidation',
+            'resetValidation',
+            'viewpdf',
+            'duplicate',
+        ]);
 
         // 5. Rendu structuré pour Tabulator
         $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);

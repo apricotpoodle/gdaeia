@@ -123,8 +123,12 @@ class ValidationsTable extends Table
         $rules->add($rules->existsIn([Validation::FIELD_APPLICATIONFORM_ID], 'Applicationforms'), [
             'errorField' => Validation::FIELD_APPLICATIONFORM_ID,
         ]);
-        $rules->add($rules->existsIn([Validation::FIELD_USER_ID], 'Users'), ['errorField' => Validation::FIELD_USER_ID]);
-        $rules->add($rules->existsIn([Validation::FIELD_ROLE_ID], 'Roles'), ['errorField' => Validation::FIELD_ROLE_ID]);
+        $rules->add($rules->existsIn([Validation::FIELD_USER_ID], 'Users'), [
+            'errorField' => Validation::FIELD_USER_ID,
+        ]);
+        $rules->add($rules->existsIn([Validation::FIELD_ROLE_ID], 'Roles'), [
+            'errorField' => Validation::FIELD_ROLE_ID,
+        ]);
         $rules->add($rules->existsIn([Validation::FIELD_VALIDATIONSTATUS_ID], 'Validationstatuses'), [
             'errorField' => Validation::FIELD_VALIDATIONSTATUS_ID,
         ]);
