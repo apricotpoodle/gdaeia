@@ -62,7 +62,7 @@ class RolesController extends AppController
         $role = $this->Roles->patchEntity($role, $this->request->getData(), $this->patchOptions());
 
         if ($this->Roles->save($role)) {
-            return $this->jsonSuccess(['id' => $role->id], __('Le rôle a été créé avec succès.'));
+            return $this->jsonSuccess(['id' => $role->get(Role::FIELD_ID)], __('Le rôle a été créé avec succès.'));
         }
 
         return $this->validationErrorResponse($role, 'Roles');

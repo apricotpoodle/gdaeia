@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\FieldAuthorization;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -41,13 +42,13 @@ class FieldAuthorizationsTable extends Table
         parent::initialize($config);
 
         $this->setTable('field_authorizations');
-        $this->setDisplayField('resource');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(FieldAuthorization::FIELD_RESOURCE);
+        $this->setPrimaryKey(FieldAuthorization::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
         $this->belongsTo('Roles', [
-            'foreignKey' => 'role_id',
+            'foreignKey' => FieldAuthorization::FIELD_ROLE_ID,
             'joinType' => 'INNER',
         ]);
     }
@@ -61,26 +62,26 @@ class FieldAuthorizationsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->nonNegativeInteger('role_id')
-            ->notEmptyString('role_id');
+            ->nonNegativeInteger(FieldAuthorization::FIELD_ROLE_ID)
+            ->notEmptyString(FieldAuthorization::FIELD_ROLE_ID);
 
         $validator
-            ->scalar('resource')
-            ->maxLength('resource', 50)
-            ->requirePresence('resource', 'create')
-            ->notEmptyString('resource');
+            ->scalar(FieldAuthorization::FIELD_RESOURCE)
+            ->maxLength(FieldAuthorization::FIELD_RESOURCE, 50)
+            ->requirePresence(FieldAuthorization::FIELD_RESOURCE, 'create')
+            ->notEmptyString(FieldAuthorization::FIELD_RESOURCE);
 
         $validator
-            ->scalar('field')
-            ->maxLength('field', 50)
-            ->requirePresence('field', 'create')
-            ->notEmptyString('field');
+            ->scalar(FieldAuthorization::FIELD_FIELD)
+            ->maxLength(FieldAuthorization::FIELD_FIELD, 50)
+            ->requirePresence(FieldAuthorization::FIELD_FIELD, 'create')
+            ->notEmptyString(FieldAuthorization::FIELD_FIELD);
 
         $validator
-            ->scalar('access_level')
-            ->maxLength('access_level', 20)
-            ->notEmptyString('access_level')
-            ->inList('access_level', ['EDIT', 'VIEW', 'NONE'], __('Le niveau d’accès est invalide.'));
+            ->scalar(FieldAuthorization::FIELD_ACCESS_LEVEL)
+            ->maxLength(FieldAuthorization::FIELD_ACCESS_LEVEL, 20)
+            ->notEmptyString(FieldAuthorization::FIELD_ACCESS_LEVEL)
+            ->inList(FieldAuthorization::FIELD_ACCESS_LEVEL, ['EDIT', 'VIEW', 'NONE'], __('Le niveau d’accès est invalide.'));
 
         return $validator;
     }
@@ -94,11 +95,11 @@ class FieldAuthorizationsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['role_id', 'resource', 'field']), [
-            'errorField' => 'role_id',
+        $rules->add($rules->isUnique([FieldAuthorization::FIELD_ROLE_ID, FieldAuthorization::FIELD_RESOURCE, FieldAuthorization::FIELD_FIELD]), [
+            'errorField' => FieldAuthorization::FIELD_ROLE_ID,
             'message' => __('Une autorisation existe déjà pour ce rôle, cette ressource et ce champ.'),
         ]);
-        $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
+        $rules->add($rules->existsIn([FieldAuthorization::FIELD_ROLE_ID], 'Roles'), ['errorField' => FieldAuthorization::FIELD_ROLE_ID]);
 
         return $rules;
     }

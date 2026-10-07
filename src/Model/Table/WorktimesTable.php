@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Worktime;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 
@@ -38,8 +39,8 @@ class WorktimesTable extends AppTable
         parent::initialize($config);
 
         $this->setTable('worktimes');
-        $this->setDisplayField('name');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Worktime::FIELD_NAME);
+        $this->setPrimaryKey(Worktime::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
@@ -57,29 +58,29 @@ class WorktimesTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->boolean('base')
-            ->notEmptyString('base');
+            ->boolean(Worktime::FIELD_BASE)
+            ->notEmptyString(Worktime::FIELD_BASE);
 
         $validator
-            ->scalar('code')
-            ->maxLength('code', 16)
-            ->requirePresence('code', 'create')
-            ->notEmptyString('code')
+            ->scalar(Worktime::FIELD_CODE)
+            ->maxLength(Worktime::FIELD_CODE, 16)
+            ->requirePresence(Worktime::FIELD_CODE, 'create')
+            ->notEmptyString(Worktime::FIELD_CODE)
             /** @link validateUnique() */
-            ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Worktime::FIELD_CODE, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('name')
-            ->maxLength('name', 32)
-            ->requirePresence('name', 'create')
-            ->notEmptyString('name')
+            ->scalar(Worktime::FIELD_NAME)
+            ->maxLength(Worktime::FIELD_NAME, 32)
+            ->requirePresence(Worktime::FIELD_NAME, 'create')
+            ->notEmptyString(Worktime::FIELD_NAME)
             /** @link validateUnique() */
-            ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Worktime::FIELD_NAME, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('sort')
-            ->maxLength('sort', 32)
-            ->notEmptyString('sort');
+            ->scalar(Worktime::FIELD_SORT)
+            ->maxLength(Worktime::FIELD_SORT, 32)
+            ->notEmptyString(Worktime::FIELD_SORT);
 
         return $validator;
     }
@@ -93,8 +94,8 @@ class WorktimesTable extends AppTable
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['code']), ['errorField' => 'code']);
-        $rules->add($rules->isUnique(['name']), ['errorField' => 'name']);
+        $rules->add($rules->isUnique([Worktime::FIELD_CODE]), ['errorField' => Worktime::FIELD_CODE]);
+        $rules->add($rules->isUnique([Worktime::FIELD_NAME]), ['errorField' => Worktime::FIELD_NAME]);
 
         return $rules;
     }

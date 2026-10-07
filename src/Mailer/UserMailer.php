@@ -25,7 +25,7 @@ class UserMailer extends AppMailer
         $fullBaseUrl = Configure::read('App.fullBaseUrl', 'http://localhost');
         $resetUrl = $fullBaseUrl . '/users/reset-password/' . $user->token;
 
-        $this->setTo($user->email)
+        $this->setTo($user->get(User::FIELD_EMAIL))
             ->setSubject('Demande de réinitialisation de votre mot de passe')
             ->setViewVars([
                 'user' => $user,

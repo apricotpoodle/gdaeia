@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Policy\Trait;
 
+use App\Model\Entity\User;
 use Authorization\IdentityInterface;
 use Cake\Datasource\EntityInterface;
 
@@ -22,10 +23,10 @@ trait ImpersonationCheckTrait
             return false;
         }
 
-        return $entity->has('is_impersonating')
-            && $entity->get('is_impersonating') === true
-            && $entity->has('original_admin_id')
-            && !empty($entity->get('original_admin_id'));
+        return $entity->has(User::FIELD_IS_IMPERSONATING)
+            && $entity->get(User::FIELD_IS_IMPERSONATING) === true
+            && $entity->has(User::FIELD_ORIGINAL_ADMIN_ID)
+            && !empty($entity->get(User::FIELD_ORIGINAL_ADMIN_ID));
     }
 
     /**
@@ -43,6 +44,6 @@ trait ImpersonationCheckTrait
         /** @var \Cake\Datasource\EntityInterface $entity */
         $entity = $user->getOriginalData();
 
-        return $entity->get('original_admin_id');
+        return $entity->get(User::FIELD_ORIGINAL_ADMIN_ID);
     }
 }

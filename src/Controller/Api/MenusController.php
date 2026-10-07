@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use App\Model\Entity\Menu;
+use App\Model\Entity\Role;
 use App\Model\Entity\User;
 use App\Service\DataGrid\TabulatorAdapter;
 use Cake\Event\EventInterface;
@@ -67,13 +69,13 @@ class MenusController extends AppController
             $matchingQuery = $this->Menus->find();
             $matchingQuery = $adapter->adaptRequest($this->request, $matchingQuery);
             $matchingMenus = $matchingQuery
-                ->select(['id', 'lft', 'rght'])
+                ->select([Menu::FIELD_ID, Menu::FIELD_LFT, Menu::FIELD_RGHT])
                 ->all()
                 ->toList();
 
             $rootCandidates = $this->Menus->find()
-                ->select(['id', 'lft', 'rght'])
-                ->where(['parent_id IS' => null])
+                ->select([Menu::FIELD_ID, Menu::FIELD_LFT, Menu::FIELD_RGHT])
+                ->where([Menu::FIELD_PARENT_ID . ' IS' => null])
                 ->all()
                 ->toList();
 
@@ -81,10 +83,10 @@ class MenusController extends AppController
             foreach ($matchingMenus as $matchingMenu) {
                 foreach ($rootCandidates as $rootCandidate) {
                     if (
-                        (int)$rootCandidate->get('lft') <= (int)$matchingMenu->get('lft')
-                        && (int)$rootCandidate->get('rght') >= (int)$matchingMenu->get('rght')
+                        (int)$rootCandidate->get(Menu::FIELD_LFT) <= (int)$matchingMenu->get(Menu::FIELD_LFT)
+                        && (int)$rootCandidate->get(Menu::FIELD_RGHT) >= (int)$matchingMenu->get(Menu::FIELD_RGHT)
                     ) {
-                        $rootId = (int)$rootCandidate->get('id');
+                        $rootId = (int)$rootCandidate->get(Menu::FIELD_ID);
                         $rootIds[$rootId] = $rootId;
                         break;
                     }
@@ -94,8 +96,8 @@ class MenusController extends AppController
         }
 
         $rootsQuery = $this->Menus->find()
-            ->where(['parent_id IS' => null])
-            ->orderBy(['Menus.lft' => 'ASC']);
+            ->where([Menu::FIELD_PARENT_ID . ' IS' => null])
+            ->orderBy(['Menus.' . Menu::FIELD_LFT => 'ASC']);
         if ($rootIds !== null) {
             $rootsQuery->where($rootIds === [] ? ['1 = 0'] : ['id IN' => $rootIds]);
         }
@@ -117,14 +119,14 @@ class MenusController extends AppController
         $branchConditions = [];
         foreach ($rootRows as $root) {
             $branchConditions[] = [
-                'Menus.lft >=' => (int)$root->lft,
-                'Menus.rght <=' => (int)$root->rght,
+                'Menus.' . Menu::FIELD_LFT . ' >=' => (int)$root->get(Menu::FIELD_LFT),
+                'Menus.' . Menu::FIELD_RGHT . ' <=' => (int)$root->get(Menu::FIELD_RGHT),
             ];
         }
 
         $menus = [];
         if ($branchConditions !== []) {
-            $menus = $this->Menus->find('threaded')
+                $menus = $this->Menus->find('threaded')
                 ->where(['OR' => $branchConditions])
                 ->orderBy(['Menus.lft' => 'ASC'])
                 ->all();
@@ -473,11 +475,11 @@ class MenusController extends AppController
             $query->where(['1 = 0']);
         } else {
             /** @var bool $issuperuser */
-            $issuperuser = $user->get('issuperuser') ?? false;
+            $issuperuser = $user->get(User::FIELD_ISSUPERUSER) ?? false;
 
             if (!$issuperuser) {
                 /** @var int|null $roleId */
-                $roleId = $user->get('role_id');
+                $roleId = $user->get(User::FIELD_ROLE_ID);
                 if ($roleId !== null) {
                     $roleMenusTable = TableRegistry::getTableLocator()->get('RoleMenus');
 
@@ -503,19 +505,19 @@ class MenusController extends AppController
                 $userTable = TableRegistry::getTableLocator()->get('Users');
 
                 /** @var \App\Model\Entity\User $userWithRole */
-                $userWithRole = $userTable->get($user->get('id'), contain: ['Roles']);
+                $userWithRole = $userTable->get($user->get(User::FIELD_ID), contain: ['Roles']);
 
                 $userData = [
-                    'email' => $userWithRole->get('email'),
-                    'role_name' => $userWithRole->role ? $userWithRole->role->get('name') : 'Sans Rôle',
-                    'issuperuser' => (bool)$userWithRole->get('issuperuser'),
+                    'email' => $userWithRole->get(User::FIELD_EMAIL),
+                    'role_name' => $userWithRole->role ? $userWithRole->role->get(Role::FIELD_NAME) : 'Sans Rôle',
+                    'issuperuser' => (bool)$userWithRole->get(User::FIELD_ISSUPERUSER),
                     'is_impersonated' => $this->Authentication->isImpersonating(),
                 ];
             } catch (Throwable $th) {
                 $userData = [
-                    'email' => $user->get('email'),
+                    'email' => $user->get(User::FIELD_EMAIL),
                     'role_name' => 'Utilisateur',
-                    'issuperuser' => (bool)$user->get('issuperuser'),
+                    'issuperuser' => (bool)$user->get(User::FIELD_ISSUPERUSER),
                     'is_impersonated' => $this->Authentication->isImpersonating(),
                 ];
             }

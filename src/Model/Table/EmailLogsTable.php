@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\EmailLog;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -40,8 +41,8 @@ class EmailLogsTable extends Table
         parent::initialize($config);
 
         $this->setTable('email_logs');
-        $this->setDisplayField('subject');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(EmailLog::FIELD_SUBJECT);
+        $this->setPrimaryKey(EmailLog::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
@@ -59,22 +60,22 @@ class EmailLogsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->scalar('subject')
-            ->maxLength('subject', 255)
-            ->requirePresence('subject', 'create')
-            ->notEmptyString('subject');
+            ->scalar(EmailLog::FIELD_SUBJECT)
+            ->maxLength(EmailLog::FIELD_SUBJECT, 255)
+            ->requirePresence(EmailLog::FIELD_SUBJECT, 'create')
+            ->notEmptyString(EmailLog::FIELD_SUBJECT);
 
         $validator
-            ->scalar('content_text')
-            ->allowEmptyString('content_text');
+            ->scalar(EmailLog::FIELD_CONTENT_TEXT)
+            ->allowEmptyString(EmailLog::FIELD_CONTENT_TEXT);
 
         $validator
-            ->scalar('content_html')
-            ->allowEmptyString('content_html');
+            ->scalar(EmailLog::FIELD_CONTENT_HTML)
+            ->allowEmptyString(EmailLog::FIELD_CONTENT_HTML);
 
         $validator
-            ->scalar('error_message')
-            ->allowEmptyString('error_message');
+            ->scalar(EmailLog::FIELD_ERROR_MESSAGE)
+            ->allowEmptyString(EmailLog::FIELD_ERROR_MESSAGE);
 
         return $validator;
     }

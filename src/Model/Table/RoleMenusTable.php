@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\RoleMenu;
 use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
@@ -45,21 +46,21 @@ class RoleMenusTable extends Table
         parent::initialize($config);
 
         $this->setTable('role_menus');
-        $this->setDisplayField('id');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(RoleMenu::FIELD_ID);
+        $this->setPrimaryKey(RoleMenu::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
         $this->belongsTo('Roles', [
-            'foreignKey' => 'role_id',
+            'foreignKey' => RoleMenu::FIELD_ROLE_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Menus', [
-            'foreignKey' => 'menu_id',
+            'foreignKey' => RoleMenu::FIELD_MENU_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Departments', [
-            'foreignKey' => 'department_id',
+            'foreignKey' => RoleMenu::FIELD_DEPARTMENT_ID,
         ]);
     }
 
@@ -72,16 +73,16 @@ class RoleMenusTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('role_id')
-            ->notEmptyString('role_id');
+            ->integer(RoleMenu::FIELD_ROLE_ID)
+            ->notEmptyString(RoleMenu::FIELD_ROLE_ID);
 
         $validator
-            ->integer('menu_id')
-            ->notEmptyString('menu_id');
+            ->integer(RoleMenu::FIELD_MENU_ID)
+            ->notEmptyString(RoleMenu::FIELD_MENU_ID);
 
         $validator
-            ->nonNegativeInteger('department_id')
-            ->allowEmptyString('department_id');
+            ->nonNegativeInteger(RoleMenu::FIELD_DEPARTMENT_ID)
+            ->allowEmptyString(RoleMenu::FIELD_DEPARTMENT_ID);
 
         return $validator;
     }
@@ -96,15 +97,15 @@ class RoleMenusTable extends Table
     public function buildRules(RulesChecker $rules): RulesChecker
     {
         $rules->add($rules->isUnique(
-            ['role_id', 'menu_id', 'department_id'],
+            [RoleMenu::FIELD_ROLE_ID, RoleMenu::FIELD_MENU_ID, RoleMenu::FIELD_DEPARTMENT_ID],
             ['allowMultipleNulls' => true],
         ), [
-            'errorField' => 'role_id',
+            'errorField' => RoleMenu::FIELD_ROLE_ID,
             'message' => __('Cette option de menu est déjà associée à ce rôle et à ce département.'),
         ]);
-        $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
-        $rules->add($rules->existsIn(['menu_id'], 'Menus'), ['errorField' => 'menu_id']);
-        $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
+        $rules->add($rules->existsIn([RoleMenu::FIELD_ROLE_ID], 'Roles'), ['errorField' => RoleMenu::FIELD_ROLE_ID]);
+        $rules->add($rules->existsIn([RoleMenu::FIELD_MENU_ID], 'Menus'), ['errorField' => RoleMenu::FIELD_MENU_ID]);
+        $rules->add($rules->existsIn([RoleMenu::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => RoleMenu::FIELD_DEPARTMENT_ID]);
 
         return $rules;
     }
@@ -124,8 +125,8 @@ class RoleMenusTable extends Table
         $visibleRoles = $this->Roles->find('roleAccessVisibleTo', user: $user)
             ->select(['Roles.id']);
 
-        return $query->select(['role_id'])
-            ->distinct(['role_id'])
+        return $query->select([RoleMenu::FIELD_ROLE_ID])
+            ->distinct([RoleMenu::FIELD_ROLE_ID])
             ->where([
                 'RoleMenus.menu_id IN' => $menuIds,
                 'RoleMenus.role_id IN' => $visibleRoles,

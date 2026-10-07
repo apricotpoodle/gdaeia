@@ -22,6 +22,15 @@ use Cake\ORM\Entity;
  */
 final class ValidationWorkflowRun extends Entity
 {
+    public const FIELD_ID = 'id';
+    public const FIELD_APPLICATIONFORM_ID = 'applicationform_id';
+    public const FIELD_STARTED_BY_USER_ID = 'started_by_user_id';
+    public const FIELD_STATE = 'state';
+    public const FIELD_STARTED_AT = 'started_at';
+    public const FIELD_FINISHED_AT = 'finished_at';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+
     public const STATE_PENDING = 'en_attente';
     public const STATE_ACCEPTED = 'acceptee';
     public const STATE_REJECTED = 'refusee';

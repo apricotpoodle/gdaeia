@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\ValidationVisa;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -41,14 +42,14 @@ class ValidationVisasTable extends Table
         parent::initialize($config);
 
         $this->setTable('validation_visas');
-        $this->setDisplayField('role_name');
+        $this->setDisplayField(ValidationVisa::FIELD_ROLE_NAME);
 
         $this->belongsTo('Applicationforms', [
-            'foreignKey' => 'applicationform_id',
+            'foreignKey' => ValidationVisa::FIELD_APPLICATIONFORM_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Roles', [
-            'foreignKey' => 'role_id',
+            'foreignKey' => ValidationVisa::FIELD_ROLE_ID,
             'joinType' => 'INNER',
         ]);
     }
@@ -62,36 +63,36 @@ class ValidationVisasTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->nonNegativeInteger('applicationform_id')
-            ->notEmptyString('applicationform_id');
+            ->nonNegativeInteger(ValidationVisa::FIELD_APPLICATIONFORM_ID)
+            ->notEmptyString(ValidationVisa::FIELD_APPLICATIONFORM_ID);
 
         $validator
-            ->integer('sequence')
-            ->notEmptyString('sequence');
+            ->integer(ValidationVisa::FIELD_SEQUENCE)
+            ->notEmptyString(ValidationVisa::FIELD_SEQUENCE);
 
         $validator
-            ->nonNegativeInteger('role_id')
-            ->notEmptyString('role_id');
+            ->nonNegativeInteger(ValidationVisa::FIELD_ROLE_ID)
+            ->notEmptyString(ValidationVisa::FIELD_ROLE_ID);
 
         $validator
-            ->scalar('op_name')
-            ->maxLength('op_name', 511)
-            ->allowEmptyString('op_name');
+            ->scalar(ValidationVisa::FIELD_OP_NAME)
+            ->maxLength(ValidationVisa::FIELD_OP_NAME, 511)
+            ->allowEmptyString(ValidationVisa::FIELD_OP_NAME);
 
         $validator
-            ->scalar('role_name')
-            ->maxLength('role_name', 64)
-            ->requirePresence('role_name', 'create')
-            ->notEmptyString('role_name');
+            ->scalar(ValidationVisa::FIELD_ROLE_NAME)
+            ->maxLength(ValidationVisa::FIELD_ROLE_NAME, 64)
+            ->requirePresence(ValidationVisa::FIELD_ROLE_NAME, 'create')
+            ->notEmptyString(ValidationVisa::FIELD_ROLE_NAME);
 
         $validator
-            ->scalar('status_name')
-            ->maxLength('status_name', 100)
-            ->allowEmptyString('status_name');
+            ->scalar(ValidationVisa::FIELD_STATUS_NAME)
+            ->maxLength(ValidationVisa::FIELD_STATUS_NAME, 100)
+            ->allowEmptyString(ValidationVisa::FIELD_STATUS_NAME);
 
         $validator
-            ->dateTime('validated_at')
-            ->allowEmptyDateTime('validated_at');
+            ->dateTime(ValidationVisa::FIELD_VALIDATED_AT)
+            ->allowEmptyDateTime(ValidationVisa::FIELD_VALIDATED_AT);
 
         return $validator;
     }
@@ -105,10 +106,10 @@ class ValidationVisasTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), [
-            'errorField' => 'applicationform_id',
+        $rules->add($rules->existsIn([ValidationVisa::FIELD_APPLICATIONFORM_ID], 'Applicationforms'), [
+            'errorField' => ValidationVisa::FIELD_APPLICATIONFORM_ID,
         ]);
-        $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
+        $rules->add($rules->existsIn([ValidationVisa::FIELD_ROLE_ID], 'Roles'), ['errorField' => ValidationVisa::FIELD_ROLE_ID]);
 
         return $rules;
     }

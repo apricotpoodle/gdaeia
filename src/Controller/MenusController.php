@@ -23,7 +23,7 @@ class MenusController extends AppController
 
         $identity = $this->getRequest()->getAttribute('identity');
         $user = $identity?->getOriginalData();
-        if ($user instanceof User && !$user->issuperuser) {
+        if ($user instanceof User && !$user->get(User::FIELD_ISSUPERUSER)) {
             $this->Authorization->skipAuthorization();
             $this->Flash->error(__('Vous n’êtes pas autorisé à administrer les menus.'));
             $event->setResult($this->redirect('/'));

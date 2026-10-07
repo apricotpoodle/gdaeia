@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Budgetfeature;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 
@@ -38,8 +39,8 @@ class BudgetfeaturesTable extends AppTable
         parent::initialize($config);
 
         $this->setTable('budgetfeatures');
-        $this->setDisplayField('name');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Budgetfeature::FIELD_NAME);
+        $this->setPrimaryKey(Budgetfeature::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
@@ -57,33 +58,33 @@ class BudgetfeaturesTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->boolean('base')
-            ->notEmptyString('base');
+            ->boolean(Budgetfeature::FIELD_BASE)
+            ->notEmptyString(Budgetfeature::FIELD_BASE);
 
         $validator
-            ->scalar('code')
-            ->maxLength('code', 16)
-            ->requirePresence('code', 'create')
-            ->notEmptyString('code')
+            ->scalar(Budgetfeature::FIELD_CODE)
+            ->maxLength(Budgetfeature::FIELD_CODE, 16)
+            ->requirePresence(Budgetfeature::FIELD_CODE, 'create')
+            ->notEmptyString(Budgetfeature::FIELD_CODE)
             /** @link validateUnique() */
-            ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Budgetfeature::FIELD_CODE, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('name')
-            ->maxLength('name', 32)
-            ->requirePresence('name', 'create')
-            ->notEmptyString('name')
+            ->scalar(Budgetfeature::FIELD_NAME)
+            ->maxLength(Budgetfeature::FIELD_NAME, 32)
+            ->requirePresence(Budgetfeature::FIELD_NAME, 'create')
+            ->notEmptyString(Budgetfeature::FIELD_NAME)
             /** @link validateUnique() */
-            ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Budgetfeature::FIELD_NAME, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('sort')
-            ->maxLength('sort', 32)
-            ->notEmptyString('sort');
+            ->scalar(Budgetfeature::FIELD_SORT)
+            ->maxLength(Budgetfeature::FIELD_SORT, 32)
+            ->notEmptyString(Budgetfeature::FIELD_SORT);
 
         $validator
-            ->dateTime('deleted')
-            ->allowEmptyDateTime('deleted');
+            ->dateTime(Budgetfeature::FIELD_DELETED)
+            ->allowEmptyDateTime(Budgetfeature::FIELD_DELETED);
 
         return $validator;
     }
@@ -97,8 +98,8 @@ class BudgetfeaturesTable extends AppTable
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['code']), ['errorField' => 'code']);
-        $rules->add($rules->isUnique(['name']), ['errorField' => 'name']);
+        $rules->add($rules->isUnique([Budgetfeature::FIELD_CODE]), ['errorField' => Budgetfeature::FIELD_CODE]);
+        $rules->add($rules->isUnique([Budgetfeature::FIELD_NAME]), ['errorField' => Budgetfeature::FIELD_NAME]);
 
         return $rules;
     }

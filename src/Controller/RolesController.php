@@ -84,7 +84,7 @@ class RolesController extends AppController
             if (!$success) {
                 throw new Exception(__("L'ORM a refusé la désactivation du rôle."));
             }
-            $message = __('Le rôle {0} a été désactivé avec succès.', $role->name);
+            $message = __('Le rôle {0} a été désactivé avec succès.', $role->get(Role::FIELD_NAME));
         } catch (Exception $exception) {
             $message = $exception->getMessage();
         }

@@ -19,6 +19,15 @@ use Cake\ORM\Entity;
  */
 final class ValidationCommentTemplate extends Entity
 {
+    public const FIELD_ID = 'id';
+    public const FIELD_DECISION = 'decision';
+    public const FIELD_LABEL = 'label';
+    public const FIELD_CONTENT = 'content';
+    public const FIELD_POSITION = 'position';
+    public const FIELD_ACTIVE = 'active';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+
     /**
      * @var array<string, bool>
      */

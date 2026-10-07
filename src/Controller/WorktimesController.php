@@ -4,6 +4,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 /** Contrôleur des temps de travail. */
+/**
+ * @property \App\Model\Table\WorktimesTable $Worktimes
+ */
 final class WorktimesController extends ReferenceController
 {
     /** @return string Alias ORM de la table. */

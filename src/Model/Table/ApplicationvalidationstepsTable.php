@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Applicationvalidationstep;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -46,29 +47,29 @@ class ApplicationvalidationstepsTable extends Table
         parent::initialize($config);
 
         $this->setTable('applicationvalidationsteps');
-        $this->setDisplayField('id');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Applicationvalidationstep::FIELD_ID);
+        $this->setPrimaryKey(Applicationvalidationstep::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
         $this->belongsTo('Applicationforms', [
-            'foreignKey' => 'applicationform_id',
+            'foreignKey' => Applicationvalidationstep::FIELD_APPLICATIONFORM_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Roles', [
-            'foreignKey' => 'role_id',
+            'foreignKey' => Applicationvalidationstep::FIELD_ROLE_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Validationstatuses', [
-            'foreignKey' => 'validationstatus_id',
+            'foreignKey' => Applicationvalidationstep::FIELD_VALIDATIONSTATUS_ID,
             'joinType' => 'LEFT',
         ]);
         $this->belongsTo('Validationsequences', [
-            'foreignKey' => 'validationsequence_id',
+            'foreignKey' => Applicationvalidationstep::FIELD_VALIDATIONSEQUENCE_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('ValidationWorkflowRuns', [
-            'foreignKey' => 'validation_workflow_run_id',
+            'foreignKey' => Applicationvalidationstep::FIELD_VALIDATION_WORKFLOW_RUN_ID,
         ]);
         $this->hasOne('Validations', [
             'foreignKey' => 'applicationvalidationstep_id',
@@ -84,24 +85,24 @@ class ApplicationvalidationstepsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->nonNegativeInteger('applicationform_id')
-            ->notEmptyString('applicationform_id');
+            ->nonNegativeInteger(Applicationvalidationstep::FIELD_APPLICATIONFORM_ID)
+            ->notEmptyString(Applicationvalidationstep::FIELD_APPLICATIONFORM_ID);
 
         $validator
-            ->nonNegativeInteger('role_id')
-            ->notEmptyString('role_id');
+            ->nonNegativeInteger(Applicationvalidationstep::FIELD_ROLE_ID)
+            ->notEmptyString(Applicationvalidationstep::FIELD_ROLE_ID);
 
         $validator
-            ->nonNegativeInteger('validationstatus_id')
-            ->allowEmptyString('validationstatus_id');
+            ->nonNegativeInteger(Applicationvalidationstep::FIELD_VALIDATIONSTATUS_ID)
+            ->allowEmptyString(Applicationvalidationstep::FIELD_VALIDATIONSTATUS_ID);
 
         $validator
-            ->nonNegativeInteger('validationsequence_id')
-            ->notEmptyString('validationsequence_id');
+            ->nonNegativeInteger(Applicationvalidationstep::FIELD_VALIDATIONSEQUENCE_ID)
+            ->notEmptyString(Applicationvalidationstep::FIELD_VALIDATIONSEQUENCE_ID);
 
         $validator
-            ->dateTime('deleted')
-            ->allowEmptyDateTime('deleted');
+            ->dateTime(Applicationvalidationstep::FIELD_DELETED)
+            ->allowEmptyDateTime(Applicationvalidationstep::FIELD_DELETED);
 
         return $validator;
     }
@@ -115,16 +116,16 @@ class ApplicationvalidationstepsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), [
-            'errorField' => 'applicationform_id',
+        $rules->add($rules->existsIn([Applicationvalidationstep::FIELD_APPLICATIONFORM_ID], 'Applicationforms'), [
+            'errorField' => Applicationvalidationstep::FIELD_APPLICATIONFORM_ID,
         ]);
-        $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
-        $rules->add($rules->existsIn(['validationstatus_id'], 'Validationstatuses'), [
-            'errorField' => 'validationstatus_id',
+        $rules->add($rules->existsIn([Applicationvalidationstep::FIELD_ROLE_ID], 'Roles'), ['errorField' => Applicationvalidationstep::FIELD_ROLE_ID]);
+        $rules->add($rules->existsIn([Applicationvalidationstep::FIELD_VALIDATIONSTATUS_ID], 'Validationstatuses'), [
+            'errorField' => Applicationvalidationstep::FIELD_VALIDATIONSTATUS_ID,
             'allowNullableNulls' => true,
         ]);
-        $rules->add($rules->existsIn(['validationsequence_id'], 'Validationsequences'), [
-            'errorField' => 'validationsequence_id',
+        $rules->add($rules->existsIn([Applicationvalidationstep::FIELD_VALIDATIONSEQUENCE_ID], 'Validationsequences'), [
+            'errorField' => Applicationvalidationstep::FIELD_VALIDATIONSEQUENCE_ID,
         ]);
 
         return $rules;

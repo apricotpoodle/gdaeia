@@ -1,6 +1,13 @@
 <?php
 declare(strict_types=1);
 
+/**
+ * @var \App\View\AppView $this
+ * @var mixed $mode
+ * @var mixed $reference
+ * @var mixed $referenceAlias
+ * @var mixed $referenceLabel
+ */
 use App\View\Action\ReferencesActions;
 
 /** @var \App\View\AppView $this */

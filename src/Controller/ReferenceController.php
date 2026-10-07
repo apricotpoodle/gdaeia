@@ -12,6 +12,8 @@ use Exception;
 /** Contrôleur Web commun aux sept nomenclatures de demandes. */
 abstract class ReferenceController extends AppController
 {
+    protected ?string $defaultTable = '';
+
     /** Nom ORM de la nomenclature concrète. */
     abstract protected function referenceAlias(): string;
 

@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Service\Security;
 
+use App\Model\Entity\FieldAuthorization;
+use App\Model\Entity\User;
 use Authorization\IdentityInterface;
 use Cake\ORM\TableRegistry;
 
@@ -26,18 +28,18 @@ class FieldAuthorizationService
         /** @var \App\Model\Entity\User $user */
         $user = $identity->getOriginalData();
 
-        if ($user->get('issuperuser')) {
+        if ($user->get(User::FIELD_ISSUPERUSER)) {
             return [];
         }
 
-        $roleId = $user->get('role_id');
+        $roleId = $user->get(User::FIELD_ROLE_ID);
         $authTable = TableRegistry::getTableLocator()->get('FieldAuthorizations');
 
         /** @var array<\App\Model\Entity\FieldAuthorization> $records */
         $records = $authTable->find()
             ->where([
-                'role_id' => $roleId,
-                'resource' => $resource,
+                FieldAuthorization::FIELD_ROLE_ID => $roleId,
+                FieldAuthorization::FIELD_RESOURCE => $resource,
             ])
             ->all()
             ->toArray();

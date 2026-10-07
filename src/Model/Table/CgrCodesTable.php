@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\CgrCode;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -42,13 +43,13 @@ class CgrCodesTable extends Table
         parent::initialize($config);
 
         $this->setTable('cgr_codes');
-        $this->setDisplayField('label');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(CgrCode::FIELD_LABEL);
+        $this->setPrimaryKey(CgrCode::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
         $this->belongsTo('Departments', [
-            'foreignKey' => 'department_id',
+            'foreignKey' => CgrCode::FIELD_DEPARTMENT_ID,
             'joinType' => 'INNER',
         ]);
         $this->hasMany('UsingDepartments', [
@@ -66,34 +67,34 @@ class CgrCodesTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->nonNegativeInteger('department_id')
-            ->notEmptyString('department_id');
+            ->nonNegativeInteger(CgrCode::FIELD_DEPARTMENT_ID)
+            ->notEmptyString(CgrCode::FIELD_DEPARTMENT_ID);
 
         $validator
-            ->scalar('type')
-            ->maxLength('type', 32)
-            ->requirePresence('type', 'create')
-            ->notEmptyString('type');
+            ->scalar(CgrCode::FIELD_TYPE)
+            ->maxLength(CgrCode::FIELD_TYPE, 32)
+            ->requirePresence(CgrCode::FIELD_TYPE, 'create')
+            ->notEmptyString(CgrCode::FIELD_TYPE);
 
         $validator
-            ->scalar('code')
-            ->maxLength('code', 16)
-            ->requirePresence('code', 'create')
-            ->notEmptyString('code');
+            ->scalar(CgrCode::FIELD_CODE)
+            ->maxLength(CgrCode::FIELD_CODE, 16)
+            ->requirePresence(CgrCode::FIELD_CODE, 'create')
+            ->notEmptyString(CgrCode::FIELD_CODE);
 
         $validator
-            ->scalar('label')
-            ->maxLength('label', 255)
-            ->requirePresence('label', 'create')
-            ->notEmptyString('label');
+            ->scalar(CgrCode::FIELD_LABEL)
+            ->maxLength(CgrCode::FIELD_LABEL, 255)
+            ->requirePresence(CgrCode::FIELD_LABEL, 'create')
+            ->notEmptyString(CgrCode::FIELD_LABEL);
 
         $validator
-            ->boolean('active')
-            ->notEmptyString('active');
+            ->boolean(CgrCode::FIELD_ACTIVE)
+            ->notEmptyString(CgrCode::FIELD_ACTIVE);
 
         $validator
-            ->boolean('is_system')
-            ->notEmptyString('is_system');
+            ->boolean(CgrCode::FIELD_IS_SYSTEM)
+            ->notEmptyString(CgrCode::FIELD_IS_SYSTEM);
 
         return $validator;
     }
@@ -107,11 +108,11 @@ class CgrCodesTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['department_id', 'type', 'code']), [
-            'errorField' => 'department_id',
+        $rules->add($rules->isUnique([CgrCode::FIELD_DEPARTMENT_ID, CgrCode::FIELD_TYPE, CgrCode::FIELD_CODE]), [
+            'errorField' => CgrCode::FIELD_DEPARTMENT_ID,
             'message' => __('Cette combinaison de département, type et code existe déjà.'),
         ]);
-        $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
+        $rules->add($rules->existsIn([CgrCode::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => CgrCode::FIELD_DEPARTMENT_ID]);
 
         return $rules;
     }

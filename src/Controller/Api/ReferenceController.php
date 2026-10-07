@@ -14,6 +14,8 @@ use Cake\ORM\Table;
 /** API commune aux grilles distantes des nomenclatures. */
 abstract class ReferenceController extends AppController
 {
+    protected ?string $defaultTable = '';
+
     /** Nom ORM de la nomenclature courante. */
     abstract protected function referenceAlias(): string;
 

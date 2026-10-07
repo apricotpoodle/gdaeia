@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Period;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 
@@ -38,8 +39,8 @@ class PeriodsTable extends AppTable
         parent::initialize($config);
 
         $this->setTable('periods');
-        $this->setDisplayField('name');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Period::FIELD_NAME);
+        $this->setPrimaryKey(Period::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
@@ -57,33 +58,33 @@ class PeriodsTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->boolean('base')
-            ->notEmptyString('base');
+            ->boolean(Period::FIELD_BASE)
+            ->notEmptyString(Period::FIELD_BASE);
 
         $validator
-            ->scalar('code')
-            ->maxLength('code', 16)
-            ->requirePresence('code', 'create')
-            ->notEmptyString('code')
+            ->scalar(Period::FIELD_CODE)
+            ->maxLength(Period::FIELD_CODE, 16)
+            ->requirePresence(Period::FIELD_CODE, 'create')
+            ->notEmptyString(Period::FIELD_CODE)
             /** @link validateUnique() */
-            ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Period::FIELD_CODE, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('name')
-            ->maxLength('name', 32)
-            ->requirePresence('name', 'create')
-            ->notEmptyString('name')
+            ->scalar(Period::FIELD_NAME)
+            ->maxLength(Period::FIELD_NAME, 32)
+            ->requirePresence(Period::FIELD_NAME, 'create')
+            ->notEmptyString(Period::FIELD_NAME)
             /** @link validateUnique() */
-            ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Period::FIELD_NAME, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('sort')
-            ->maxLength('sort', 32)
-            ->notEmptyString('sort');
+            ->scalar(Period::FIELD_SORT)
+            ->maxLength(Period::FIELD_SORT, 32)
+            ->notEmptyString(Period::FIELD_SORT);
 
         $validator
-            ->dateTime('deleted')
-            ->allowEmptyDateTime('deleted');
+            ->dateTime(Period::FIELD_DELETED)
+            ->allowEmptyDateTime(Period::FIELD_DELETED);
 
         return $validator;
     }
@@ -97,8 +98,8 @@ class PeriodsTable extends AppTable
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['code']), ['errorField' => 'code']);
-        $rules->add($rules->isUnique(['name']), ['errorField' => 'name']);
+        $rules->add($rules->isUnique([Period::FIELD_CODE]), ['errorField' => Period::FIELD_CODE]);
+        $rules->add($rules->isUnique([Period::FIELD_NAME]), ['errorField' => Period::FIELD_NAME]);
 
         return $rules;
     }

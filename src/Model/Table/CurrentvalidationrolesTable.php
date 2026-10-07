@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Currentvalidationrole;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -44,15 +45,15 @@ class CurrentvalidationrolesTable extends Table
         $this->setTable('currentvalidationroles');
 
         $this->belongsTo('Applicationforms', [
-            'foreignKey' => 'applicationform_id',
+            'foreignKey' => Currentvalidationrole::FIELD_APPLICATIONFORM_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Departments', [
-            'foreignKey' => 'department_id',
+            'foreignKey' => Currentvalidationrole::FIELD_DEPARTMENT_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Validationstatuses', [
-            'foreignKey' => 'validationstatus_id',
+            'foreignKey' => Currentvalidationrole::FIELD_VALIDATIONSTATUS_ID,
         ]);
     }
 
@@ -65,37 +66,37 @@ class CurrentvalidationrolesTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->nonNegativeInteger('applicationform_id')
-            ->notEmptyString('applicationform_id');
+            ->nonNegativeInteger(Currentvalidationrole::FIELD_APPLICATIONFORM_ID)
+            ->notEmptyString(Currentvalidationrole::FIELD_APPLICATIONFORM_ID);
 
         $validator
-            ->integer('department_id')
-            ->notEmptyString('department_id');
+            ->integer(Currentvalidationrole::FIELD_DEPARTMENT_ID)
+            ->notEmptyString(Currentvalidationrole::FIELD_DEPARTMENT_ID);
 
         $validator
-            ->nonNegativeInteger('validator_role_id')
-            ->requirePresence('validator_role_id', 'create')
-            ->notEmptyString('validator_role_id');
+            ->nonNegativeInteger(Currentvalidationrole::FIELD_VALIDATOR_ROLE_ID)
+            ->requirePresence(Currentvalidationrole::FIELD_VALIDATOR_ROLE_ID, 'create')
+            ->notEmptyString(Currentvalidationrole::FIELD_VALIDATOR_ROLE_ID);
 
         $validator
-            ->integer('validation_sequence')
-            ->notEmptyString('validation_sequence');
+            ->integer(Currentvalidationrole::FIELD_VALIDATION_SEQUENCE)
+            ->notEmptyString(Currentvalidationrole::FIELD_VALIDATION_SEQUENCE);
 
         $validator
-            ->integer('validationstatus_id')
-            ->allowEmptyString('validationstatus_id');
+            ->integer(Currentvalidationrole::FIELD_VALIDATIONSTATUS_ID)
+            ->allowEmptyString(Currentvalidationrole::FIELD_VALIDATIONSTATUS_ID);
 
         $validator
-            ->integer('en_cours')
-            ->notEmptyString('en_cours');
+            ->integer(Currentvalidationrole::FIELD_EN_COURS)
+            ->notEmptyString(Currentvalidationrole::FIELD_EN_COURS);
 
         $validator
-            ->integer('accepted')
-            ->notEmptyString('accepted');
+            ->integer(Currentvalidationrole::FIELD_ACCEPTED)
+            ->notEmptyString(Currentvalidationrole::FIELD_ACCEPTED);
 
         $validator
-            ->integer('rejected')
-            ->notEmptyString('rejected');
+            ->integer(Currentvalidationrole::FIELD_REJECTED)
+            ->notEmptyString(Currentvalidationrole::FIELD_REJECTED);
 
         return $validator;
     }
@@ -109,14 +110,14 @@ class CurrentvalidationrolesTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), [
-            'errorField' => 'applicationform_id',
+        $rules->add($rules->existsIn([Currentvalidationrole::FIELD_APPLICATIONFORM_ID], 'Applicationforms'), [
+            'errorField' => Currentvalidationrole::FIELD_APPLICATIONFORM_ID,
         ]);
-        $rules->add($rules->existsIn(['department_id'], 'Departments'), [
-            'errorField' => 'department_id',
+        $rules->add($rules->existsIn([Currentvalidationrole::FIELD_DEPARTMENT_ID], 'Departments'), [
+            'errorField' => Currentvalidationrole::FIELD_DEPARTMENT_ID,
         ]);
-        $rules->add($rules->existsIn(['validationstatus_id'], 'Validationstatuses'), [
-            'errorField' => 'validationstatus_id',
+        $rules->add($rules->existsIn([Currentvalidationrole::FIELD_VALIDATIONSTATUS_ID], 'Validationstatuses'), [
+            'errorField' => Currentvalidationrole::FIELD_VALIDATIONSTATUS_ID,
         ]);
 
         return $rules;

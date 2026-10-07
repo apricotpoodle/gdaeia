@@ -16,6 +16,12 @@ use Cake\ORM\Entity;
  */
 final class WorkflowSetting extends Entity
 {
+    public const FIELD_ID = 'id';
+    public const FIELD_NAME = 'name';
+    public const FIELD_VALUE = 'value';
+    public const FIELD_CREATED = 'created';
+    public const FIELD_MODIFIED = 'modified';
+
     /**
      * @var array<string, bool>
      */

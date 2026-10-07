@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Comment;
 use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
@@ -19,21 +20,21 @@ class CommentsTable extends AppTable
         parent::initialize($config);
 
         $this->setTable('comments');
-        $this->setDisplayField('id');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Comment::FIELD_ID);
+        $this->setPrimaryKey(Comment::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
         $this->belongsTo('ParentComments', [
             'className' => 'Comments',
-            'foreignKey' => 'parent_id',
+            'foreignKey' => Comment::FIELD_PARENT_ID,
         ]);
         $this->hasMany('ChildComments', [
             'className' => 'Comments',
-            'foreignKey' => 'parent_id',
+            'foreignKey' => Comment::FIELD_PARENT_ID,
         ]);
         $this->belongsTo('Users', [
-            'foreignKey' => 'user_id',
+            'foreignKey' => Comment::FIELD_USER_ID,
             'joinType' => 'INNER',
         ]);
     }
@@ -42,33 +43,33 @@ class CommentsTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->nonNegativeInteger('parent_id')
-            ->allowEmptyString('parent_id');
+            ->nonNegativeInteger(Comment::FIELD_PARENT_ID)
+            ->allowEmptyString(Comment::FIELD_PARENT_ID);
 
         $validator
-            ->scalar('model')
-            ->maxLength('model', 64)
-            ->requirePresence('model', 'create')
-            ->notEmptyString('model');
+            ->scalar(Comment::FIELD_MODEL)
+            ->maxLength(Comment::FIELD_MODEL, 64)
+            ->requirePresence(Comment::FIELD_MODEL, 'create')
+            ->notEmptyString(Comment::FIELD_MODEL);
 
         $validator
-            ->nonNegativeInteger('foreign_key')
-            ->requirePresence('foreign_key', 'create')
-            ->notEmptyString('foreign_key');
+            ->nonNegativeInteger(Comment::FIELD_FOREIGN_KEY)
+            ->requirePresence(Comment::FIELD_FOREIGN_KEY, 'create')
+            ->notEmptyString(Comment::FIELD_FOREIGN_KEY);
 
         $validator
-            ->scalar('type')
-            ->maxLength('type', 32)
-            ->notEmptyString('type');
+            ->scalar(Comment::FIELD_TYPE)
+            ->maxLength(Comment::FIELD_TYPE, 32)
+            ->notEmptyString(Comment::FIELD_TYPE);
 
         $validator
-            ->scalar('content')
-            ->requirePresence('content', 'create')
-            ->notEmptyString('content');
+            ->scalar(Comment::FIELD_CONTENT)
+            ->requirePresence(Comment::FIELD_CONTENT, 'create')
+            ->notEmptyString(Comment::FIELD_CONTENT);
 
         $validator
-            ->nonNegativeInteger('user_id')
-            ->notEmptyString('user_id');
+            ->nonNegativeInteger(Comment::FIELD_USER_ID)
+            ->notEmptyString(Comment::FIELD_USER_ID);
 
         return $validator;
     }
@@ -76,8 +77,8 @@ class CommentsTable extends AppTable
     /** @inheritDoc */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['parent_id'], 'ParentComments'), ['errorField' => 'parent_id']);
-        $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
+        $rules->add($rules->existsIn([Comment::FIELD_PARENT_ID], 'ParentComments'), ['errorField' => Comment::FIELD_PARENT_ID]);
+        $rules->add($rules->existsIn([Comment::FIELD_USER_ID], 'Users'), ['errorField' => Comment::FIELD_USER_ID]);
 
         return $rules;
     }
@@ -93,7 +94,7 @@ class CommentsTable extends AppTable
     {
         $query = parent::findVisibleTo($query, $user);
 
-        if ($user->get('issuperuser')) {
+        if ($user->get(User::FIELD_ISSUPERUSER)) {
             return $query;
         }
 

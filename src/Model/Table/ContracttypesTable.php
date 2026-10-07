@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Contracttype;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 
@@ -38,8 +39,8 @@ class ContracttypesTable extends AppTable
         parent::initialize($config);
 
         $this->setTable('contracttypes');
-        $this->setDisplayField('name');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Contracttype::FIELD_NAME);
+        $this->setPrimaryKey(Contracttype::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
@@ -57,33 +58,33 @@ class ContracttypesTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->boolean('base')
-            ->notEmptyString('base');
+            ->boolean(Contracttype::FIELD_BASE)
+            ->notEmptyString(Contracttype::FIELD_BASE);
 
         $validator
-            ->scalar('code')
-            ->maxLength('code', 16)
-            ->requirePresence('code', 'create')
-            ->notEmptyString('code')
+            ->scalar(Contracttype::FIELD_CODE)
+            ->maxLength(Contracttype::FIELD_CODE, 16)
+            ->requirePresence(Contracttype::FIELD_CODE, 'create')
+            ->notEmptyString(Contracttype::FIELD_CODE)
             /** @link validateUnique() */
-            ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Contracttype::FIELD_CODE, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('name')
-            ->maxLength('name', 32)
-            ->requirePresence('name', 'create')
-            ->notEmptyString('name')
+            ->scalar(Contracttype::FIELD_NAME)
+            ->maxLength(Contracttype::FIELD_NAME, 32)
+            ->requirePresence(Contracttype::FIELD_NAME, 'create')
+            ->notEmptyString(Contracttype::FIELD_NAME)
             /** @link validateUnique() */
-            ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Contracttype::FIELD_NAME, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('sort')
-            ->maxLength('sort', 32)
-            ->notEmptyString('sort');
+            ->scalar(Contracttype::FIELD_SORT)
+            ->maxLength(Contracttype::FIELD_SORT, 32)
+            ->notEmptyString(Contracttype::FIELD_SORT);
 
         $validator
-            ->dateTime('deleted')
-            ->allowEmptyDateTime('deleted');
+            ->dateTime(Contracttype::FIELD_DELETED)
+            ->allowEmptyDateTime(Contracttype::FIELD_DELETED);
 
         return $validator;
     }
@@ -97,8 +98,8 @@ class ContracttypesTable extends AppTable
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['code']), ['errorField' => 'code']);
-        $rules->add($rules->isUnique(['name']), ['errorField' => 'name']);
+        $rules->add($rules->isUnique([Contracttype::FIELD_CODE]), ['errorField' => Contracttype::FIELD_CODE]);
+        $rules->add($rules->isUnique([Contracttype::FIELD_NAME]), ['errorField' => Contracttype::FIELD_NAME]);
 
         return $rules;
     }

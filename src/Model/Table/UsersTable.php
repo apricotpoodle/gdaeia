@@ -47,13 +47,13 @@ class UsersTable extends Table
         parent::initialize($config);
 
         $this->setTable('users');
-        $this->setDisplayField('email');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(User::FIELD_EMAIL);
+        $this->setPrimaryKey(User::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
         $this->belongsTo('Roles', [
-            'foreignKey' => 'role_id',
+            'foreignKey' => User::FIELD_ROLE_ID,
             'joinType' => 'INNER',
         ]);
         $this->hasMany('Applicationforms', [
@@ -82,38 +82,38 @@ class UsersTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->scalar('username')
-            ->maxLength('username', 255)
-            ->allowEmptyString('username');
+            ->scalar(User::FIELD_USERNAME)
+            ->maxLength(User::FIELD_USERNAME, 255)
+            ->allowEmptyString(User::FIELD_USERNAME);
 
         $validator
-            ->email('email')
-            ->requirePresence('email', 'create')
-            ->notEmptyString('email');
+            ->email(User::FIELD_EMAIL)
+            ->requirePresence(User::FIELD_EMAIL, 'create')
+            ->notEmptyString(User::FIELD_EMAIL);
 
         $validator
-            ->scalar('password')
-            ->maxLength('password', 255)
-            ->requirePresence('password', 'create')
-            ->notEmptyString('password');
+            ->scalar(User::FIELD_PASSWORD)
+            ->maxLength(User::FIELD_PASSWORD, 255)
+            ->requirePresence(User::FIELD_PASSWORD, 'create')
+            ->notEmptyString(User::FIELD_PASSWORD);
 
         $validator
-            ->scalar('firstname')
-            ->maxLength('firstname', 255)
-            ->allowEmptyString('firstname');
+            ->scalar(User::FIELD_FIRSTNAME)
+            ->maxLength(User::FIELD_FIRSTNAME, 255)
+            ->allowEmptyString(User::FIELD_FIRSTNAME);
 
         $validator
-            ->scalar('lastname')
-            ->maxLength('lastname', 255)
-            ->allowEmptyString('lastname');
+            ->scalar(User::FIELD_LASTNAME)
+            ->maxLength(User::FIELD_LASTNAME, 255)
+            ->allowEmptyString(User::FIELD_LASTNAME);
 
         $validator
-            ->boolean('issuperuser')
-            ->notEmptyString('issuperuser');
+            ->boolean(User::FIELD_ISSUPERUSER)
+            ->notEmptyString(User::FIELD_ISSUPERUSER);
 
         $validator
-            ->integer('role_id')
-            ->notEmptyString('role_id');
+            ->integer(User::FIELD_ROLE_ID)
+            ->notEmptyString(User::FIELD_ROLE_ID);
 
         return $validator;
     }
@@ -126,9 +126,9 @@ class UsersTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['username']), ['errorField' => 'username']);
-        $rules->add($rules->isUnique(['email']), ['errorField' => 'email']);
-        $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
+        $rules->add($rules->isUnique([User::FIELD_USERNAME]), ['errorField' => User::FIELD_USERNAME]);
+        $rules->add($rules->isUnique([User::FIELD_EMAIL]), ['errorField' => User::FIELD_EMAIL]);
+        $rules->add($rules->existsIn([User::FIELD_ROLE_ID], 'Roles'), ['errorField' => User::FIELD_ROLE_ID]);
 
         return $rules;
     }
@@ -142,7 +142,7 @@ class UsersTable extends Table
      */
     public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
-        if ($user->get('issuperuser')) {
+        if ($user->get(User::FIELD_ISSUPERUSER)) {
             return $query;
         }
 
