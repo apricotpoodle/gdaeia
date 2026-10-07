@@ -156,6 +156,17 @@ class ApplicationformPolicyTest extends TestCase
         $this->assertFalse($this->policy->canViewpdf($foreign, $applicationform));
     }
 
+    /** Vérifie que la duplication reprend exactement le périmètre de consultation. */
+    public function testLaDuplicationEstAutoriseePourUneDemandeVisibleSeulement(): void
+    {
+        $applicationform = new Applicationform(['user_id' => 10]);
+        $owner = $this->identity(new User(['id' => 10, 'role_id' => User::ROLE_DEMANDEUR]));
+        $foreign = $this->identity(new User(['id' => 11, 'role_id' => User::ROLE_DEMANDEUR]));
+
+        $this->assertTrue($this->policy->canDuplicate($owner, $applicationform));
+        $this->assertFalse($this->policy->canDuplicate($foreign, $applicationform));
+    }
+
     public function testLesRequetesDePerimetreEtDeWorkflowSontEvaluees(): void
     {
         $visible = new Applicationform(['id' => 1001, 'user_id' => 10, 'department_id' => 1]);

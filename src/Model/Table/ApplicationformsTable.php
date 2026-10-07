@@ -368,4 +368,45 @@ class ApplicationformsTable extends Table
             ],
         ]);
     }
+
+    /**
+     * Crée une nouvelle DAE indépendante à partir d'une DAE existante.
+     *
+     * Les commentaires, les visas et le cycle de validation ne sont pas
+     * copiés : ils sont liés à l'enregistrement source et la nouvelle demande
+     * doit repartir en brouillon avec son nouveau demandeur.
+     *
+     * @param \App\Model\Entity\Applicationform $source DAE à recopier.
+     * @param \App\Model\Entity\User $actor Utilisateur qui déclenche la copie.
+     * @return \App\Model\Entity\Applicationform|false Nouvelle DAE ou échec de validation/persistance.
+     */
+    public function duplicateFor(Applicationform $source, User $actor): Applicationform|false
+    {
+        $fields = [
+            Applicationform::FIELD_DEPARTMENT_ID,
+            Applicationform::FIELD_CGR,
+            Applicationform::FIELD_CONTRACTTYPE_ID,
+            Applicationform::FIELD_HIRINGREASON_ID,
+            Applicationform::FIELD_REASONFORREPLACEMENT,
+            Applicationform::FIELD_BUDGETFEATURE_ID,
+            Applicationform::FIELD_JOBTITLE,
+            Applicationform::FIELD_PROFESSIONALCATEGORY_ID,
+            Applicationform::FIELD_WORKTIME_ID,
+            Applicationform::FIELD_WORKINGTIMEDISTRIBUTION,
+            Applicationform::FIELD_GROSSREMUNERATION,
+            Applicationform::FIELD_PERIOD_ID,
+            Applicationform::FIELD_QUALIFICATION,
+            Applicationform::FIELD_BEGIN_AT,
+            Applicationform::FIELD_END_AT,
+            Applicationform::FIELD_APPLICANTNAME,
+            Applicationform::FIELD_YESNO_ID,
+            Applicationform::FIELD_COLLABORATOR_ID,
+        ];
+        $data = $source->extract($fields);
+        $data[Applicationform::FIELD_USER_ID] = $actor->get(User::FIELD_ID);
+
+        $duplicate = $this->newEntity($data);
+
+        return $this->save($duplicate) ? $duplicate : false;
+    }
 }

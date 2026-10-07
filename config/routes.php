@@ -119,6 +119,7 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/applicationforms/{id}/validation/vote', ['controller' => 'Applicationforms', 'action' => 'voteValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/reset', ['controller' => 'Applicationforms', 'action' => 'resetValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation', ['controller' => 'Applicationforms', 'action' => 'validationState', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/applicationforms/{id}/duplicate', ['controller' => 'Applicationforms', 'action' => 'duplicate', '_ext' => 'json'], ['pass' => ['id']]);
 
         $builder->resources('Users'); // Crée automatiquement les routes RESTful (GET /api/users)
         $builder->resources('Roles');

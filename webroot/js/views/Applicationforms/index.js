@@ -32,6 +32,26 @@ if (globalTabulatorObserver) {
         window.location.href = demande._actionUrl;
     });
 
+    globalTabulatorObserver.subscribe(`${tableSelector}:action:duplicate`, async (demande) => {
+        if (!confirm(`Dupliquer la demande n° ${demande.id} en brouillon ?`)) return;
+        try {
+            const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
+            if (!csrfToken) throw new Error('Jeton CSRF manquant.');
+            const response = await fetch(`/api/applicationforms/${demande.id}/duplicate.json`, {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'X-CSRF-Token': csrfToken, 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                body: JSON.stringify({ _csrfToken: csrfToken }),
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.success) throw new Error(payload.message || 'La duplication a échoué.');
+            FlashManager.success(payload.message);
+            window.location.href = `/applicationforms/edit/${payload.details?.id ?? payload.data?.id ?? ''}`;
+        } catch (error) {
+            FlashManager.error(`<strong>Action refusée :</strong> ${error.message}`);
+        }
+    });
+
     globalTabulatorObserver.subscribe(`${tableSelector}:action:launchValidation`, async (demande) => {
         if (!confirm(`Lancer le cycle de validation de la demande n° ${demande.id} ?`)) return;
         try {

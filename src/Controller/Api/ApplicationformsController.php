@@ -453,6 +453,37 @@ class ApplicationformsController extends AppController
     }
 
     /**
+     * Duplique une DAE visible en brouillon pour l'utilisateur courant.
+     *
+     * @param string $id Identifiant de la DAE source.
+     * @return \Cake\Http\Response Réponse JSON.
+     */
+    public function duplicate(string $id): Response
+    {
+        $this->request->allowMethod(['post']);
+        $source = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($source, 'duplicate');
+
+        /** @var \App\Model\Entity\User $actor */
+        $actor = $this->request->getAttribute('identity')->getOriginalData();
+        $duplicate = $this->Applicationforms->duplicateFor($source, $actor);
+        if ($duplicate === false) {
+            return $this->workflowResponse(
+                false,
+                __('La demande ne peut pas être dupliquée. Vérifiez les champs obligatoires.'),
+                [],
+                422,
+            );
+        }
+
+        return $this->workflowResponse(
+            true,
+            __('La demande a été dupliquée en brouillon.'),
+            ['id' => $duplicate->get(Applicationform::FIELD_ID)],
+        );
+    }
+
+    /**
      * Endpoint : PUT/PATCH /api/applicationforms/edit/{id}.json
      */
     public function edit(string $id): ?Response
@@ -599,7 +630,7 @@ class ApplicationformsController extends AppController
         }
 
         // 4. Droits dynamiques de la grille
-        $rightsFormatter = $this->createGridRightsFormatter(['launchValidation', 'resetValidation', 'viewpdf']);
+        $rightsFormatter = $this->createGridRightsFormatter(['launchValidation', 'resetValidation', 'viewpdf', 'duplicate']);
 
         // 5. Rendu structuré pour Tabulator
         $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);

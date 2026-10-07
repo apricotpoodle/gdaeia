@@ -73,6 +73,17 @@ class DomainActionsTest extends TestCase
         $this->assertSame('_blank', $action->options['target']);
     }
 
+    /** Vérifie que la duplication porte la Policy de la DAE source. */
+    public function testLaDuplicationDeDemandeEstUneCommandeProtegee(): void
+    {
+        $applicationform = new Applicationform(['id' => 12]);
+        $action = ApplicationformsActions::duplicate($applicationform);
+
+        $this->assertSame(UiAction::TYPE_BUTTON, $action->type);
+        $this->assertSame('duplicate', $action->authorizationAction);
+        $this->assertSame($applicationform, $action->resource);
+    }
+
     /** Vérifie le contrat de la commande de lancement du cycle de validation. */
     public function testLeLancementDeValidationEstUneCommandeProtegeeDeDomaine(): void
     {

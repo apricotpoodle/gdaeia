@@ -97,6 +97,20 @@ class ApplicationformPolicy extends AppPolicy
     }
 
     /**
+     * Autorisation de créer une nouvelle DAE à partir d'une DAE visible.
+     *
+     * @param \Authorization\IdentityInterface $identity Identité courante.
+     * @param \App\Model\Entity\Applicationform $applicationform DAE source.
+     * @return bool Vrai si la source est visible et l'utilisateur connecté.
+     */
+    public function canDuplicate(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        $user = $this->getValidUser($identity);
+
+        return $user !== null && $this->canView($identity, $applicationform);
+    }
+
+    /**
      * Autorisation pour l'édition (edit)
      *
      * @param \Authorization\IdentityInterface $identity
