@@ -16,6 +16,10 @@ Afin d'éviter la duplication de code (configuration Ajax, pagination distante, 
 ## Principes du Socle Commun (Tri et Filtrage)
 Chaque table générée dans l'application doit proposer de base des fonctionnalités de tri (unitaire ou multi-colonnes) ainsi qu'un système de filtrage en en-tête de colonne. Pour respecter les principes KISS et DRY, ces fonctionnalités sont pilotées via le Monteur (`TabulatorBuilder`).
 
+Les nomenclatures code/libellé/clé de tri utilisent `TabulatorFactory.createReferenceGrid()`
+et l'orchestrateur partagé `views/References/index.js`. Les actions de ligne restent
+diffusées par `TabulatorObserver`, sans logique Tabulator dupliquée dans les vues.
+
 ### Comment Activer/Désactiver globalement ?
 Dans votre méthode de Factory, utilisez la méthode `setColumnDefaults()`. Tout paramètre passé à cette méthode est hérité par l'intégralité des colonnes de la grille :
 
