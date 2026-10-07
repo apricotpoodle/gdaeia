@@ -31,7 +31,7 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditRemuneration):
             <div class="col-md-6">
                 <label for="professionalcategory-id" class="form-label fw-bold">
                     <i class="fa-solid fa-layer-group text-secondary me-1"></i>
-                    <?= __('Catégorie professionnelle') ?> <span class="text-danger">*</span>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'professionalcategory_id') ?> <span class="text-danger">*</span>
                 </label>
                 <?= $this->Form->control('professionalcategory_id', [
                     'type' => 'select',
@@ -49,7 +49,7 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditRemuneration):
             <div class="col-md-6">
                 <label for="worktime-id" class="form-label fw-bold">
                     <i class="fa-solid fa-business-time text-secondary me-1"></i>
-                    <?= __('Temps de travail') ?> <span class="text-danger">*</span>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'worktime_id') ?> <span class="text-danger">*</span>
                 </label>
                 <?= $this->Form->control('worktime_id', [
                     'type' => 'select',
@@ -67,7 +67,7 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditRemuneration):
             <div class="col-md-6">
                 <label for="grossremuneration" class="form-label fw-bold">
                     <i class="fa-solid fa-money-bill-wave text-secondary me-1"></i>
-                    <?= __('Rémunération Brute') ?> <span class="text-danger">*</span>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'grossremuneration') ?> <span class="text-danger">*</span>
                 </label>
                 <?= $this->Form->control('grossremuneration', [
                     'type' => 'number',
@@ -84,7 +84,7 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditRemuneration):
             <div class="col-md-6">
                 <label for="period-id" class="form-label fw-bold">
                     <i class="fa-solid fa-rotate text-secondary me-1"></i>
-                    <?= __('Périodicité') ?> <span class="text-danger">*</span>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'period_id') ?> <span class="text-danger">*</span>
                 </label>
                 <?= $this->Form->control('period_id', [
                     'type' => 'select',

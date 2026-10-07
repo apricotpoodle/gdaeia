@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Service\DataGrid\TabulatorAdapter;
+use App\Service\Metadata\FieldMetadataService;
 use App\Service\Security\FieldAuthorizationService;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
@@ -70,6 +71,19 @@ class FieldAuthorizationsController extends AppController
 
         // 6. Formatage de la réponse
         $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);
+        $metadata = new FieldMetadataService();
+        $output['data'] = array_map(
+            static function ($authorization) use ($metadata): array {
+                $data = $authorization->toArray();
+                $resource = (string)$authorization->get('resource');
+                $field = (string)$authorization->get('field');
+                $data['field_label'] = $metadata->label($resource, $field);
+                $data['field_description'] = $metadata->description($resource, $field);
+
+                return $data;
+            },
+            $output['data'],
+        );
 
         // 7. Sérialisation JSON
         $this->set($output);
@@ -83,7 +97,7 @@ class FieldAuthorizationsController extends AppController
     public function getFormSchema(): void
     {
         $this->request->allowMethod(['get']);
-        $this->Authorization->skipAuthorization();
+        $this->Authorization->authorize($this->FieldAuthorizations->newEmptyEntity(), 'index');
 
         $service = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
@@ -120,7 +134,12 @@ class FieldAuthorizationsController extends AppController
 
         if ($this->FieldAuthorizations->save($fieldAuthorization)) {
             return $this->response->withType('application/json')
-                ->withStringBody((string)json_encode(['success' => true]));
+                ->withStringBody((string)json_encode([
+                    'success' => true,
+                    'message' => __('La règle d’autorisation a été créée avec succès.'),
+                    'errors' => null,
+                    'id' => $fieldAuthorization->id,
+                ], JSON_UNESCAPED_UNICODE));
         }
 
         return $this->validationErrorResponse($fieldAuthorization, 'FieldAuthorizations');
@@ -146,7 +165,11 @@ class FieldAuthorizationsController extends AppController
 
         if ($this->FieldAuthorizations->save($fieldAuthorization)) {
             return $this->response->withType('application/json')
-                ->withStringBody((string)json_encode(['success' => true]));
+                ->withStringBody((string)json_encode([
+                    'success' => true,
+                    'message' => __('La règle d’autorisation a été modifiée avec succès.'),
+                    'errors' => null,
+                ], JSON_UNESCAPED_UNICODE));
         }
 
         return $this->validationErrorResponse($fieldAuthorization, 'FieldAuthorizations');

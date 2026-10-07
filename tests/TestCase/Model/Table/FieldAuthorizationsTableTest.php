@@ -96,8 +96,8 @@ class FieldAuthorizationsTableTest extends TestCase
     {
         $authorization = $this->FieldAuthorizations->newEntity([
             'role_id' => 1,
-            'resource' => 'Lorem ipsum dolor sit amet',
-            'field' => 'Lorem ipsum dolor sit amet',
+            'resource' => 'Applicationforms',
+            'field' => 'jobtitle',
             'access_level' => 'EDIT',
         ]);
 

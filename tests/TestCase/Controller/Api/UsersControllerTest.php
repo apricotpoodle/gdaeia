@@ -19,6 +19,7 @@ class UsersControllerTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
+        'app.FieldDefinitions',
         'app.Users',
         'app.Roles',
         'app.Departments',

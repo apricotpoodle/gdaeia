@@ -365,8 +365,6 @@ export class TabulatorBuilder {
             headerFilter: false,
             hozAlign: "right",
             headerHozAlign: "right",
-            // 💡 INDIQUE À TABULATOR D'IGNORER CETTE COLONNE POUR LA PERSISTANCE
-            persistence: false,
             // 💡 2. VERROU STRICT : Interdit à Tabulator d'étirer ou d'écraser cette colonne
             width: calculatedWidth,
             minWidth: calculatedWidth,

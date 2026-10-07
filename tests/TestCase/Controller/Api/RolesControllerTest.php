@@ -19,7 +19,7 @@ class RolesControllerTest extends TestCase
     /**
      * @var array<string>
      */
-    protected array $fixtures = ['app.Roles', 'app.Users'];
+    protected array $fixtures = ['app.Roles', 'app.Users', 'app.FieldDefinitions'];
 
     public function testLApiDesRolesRedirigeUnVisiteurVersLaConnexion(): void
     {

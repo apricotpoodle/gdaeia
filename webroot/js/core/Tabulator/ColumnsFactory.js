@@ -58,6 +58,32 @@ export class ColumnsFactory {
     }
 
     /**
+     * Génère une colonne texte éditable avec une liste de valeurs.
+     * L'ouverture de l'éditeur est pilotée par la grille, par exemple via
+     * l'option Tabulator `editTriggerEvent: 'dblclick'`.
+     *
+     * @static
+     * @param {string} field Champ de l'entité JSON.
+     * @param {string} title Libellé de l'en-tête.
+     * @param {Object<string, string>} values Valeurs techniques et libellés affichés.
+     * @param {Object} [overrides={}] Options complémentaires de colonne.
+     * @returns {Object} Configuration de colonne Tabulator.
+     */
+    static select(field, title, values, overrides = {}) {
+        return new ColumnBuilder(field, title)
+            .setSorter("string")
+            .setHozAlign("left")
+            .setHeaderFilter("list", { values })
+            .setOptions({
+                editable: true,
+                editor: "list",
+                editorParams: { values },
+                ...overrides,
+            })
+            .build();
+    }
+
+    /**
      * Génère une colonne de texte standard avec tri Tristate inclus.
      *
      * @static

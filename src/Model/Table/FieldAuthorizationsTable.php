@@ -79,7 +79,8 @@ class FieldAuthorizationsTable extends Table
         $validator
             ->scalar('access_level')
             ->maxLength('access_level', 20)
-            ->notEmptyString('access_level');
+            ->notEmptyString('access_level')
+            ->inList('access_level', ['EDIT', 'VIEW', 'NONE'], __('Le niveau d’accès est invalide.'));
 
         return $validator;
     }

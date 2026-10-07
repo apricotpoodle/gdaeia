@@ -16,6 +16,7 @@ class WorkflowSettingsControllerTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
+        'app.FieldDefinitions',
         'app.WorkflowSettings',
         'app.ValidationCommentTemplates',
     ];

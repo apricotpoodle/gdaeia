@@ -2,23 +2,36 @@
 /**
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\FieldAuthorization $fieldAuthorization
+ * @var array<int|string, string> $roles
  */
-?>
 
-<?php
-/**
- * @var \App\View\AppView $this
- * @var \App\Model\Entity\FieldAuthorization $fieldAuthorization
- */
+$this->assign('title', __('Modifier la règle d’autorisation #{0}', $fieldAuthorization->id));
 ?>
-<div class="field-authorizations form content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h3><?= __('Éditer la Règle') ?> #<?= $fieldAuthorization->id ?></h3>
-        <?= $this->Action->render(\App\View\Action\FieldAuthorizationsActions::index()) ?>
-    </div>
-
-    <div id="fieldauth-edit-form-container">
-        <!-- Le formulaire sera piloté par webroot/js/views/FieldAuthorizations/edit.js -->
-        <p class="text-muted">Formulaire d'édition en cours d'intégration...</p>
+<div class="row">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0"><i class="fa-solid fa-shield-halved me-2"></i><?= h($this->fetch('title')) ?></h3>
+                <?= $this->Action->render(\App\View\Action\FieldAuthorizationsActions::index()) ?>
+            </div>
+            <div class="card-body">
+                <?= $this->Form->create($fieldAuthorization, ['id' => 'field-authorization-form', 'data-id' => (string)$fieldAuthorization->id, 'novalidate' => true]) ?>
+                <?= $this->Form->control('role_id', ['label' => __('Rôle applicatif'), 'options' => $roles, 'class' => 'form-select mb-3']) ?>
+                <?= $this->Form->control('resource', ['label' => __('Ressource'), 'class' => 'form-control mb-3', 'maxlength' => 50]) ?>
+                <?= $this->Form->control('field', ['label' => __('Champ'), 'class' => 'form-control mb-3', 'maxlength' => 50]) ?>
+                <?= $this->Form->control('access_level', [
+                    'label' => __('Niveau d’accès'),
+                    'options' => ['EDIT' => __('Modification'), 'VIEW' => __('Lecture seule'), 'NONE' => __('Aucun accès')],
+                    'class' => 'form-select mb-4',
+                ]) ?>
+                <div class="d-flex justify-content-end gap-2">
+                    <?= $this->Action->render(\App\View\Action\FieldAuthorizationsActions::index(__('Annuler'), 'btn btn-secondary')) ?>
+                    <?= $this->Form->button(__('Enregistrer'), ['type' => 'submit', 'class' => 'btn btn-success']) ?>
+                </div>
+                <?= $this->Form->end() ?>
+            </div>
+        </div>
     </div>
 </div>
+
+<?php $this->Html->script('views/FieldAuthorizations/edit', ['type' => 'module', 'block' => 'scriptBottom']); ?>

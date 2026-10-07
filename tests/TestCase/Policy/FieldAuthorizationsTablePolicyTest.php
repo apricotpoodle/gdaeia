@@ -11,13 +11,13 @@ use Cake\TestSuite\TestCase;
 
 class FieldAuthorizationsTablePolicyTest extends TestCase
 {
-    public function testLaListeEstRefuseeAuxAdministrateursEtAccordeeAuxAutresRoles(): void
+    public function testLaListeEstReserveeAuxSuperAdministrateurs(): void
     {
         $policy = new FieldAuthorizationsTablePolicy();
         $table = new FieldAuthorizationsTable();
 
-        $this->assertFalse($policy->canIndex($this->identity(new User(['role_id' => User::ROLE_ADMIN])), $table));
-        $this->assertTrue($policy->canIndex($this->identity(new User(['role_id' => User::ROLE_DEMANDEUR])), $table));
+        $this->assertTrue($policy->canIndex($this->identity(new User(['issuperuser' => true])), $table));
+        $this->assertFalse($policy->canIndex($this->identity(new User(['issuperuser' => false])), $table));
         $this->assertFalse($policy->canIndex($this->identity([]), $table));
     }
 

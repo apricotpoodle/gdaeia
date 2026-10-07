@@ -15,7 +15,7 @@ requête, de droit et de règle métier gardent leurs réponses propres.
 
 * **`UsersController`** : Exposition paginée des utilisateurs pour Tabulator, création et schéma de champs.
 * **`MenusController`** : Distribution de l'arborescence des menus filtrée par rôles.
-* **`FieldAuthorizationsController`** : Gestion CRUD de la matrice de sécurité des champs (`[role_id, resource, field, access_level]`).
+* **`FieldAuthorizationsController`** : Gestion CRUD de la matrice de sécurité des champs (`[role_id, resource, field, access_level]`). L’administration est réservée aux super-administrateurs ; les niveaux acceptés sont `EDIT`, `VIEW` et `NONE`. Les pages Web servent les formulaires et les mutations passent par les endpoints JSON `add`/`edit`, avec une suppression hybride compatible Tabulator.
 * **`ValidationsequencesController`** : Administration réservée aux Super Admins des séquences par département.
 * **`WorkflowSettingsController`** : Paramétrage global du workflow via `/default-due-hours.json` et `/comment-requirements.json`, ainsi que catalogue paginé des commentaires prédéfinis. Les modèles servent à préremplir le champ de vote ; seul le texte final est conservé dans `validations.obs`.
 

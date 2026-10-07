@@ -29,7 +29,7 @@ $isEditable = function (string $field) use ($fieldSchema): bool {
             <div class="col-md-6">
                 <label for="contracttype-id" class="form-label fw-bold">
                     <i class="fa-solid fa-file-signature text-secondary me-1"></i>
-                    <?= __('Type de contrat') ?> <span class="text-danger">*</span>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'contracttype_id') ?> <span class="text-danger">*</span>
                 </label>
                 <?= $this->Form->control('contracttype_id', [
                     'type' => 'select',
@@ -47,7 +47,7 @@ $isEditable = function (string $field) use ($fieldSchema): bool {
             <div class="col-md-6">
                 <label for="hiringreason-id" class="form-label fw-bold">
                     <i class="fa-solid fa-clipboard-question text-secondary me-1"></i>
-                    <?= __('Motif de recrutement') ?> <span class="text-danger">*</span>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'hiringreason_id') ?> <span class="text-danger">*</span>
                 </label>
                 <?= $this->Form->control('hiringreason_id', [
                     'type' => 'select',
@@ -66,7 +66,7 @@ $isEditable = function (string $field) use ($fieldSchema): bool {
             <div class="col-md-12">
                 <label for="reasonforreplacement" class="form-label fw-bold">
                     <i class="fa-solid fa-pen-fancy text-secondary me-1"></i>
-                    <?= __('Précisions motif / Remplacement') ?>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'reasonforreplacement') ?>
                 </label>
                 <?= $this->Form->control('reasonforreplacement', [
                     'type' => 'text',
@@ -82,7 +82,7 @@ $isEditable = function (string $field) use ($fieldSchema): bool {
             <div class="col-md-6">
                 <label for="begin-at" class="form-label fw-bold">
                     <i class="fa-regular fa-calendar-check text-secondary me-1"></i>
-                    <?= __('Date de début') ?>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'begin_at') ?>
                 </label>
                 <?= $this->Form->control('begin_at', [
                     'type' => 'date',
@@ -97,7 +97,7 @@ $isEditable = function (string $field) use ($fieldSchema): bool {
             <div class="col-md-6" id="container-end-at">
                 <label for="end-at" class="form-label fw-bold">
                     <i class="fa-regular fa-calendar-xmark text-secondary me-1"></i>
-                    <?= __('Date de fin') ?>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'end_at') ?>
                     <span id="end-at-required-asterisk" class="text-danger d-none">*</span>
                 </label>
                 <?= $this->Form->control('end_at', [

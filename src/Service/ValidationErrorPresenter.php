@@ -3,100 +3,20 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Service\Metadata\FieldMetadataProviderInterface;
+use App\Service\Metadata\FieldMetadataService;
 use Cake\Datasource\EntityInterface;
 
 /** Présente les erreurs de validation ORM sans dépendre du canal Web ou API. */
 final class ValidationErrorPresenter
 {
-    /** @var array<string, array<string, string>> */
-    private const FIELD_LABELS = [
-        'Applicationforms' => [
-            'department_id' => 'Département',
-            'user_id' => 'Créateur de la demande',
-            'cgr' => 'Code CGR',
-            'contracttype_id' => 'Type de contrat',
-            'hiringreason_id' => 'Motif de recrutement',
-            'reasonforreplacement' => 'Précision du motif',
-            'budgetfeature_id' => 'Imputation budgétaire',
-            'jobtitle' => 'Intitulé du poste',
-            'professionalcategory_id' => 'Catégorie professionnelle',
-            'worktime_id' => 'Temps de travail',
-            'workingtimedistribution' => 'Répartition du temps de travail',
-            'grossremuneration' => 'Rémunération brute',
-            'period_id' => 'Périodicité',
-            'qualification' => 'Qualification',
-            'begin_at' => 'Date de début',
-            'end_at' => 'Date de fin',
-            'applicantname' => 'Nom du candidat',
-            'yesno_id' => 'Champ Oui/Non',
-        ],
-        'Users' => [
-            'user_id' => 'Utilisateur',
-            'email' => 'Adresse courriel',
-            'username' => "Nom d'utilisateur",
-            'password' => 'Mot de passe',
-            'role_id' => 'Rôle applicatif',
-            'user_departments' => 'Périmètre organisationnel',
-            'department_id' => 'Département',
-            'firstname' => 'Prénom',
-            'lastname' => 'Nom',
-        ],
-        'Roles' => [
-            'code' => 'Code',
-            'name' => 'Libellé',
-            'sort' => 'Clé de tri',
-            'base' => 'Rôle socle',
-            'deleted' => 'Date de désactivation',
-        ],
-        'Menus' => [
-            'parent_id' => 'Menu parent',
-            'name' => 'Nom du menu',
-            'url' => 'URL du menu',
-            'active' => 'Actif',
-            'disabled' => 'Désactivé',
-            'dividor_before' => 'Séparateur avant',
-            'level' => 'Niveau',
-        ],
-        'Comments' => [
-            'parent_id' => 'Commentaire parent',
-            'model' => 'Type de ressource',
-            'foreign_key' => 'Élément commenté',
-            'type' => 'Type de commentaire',
-            'content' => 'Contenu',
-            'user_id' => 'Auteur',
-        ],
-        'FieldAuthorizations' => [
-            'role_id' => 'Rôle applicatif',
-            'resource' => 'Ressource',
-            'field' => 'Champ',
-            'access_level' => "Niveau d'accès",
-        ],
-        'ValidationCommentTemplates' => [
-            'decision' => 'Décision',
-            'label' => 'Libellé',
-            'content' => 'Contenu',
-            'position' => 'Position',
-            'active' => 'Actif',
-        ],
-        'WorkflowSettings' => [
-            'name' => 'Paramètre',
-            'value' => 'Valeur',
-        ],
-        'RoleMenus' => [
-            'role_id' => 'Rôle applicatif',
-            'menu_id' => 'Menu',
-            'department_id' => 'Département',
-        ],
-        'Validationsequences' => [
-            'department_id' => 'Département',
-            'role_id' => 'Rôle validateur',
-            'sequence' => 'Numéro de séquence',
-            'name' => 'Nom de la séquence',
-            'description' => 'Description',
-            'reminder_delay_hours' => 'Délai de relance',
-            'deleted' => 'Date de désactivation',
-        ],
-    ];
+    private FieldMetadataProviderInterface $metadata;
+
+    /** @param \App\Service\Metadata\FieldMetadataProviderInterface|null $metadata Fournisseur injectable. */
+    public function __construct(?FieldMetadataProviderInterface $metadata = null)
+    {
+        $this->metadata = $metadata ?? new FieldMetadataService();
+    }
 
     /**
      * @return array{summary: string, errors: list<array{field: string, label: string, reason: string}>}
@@ -145,7 +65,10 @@ final class ValidationErrorPresenter
     {
         $field = implode('.', $path);
         $name = (string)end($path);
-        $label = self::FIELD_LABELS[$resource][$name] ?? __('Champ non répertorié ({0})', $name);
+        $label = $this->metadata->label($resource, $name);
+        if ($label === $name) {
+            $label = __('Champ non répertorié ({0})', $name);
+        }
 
         $results[] = [
             'field' => $field,

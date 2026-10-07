@@ -30,7 +30,7 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditReserves): boo
             <div class="col-md-6">
                 <label for="budgetfeature-id" class="form-label fw-bold">
                     <i class="fa-solid fa-sack-dollar text-secondary me-1"></i>
-                    <?= __('Caractéristique budgétaire') ?>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'budgetfeature_id') ?>
                 </label>
                 <?= $this->Form->control('budgetfeature_id', [
                     'type' => 'select',
@@ -47,7 +47,7 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditReserves): boo
             <div class="col-md-6">
                 <label for="yesno-id" class="form-label fw-bold">
                     <i class="fa-solid fa-coins text-secondary me-1"></i>
-                    <?= __('Inscrit au budget') ?>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'yesno_id') ?>
                 </label>
                 <?= $this->Form->control('yesno_id', [
                     'type' => 'select',
@@ -64,7 +64,7 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditReserves): boo
             <div class="col-md-12">
                 <label for="qualification" class="form-label fw-bold">
                     <i class="fa-solid fa-user-check text-secondary me-1"></i>
-                    <?= __('Qualification retenue') ?>
+                    <?= $this->FieldMetadata->label('Applicationforms', 'qualification') ?>
                 </label>
                 <?= $this->Form->control('qualification', [
                     'type' => 'text',

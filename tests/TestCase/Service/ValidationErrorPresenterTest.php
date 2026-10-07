@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Service;
 
+use App\Service\Metadata\FieldMetadataProviderInterface;
 use App\Service\ValidationErrorPresenter;
 use Cake\ORM\Entity;
 use Cake\TestSuite\TestCase;
@@ -10,6 +11,20 @@ use Cake\TestSuite\TestCase;
 /** Vérifie la présentation des erreurs ORM pour les interfaces Web et API. */
 class ValidationErrorPresenterTest extends TestCase
 {
+    private function presenter(): ValidationErrorPresenter
+    {
+        $metadata = $this->createMock(FieldMetadataProviderInterface::class);
+        $metadata->method('label')->willReturnCallback(
+            static fn(string $resource, string $field): string => match ($field) {
+                'department_id' => 'Département',
+                'jobtitle' => 'Intitulé du poste',
+                default => $field,
+            },
+        );
+
+        return new ValidationErrorPresenter($metadata);
+    }
+
     public function testPresenteToutesLesErreursAvecLeursLibellesDansLOrdreOrm(): void
     {
         $entity = new Entity();
@@ -28,7 +43,7 @@ class ValidationErrorPresenterTest extends TestCase
                 ['field' => 'jobtitle', 'label' => 'Intitulé du poste', 'reason' => 'Ce champ est obligatoire.'],
                 ['field' => 'jobtitle', 'label' => 'Intitulé du poste', 'reason' => 'La valeur est trop longue.'],
             ],
-        ], (new ValidationErrorPresenter())->present($entity, 'Applicationforms'));
+        ], $this->presenter()->present($entity, 'Applicationforms'));
     }
 
     public function testConserveLeCheminDesAssociationsImbriquees(): void
@@ -55,7 +70,7 @@ class ValidationErrorPresenterTest extends TestCase
                     'reason' => 'Le département est introuvable.',
                 ],
             ],
-        ], (new ValidationErrorPresenter())->present($entity, 'Users'));
+        ], $this->presenter()->present($entity, 'Users'));
     }
 
     public function testUnChampInconnuResteIdentifiable(): void
@@ -70,7 +85,7 @@ class ValidationErrorPresenterTest extends TestCase
                 'label' => 'Champ non répertorié (champ_inconnu)',
                 'reason' => 'Ce champ est obligatoire.',
             ]],
-        ], (new ValidationErrorPresenter())->present($entity, 'Applicationforms'));
+        ], $this->presenter()->present($entity, 'Applicationforms'));
     }
 
     public function testUneEntiteSansErreurRetourneUnResultatVide(): void
@@ -78,6 +93,6 @@ class ValidationErrorPresenterTest extends TestCase
         $this->assertSame([
             'summary' => 'Aucun détail de validation n’a été retourné.',
             'errors' => [],
-        ], (new ValidationErrorPresenter())->present(new Entity(), 'Users'));
+        ], $this->presenter()->present(new Entity(), 'Users'));
     }
 }

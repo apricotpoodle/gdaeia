@@ -26,7 +26,15 @@ class FieldAuthorizationsController extends AppController
      */
     public function add(): void
     {
-        $this->Authorization->authorize($this->FieldAuthorizations->newEmptyEntity(), 'add');
+        $fieldAuthorization = $this->FieldAuthorizations->newEmptyEntity();
+        $this->Authorization->authorize($fieldAuthorization, 'add');
+
+        $roles = $this->fetchTable('Roles')
+            ->find('list', keyField: 'id', valueField: 'name')
+            ->orderBy(['Roles.name' => 'ASC'])
+            ->toArray();
+
+        $this->set(compact('fieldAuthorization', 'roles'));
     }
 
     /**
@@ -38,7 +46,12 @@ class FieldAuthorizationsController extends AppController
         $fieldAuthorization = $this->FieldAuthorizations->get($id);
         $this->Authorization->authorize($fieldAuthorization, 'edit');
 
-        $this->set(compact('fieldAuthorization'));
+        $roles = $this->fetchTable('Roles')
+            ->find('list', keyField: 'id', valueField: 'name')
+            ->orderBy(['Roles.name' => 'ASC'])
+            ->toArray();
+
+        $this->set(compact('fieldAuthorization', 'roles'));
     }
 
     /**
@@ -74,6 +87,7 @@ class FieldAuthorizationsController extends AppController
                 ->withStringBody((string)json_encode([
                     'success' => $success,
                     'message' => $message,
+                    'errors' => null,
                 ]));
         }
 
