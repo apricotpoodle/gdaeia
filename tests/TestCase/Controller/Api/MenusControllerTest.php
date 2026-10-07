@@ -42,6 +42,69 @@ class MenusControllerTest extends TestCase
         $this->assertHeaderContains('Content-Type', 'application/json');
     }
 
+    /** Vérifie le contrat distant de la grille et la pagination des racines. */
+    public function testLApiDeGrilleDesMenusRetourneUnePageEtSonDernierNumero(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $menus = $this->getTableLocator()->get('Menus');
+        $menus->saveOrFail($menus->newEntity([
+            'name' => 'Deuxième racine',
+            'url' => '/deuxieme-racine',
+            'active' => true,
+        ]));
+
+        $this->get('/api/menus/grid.json?size=1&page=1');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertCount(1, $payload['data']);
+        $this->assertSame(2, $payload['last_page']);
+    }
+
+    /** Vérifie qu'un filtre sur un descendant conserve le contexte de sa branche. */
+    public function testLeFiltreDeLaGrilleDesMenusConserveLesAncetresDuResultat(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $menus = $this->getTableLocator()->get('Menus');
+        $root = $menus->get(1);
+        $root->parent_id = null;
+        $menus->saveOrFail($root);
+        $child = $menus->newEntity([
+            'parent_id' => 1,
+            'name' => 'Résultat filtré',
+            'url' => '/resultat-filtre',
+            'active' => true,
+        ]);
+        $menus->saveOrFail($child);
+
+        $filters = rawurlencode(json_encode([
+            ['field' => 'name', 'type' => 'like', 'value' => 'Résultat filtré'],
+        ], JSON_THROW_ON_ERROR));
+        $this->get('/api/menus/grid.json?filters=' . $filters);
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertCount(1, $payload['data']);
+        $this->assertSame('Lorem ipsum dolor sit amet', $payload['data'][0]['name']);
+        $this->assertSame('Résultat filtré', $payload['data'][0]['children'][0]['name']);
+    }
+
+    /** Vérifie que le filtre numérique du niveau ne provoque pas d'erreur API. */
+    public function testLeFiltreDuNiveauDesMenusEstTraiteCommeUnEntier(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $filters = rawurlencode(json_encode([
+            ['field' => 'level', 'type' => '=', 'value' => '0'],
+        ], JSON_THROW_ON_ERROR));
+
+        $this->get('/api/menus/grid.json?filters=' . $filters);
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertNotEmpty($payload['data']);
+        $this->assertSame(0, $payload['data'][0]['level']);
+    }
+
     /** Vérifie qu'un administrateur non super-utilisateur est refusé par l'API. */
     public function testLApiDesMenusRefuseUnAdministrateurOrdinaire(): void
     {

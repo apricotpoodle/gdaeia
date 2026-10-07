@@ -70,13 +70,13 @@ class TabulatorAdapter
                         continue; // On passe au filtre suivant
                     }
 
-                    // SÉCURITÉ & NORMALISATION DES TYPES numérique (ID)
+                    // SÉCURITÉ & NORMALISATION DES TYPES numériques
                     // Si on filtre sur l'ID, on force une égalité stricte, peu importe
                     // ce que demande le front.
                     //
                     // Conserver ce test même si c'est censé être traité dans le front end
                     // Car on peut craindre un petit malin modifiant l'url = en like
-                    if (in_array(strtolower($field), ['id', 'validation_status'], true)) {
+                    if (in_array(strtolower($field), ['id', 'level', 'validation_status'], true)) {
                         $query->where([$ormField => (int)$value]);
                         continue; // On passe au filtre suivant
                     }
