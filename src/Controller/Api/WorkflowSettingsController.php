@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Model\Entity\ValidationCommentTemplate;
+use App\Model\Entity\WorkflowSetting;
 use App\Model\Table\ValidationCommentTemplatesTable;
 use App\Service\DataGrid\TabulatorAdapter;
 use Cake\Http\Exception\BadRequestException;
@@ -33,7 +34,7 @@ class WorkflowSettingsController extends AppController
         /** @var \App\Model\Entity\WorkflowSetting|null $setting */
         $setting = $settings->find()->where(['name' => 'validation.default_due_hours'])->first();
         if ($this->request->is('get')) {
-            $this->set('data', ['default_due_hours' => (int)($setting?->get('value') ?? 72)]);
+            $this->set('data', ['default_due_hours' => (int)($setting?->get(WorkflowSetting::FIELD_VALUE) ?? 72)]);
             $this->viewBuilder()->setOption('serialize', ['data']);
 
             return null;
@@ -69,7 +70,7 @@ class WorkflowSettingsController extends AppController
             $setting = $settings->find()->where(['name' => $name])->first();
             $requirements[$decision] = $setting === null
                 ? $defaults[$decision]
-                : $this->parseBoolean($setting->get('value'), $defaults[$decision]);
+                : $this->parseBoolean($setting->get(WorkflowSetting::FIELD_VALUE), $defaults[$decision]);
         }
 
         if ($this->request->is('get')) {

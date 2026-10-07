@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use App\Model\Entity\FieldAuthorization;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Metadata\FieldMetadataService;
 use App\Service\Security\FieldAuthorizationService;
@@ -75,8 +76,8 @@ class FieldAuthorizationsController extends AppController
         $output['data'] = array_map(
             static function ($authorization) use ($metadata): array {
                 $data = $authorization->toArray();
-                $resource = (string)$authorization->get('resource');
-                $field = (string)$authorization->get('field');
+                $resource = (string)$authorization->get(FieldAuthorization::FIELD_RESOURCE);
+                $field = (string)$authorization->get(FieldAuthorization::FIELD_FIELD);
                 $data['field_label'] = $metadata->label($resource, $field);
                 $data['field_description'] = $metadata->description($resource, $field);
 
@@ -138,7 +139,7 @@ class FieldAuthorizationsController extends AppController
                     'success' => true,
                     'message' => __('La règle d’autorisation a été créée avec succès.'),
                     'errors' => null,
-                    'id' => $fieldAuthorization->id,
+            'id' => $fieldAuthorization->get(FieldAuthorization::FIELD_ID),
                 ], JSON_UNESCAPED_UNICODE));
         }
 

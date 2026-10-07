@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Hiringreason;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 
@@ -38,8 +39,8 @@ class HiringreasonsTable extends AppTable
         parent::initialize($config);
 
         $this->setTable('hiringreasons');
-        $this->setDisplayField('name');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Hiringreason::FIELD_NAME);
+        $this->setPrimaryKey(Hiringreason::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
@@ -57,29 +58,29 @@ class HiringreasonsTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->boolean('base')
-            ->notEmptyString('base');
+            ->boolean(Hiringreason::FIELD_BASE)
+            ->notEmptyString(Hiringreason::FIELD_BASE);
 
         $validator
-            ->scalar('code')
-            ->maxLength('code', 16)
-            ->requirePresence('code', 'create')
-            ->notEmptyString('code')
+            ->scalar(Hiringreason::FIELD_CODE)
+            ->maxLength(Hiringreason::FIELD_CODE, 16)
+            ->requirePresence(Hiringreason::FIELD_CODE, 'create')
+            ->notEmptyString(Hiringreason::FIELD_CODE)
             /** @link validateUnique() */
-            ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Hiringreason::FIELD_CODE, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('name')
-            ->maxLength('name', 32)
-            ->requirePresence('name', 'create')
-            ->notEmptyString('name')
+            ->scalar(Hiringreason::FIELD_NAME)
+            ->maxLength(Hiringreason::FIELD_NAME, 32)
+            ->requirePresence(Hiringreason::FIELD_NAME, 'create')
+            ->notEmptyString(Hiringreason::FIELD_NAME)
             /** @link validateUnique() */
-            ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Hiringreason::FIELD_NAME, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('sort')
-            ->maxLength('sort', 32)
-            ->notEmptyString('sort');
+            ->scalar(Hiringreason::FIELD_SORT)
+            ->maxLength(Hiringreason::FIELD_SORT, 32)
+            ->notEmptyString(Hiringreason::FIELD_SORT);
 
         return $validator;
     }
@@ -93,8 +94,8 @@ class HiringreasonsTable extends AppTable
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['code']), ['errorField' => 'code']);
-        $rules->add($rules->isUnique(['name']), ['errorField' => 'name']);
+        $rules->add($rules->isUnique([Hiringreason::FIELD_CODE]), ['errorField' => Hiringreason::FIELD_CODE]);
+        $rules->add($rules->isUnique([Hiringreason::FIELD_NAME]), ['errorField' => Hiringreason::FIELD_NAME]);
 
         return $rules;
     }

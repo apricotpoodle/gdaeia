@@ -203,6 +203,8 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
     public const FIELD_ROLE = 'role';
     public const FIELD_USER_DEPARTMENTS = 'user_departments';
     public const FIELD_ISSUPERUSER = 'issuperuser';
+    public const FIELD_IS_IMPERSONATING = 'is_impersonating';
+    public const FIELD_ORIGINAL_ADMIN_ID = 'original_admin_id';
     public const FIELD_AUTHORIZATION = 'authorization';
     public const FIELD_CREATED = 'created';
     public const FIELD_MODIFIED = 'modified';

@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use App\Model\Entity\Comment;
+use App\Model\Entity\User;
 use Cake\Http\Response;
 
 /**
@@ -77,13 +79,13 @@ class CommentsController extends AppController
 
         /** @var \App\Model\Entity\User $user */
         $user = $this->request->getAttribute('identity')->getOriginalData();
-        $data['user_id'] = $user->id;
+        $data[Comment::FIELD_USER_ID] = $user->get(User::FIELD_ID);
 
         $comment = $commentsTable->patchEntity($comment, $data);
         /** @var \App\Model\Entity\Comment $comment */
 
         if ($commentsTable->save($comment)) {
-            $comment = $commentsTable->get($comment->id, contain: ['Users']);
+            $comment = $commentsTable->get($comment->get(Comment::FIELD_ID), contain: ['Users']);
 
             return $this->response->withType('application/json')
                 ->withStringBody((string)json_encode([
@@ -112,7 +114,10 @@ class CommentsController extends AppController
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
 
         // Seul l'auteur ou un Super Admin peut éditer son commentaire
-        if (!$currentUser->issuperuser && $comment->user_id !== $currentUser->id) {
+        if (
+            !$currentUser->get(User::FIELD_ISSUPERUSER)
+            && $comment->get(Comment::FIELD_USER_ID) !== $currentUser->get(User::FIELD_ID)
+        ) {
             return $this->response->withType('application/json')
                 ->withStatus(403)
                 ->withStringBody((string)json_encode([

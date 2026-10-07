@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Yesno;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
 
@@ -38,8 +39,8 @@ class YesnosTable extends AppTable
         parent::initialize($config);
 
         $this->setTable('yesnos');
-        $this->setDisplayField('name');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Yesno::FIELD_NAME);
+        $this->setPrimaryKey(Yesno::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
@@ -57,33 +58,33 @@ class YesnosTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->boolean('base')
-            ->notEmptyString('base');
+            ->boolean(Yesno::FIELD_BASE)
+            ->notEmptyString(Yesno::FIELD_BASE);
 
         $validator
-            ->scalar('code')
-            ->maxLength('code', 16)
-            ->requirePresence('code', 'create')
-            ->notEmptyString('code')
+            ->scalar(Yesno::FIELD_CODE)
+            ->maxLength(Yesno::FIELD_CODE, 16)
+            ->requirePresence(Yesno::FIELD_CODE, 'create')
+            ->notEmptyString(Yesno::FIELD_CODE)
             /** @link validateUnique() */
-            ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Yesno::FIELD_CODE, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('name')
-            ->maxLength('name', 32)
-            ->requirePresence('name', 'create')
-            ->notEmptyString('name')
+            ->scalar(Yesno::FIELD_NAME)
+            ->maxLength(Yesno::FIELD_NAME, 32)
+            ->requirePresence(Yesno::FIELD_NAME, 'create')
+            ->notEmptyString(Yesno::FIELD_NAME)
             /** @link validateUnique() */
-            ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Yesno::FIELD_NAME, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('sort')
-            ->maxLength('sort', 32)
-            ->notEmptyString('sort');
+            ->scalar(Yesno::FIELD_SORT)
+            ->maxLength(Yesno::FIELD_SORT, 32)
+            ->notEmptyString(Yesno::FIELD_SORT);
 
         $validator
-            ->dateTime('deleted')
-            ->allowEmptyDateTime('deleted');
+            ->dateTime(Yesno::FIELD_DELETED)
+            ->allowEmptyDateTime(Yesno::FIELD_DELETED);
 
         return $validator;
     }
@@ -97,8 +98,8 @@ class YesnosTable extends AppTable
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['code']), ['errorField' => 'code']);
-        $rules->add($rules->isUnique(['name']), ['errorField' => 'name']);
+        $rules->add($rules->isUnique([Yesno::FIELD_CODE]), ['errorField' => Yesno::FIELD_CODE]);
+        $rules->add($rules->isUnique([Yesno::FIELD_NAME]), ['errorField' => Yesno::FIELD_NAME]);
 
         return $rules;
     }

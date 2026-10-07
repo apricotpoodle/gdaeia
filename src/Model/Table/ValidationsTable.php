@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Validation;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -45,28 +46,28 @@ class ValidationsTable extends Table
         parent::initialize($config);
 
         $this->setTable('validations');
-        $this->setDisplayField('id');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Validation::FIELD_ID);
+        $this->setPrimaryKey(Validation::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
         $this->belongsTo('Applicationforms', [
-            'foreignKey' => 'applicationform_id',
+            'foreignKey' => Validation::FIELD_APPLICATIONFORM_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Users', [
-            'foreignKey' => 'user_id',
+            'foreignKey' => Validation::FIELD_USER_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Roles', [
-            'foreignKey' => 'role_id',
+            'foreignKey' => Validation::FIELD_ROLE_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Validationstatuses', [
-            'foreignKey' => 'validationstatus_id',
+            'foreignKey' => Validation::FIELD_VALIDATIONSTATUS_ID,
         ]);
         $this->belongsTo('Applicationvalidationsteps', [
-            'foreignKey' => 'applicationvalidationstep_id',
+            'foreignKey' => Validation::FIELD_APPLICATIONVALIDATIONSTEP_ID,
         ]);
     }
 
@@ -79,33 +80,33 @@ class ValidationsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('applicationform_id')
-            ->notEmptyString('applicationform_id');
+            ->integer(Validation::FIELD_APPLICATIONFORM_ID)
+            ->notEmptyString(Validation::FIELD_APPLICATIONFORM_ID);
 
         $validator
-            ->integer('user_id')
-            ->notEmptyString('user_id');
+            ->integer(Validation::FIELD_USER_ID)
+            ->notEmptyString(Validation::FIELD_USER_ID);
 
         $validator
-            ->integer('role_id')
-            ->notEmptyString('role_id');
+            ->integer(Validation::FIELD_ROLE_ID)
+            ->notEmptyString(Validation::FIELD_ROLE_ID);
 
         $validator
-            ->dateTime('validated')
-            ->allowEmptyDateTime('validated');
+            ->dateTime(Validation::FIELD_VALIDATED)
+            ->allowEmptyDateTime(Validation::FIELD_VALIDATED);
 
         $validator
-            ->integer('validationstatus_id')
-            ->allowEmptyString('validationstatus_id');
+            ->integer(Validation::FIELD_VALIDATIONSTATUS_ID)
+            ->allowEmptyString(Validation::FIELD_VALIDATIONSTATUS_ID);
 
         $validator
-            ->scalar('obs')
-            ->maxLength('obs', 255)
-            ->allowEmptyString('obs');
+            ->scalar(Validation::FIELD_OBS)
+            ->maxLength(Validation::FIELD_OBS, 255)
+            ->allowEmptyString(Validation::FIELD_OBS);
 
         $validator
-            ->dateTime('deleted')
-            ->allowEmptyDateTime('deleted');
+            ->dateTime(Validation::FIELD_DELETED)
+            ->allowEmptyDateTime(Validation::FIELD_DELETED);
 
         return $validator;
     }
@@ -119,13 +120,13 @@ class ValidationsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['applicationform_id'], 'Applicationforms'), [
-            'errorField' => 'applicationform_id',
+        $rules->add($rules->existsIn([Validation::FIELD_APPLICATIONFORM_ID], 'Applicationforms'), [
+            'errorField' => Validation::FIELD_APPLICATIONFORM_ID,
         ]);
-        $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
-        $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
-        $rules->add($rules->existsIn(['validationstatus_id'], 'Validationstatuses'), [
-            'errorField' => 'validationstatus_id',
+        $rules->add($rules->existsIn([Validation::FIELD_USER_ID], 'Users'), ['errorField' => Validation::FIELD_USER_ID]);
+        $rules->add($rules->existsIn([Validation::FIELD_ROLE_ID], 'Roles'), ['errorField' => Validation::FIELD_ROLE_ID]);
+        $rules->add($rules->existsIn([Validation::FIELD_VALIDATIONSTATUS_ID], 'Validationstatuses'), [
+            'errorField' => Validation::FIELD_VALIDATIONSTATUS_ID,
         ]);
 
         return $rules;

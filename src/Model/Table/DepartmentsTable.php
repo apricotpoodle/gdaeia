@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Department;
 use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\TableRegistry;
@@ -46,38 +47,38 @@ class DepartmentsTable extends AppTable
         parent::initialize($config);
 
         $this->setTable('departments');
-        $this->setDisplayField('name');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Department::FIELD_NAME);
+        $this->setPrimaryKey(Department::FIELD_ID);
 
         $this->addBehavior('Timestamp');
         $this->addBehavior('Tree');
 
         $this->belongsTo('ParentDepartments', [
             'className' => 'Departments',
-            'foreignKey' => 'parent_id',
+            'foreignKey' => Department::FIELD_PARENT_ID,
         ]);
         $this->hasMany('ChildDepartments', [
             'className' => 'Departments',
-            'foreignKey' => 'parent_id',
+            'foreignKey' => Department::FIELD_PARENT_ID,
         ]);
         $this->belongsTo('DefaultCgrCode', [
             'className' => 'CgrCodes',
-            'foreignKey' => 'cgr_code_id',
+            'foreignKey' => Department::FIELD_CGR_CODE_ID,
         ]);
         $this->hasMany('OwnedCgrCodes', [
             'className' => 'CgrCodes',
             'foreignKey' => 'department_id',
         ]);
         $this->belongsTo('CgrStrategies', [
-            'foreignKey' => 'cgr_strategy_id',
+            'foreignKey' => Department::FIELD_CGR_STRATEGY_ID,
         ]);
         $this->hasMany('Applicationforms', [
             'foreignKey' => 'department_id',
         ]);
         $this->belongsTo('Managers', [
             'className' => 'Users',
-            'foreignKey' => 'current_manager_id',
-            'propertyName' => 'manager',
+            'foreignKey' => Department::FIELD_CURRENT_MANAGER_ID,
+            'propertyName' => Department::FIELD_MANAGER,
         ]);
     }
 
@@ -91,7 +92,7 @@ class DepartmentsTable extends AppTable
     public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
         $query = parent::findVisibleTo($query, $user);
-        if ($user->get('issuperuser')) {
+        if ($user->get(User::FIELD_ISSUPERUSER)) {
             return $query;
         }
 
@@ -147,7 +148,7 @@ class DepartmentsTable extends AppTable
         foreach ($nodes as $node) {
             $item = [
                 'value' => (int)$node->id,
-                'name' => (string)($node->name ?? $node->code ?? 'Département #' . $node->id),
+                Department::FIELD_NAME => (string)($node->name ?? $node->code ?? 'Département #' . $node->id),
             ];
 
             $children = $node->get('children');

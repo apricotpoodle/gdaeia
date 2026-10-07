@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Menu;
 use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
@@ -42,23 +43,23 @@ class MenusTable extends AppTable
         parent::initialize($config);
 
         $this->setTable('menus');
-        $this->setDisplayField('name');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Menu::FIELD_NAME);
+        $this->setPrimaryKey(Menu::FIELD_ID);
 
         $this->addBehavior(
             'Tree',
             [
-                'level' => 'level', // Default to null, i.e. no level saving
+                Menu::FIELD_LEVEL => Menu::FIELD_LEVEL, // Default to null, i.e. no level saving
             ],
         );
 
         $this->belongsTo('ParentMenus', [
             'className' => 'Menus',
-            'foreignKey' => 'parent_id',
+            'foreignKey' => Menu::FIELD_PARENT_ID,
         ]);
         $this->hasMany('ChildMenus', [
             'className' => 'Menus',
-            'foreignKey' => 'parent_id',
+            'foreignKey' => Menu::FIELD_PARENT_ID,
         ]);
         $this->hasMany('RoleMenus', [
             'foreignKey' => 'menu_id',
@@ -74,34 +75,34 @@ class MenusTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('parent_id')
-            ->allowEmptyString('parent_id');
+            ->integer(Menu::FIELD_PARENT_ID)
+            ->allowEmptyString(Menu::FIELD_PARENT_ID);
 
         $validator
-            ->integer('level')
-            ->allowEmptyString('level');
+            ->integer(Menu::FIELD_LEVEL)
+            ->allowEmptyString(Menu::FIELD_LEVEL);
 
         $validator
-            ->scalar('name')
-            ->maxLength('name', 255)
-            ->allowEmptyString('name');
+            ->scalar(Menu::FIELD_NAME)
+            ->maxLength(Menu::FIELD_NAME, 255)
+            ->allowEmptyString(Menu::FIELD_NAME);
 
         $validator
-            ->scalar('url')
-            ->maxLength('url', 255)
-            ->allowEmptyString('url');
+            ->scalar(Menu::FIELD_URL)
+            ->maxLength(Menu::FIELD_URL, 255)
+            ->allowEmptyString(Menu::FIELD_URL);
 
         $validator
-            ->boolean('active')
-            ->allowEmptyString('active');
+            ->boolean(Menu::FIELD_ACTIVE)
+            ->allowEmptyString(Menu::FIELD_ACTIVE);
 
         $validator
-            ->boolean('disabled')
-            ->allowEmptyString('disabled');
+            ->boolean(Menu::FIELD_DISABLED)
+            ->allowEmptyString(Menu::FIELD_DISABLED);
 
         $validator
-            ->boolean('dividor_before')
-            ->allowEmptyString('dividor_before');
+            ->boolean(Menu::FIELD_DIVIDOR_BEFORE)
+            ->allowEmptyString(Menu::FIELD_DIVIDOR_BEFORE);
 
         return $validator;
     }
@@ -115,7 +116,7 @@ class MenusTable extends AppTable
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['parent_id'], 'ParentMenus'), ['errorField' => 'parent_id']);
+        $rules->add($rules->existsIn([Menu::FIELD_PARENT_ID], 'ParentMenus'), ['errorField' => Menu::FIELD_PARENT_ID]);
 
         return $rules;
     }
@@ -132,7 +133,7 @@ class MenusTable extends AppTable
     public function findRoleAccessVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
         $query->where(['Menus.active' => true]);
-        if (!$user->get('issuperuser') && $user->get('role_id') !== User::ROLE_ADMIN) {
+        if (!$user->get(User::FIELD_ISSUPERUSER) && $user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN) {
             $query->where(['1 = 0']);
         }
 

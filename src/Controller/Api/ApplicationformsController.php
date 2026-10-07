@@ -6,7 +6,11 @@ namespace App\Controller\Api;
 use App\Controller\AppController;
 use App\Mailer\ValidationWorkflowMailer;
 use App\Model\Entity\Applicationform;
+use App\Model\Entity\Applicationvalidationstep;
+use App\Model\Entity\Role;
 use App\Model\Entity\User;
+use App\Model\Entity\ValidationCommentTemplate;
+use App\Model\Entity\ValidationWorkflowRun;
 use App\Service\CgrResolverService;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
@@ -157,7 +161,7 @@ class ApplicationformsController extends AppController
         $this->Authorization->authorize($applicationform, 'view');
         /** @var \App\Model\Entity\ValidationWorkflowRun|null $run */
         $run = $this->fetchTable('ValidationWorkflowRuns')->find()
-            ->where(['applicationform_id' => $id])
+            ->where([ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $id])
             ->first();
         /** @var \App\Model\Entity\User $actor */
         $actor = $this->request->getAttribute('identity')->getOriginalData();
@@ -171,16 +175,16 @@ class ApplicationformsController extends AppController
             ->orderByAsc('position')
             ->all();
         foreach ($templates as $template) {
-            $decision = (string)$template->get('decision');
+            $decision = (string)$template->get(ValidationCommentTemplate::FIELD_DECISION);
             $commentTemplates[$decision][] = [
-                'label' => (string)$template->get('label'),
-                'content' => (string)$template->get('content'),
+                'label' => (string)$template->get(ValidationCommentTemplate::FIELD_LABEL),
+                'content' => (string)$template->get(ValidationCommentTemplate::FIELD_CONTENT),
             ];
         }
         /** @var list<\App\Model\Entity\Applicationvalidationstep> $rawSteps */
         $rawSteps = $run === null ? [] : $this->fetchTable('Applicationvalidationsteps')->find()
             ->contain(['Roles', 'Validations'])
-            ->where(['validation_workflow_run_id' => $run->id])
+            ->where([Applicationvalidationstep::FIELD_VALIDATION_WORKFLOW_RUN_ID => $run->get(ValidationWorkflowRun::FIELD_ID)])
             ->orderByAsc('sequence_number')
             ->all()
             ->toList();
@@ -190,7 +194,7 @@ class ApplicationformsController extends AppController
             : array_values(array_filter(
                 $rawSteps,
                 function ($step) use ($workflow, $actor): bool {
-                    if ((int)$step->role_id === (int)$actor->role_id) {
+                    if ((int)$step->get(Applicationvalidationstep::FIELD_ROLE_ID) === (int)$actor->get(User::FIELD_ROLE_ID)) {
                         return true;
                     }
 
@@ -202,15 +206,15 @@ class ApplicationformsController extends AppController
             $canOverride = $workflow->canOverrideStep($step, $actor);
 
             return [
-                'id' => (int)$step->id,
-                'sequence_number' => (int)$step->sequence_number,
-                'state' => (string)$step->state,
-                'due_at' => $step->due_at,
-                'completed_at' => $step->completed_at,
+                'id' => (int)$step->get(Applicationvalidationstep::FIELD_ID),
+                'sequence_number' => (int)$step->get(Applicationvalidationstep::FIELD_SEQUENCE_NUMBER),
+                'state' => (string)$step->get(Applicationvalidationstep::FIELD_STATE),
+                'due_at' => $step->get(Applicationvalidationstep::FIELD_DUE_AT),
+                'completed_at' => $step->get(Applicationvalidationstep::FIELD_COMPLETED_AT),
                 'comment' => $step->validation?->obs,
                 'role' => [
-                    'id' => (int)$step->role_id,
-                    'name' => (string)($step->role->name ?? __('Rôle n°{0}', $step->role_id)),
+                    'id' => (int)$step->get(Applicationvalidationstep::FIELD_ROLE_ID),
+                    'name' => (string)($step->role?->get(Role::FIELD_NAME) ?? __('Rôle n°{0}', $step->get(Applicationvalidationstep::FIELD_ROLE_ID))),
                 ],
                 'can_vote' => $canVoteNormally || $canOverride,
                 'can_override' => $canOverride,
@@ -262,7 +266,7 @@ class ApplicationformsController extends AppController
      */
     private function sendFinalResult(Applicationform $applicationform, string $state, ?string $comment): void
     {
-        $loaded = $this->Applicationforms->get($applicationform->id, contain: ['Users', 'Departments' => ['Managers']]);
+        $loaded = $this->Applicationforms->get($applicationform->get(Applicationform::FIELD_ID), contain: ['Users', 'Departments' => ['Managers']]);
         $recipients = [$loaded->user];
         if ($loaded->department->manager !== null) {
             $recipients[] = $loaded->department->manager;
@@ -435,7 +439,7 @@ class ApplicationformsController extends AppController
         // Assignation automatique de l'utilisateur créateur
         /** @var \App\Model\Entity\User $user */
         $user = $identity->getOriginalData();
-        $filteredData['user_id'] = $user->id;
+        $filteredData[Applicationform::FIELD_USER_ID] = $user->get(User::FIELD_ID);
 
         $applicationform = $this->Applicationforms->patchEntity($applicationform, $filteredData);
 
@@ -465,13 +469,13 @@ class ApplicationformsController extends AppController
 
         $activeRun = $this->fetchTable('ValidationWorkflowRuns')->find()
             ->where([
-                'applicationform_id' => $applicationform->id,
+                ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID),
                 'state' => 'en_attente',
             ])->first();
         if (
             $activeRun !== null
             && isset($filteredData['department_id'])
-            && (int)$filteredData['department_id'] !== (int)$applicationform->department_id
+            && (int)$filteredData[Applicationform::FIELD_DEPARTMENT_ID] !== (int)$applicationform->get(Applicationform::FIELD_DEPARTMENT_ID)
         ) {
             return $this->workflowResponse(
                 false,
@@ -490,14 +494,14 @@ class ApplicationformsController extends AppController
                 $operator = $identity->getOriginalData();
                 $this->fetchTable('Comments')->saveOrFail($this->fetchTable('Comments')->newEntity([
                     'model' => 'Applicationforms',
-                    'foreign_key' => $applicationform->id,
+                    'foreign_key' => $applicationform->get(Applicationform::FIELD_ID),
                     'type' => 'WORKFLOW_EDIT_AUDIT',
                     'content' => __(
                         'Modification pendant le cycle par {0} le {1}.',
                         $operator->display_name,
                         DateTime::now()->i18nFormat('dd/MM/yyyy HH:mm'),
                     ),
-                    'user_id' => $operator->id,
+                    'user_id' => $operator->get(User::FIELD_ID),
                 ]));
             }
 

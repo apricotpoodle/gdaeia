@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Model\Entity\Applicationform;
+use App\Model\Entity\User;
 use App\Service\Pdf\ApplicationformPdfService;
 use App\Service\Security\FieldAuthorizationService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
@@ -59,9 +61,9 @@ class ApplicationformsController extends AppController
 
         // 💡 Récupération de l'arborescence complète via le TreeBehavior
         $departmentPath = [];
-        if ($applicationform->department_id) {
+        if ($applicationform->get(Applicationform::FIELD_DEPARTMENT_ID)) {
             $departmentPath = $this->fetchTable('Departments')
-                ->find('path', for: $applicationform->department_id)
+                ->find('path', for: $applicationform->get(Applicationform::FIELD_DEPARTMENT_ID))
                 ->all()
                 ->toArray();
         }
@@ -89,7 +91,7 @@ class ApplicationformsController extends AppController
             ->withType('application/pdf')
             ->withHeader(
                 'Content-Disposition',
-                sprintf('inline; filename="dae-%s.pdf"', $applicationform->id),
+                sprintf('inline; filename="dae-%s.pdf"', $applicationform->get(Applicationform::FIELD_ID)),
             )
             ->withStringBody($content);
     }
@@ -111,7 +113,7 @@ class ApplicationformsController extends AppController
             $identity = $this->request->getAttribute('identity');
             /** @var \App\Model\Entity\User $currentUser */
             $currentUser = $identity->getOriginalData();
-            $applicationform->user_id = $currentUser->id;
+            $applicationform->set(Applicationform::FIELD_USER_ID, $currentUser->get(User::FIELD_ID));
 
             if ($this->Applicationforms->save($applicationform)) {
                 $this->Flash->success(__('La demande de recrutement a été créée avec succès.'));

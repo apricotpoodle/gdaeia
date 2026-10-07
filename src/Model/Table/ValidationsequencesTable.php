@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Validationsequence;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -44,17 +45,17 @@ class ValidationsequencesTable extends Table
         parent::initialize($config);
 
         $this->setTable('validationsequences');
-        $this->setDisplayField('name');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Validationsequence::FIELD_NAME);
+        $this->setPrimaryKey(Validationsequence::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
         $this->belongsTo('Departments', [
-            'foreignKey' => 'department_id',
+            'foreignKey' => Validationsequence::FIELD_DEPARTMENT_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Roles', [
-            'foreignKey' => 'role_id',
+            'foreignKey' => Validationsequence::FIELD_ROLE_ID,
             'joinType' => 'INNER',
         ]);
         $this->hasMany('Applicationvalidationsteps', [
@@ -71,35 +72,35 @@ class ValidationsequencesTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->nonNegativeInteger('department_id')
-            ->notEmptyString('department_id');
+            ->nonNegativeInteger(Validationsequence::FIELD_DEPARTMENT_ID)
+            ->notEmptyString(Validationsequence::FIELD_DEPARTMENT_ID);
 
         $validator
-            ->scalar('name')
-            ->maxLength('name', 255)
-            ->allowEmptyString('name');
+            ->scalar(Validationsequence::FIELD_NAME)
+            ->maxLength(Validationsequence::FIELD_NAME, 255)
+            ->allowEmptyString(Validationsequence::FIELD_NAME);
 
         $validator
-            ->scalar('description')
-            ->allowEmptyString('description');
+            ->scalar(Validationsequence::FIELD_DESCRIPTION)
+            ->allowEmptyString(Validationsequence::FIELD_DESCRIPTION);
 
         $validator
-            ->nonNegativeInteger('role_id')
-            ->notEmptyString('role_id');
+            ->nonNegativeInteger(Validationsequence::FIELD_ROLE_ID)
+            ->notEmptyString(Validationsequence::FIELD_ROLE_ID);
 
         $validator
-            ->integer('sequence')
-            ->greaterThanOrEqual('sequence', 1, __('Le numéro de séquence doit être supérieur ou égal à 1.'))
-            ->notEmptyString('sequence');
+            ->integer(Validationsequence::FIELD_SEQUENCE)
+            ->greaterThanOrEqual(Validationsequence::FIELD_SEQUENCE, 1, __('Le numéro de séquence doit être supérieur ou égal à 1.'))
+            ->notEmptyString(Validationsequence::FIELD_SEQUENCE);
 
         $validator
-            ->nonNegativeInteger('reminder_delay_hours')
-            ->greaterThan('reminder_delay_hours', 0, __('Le délai doit être un entier positif.'))
-            ->allowEmptyString('reminder_delay_hours');
+            ->nonNegativeInteger(Validationsequence::FIELD_REMINDER_DELAY_HOURS)
+            ->greaterThan(Validationsequence::FIELD_REMINDER_DELAY_HOURS, 0, __('Le délai doit être un entier positif.'))
+            ->allowEmptyString(Validationsequence::FIELD_REMINDER_DELAY_HOURS);
 
         $validator
-            ->dateTime('deleted')
-            ->allowEmptyDateTime('deleted');
+            ->dateTime(Validationsequence::FIELD_DELETED)
+            ->allowEmptyDateTime(Validationsequence::FIELD_DELETED);
 
         return $validator;
     }
@@ -113,12 +114,12 @@ class ValidationsequencesTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['department_id', 'role_id']), [
-            'errorField' => 'department_id',
+        $rules->add($rules->isUnique([Validationsequence::FIELD_DEPARTMENT_ID, Validationsequence::FIELD_ROLE_ID]), [
+            'errorField' => Validationsequence::FIELD_DEPARTMENT_ID,
             'message' => __('Ce rôle possède déjà une séquence de validation pour ce département.'),
         ]);
-        $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
-        $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
+        $rules->add($rules->existsIn([Validationsequence::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => Validationsequence::FIELD_DEPARTMENT_ID]);
+        $rules->add($rules->existsIn([Validationsequence::FIELD_ROLE_ID], 'Roles'), ['errorField' => Validationsequence::FIELD_ROLE_ID]);
 
         return $rules;
     }
@@ -149,7 +150,7 @@ class ValidationsequencesTable extends Table
     {
         $sequencesByDepartment = array_fill_keys($departmentIds, []);
         $rows = $this->find('activeForDepartments', departmentIds: $departmentIds)
-            ->select(['department_id', 'sequence'])
+            ->select([Validationsequence::FIELD_DEPARTMENT_ID, Validationsequence::FIELD_SEQUENCE])
             ->all();
         foreach ($rows as $row) {
             $sequencesByDepartment[(int)$row->department_id][(int)$row->sequence] = true;

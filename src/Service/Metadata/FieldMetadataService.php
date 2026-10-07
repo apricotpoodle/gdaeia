@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service\Metadata;
 
+use App\Model\Entity\FieldDefinition;
 use Cake\ORM\TableRegistry;
 
 /** Fournit les métadonnées d'affichage des champs depuis le référentiel SQL. */
@@ -33,15 +34,22 @@ final class FieldMetadataService implements FieldMetadataProviderInterface
             /** @var array<string, array{label: string, description: ?string}> $definitions */
             $definitions = [];
             $query = $table->find()
-                ->select(['field', 'label', 'description'])
-                ->where(['resource' => $resource, 'active' => true])
-                ->orderByAsc('position');
+                ->select([
+                    FieldDefinition::FIELD_FIELD,
+                    FieldDefinition::FIELD_LABEL,
+                    FieldDefinition::FIELD_DESCRIPTION,
+                ])
+                ->where([
+                    FieldDefinition::FIELD_RESOURCE => $resource,
+                    FieldDefinition::FIELD_ACTIVE => true,
+                ])
+                ->orderByAsc(FieldDefinition::FIELD_POSITION);
             foreach ($query->all() as $entity) {
-                $field = (string)$entity->get('field');
+                $field = (string)$entity->get(FieldDefinition::FIELD_FIELD);
                 $definitions[$field] = [
-                    'label' => (string)$entity->get('label'),
-                    'description' => $entity->get('description') !== null
-                        ? (string)$entity->get('description')
+                    'label' => (string)$entity->get(FieldDefinition::FIELD_LABEL),
+                    'description' => $entity->get(FieldDefinition::FIELD_DESCRIPTION) !== null
+                        ? (string)$entity->get(FieldDefinition::FIELD_DESCRIPTION)
                         : null,
                 ];
             }

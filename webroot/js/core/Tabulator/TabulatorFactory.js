@@ -15,6 +15,27 @@ import { getMenusColumns } from '../../views/Menus/menus-columns.js';
 export class TabulatorFactory {
 
     /**
+     * Fabrique commune des grilles de nomenclatures code/libellé/tri.
+     * @param {string} selector Sélecteur CSS cible.
+     * @param {string} controller Nom du contrôleur CakePHP au pluriel.
+     * @returns {Tabulator} Instance Tabulator configurée.
+     */
+    static createReferenceGrid(selector, controller) {
+        const resource = controller.toLowerCase();
+        return this._createActionGrid(selector)
+            .setAjaxSource(`/api/${resource}.json`)
+            .setController(resource)
+            .setHeight('calc(100vh - 180px)')
+            .setColumns([
+                ColumnsFactory.id({ visible: true }),
+                ColumnsFactory.text('code', 'Code'),
+                ColumnsFactory.text('name', 'Libellé'),
+                ColumnsFactory.text('sort', 'Clé de tri'),
+            ])
+            .build();
+    }
+
+    /**
      * SOCLE COMMUN (DRY)
      * Définit le standard UX/UI de l'entreprise pour une grille de données classique.
      * Maintient impérativement le système de contrôle et la pagination en HAUT.

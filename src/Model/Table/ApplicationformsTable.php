@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Applicationform;
+use App\Model\Entity\Contracttype;
 use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
@@ -61,8 +63,8 @@ class ApplicationformsTable extends Table
         parent::initialize($config);
 
         $this->setTable('applicationforms');
-        $this->setDisplayField('jobtitle');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Applicationform::FIELD_JOBTITLE);
+        $this->setPrimaryKey(Applicationform::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
@@ -70,7 +72,7 @@ class ApplicationformsTable extends Table
             'emptyState' => false,
         ]);
         $this->getBehavior('Search')->searchManager()
-            ->value('department_id')
+            ->value(Applicationform::FIELD_DEPARTMENT_ID)
             ->callback('q', [
                 'callback' => function (SelectQuery $query, array $args, Callback $filter) {
                     $searchValue = trim((string)($args['q'] ?? ''));
@@ -104,39 +106,39 @@ class ApplicationformsTable extends Table
             ]);
 
         $this->belongsTo('Departments', [
-            'foreignKey' => 'department_id',
+            'foreignKey' => Applicationform::FIELD_DEPARTMENT_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Users', [
-            'foreignKey' => 'user_id',
+            'foreignKey' => Applicationform::FIELD_USER_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Contracttypes', [
-            'foreignKey' => 'contracttype_id',
+            'foreignKey' => Applicationform::FIELD_CONTRACTTYPE_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Hiringreasons', [
-            'foreignKey' => 'hiringreason_id',
+            'foreignKey' => Applicationform::FIELD_HIRINGREASON_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Budgetfeatures', [
-            'foreignKey' => 'budgetfeature_id',
+            'foreignKey' => Applicationform::FIELD_BUDGETFEATURE_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Professionalcategories', [
-            'foreignKey' => 'professionalcategory_id',
+            'foreignKey' => Applicationform::FIELD_PROFESSIONALCATEGORY_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Worktimes', [
-            'foreignKey' => 'worktime_id',
+            'foreignKey' => Applicationform::FIELD_WORKTIME_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Periods', [
-            'foreignKey' => 'period_id',
+            'foreignKey' => Applicationform::FIELD_PERIOD_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Yesnos', [
-            'foreignKey' => 'yesno_id',
+            'foreignKey' => Applicationform::FIELD_YESNO_ID,
             'joinType' => 'INNER',
         ]);
         $this->hasMany('Applicationformstatuses', [
@@ -174,89 +176,89 @@ class ApplicationformsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('department_id')
-            ->notEmptyString('department_id');
+            ->integer(Applicationform::FIELD_DEPARTMENT_ID)
+            ->notEmptyString(Applicationform::FIELD_DEPARTMENT_ID);
 
         $validator
-            ->integer('user_id')
-            ->notEmptyString('user_id');
+            ->integer(Applicationform::FIELD_USER_ID)
+            ->notEmptyString(Applicationform::FIELD_USER_ID);
 
         $validator
-            ->scalar('cgr')
-            ->maxLength('cgr', 255)
-            ->allowEmptyString('cgr');
+            ->scalar(Applicationform::FIELD_CGR)
+            ->maxLength(Applicationform::FIELD_CGR, 255)
+            ->allowEmptyString(Applicationform::FIELD_CGR);
 
         $validator
-            ->integer('contracttype_id')
-            ->notEmptyString('contracttype_id');
+            ->integer(Applicationform::FIELD_CONTRACTTYPE_ID)
+            ->notEmptyString(Applicationform::FIELD_CONTRACTTYPE_ID);
 
         $validator
-            ->integer('hiringreason_id')
-            ->notEmptyString('hiringreason_id');
+            ->integer(Applicationform::FIELD_HIRINGREASON_ID)
+            ->notEmptyString(Applicationform::FIELD_HIRINGREASON_ID);
 
         $validator
-            ->scalar('reasonforreplacement')
-            ->maxLength('reasonforreplacement', 255)
-            ->allowEmptyString('reasonforreplacement');
+            ->scalar(Applicationform::FIELD_REASONFORREPLACEMENT)
+            ->maxLength(Applicationform::FIELD_REASONFORREPLACEMENT, 255)
+            ->allowEmptyString(Applicationform::FIELD_REASONFORREPLACEMENT);
 
         $validator
-            ->integer('budgetfeature_id')
-            ->notEmptyString('budgetfeature_id');
+            ->integer(Applicationform::FIELD_BUDGETFEATURE_ID)
+            ->notEmptyString(Applicationform::FIELD_BUDGETFEATURE_ID);
 
         $validator
-            ->scalar('jobtitle')
-            ->maxLength('jobtitle', 255)
-            ->requirePresence('jobtitle', 'create')
-            ->notEmptyString('jobtitle');
+            ->scalar(Applicationform::FIELD_JOBTITLE)
+            ->maxLength(Applicationform::FIELD_JOBTITLE, 255)
+            ->requirePresence(Applicationform::FIELD_JOBTITLE, 'create')
+            ->notEmptyString(Applicationform::FIELD_JOBTITLE);
 
         $validator
-            ->integer('professionalcategory_id')
-            ->notEmptyString('professionalcategory_id');
+            ->integer(Applicationform::FIELD_PROFESSIONALCATEGORY_ID)
+            ->notEmptyString(Applicationform::FIELD_PROFESSIONALCATEGORY_ID);
 
         $validator
-            ->integer('worktime_id')
-            ->notEmptyString('worktime_id');
+            ->integer(Applicationform::FIELD_WORKTIME_ID)
+            ->notEmptyString(Applicationform::FIELD_WORKTIME_ID);
 
         $validator
-            ->scalar('workingtimedistribution')
-            ->maxLength('workingtimedistribution', 255)
-            ->allowEmptyString('workingtimedistribution');
+            ->scalar(Applicationform::FIELD_WORKINGTIMEDISTRIBUTION)
+            ->maxLength(Applicationform::FIELD_WORKINGTIMEDISTRIBUTION, 255)
+            ->allowEmptyString(Applicationform::FIELD_WORKINGTIMEDISTRIBUTION);
 
         $validator
-            ->decimal('grossremuneration')
-            ->notEmptyString('grossremuneration');
+            ->decimal(Applicationform::FIELD_GROSSREMUNERATION)
+            ->notEmptyString(Applicationform::FIELD_GROSSREMUNERATION);
 
         $validator
-            ->integer('period_id')
-            ->notEmptyString('period_id');
+            ->integer(Applicationform::FIELD_PERIOD_ID)
+            ->notEmptyString(Applicationform::FIELD_PERIOD_ID);
 
         $validator
-            ->scalar('qualification')
-            ->maxLength('qualification', 255)
-            ->allowEmptyString('qualification');
+            ->scalar(Applicationform::FIELD_QUALIFICATION)
+            ->maxLength(Applicationform::FIELD_QUALIFICATION, 255)
+            ->allowEmptyString(Applicationform::FIELD_QUALIFICATION);
 
         $validator
-            ->date('begin_at')
-            ->allowEmptyDate('begin_at');
+            ->date(Applicationform::FIELD_BEGIN_AT)
+            ->allowEmptyDate(Applicationform::FIELD_BEGIN_AT);
 
         $validator
-            ->date('end_at')
-            ->allowEmptyDate('end_at')
+            ->date(Applicationform::FIELD_END_AT)
+            ->allowEmptyDate(Applicationform::FIELD_END_AT)
             // Règle 1 : La date de fin doit être supérieure à la date de début
-            ->add('end_at', 'greaterThanBegin', [
+            ->add(Applicationform::FIELD_END_AT, 'greaterThanBegin', [
                 'rule' => function ($value, array $context) {
-                    if (empty($value) || empty($context['data']['begin_at'])) {
+                    if (empty($value) || empty($context['data'][Applicationform::FIELD_BEGIN_AT])) {
                         return true;
                     }
 
-                    return strtotime((string)$value) >= strtotime((string)$context['data']['begin_at']);
+                    return strtotime((string)$value) >= strtotime((string)$context['data'][Applicationform::FIELD_BEGIN_AT]);
                 },
                 'message' => __('La date de fin doit être strictement supérieure à la date de début.'),
             ])
             // Règle 2 : Cohérence selon le type de contrat (CDI vs CDD)
-            ->add('end_at', 'contractTypeCoherence', [
+            ->add(Applicationform::FIELD_END_AT, 'contractTypeCoherence', [
                 'rule' => function ($value, array $context) {
-                    $contractTypeId = $context['data']['contracttype_id'] ?? null;
+                    $contractTypeId = $context['data'][Applicationform::FIELD_CONTRACTTYPE_ID] ?? null;
                     if (!$contractTypeId) {
                         return true;
                     }
@@ -264,7 +266,7 @@ class ApplicationformsTable extends Table
                     // Récupération du type de contrat
                     $contracttypesTable = TableRegistry::getTableLocator()->get('Contracttypes');
                     /** @var \App\Model\Entity\Contracttype|null $contractType */
-                    $contractType = $contracttypesTable->find()->where(['id' => $contractTypeId])->first();
+                    $contractType = $contracttypesTable->find()->where([Contracttype::FIELD_ID => $contractTypeId])->first();
 
                     if (!$contractType) {
                         return true;
@@ -287,25 +289,25 @@ class ApplicationformsTable extends Table
             ]);
 
         $validator
-            ->scalar('applicantname')
-            ->maxLength('applicantname', 255)
-            ->allowEmptyString('applicantname');
+            ->scalar(Applicationform::FIELD_APPLICANTNAME)
+            ->maxLength(Applicationform::FIELD_APPLICANTNAME, 255)
+            ->allowEmptyString(Applicationform::FIELD_APPLICANTNAME);
 
         $validator
-            ->integer('yesno_id')
-            ->notEmptyString('yesno_id');
+            ->integer(Applicationform::FIELD_YESNO_ID)
+            ->notEmptyString(Applicationform::FIELD_YESNO_ID);
 
         $validator
-            ->dateTime('deleted')
-            ->allowEmptyDateTime('deleted');
+            ->dateTime(Applicationform::FIELD_DELETED)
+            ->allowEmptyDateTime(Applicationform::FIELD_DELETED);
 
         $validator
-            ->nonNegativeInteger('collaborator_id')
-            ->allowEmptyString('collaborator_id');
+            ->nonNegativeInteger(Applicationform::FIELD_COLLABORATOR_ID)
+            ->allowEmptyString(Applicationform::FIELD_COLLABORATOR_ID);
 
         $validator
-            ->dateTime('archived')
-            ->allowEmptyDateTime('archived');
+            ->dateTime(Applicationform::FIELD_ARCHIVED)
+            ->allowEmptyDateTime(Applicationform::FIELD_ARCHIVED);
 
         return $validator;
     }
@@ -319,17 +321,17 @@ class ApplicationformsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
-        $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
-        $rules->add($rules->existsIn(['contracttype_id'], 'Contracttypes'), ['errorField' => 'contracttype_id']);
-        $rules->add($rules->existsIn(['hiringreason_id'], 'Hiringreasons'), ['errorField' => 'hiringreason_id']);
-        $rules->add($rules->existsIn(['budgetfeature_id'], 'Budgetfeatures'), ['errorField' => 'budgetfeature_id']);
-        $rules->add($rules->existsIn(['professionalcategory_id'], 'Professionalcategories'), [
-            'errorField' => 'professionalcategory_id',
+        $rules->add($rules->existsIn([Applicationform::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => Applicationform::FIELD_DEPARTMENT_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_USER_ID], 'Users'), ['errorField' => Applicationform::FIELD_USER_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_CONTRACTTYPE_ID], 'Contracttypes'), ['errorField' => Applicationform::FIELD_CONTRACTTYPE_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_HIRINGREASON_ID], 'Hiringreasons'), ['errorField' => Applicationform::FIELD_HIRINGREASON_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_BUDGETFEATURE_ID], 'Budgetfeatures'), ['errorField' => Applicationform::FIELD_BUDGETFEATURE_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_PROFESSIONALCATEGORY_ID], 'Professionalcategories'), [
+            'errorField' => Applicationform::FIELD_PROFESSIONALCATEGORY_ID,
         ]);
-        $rules->add($rules->existsIn(['worktime_id'], 'Worktimes'), ['errorField' => 'worktime_id']);
-        $rules->add($rules->existsIn(['period_id'], 'Periods'), ['errorField' => 'period_id']);
-        $rules->add($rules->existsIn(['yesno_id'], 'Yesnos'), ['errorField' => 'yesno_id']);
+        $rules->add($rules->existsIn([Applicationform::FIELD_WORKTIME_ID], 'Worktimes'), ['errorField' => Applicationform::FIELD_WORKTIME_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_PERIOD_ID], 'Periods'), ['errorField' => Applicationform::FIELD_PERIOD_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_YESNO_ID], 'Yesnos'), ['errorField' => Applicationform::FIELD_YESNO_ID]);
 
         return $rules;
     }
@@ -349,7 +351,7 @@ class ApplicationformsTable extends Table
     public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
         // 1. Le Super Admin a une vision globale (pas de filtre)
-        if ($user->get('issuperuser')) {
+        if ($user->get(User::FIELD_ISSUPERUSER)) {
             return $query;
         }
 

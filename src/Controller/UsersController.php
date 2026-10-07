@@ -5,6 +5,8 @@ namespace App\Controller;
 
 use App\Log\EmailLoggerTrait;
 use App\Mailer\UserMailer;
+use App\Model\Entity\User;
+use App\Model\Entity\UserDepartment;
 use App\Service\Security\FieldAuthorizationService;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
@@ -149,7 +151,7 @@ class UsersController extends AppController
         $selectedDepartmentIds = [];
         if (!empty($user->user_departments)) {
             foreach ($user->user_departments as $userDept) {
-                $selectedDepartmentIds[] = (int)$userDept->department_id;
+                $selectedDepartmentIds[] = (int)$userDept->get(UserDepartment::FIELD_DEPARTMENT_ID);
             }
         }
 
@@ -300,7 +302,7 @@ class UsersController extends AppController
         $selectedDepartmentIds = [];
         if (!empty($user->user_departments)) {
             foreach ($user->user_departments as $userDept) {
-                $selectedDepartmentIds[] = (int)$userDept->department_id;
+                $selectedDepartmentIds[] = (int)$userDept->get(UserDepartment::FIELD_DEPARTMENT_ID);
             }
         }
 
@@ -325,12 +327,12 @@ class UsersController extends AppController
 
         $success = false;
         try {
-            if ($user->issuperuser) {
+            if ($user->get(User::FIELD_ISSUPERUSER)) {
                 throw new Exception(__('Action interdite : Impossible de supprimer un compte Super Administrateur.'));
             }
 
             if ($this->Users->delete($user)) {
-                $message = __('L\'utilisateur {0} a été supprimé avec succès.', $user->email);
+                $message = __('L\'utilisateur {0} a été supprimé avec succès.', $user->get(User::FIELD_EMAIL));
                 $success = true;
             } else {
                 throw new Exception(__('L\'ORM a refusé la suppression de l\'enregistrement.'));

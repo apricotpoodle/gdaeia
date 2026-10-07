@@ -18,8 +18,8 @@ final class ValidationWorkflowMailer extends AppMailer
      */
     public function validationStep(User $recipient, Applicationform $applicationform): void
     {
-        $this->setTo($recipient->email)
-            ->setSubject(__('Validation attendue — demande n°{0}', $applicationform->id))
+        $this->setTo($recipient->get(User::FIELD_EMAIL))
+            ->setSubject(__('Validation attendue — demande n°{0}', $applicationform->get(Applicationform::FIELD_ID)))
             ->setViewVars([
                 'recipient' => $recipient,
                 'applicationform' => $applicationform,
@@ -43,8 +43,8 @@ final class ValidationWorkflowMailer extends AppMailer
         ?string $comment,
     ): void {
         $label = $state === 'acceptee' ? __('acceptée') : __('refusée');
-        $this->setTo($recipient->email)
-            ->setSubject(__('Demande n°{0} {1}', $applicationform->id, $label))
+        $this->setTo($recipient->get(User::FIELD_EMAIL))
+            ->setSubject(__('Demande n°{0} {1}', $applicationform->get(Applicationform::FIELD_ID), $label))
             ->setViewVars([
                 'recipient' => $recipient,
                 'applicationform' => $applicationform,
@@ -62,7 +62,7 @@ final class ValidationWorkflowMailer extends AppMailer
      */
     public function validationBlocked(User $recipient, Applicationform $applicationform, array $issues): void
     {
-        $this->setTo($recipient->email)
+        $this->setTo($recipient->get(User::FIELD_EMAIL))
             ->setSubject(__('Configuration de validation à corriger — demande n°{0}', $applicationform->id))
             ->setViewVars([
                 'recipient' => $recipient,

@@ -5,6 +5,7 @@ namespace App\Policy;
 
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\User;
+use App\Model\Entity\ValidationWorkflowRun;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Authorization\IdentityInterface;
 use Cake\ORM\TableRegistry;
@@ -46,15 +47,18 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        if ($user->get('issuperuser') || $applicationform->user_id === $user->id) {
+        if ($user->get(User::FIELD_ISSUPERUSER) || $applicationform->get(Applicationform::FIELD_USER_ID) === $user->get(User::FIELD_ID)) {
             return true;
         }
-        if ($applicationform->department_id === null) {
+        if ($applicationform->get(Applicationform::FIELD_DEPARTMENT_ID) === null) {
             return false;
         }
 
         return TableRegistry::getTableLocator()->get('UserDepartments')->find()
-            ->where(['user_id' => $user->id, 'department_id' => $applicationform->department_id])
+            ->where([
+                User::FIELD_ID => $user->get(User::FIELD_ID),
+                Applicationform::FIELD_DEPARTMENT_ID => $applicationform->get(Applicationform::FIELD_DEPARTMENT_ID),
+            ])
             ->count() > 0;
     }
 
@@ -105,7 +109,7 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        if ($user->get('issuperuser')) {
+        if ($user->get(User::FIELD_ISSUPERUSER)) {
             return true;
         }
 
@@ -114,27 +118,27 @@ class ApplicationformPolicy extends AppPolicy
         }
 
         if ($this->hasWorkflow($applicationform)) {
-            if ((int)$applicationform->user_id === (int)$user->id) {
+            if ((int)$applicationform->get(Applicationform::FIELD_USER_ID) === (int)$user->get(User::FIELD_ID)) {
                 return false;
             }
 
             return (new ApplicationformValidationWorkflow())->canEditDuringActiveStep($applicationform, $user);
         }
 
-        return $applicationform->user_id === $user->id
-            || in_array($user->get('role_id'), Applicationform::ALLOWED_ROLES_FOR_EDIT);
+        return $applicationform->get(Applicationform::FIELD_USER_ID) === $user->get(User::FIELD_ID)
+            || in_array($user->get(User::FIELD_ROLE_ID), Applicationform::ALLOWED_ROLES_FOR_EDIT);
     }
 
     /** Détermine si un cycle de validation existe pour la demande. */
     private function hasWorkflow(Applicationform $applicationform): bool
     {
-        if ($applicationform->id === null) {
+        if ($applicationform->get(Applicationform::FIELD_ID) === null) {
             return false;
         }
 
         return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
             ->where([
-                'applicationform_id' => $applicationform->id,
+                ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID),
             ])
             ->count() > 0;
     }
@@ -146,7 +150,7 @@ class ApplicationformPolicy extends AppPolicy
         if (
             $user === null
             || !$this->canView($identity, $applicationform)
-            || ($applicationform->user_id !== $user->id && (int)$user->get('role_id') !== User::ROLE_ADMIN)
+            || ($applicationform->get(Applicationform::FIELD_USER_ID) !== $user->get(User::FIELD_ID) && (int)$user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN)
         ) {
             return false;
         }
@@ -156,7 +160,7 @@ class ApplicationformPolicy extends AppPolicy
         }
 
         return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
-            ->where(['applicationform_id' => $applicationform->id])
+            ->where([ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID)])
             ->count() === 0;
     }
 
@@ -167,13 +171,13 @@ class ApplicationformPolicy extends AppPolicy
         if (
             $user === null
             || !$this->canView($identity, $applicationform)
-            || ((int)$user->get('role_id') !== User::ROLE_ADMIN && !$user->get('issuperuser'))
+            || ((int)$user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN && !$user->get(User::FIELD_ISSUPERUSER))
         ) {
             return false;
         }
 
         return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
-            ->where(['applicationform_id' => $applicationform->id])
+            ->where([ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID)])
             ->count() === 1;
     }
 
@@ -197,11 +201,12 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        if ($user->get('issuperuser')) {
+        if ($user->get(User::FIELD_ISSUPERUSER)) {
             return true;
         }
 
-        return !$this->hasWorkflow($applicationform) && $applicationform->user_id === $user->id;
+        return !$this->hasWorkflow($applicationform)
+            && $applicationform->get(Applicationform::FIELD_USER_ID) === $user->get(User::FIELD_ID);
     }
 
     // =========================================================================
@@ -277,9 +282,9 @@ class ApplicationformPolicy extends AppPolicy
         }
 
         // Exemple : Accessible aux Admins, RH et Créateurs
-        return $user->get('issuperuser')
-            || $applicationform->user_id === $user->id
-            || in_array($user->get('role_id'), [
+        return $user->get(User::FIELD_ISSUPERUSER)
+            || $applicationform->get(Applicationform::FIELD_USER_ID) === $user->get(User::FIELD_ID)
+            || in_array($user->get(User::FIELD_ROLE_ID), [
                 User::ROLE_ADMIN,
                 User::ROLE_2_VALIDEUR_RRH,
                 User::ROLE_3_VALIDEUR_DRH,
@@ -300,8 +305,8 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        return $user->get('issuperuser')
-            || in_array($user->get('role_id'), [
+        return $user->get(User::FIELD_ISSUPERUSER)
+            || in_array($user->get(User::FIELD_ROLE_ID), [
                 User::ROLE_ADMIN,
                 User::ROLE_2_VALIDEUR_RRH,
                 User::ROLE_3_VALIDEUR_DRH,
@@ -324,8 +329,8 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        return $user->get('issuperuser')
-            || in_array($user->get('role_id'), [
+        return $user->get(User::FIELD_ISSUPERUSER)
+            || in_array($user->get(User::FIELD_ROLE_ID), [
                 User::ROLE_ADMIN,
                 User::ROLE_2_VALIDEUR_RRH,
                 User::ROLE_3_VALIDEUR_DRH,

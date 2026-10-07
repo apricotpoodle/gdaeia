@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Model\Entity\User;
+use App\Model\Entity\UserDepartment;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -45,17 +46,17 @@ class UserDepartmentsTable extends Table
         parent::initialize($config);
 
         $this->setTable('user_departments');
-        $this->setDisplayField('id');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(UserDepartment::FIELD_ID);
+        $this->setPrimaryKey(UserDepartment::FIELD_ID);
 
         $this->addBehavior('Timestamp');
 
         $this->belongsTo('Users', [
-            'foreignKey' => 'user_id',
+            'foreignKey' => UserDepartment::FIELD_USER_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Departments', [
-            'foreignKey' => 'department_id',
+            'foreignKey' => UserDepartment::FIELD_DEPARTMENT_ID,
             'joinType' => 'INNER',
         ]);
     }
@@ -69,12 +70,12 @@ class UserDepartmentsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('user_id')
-            ->notEmptyString('user_id');
+            ->integer(UserDepartment::FIELD_USER_ID)
+            ->notEmptyString(UserDepartment::FIELD_USER_ID);
 
         $validator
-            ->integer('department_id')
-            ->notEmptyString('department_id');
+            ->integer(UserDepartment::FIELD_DEPARTMENT_ID)
+            ->notEmptyString(UserDepartment::FIELD_DEPARTMENT_ID);
 
         return $validator;
     }
@@ -88,12 +89,12 @@ class UserDepartmentsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['user_id', 'department_id']), [
-            'errorField' => 'user_id',
+        $rules->add($rules->isUnique([UserDepartment::FIELD_USER_ID, UserDepartment::FIELD_DEPARTMENT_ID]), [
+            'errorField' => UserDepartment::FIELD_USER_ID,
             'message' => __('Cet utilisateur est déjà associé à ce département.'),
         ]);
-        $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
-        $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
+        $rules->add($rules->existsIn([UserDepartment::FIELD_USER_ID], 'Users'), ['errorField' => UserDepartment::FIELD_USER_ID]);
+        $rules->add($rules->existsIn([UserDepartment::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => UserDepartment::FIELD_DEPARTMENT_ID]);
 
         return $rules;
     }
@@ -156,7 +157,7 @@ class UserDepartmentsTable extends Table
     public function addMissingAssociations(array $userIds, array $departmentIds): int
     {
         $existingAssociations = $this->find()
-            ->select(['user_id', 'department_id'])
+            ->select([UserDepartment::FIELD_USER_ID, UserDepartment::FIELD_DEPARTMENT_ID])
             ->where([
                 'UserDepartments.user_id IN' => $userIds,
                 'UserDepartments.department_id IN' => $departmentIds,
@@ -174,8 +175,8 @@ class UserDepartmentsTable extends Table
                 $key = $userId . ':' . $departmentId;
                 if (!isset($existingKeys[$key])) {
                     $newAssociations[] = [
-                        'user_id' => $userId,
-                        'department_id' => $departmentId,
+                        UserDepartment::FIELD_USER_ID => $userId,
+                        UserDepartment::FIELD_DEPARTMENT_ID => $departmentId,
                     ];
                 }
             }
@@ -212,8 +213,8 @@ class UserDepartmentsTable extends Table
         foreach ($userIds as $userId) {
             foreach ($departmentIds as $departmentId) {
                 $newAssociations[] = [
-                    'user_id' => $userId,
-                    'department_id' => $departmentId,
+                    UserDepartment::FIELD_USER_ID => $userId,
+                    UserDepartment::FIELD_DEPARTMENT_ID => $departmentId,
                 ];
             }
         }

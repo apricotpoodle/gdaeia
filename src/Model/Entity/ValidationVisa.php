@@ -9,7 +9,7 @@ use Cake\ORM\Entity;
  * ValidationVisa Entity
  *
  * @property int $applicationform_id
- * @property int|null $sequence
+ * @property int $sequence
  * @property int $role_id
  * @property string|null $op_name
  * @property string $role_name

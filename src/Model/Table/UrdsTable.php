@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Urd;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -44,15 +45,15 @@ class UrdsTable extends Table
         $this->setTable('urds');
 
         $this->belongsTo('Users', [
-            'foreignKey' => 'user_id',
+            'foreignKey' => Urd::FIELD_USER_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Roles', [
-            'foreignKey' => 'role_id',
+            'foreignKey' => Urd::FIELD_ROLE_ID,
             'joinType' => 'INNER',
         ]);
         $this->belongsTo('Departments', [
-            'foreignKey' => 'department_id',
+            'foreignKey' => Urd::FIELD_DEPARTMENT_ID,
             'joinType' => 'INNER',
         ]);
     }
@@ -66,16 +67,16 @@ class UrdsTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->integer('user_id')
-            ->notEmptyString('user_id');
+            ->integer(Urd::FIELD_USER_ID)
+            ->notEmptyString(Urd::FIELD_USER_ID);
 
         $validator
-            ->integer('role_id')
-            ->notEmptyString('role_id');
+            ->integer(Urd::FIELD_ROLE_ID)
+            ->notEmptyString(Urd::FIELD_ROLE_ID);
 
         $validator
-            ->integer('department_id')
-            ->notEmptyString('department_id');
+            ->integer(Urd::FIELD_DEPARTMENT_ID)
+            ->notEmptyString(Urd::FIELD_DEPARTMENT_ID);
 
         return $validator;
     }
@@ -89,9 +90,9 @@ class UrdsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn(['user_id'], 'Users'), ['errorField' => 'user_id']);
-        $rules->add($rules->existsIn(['role_id'], 'Roles'), ['errorField' => 'role_id']);
-        $rules->add($rules->existsIn(['department_id'], 'Departments'), ['errorField' => 'department_id']);
+        $rules->add($rules->existsIn([Urd::FIELD_USER_ID], 'Users'), ['errorField' => Urd::FIELD_USER_ID]);
+        $rules->add($rules->existsIn([Urd::FIELD_ROLE_ID], 'Roles'), ['errorField' => Urd::FIELD_ROLE_ID]);
+        $rules->add($rules->existsIn([Urd::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => Urd::FIELD_DEPARTMENT_ID]);
 
         return $rules;
     }

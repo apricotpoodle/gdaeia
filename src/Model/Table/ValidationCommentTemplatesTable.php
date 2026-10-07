@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\ValidationCommentTemplate;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
@@ -31,17 +32,17 @@ final class ValidationCommentTemplatesTable extends Table
     {
         parent::initialize($config);
         $this->setTable('validation_comment_templates');
-        $this->setPrimaryKey('id');
+        $this->setPrimaryKey(ValidationCommentTemplate::FIELD_ID);
         $this->addBehavior('Timestamp');
     }
 
     /** @inheritDoc */
     public function validationDefault(Validator $validator): Validator
     {
-        return $validator->inList('decision', ['accepter', 'refuser'])->notEmptyString('decision')
-            ->scalar('label')->maxLength('label', 120)->notEmptyString('label')
-            ->scalar('content')->notEmptyString('content')
-            ->nonNegativeInteger('position')->notEmptyString('position')
-            ->boolean('active')->notEmptyString('active');
+        return $validator->inList(ValidationCommentTemplate::FIELD_DECISION, ['accepter', 'refuser'])->notEmptyString(ValidationCommentTemplate::FIELD_DECISION)
+            ->scalar(ValidationCommentTemplate::FIELD_LABEL)->maxLength(ValidationCommentTemplate::FIELD_LABEL, 120)->notEmptyString(ValidationCommentTemplate::FIELD_LABEL)
+            ->scalar(ValidationCommentTemplate::FIELD_CONTENT)->notEmptyString(ValidationCommentTemplate::FIELD_CONTENT)
+            ->nonNegativeInteger(ValidationCommentTemplate::FIELD_POSITION)->notEmptyString(ValidationCommentTemplate::FIELD_POSITION)
+            ->boolean(ValidationCommentTemplate::FIELD_ACTIVE)->notEmptyString(ValidationCommentTemplate::FIELD_ACTIVE);
     }
 }

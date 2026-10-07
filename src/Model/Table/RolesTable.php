@@ -49,8 +49,8 @@ class RolesTable extends AppTable
         parent::initialize($config);
 
         $this->setTable('roles');
-        $this->setDisplayField('name');
-        $this->setPrimaryKey('id');
+        $this->setDisplayField(Role::FIELD_NAME);
+        $this->setPrimaryKey(Role::FIELD_ID);
 
         $this->hasMany('Applicationvalidationsteps', [
             'foreignKey' => 'role_id',
@@ -87,34 +87,34 @@ class RolesTable extends AppTable
     public function validationDefault(Validator $validator): Validator
     {
         $validator
-            ->boolean('base')
-            ->notEmptyString('base');
+            ->boolean(Role::FIELD_BASE)
+            ->notEmptyString(Role::FIELD_BASE);
 
         $validator
-            ->scalar('code')
-            ->maxLength('code', 16)
-            ->requirePresence('code', 'create', __('Ce champ est obligatoire.'))
-            ->notEmptyString('code', __('Ce champ est obligatoire.'))
+            ->scalar(Role::FIELD_CODE)
+            ->maxLength(Role::FIELD_CODE, 16)
+            ->requirePresence(Role::FIELD_CODE, 'create', __('Ce champ est obligatoire.'))
+            ->notEmptyString(Role::FIELD_CODE, __('Ce champ est obligatoire.'))
             /** @link validateUnique() */
-            ->add('code', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Role::FIELD_CODE, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('name')
-            ->maxLength('name', 64)
-            ->requirePresence('name', 'create', __('Ce champ est obligatoire.'))
-            ->notEmptyString('name', __('Ce champ est obligatoire.'))
+            ->scalar(Role::FIELD_NAME)
+            ->maxLength(Role::FIELD_NAME, 64)
+            ->requirePresence(Role::FIELD_NAME, 'create', __('Ce champ est obligatoire.'))
+            ->notEmptyString(Role::FIELD_NAME, __('Ce champ est obligatoire.'))
             /** @link validateUnique() */
-            ->add('name', 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
+            ->add(Role::FIELD_NAME, 'unique', ['rule' => 'validateUnique', 'provider' => 'table']);
 
         $validator
-            ->scalar('sort')
-            ->maxLength('sort', 64)
-            ->requirePresence('sort', 'create', __('Ce champ est obligatoire.'))
-            ->notEmptyString('sort', __('Ce champ est obligatoire.'));
+            ->scalar(Role::FIELD_SORT)
+            ->maxLength(Role::FIELD_SORT, 64)
+            ->requirePresence(Role::FIELD_SORT, 'create', __('Ce champ est obligatoire.'))
+            ->notEmptyString(Role::FIELD_SORT, __('Ce champ est obligatoire.'));
 
         $validator
-            ->dateTime('deleted')
-            ->allowEmptyDateTime('deleted');
+            ->dateTime(Role::FIELD_DELETED)
+            ->allowEmptyDateTime(Role::FIELD_DELETED);
 
         return $validator;
     }
@@ -128,8 +128,8 @@ class RolesTable extends AppTable
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique(['code']), ['errorField' => 'code']);
-        $rules->add($rules->isUnique(['name']), ['errorField' => 'name']);
+        $rules->add($rules->isUnique([Role::FIELD_CODE]), ['errorField' => Role::FIELD_CODE]);
+        $rules->add($rules->isUnique([Role::FIELD_NAME]), ['errorField' => Role::FIELD_NAME]);
 
         return $rules;
     }
@@ -144,7 +144,7 @@ class RolesTable extends AppTable
     public function findRoleAccessVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
         $query = $this->findVisibleTo($query, $user);
-        if (!$user->get('issuperuser') && $user->get('role_id') !== User::ROLE_ADMIN) {
+        if (!$user->get(User::FIELD_ISSUPERUSER) && $user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN) {
             $query->where(['1 = 0']);
         }
 
@@ -159,7 +159,7 @@ class RolesTable extends AppTable
      */
     public function softDelete(Role $role): bool
     {
-        $role->set('deleted', DateTime::now());
+        $role->set(Role::FIELD_DELETED, DateTime::now());
 
         return (bool)$this->save($role);
     }

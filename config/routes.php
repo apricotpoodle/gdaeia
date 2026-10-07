@@ -125,6 +125,13 @@ return function (RouteBuilder $routes): void {
         $builder->resources('FieldAuthorizations');
         $builder->resources('Applicationforms');
         $builder->resources('Comments');
+        $builder->resources('Contracttypes');
+        $builder->resources('Hiringreasons');
+        $builder->resources('Professionalcategories');
+        $builder->resources('Worktimes');
+        $builder->resources('Periods');
+        $builder->resources('Budgetfeatures');
+        $builder->resources('Yesnos');
 
         $builder->fallbacks();
     });

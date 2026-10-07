@@ -8,6 +8,7 @@ use App\Model\Entity\Applicationvalidationstep;
 use App\Model\Entity\User;
 use App\Model\Entity\Validationsequence;
 use App\Model\Entity\ValidationWorkflowRun;
+use App\Model\Entity\WorkflowSetting;
 use Cake\I18n\DateTime;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -56,7 +57,7 @@ final class ApplicationformValidationWorkflow
             return $default;
         }
 
-        $value = strtolower(trim((string)$setting->get('value')));
+        $value = strtolower(trim((string)$setting->get(WorkflowSetting::FIELD_VALUE)));
         if (in_array($value, ['1', 'true', 'yes', 'on'], true)) {
             return true;
         }
