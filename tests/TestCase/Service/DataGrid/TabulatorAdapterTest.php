@@ -125,7 +125,7 @@ class TabulatorAdapterTest extends TestCase
 
     public function testLaRequeteRefuseUnePlageDeDatesInversee(): void
     {
-        $query = $this->queryForAlias('Users');
+        $query = $this->stubQueryForAlias('Users');
         $request = new ServerRequest([
             'query' => ['filters' => [[
                 'field' => 'created',
@@ -169,11 +169,77 @@ class TabulatorAdapterTest extends TestCase
         $this->assertFalse($result['data'][0]->has('grid_rights'));
     }
 
+    public function testLaRequeteTraduitTousLesOperateursEtIgnoreLesFiltresVides(): void
+    {
+        $query = $this->queryForAlias('Users');
+        $whereCalls = [];
+        $query->expects($this->never())->method('orderBy');
+        $query->expects($this->exactly(8))->method('where')
+            ->willReturnCallback(function (mixed $conditions) use (&$whereCalls, $query): SelectQuery {
+                $whereCalls[] = $conditions;
+
+                return $query;
+            });
+        $request = new ServerRequest([
+            'query' => [
+                'sorters' => [['field' => null, 'dir' => 'INVALID']],
+                'filters' => [
+                    ['field' => 'empty', 'type' => '=', 'value' => ''],
+                    ['field' => 'level', 'type' => 'like', 'value' => '4'],
+                    ['field' => 'name', 'type' => '=', 'value' => 'A'],
+                    ['field' => 'name', 'type' => '!=', 'value' => 'B'],
+                    ['field' => 'name', 'type' => '<', 'value' => 'C'],
+                    ['field' => 'name', 'type' => '<=', 'value' => 'D'],
+                    ['field' => 'name', 'type' => '>', 'value' => 'E'],
+                    ['field' => 'name', 'type' => '>=', 'value' => 'F'],
+                    ['field' => 'name', 'type' => 'unsupported', 'value' => 'G'],
+                ],
+            ],
+        ]);
+
+        (new TabulatorAdapter())->adaptRequest($request, $query);
+
+        $this->assertSame([
+            ['Users.level' => 4],
+            ['Users.name =' => 'A'],
+            ['Users.name !=' => 'B'],
+            ['Users.name <' => 'C'],
+            ['Users.name <=' => 'D'],
+            ['Users.name >' => 'E'],
+            ['Users.name >=' => 'F'],
+            ['Users.name' => 'G'],
+        ], $whereCalls);
+    }
+
+    public function testLaRequeteRefuseUnePlageDeDatesMalFormee(): void
+    {
+        $query = $this->stubQueryForAlias('Users');
+        $request = new ServerRequest([
+            'query' => ['filters' => [[
+                'field' => 'created',
+                'value' => ['start' => '15-01-2026', 'end' => '2026-01-31'],
+            ]]],
+        ]);
+
+        $this->expectException(UnprocessableContentException::class);
+        (new TabulatorAdapter())->adaptRequest($request, $query);
+    }
+
     private function queryForAlias(string $alias): SelectQuery
     {
         $repository = $this->createStub(Table::class);
         $repository->method('getAlias')->willReturn($alias);
         $query = $this->createMock(SelectQuery::class);
+        $query->method('getRepository')->willReturn($repository);
+
+        return $query;
+    }
+
+    private function stubQueryForAlias(string $alias): SelectQuery
+    {
+        $repository = $this->createStub(Table::class);
+        $repository->method('getAlias')->willReturn($alias);
+        $query = $this->createStub(SelectQuery::class);
         $query->method('getRepository')->willReturn($repository);
 
         return $query;
