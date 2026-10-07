@@ -6,6 +6,8 @@ namespace App\Service\DataGrid;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\Paging\PaginatedInterface;
 use Cake\Http\ServerRequest;
+use Cake\Http\Exception\UnprocessableContentException;
+use DateTimeImmutable;
 use Cake\ORM\Query\SelectQuery;
 use Cake\Utility\Inflector;
 
@@ -66,6 +68,7 @@ class TabulatorAdapter
                         $dateRange !== null
                         && (array_key_exists('start', $dateRange) || array_key_exists('end', $dateRange))
                     ) {
+                        $this->validateDateRange($dateRange);
                         $this->applyDateRangeCondition($query, $ormField, $dateRange);
                         continue; // On passe au filtre suivant
                     }
@@ -141,6 +144,35 @@ class TabulatorAdapter
     private function dateRange(mixed $value): ?array
     {
         return is_array($value) ? $value : null;
+    }
+
+    /**
+     * Vérifie la cohérence chronologique d'une plage de dates reçue par l'API.
+     *
+     * @param array<string, mixed> $range Plage contenant éventuellement start et end.
+     * @return void
+     * @throws \Cake\Http\Exception\UnprocessableContentException Si la plage est inversée ou mal formée.
+     */
+    private function validateDateRange(array $range): void
+    {
+        $start = $range['start'] ?? null;
+        $end = $range['end'] ?? null;
+        if ($start === null || $start === '' || $end === null || $end === '') {
+            return;
+        }
+
+        $startDate = is_string($start) ? DateTimeImmutable::createFromFormat('!Y-m-d', $start) : false;
+        $endDate = is_string($end) ? DateTimeImmutable::createFromFormat('!Y-m-d', $end) : false;
+        $validStart = $startDate !== false && $startDate->format('Y-m-d') === $start;
+        $validEnd = $endDate !== false && $endDate->format('Y-m-d') === $end;
+
+        if (!$validStart || !$validEnd) {
+            throw new UnprocessableContentException(__('Les dates de la plage doivent respecter le format AAAA-MM-JJ.'));
+        }
+
+        if ($startDate > $endDate) {
+            throw new UnprocessableContentException(__('La date de début doit être antérieure ou égale à la date de fin.'));
+        }
     }
 
     /**

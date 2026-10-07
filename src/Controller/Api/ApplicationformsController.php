@@ -18,6 +18,7 @@ use App\Service\Workflow\ApplicationformValidationWorkflow;
 use App\Service\Workflow\WorkflowStartFailureException;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\NotFoundException;
+use Cake\Http\Exception\UnprocessableContentException;
 use Cake\Http\Response;
 use Cake\I18n\DateTime;
 use Cake\ORM\Query\SelectQuery;
@@ -540,9 +541,9 @@ class ApplicationformsController extends AppController
     /**
      * Méthode Index (GET /api/applicationforms.json)
      *
-     * @return void
+     * @return \Cake\Http\Response|null
      */
-    public function index(): void
+    public function index(): ?Response
     {
         $this->request->allowMethod(['get']);
 
@@ -574,9 +575,13 @@ class ApplicationformsController extends AppController
             ]);
 
         // 2. Application des tris et filtres Tabulator
-        $query = $adapter->adaptRequest($this->request, $query, [
-            'validation_status' => 'Applicationformstatuses.validationstatus_id',
-        ]);
+        try {
+            $query = $adapter->adaptRequest($this->request, $query, [
+                'validation_status' => 'Applicationformstatuses.validationstatus_id',
+            ]);
+        } catch (UnprocessableContentException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 422);
+        }
 
         // 3. Pagination native
         try {
@@ -601,6 +606,8 @@ class ApplicationformsController extends AppController
 
         $this->set($output);
         $this->viewBuilder()->setOption('serialize', array_keys($output));
+
+        return null;
     }
 
     /**

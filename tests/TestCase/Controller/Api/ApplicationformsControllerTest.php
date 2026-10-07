@@ -94,6 +94,30 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('"data": []');
     }
 
+    public function testLApiRefuseUnePlageDeDatesInverseeAvecUneErreurJson(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $query = http_build_query([
+            'filters' => [[
+                'field' => 'begin_at',
+                'type' => '=',
+                'value' => ['start' => '2024-10-01', 'end' => '2023-01-01'],
+            ]],
+        ]);
+
+        $this->get('/api/applicationforms.json?' . $query);
+
+        $this->assertResponseCode(422);
+        $this->assertHeaderContains('Content-Type', 'application/json');
+        $body = json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame([
+            'success' => false,
+            'message' => 'La date de début doit être antérieure ou égale à la date de fin.',
+            'details' => [],
+            'errors' => ['La date de début doit être antérieure ou égale à la date de fin.'],
+        ], $body);
+    }
+
     public function testUnOperateurSansDepartementNeVoitAucuneDemande(): void
     {
         $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);

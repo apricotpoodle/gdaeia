@@ -7,6 +7,7 @@ use App\Service\DataGrid\TabulatorAdapter;
 use Cake\Database\Expression\QueryExpression;
 use Cake\Database\ValueBinder;
 use Cake\Datasource\Paging\PaginatedInterface;
+use Cake\Http\Exception\UnprocessableContentException;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Entity;
 use Cake\ORM\Query\SelectQuery;
@@ -120,6 +121,20 @@ class TabulatorAdapterTest extends TestCase
         (new TabulatorAdapter())->adaptRequest($request, $query);
 
         $this->assertStringContainsString('Users.created BETWEEN', $sql);
+    }
+
+    public function testLaRequeteRefuseUnePlageDeDatesInversee(): void
+    {
+        $query = $this->queryForAlias('Users');
+        $request = new ServerRequest([
+            'query' => ['filters' => [[
+                'field' => 'created',
+                'value' => ['start' => '2026-10-01', 'end' => '2026-01-01'],
+            ]]],
+        ]);
+
+        $this->expectException(UnprocessableContentException::class);
+        (new TabulatorAdapter())->adaptRequest($request, $query);
     }
 
     public function testLaReponseRespecteLeFormatTabulatorEtAppliqueLesDroits(): void

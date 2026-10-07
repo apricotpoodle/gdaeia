@@ -23,7 +23,6 @@ export function getApplicationformColumns(metadata = {}) {
         // 5. CGR
         ColumnsFactory.text("cgr", label("cgr", "CGR"), {
             width: undefined, // Supprime la largeur fixe arbitraire
-            widthFit: "fitData",
             widthGrow: 0,
             widthShrink: 0
              }),

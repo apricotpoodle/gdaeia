@@ -500,6 +500,91 @@ export class TabulatorBuilder {
     build() {
         this._compileActionColumn();
 
+        const displayAjaxError = (payload, fallback = 'Impossible de charger les données.') => {
+            const message = payload?.message
+                || (Array.isArray(payload?.errors) ? payload.errors[0] : null)
+                || fallback;
+
+            FlashManager.error(message);
+        };
+
+        /**
+         * Intercepte les réponses HTTP en erreur afin de respecter le contrat
+         * JSON de l'API et d'éviter le journal d'erreur interne de Tabulator.
+         *
+         * @param {string} url URL appelée par Tabulator.
+         * @param {RequestInit} config Configuration Fetch générée par Tabulator.
+         * @returns {Promise<Object>} Charge utile Tabulator, vide en cas d'erreur.
+         */
+        this.config.ajaxRequestFunc = async (url, config, params = {}) => {
+            try {
+                const queryParts = [];
+                const hasMeaningfulValue = (value) => {
+                    if (Array.isArray(value)) {
+                        return value.some(hasMeaningfulValue);
+                    }
+
+                    if (value !== null && typeof value === 'object') {
+                        return Object.values(value).some(hasMeaningfulValue);
+                    }
+
+                    return value !== null && value !== undefined && value !== '';
+                };
+
+                const appendQueryParam = (value, key) => {
+                    if (value === null || value === undefined || value === '') {
+                        return;
+                    }
+
+                    if (Array.isArray(value)) {
+                        value.forEach((item, index) => {
+                            appendQueryParam(item, key + '[' + index + ']');
+                        });
+
+                        return;
+                    }
+
+                    if (value !== null && typeof value === 'object') {
+                        Object.keys(value).forEach((childKey) => {
+                            appendQueryParam(value[childKey], key + '[' + childKey + ']');
+                        });
+
+                        return;
+                    }
+
+                    queryParts.push(encodeURIComponent(key) + '=' + encodeURIComponent(value));
+                };
+
+                Object.keys(params).forEach((key) => {
+                    let value = params[key];
+                    if (key === 'filters' && Array.isArray(value)) {
+                        value = value.filter((filter) => hasMeaningfulValue(filter?.value));
+                    }
+                    appendQueryParam(value, key);
+                });
+                const requestUrl = queryParts.length > 0
+                    ? url + (url.includes('?') ? '&' : '?') + queryParts.join('&')
+                    : url;
+                const response = await fetch(requestUrl, config);
+                const payload = await response.json().catch(() => null);
+
+                if (!response.ok) {
+                    displayAjaxError(
+                        payload,
+                        response.status + ' ' + response.statusText,
+                    );
+
+                    return { data: [], last_page: 1 };
+                }
+
+                return payload;
+            } catch (error) {
+                displayAjaxError(null, error?.message || 'Impossible de charger les données.');
+
+                return { data: [], last_page: 1 };
+            }
+        };
+
         const isProgressive = this.config.progressiveLoad === "scroll";
         const isPaginationDisabled = !this.config.pagination && !isProgressive;
 

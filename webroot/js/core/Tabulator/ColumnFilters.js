@@ -43,6 +43,12 @@ export class ColumnFilters {
         container.appendChild(inputStart);
         container.appendChild(inputEnd);
 
+        const currentValue = cell.getValue();
+        if (currentValue && typeof currentValue === 'object') {
+            inputStart.value = currentValue.start || '';
+            inputEnd.value = currentValue.end || '';
+        }
+
         // Adaptation dynamique selon la largeur de la colonne (ResizeObserver)
         const updateLayout = (width) => {
             const breakpoint = editorParams?.responsiveBreakpoint || 120;
@@ -78,7 +84,7 @@ export class ColumnFilters {
             const endVal = inputEnd.value || null;
 
             if (!startVal && !endVal) {
-                success("");
+                success(null);
             } else {
                 success({ start: startVal, end: endVal });
             }

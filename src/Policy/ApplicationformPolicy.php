@@ -5,6 +5,7 @@ namespace App\Policy;
 
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\User;
+use App\Model\Entity\UserDepartment;
 use App\Model\Entity\ValidationWorkflowRun;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Authorization\IdentityInterface;
@@ -56,8 +57,8 @@ class ApplicationformPolicy extends AppPolicy
 
         return TableRegistry::getTableLocator()->get('UserDepartments')->find()
             ->where([
-                User::FIELD_ID => $user->get(User::FIELD_ID),
-                Applicationform::FIELD_DEPARTMENT_ID => $applicationform->get(Applicationform::FIELD_DEPARTMENT_ID),
+                'UserDepartments.' . UserDepartment::FIELD_USER_ID => $user->get(User::FIELD_ID),
+                'UserDepartments.' . UserDepartment::FIELD_DEPARTMENT_ID => $applicationform->get(Applicationform::FIELD_DEPARTMENT_ID),
             ])
             ->count() > 0;
     }
