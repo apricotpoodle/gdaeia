@@ -95,6 +95,16 @@ class ReferenceControllersTest extends TestCase
         $this->assertResponseCode(403);
     }
 
+    public function testLesIndexWebDesSeptReferentielsUtilisentLeTemplatePartage(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        foreach (self::references() as [$slug]) {
+            $this->get('/' . $slug);
+            $this->assertResponseOk();
+        }
+    }
+
     private function authenticateSuperAdministrator(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);

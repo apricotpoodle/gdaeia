@@ -23,7 +23,7 @@ abstract class ReferenceController extends AppController
     {
         $table = $this->referenceTable();
         $this->Authorization->authorize($table->newEmptyEntity(), 'index');
-        $this->viewBuilder()->setTemplate('References/index');
+        $this->viewBuilder()->setTemplatePath('References')->setTemplate('index');
         $this->set($this->referenceViewData());
     }
 
@@ -45,7 +45,7 @@ abstract class ReferenceController extends AppController
             $this->flashValidationErrors($entity, $this->referenceAlias());
         }
 
-        $this->viewBuilder()->setTemplate('References/form');
+        $this->viewBuilder()->setTemplatePath('References')->setTemplate('form');
         $this->set($this->referenceViewData() + ['reference' => $entity, 'mode' => 'add']);
 
         return null;
@@ -68,7 +68,7 @@ abstract class ReferenceController extends AppController
             $this->flashValidationErrors($entity, $this->referenceAlias());
         }
 
-        $this->viewBuilder()->setTemplate('References/form');
+        $this->viewBuilder()->setTemplatePath('References')->setTemplate('form');
         $this->set($this->referenceViewData() + ['reference' => $entity, 'mode' => 'edit']);
 
         return null;
