@@ -50,6 +50,11 @@ Lorsque `setRemotePagination()` est invoqué, le comportement passe en mode serv
 
 - Filtrage : Saisissez la valeur et appuyez sur `Entrée`. Tabulator transmettra un tableau `filters` contenant le champ, le type d'opérateur et la valeur à l'API CakePHP.
 
+La grille des menus conserve son affichage en arbre tout en utilisant le mode
+remote. Les lots sont paginés par branches racines afin que les descendants ne
+soient jamais séparés de leur parent. Un filtre correspondant à un descendant
+retourne automatiquement les ancêtres nécessaires au contexte de la branche.
+
 ### Configuration de la Colonne d'Actions
 La méthode `.setWithActions()` du `TabulatorBuilder` applique par défaut les boutons standards du CRUD de ligne :
 * `view` (Read / Bouton Info Bleu)

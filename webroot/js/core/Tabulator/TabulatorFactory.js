@@ -239,10 +239,7 @@ export class TabulatorFactory {
             .setAjaxSource('/api/menus/grid.json')
             .setController('menus')
             .setHeight('calc(100vh - 180px)')
-            .disablePagination()
             .addOptions({
-                pagination: false,
-                progressiveLoad: false,
                 persistence: false, // Bloque la propagation de l'option aux colonnes
                 dataTree: true,
                 dataTreeStartExpanded: true,

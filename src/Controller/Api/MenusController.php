@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Model\Entity\User;
+use App\Service\DataGrid\TabulatorAdapter;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
@@ -55,22 +56,93 @@ class MenusController extends AppController
         // Verrou de sécurité calqué sur la Policy des Menus
         $this->Authorization->authorize($this->Menus->newEmptyEntity(), 'index');
 
-        // 1. Récupération de l'arbre via le TreeBehavior de CakePHP
-        $menus = $this->Menus->find('threaded')
-            ->orderBy(['lft' => 'ASC'])
-            ->all();
+        $adapter = new TabulatorAdapter();
+        $queryParams = $this->request->getQueryParams();
+        $filters = $queryParams['filters'] ?? [];
 
-        // 2. Instanciation de notre usine à droits (DRY)
+        // La pagination porte sur les racines afin de ne jamais séparer une
+        // branche de son parent. Les descendants restent dans le même lot.
+        $rootIds = null;
+        if (is_array($filters) && $filters !== []) {
+            $matchingQuery = $this->Menus->find();
+            $matchingQuery = $adapter->adaptRequest($this->request, $matchingQuery);
+            $matchingMenus = $matchingQuery
+                ->select(['id', 'lft', 'rght'])
+                ->all()
+                ->toList();
+
+            $rootCandidates = $this->Menus->find()
+                ->select(['id', 'lft', 'rght'])
+                ->where(['parent_id IS' => null])
+                ->all()
+                ->toList();
+
+            $rootIds = [];
+            foreach ($matchingMenus as $matchingMenu) {
+                foreach ($rootCandidates as $rootCandidate) {
+                    if (
+                        (int)$rootCandidate->get('lft') <= (int)$matchingMenu->get('lft')
+                        && (int)$rootCandidate->get('rght') >= (int)$matchingMenu->get('rght')
+                    ) {
+                        $rootId = (int)$rootCandidate->get('id');
+                        $rootIds[$rootId] = $rootId;
+                        break;
+                    }
+                }
+            }
+            $rootIds = array_values($rootIds);
+        }
+
+        $rootsQuery = $this->Menus->find()
+            ->where(['parent_id IS' => null])
+            ->orderBy(['Menus.lft' => 'ASC']);
+        if ($rootIds !== null) {
+            $rootsQuery->where($rootIds === [] ? ['1 = 0'] : ['id IN' => $rootIds]);
+        }
+
+        // Le filtre est déjà appliqué aux descendants. On conserve les tris
+        // Tabulator pour les racines, sans réappliquer les filtres aux racines.
+        $sortQueryParams = $queryParams;
+        unset($sortQueryParams['filters']);
+        $sortRequest = $this->request->withQueryParams($sortQueryParams);
+        $rootsQuery = $adapter->adaptRequest($sortRequest, $rootsQuery);
+
+        $paginatedRoots = $this->paginate($rootsQuery, [
+            'limit' => max(1, (int)($queryParams['size'] ?? 20)),
+            'page' => max(1, (int)($queryParams['page'] ?? 1)),
+            'sortableFields' => [],
+        ]);
+
+        $rootRows = $paginatedRoots->items();
+        $branchConditions = [];
+        foreach ($rootRows as $root) {
+            $branchConditions[] = [
+                'Menus.lft >=' => (int)$root->lft,
+                'Menus.rght <=' => (int)$root->rght,
+            ];
+        }
+
+        $menus = [];
+        if ($branchConditions !== []) {
+            $menus = $this->Menus->find('threaded')
+                ->where(['OR' => $branchConditions])
+                ->orderBy(['Menus.lft' => 'ASC'])
+                ->all();
+        }
+
+        // Instanciation de notre usine à droits (DRY)
         $rightsFormatter = $this->createGridRightsFormatter(['moveUp', 'moveDown']);
 
-        // 3. Application récursive des droits pour la vue en arbre de Tabulator
+        // Application récursive des droits pour la vue en arbre de Tabulator
         /** @var iterable<int, \App\Model\Entity\Menu> $menus */
         $data = $this->formatMenuTreeWithRights($menus, $rightsFormatter);
+        $pagingParams = $paginatedRoots->pagingParams();
 
         $this->set([
             'data' => $data,
+            'last_page' => $pagingParams['pageCount'] ?? 1,
         ]);
-        $this->viewBuilder()->setOption('serialize', ['data']);
+        $this->viewBuilder()->setOption('serialize', ['data', 'last_page']);
     }
 
     /**
