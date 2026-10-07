@@ -13,7 +13,7 @@ class ValidationErrorPresenterTest extends TestCase
 {
     private function presenter(): ValidationErrorPresenter
     {
-        $metadata = $this->createMock(FieldMetadataProviderInterface::class);
+        $metadata = $this->createStub(FieldMetadataProviderInterface::class);
         $metadata->method('label')->willReturnCallback(
             static fn(string $resource, string $field): string => match ($field) {
                 'department_id' => 'Département',
