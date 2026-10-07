@@ -251,7 +251,9 @@ class ApplicationformsTable extends Table
                         return true;
                     }
 
-                    return strtotime((string)$value) >= strtotime((string)$context['data'][Applicationform::FIELD_BEGIN_AT]);
+                    return strtotime((string)$value) >= strtotime(
+                        (string)$context['data'][Applicationform::FIELD_BEGIN_AT],
+                    );
                 },
                 'message' => __('La date de fin doit être strictement supérieure à la date de début.'),
             ])
@@ -266,7 +268,9 @@ class ApplicationformsTable extends Table
                     // Récupération du type de contrat
                     $contracttypesTable = TableRegistry::getTableLocator()->get('Contracttypes');
                     /** @var \App\Model\Entity\Contracttype|null $contractType */
-                    $contractType = $contracttypesTable->find()->where([Contracttype::FIELD_ID => $contractTypeId])->first();
+                    $contractType = $contracttypesTable->find()
+                        ->where([Contracttype::FIELD_ID => $contractTypeId])
+                        ->first();
 
                     if (!$contractType) {
                         return true;
@@ -321,17 +325,33 @@ class ApplicationformsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn([Applicationform::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => Applicationform::FIELD_DEPARTMENT_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_USER_ID], 'Users'), ['errorField' => Applicationform::FIELD_USER_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_CONTRACTTYPE_ID], 'Contracttypes'), ['errorField' => Applicationform::FIELD_CONTRACTTYPE_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_HIRINGREASON_ID], 'Hiringreasons'), ['errorField' => Applicationform::FIELD_HIRINGREASON_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_BUDGETFEATURE_ID], 'Budgetfeatures'), ['errorField' => Applicationform::FIELD_BUDGETFEATURE_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_DEPARTMENT_ID], 'Departments'), [
+            'errorField' => Applicationform::FIELD_DEPARTMENT_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_USER_ID], 'Users'), [
+            'errorField' => Applicationform::FIELD_USER_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_CONTRACTTYPE_ID], 'Contracttypes'), [
+            'errorField' => Applicationform::FIELD_CONTRACTTYPE_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_HIRINGREASON_ID], 'Hiringreasons'), [
+            'errorField' => Applicationform::FIELD_HIRINGREASON_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_BUDGETFEATURE_ID], 'Budgetfeatures'), [
+            'errorField' => Applicationform::FIELD_BUDGETFEATURE_ID,
+        ]);
         $rules->add($rules->existsIn([Applicationform::FIELD_PROFESSIONALCATEGORY_ID], 'Professionalcategories'), [
             'errorField' => Applicationform::FIELD_PROFESSIONALCATEGORY_ID,
         ]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_WORKTIME_ID], 'Worktimes'), ['errorField' => Applicationform::FIELD_WORKTIME_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_PERIOD_ID], 'Periods'), ['errorField' => Applicationform::FIELD_PERIOD_ID]);
-        $rules->add($rules->existsIn([Applicationform::FIELD_YESNO_ID], 'Yesnos'), ['errorField' => Applicationform::FIELD_YESNO_ID]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_WORKTIME_ID], 'Worktimes'), [
+            'errorField' => Applicationform::FIELD_WORKTIME_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_PERIOD_ID], 'Periods'), [
+            'errorField' => Applicationform::FIELD_PERIOD_ID,
+        ]);
+        $rules->add($rules->existsIn([Applicationform::FIELD_YESNO_ID], 'Yesnos'), [
+            'errorField' => Applicationform::FIELD_YESNO_ID,
+        ]);
 
         return $rules;
     }
@@ -367,5 +387,46 @@ class ApplicationformsTable extends Table
                 'Applicationforms.department_id IN' => $myDepartmentIds,
             ],
         ]);
+    }
+
+    /**
+     * Crée une nouvelle DAE indépendante à partir d'une DAE existante.
+     *
+     * Les commentaires, les visas et le cycle de validation ne sont pas
+     * copiés : ils sont liés à l'enregistrement source et la nouvelle demande
+     * doit repartir en brouillon avec son nouveau demandeur.
+     *
+     * @param \App\Model\Entity\Applicationform $source DAE à recopier.
+     * @param \App\Model\Entity\User $actor Utilisateur qui déclenche la copie.
+     * @return \App\Model\Entity\Applicationform|false Nouvelle DAE ou échec de validation/persistance.
+     */
+    public function duplicateFor(Applicationform $source, User $actor): Applicationform|false
+    {
+        $fields = [
+            Applicationform::FIELD_DEPARTMENT_ID,
+            Applicationform::FIELD_CGR,
+            Applicationform::FIELD_CONTRACTTYPE_ID,
+            Applicationform::FIELD_HIRINGREASON_ID,
+            Applicationform::FIELD_REASONFORREPLACEMENT,
+            Applicationform::FIELD_BUDGETFEATURE_ID,
+            Applicationform::FIELD_JOBTITLE,
+            Applicationform::FIELD_PROFESSIONALCATEGORY_ID,
+            Applicationform::FIELD_WORKTIME_ID,
+            Applicationform::FIELD_WORKINGTIMEDISTRIBUTION,
+            Applicationform::FIELD_GROSSREMUNERATION,
+            Applicationform::FIELD_PERIOD_ID,
+            Applicationform::FIELD_QUALIFICATION,
+            Applicationform::FIELD_BEGIN_AT,
+            Applicationform::FIELD_END_AT,
+            Applicationform::FIELD_APPLICANTNAME,
+            Applicationform::FIELD_YESNO_ID,
+            Applicationform::FIELD_COLLABORATOR_ID,
+        ];
+        $data = $source->extract($fields);
+        $data[Applicationform::FIELD_USER_ID] = $actor->get(User::FIELD_ID);
+
+        $duplicate = $this->newEntity($data);
+
+        return $this->save($duplicate) ? $duplicate : false;
     }
 }

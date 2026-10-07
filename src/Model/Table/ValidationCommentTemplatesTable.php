@@ -39,10 +39,17 @@ final class ValidationCommentTemplatesTable extends Table
     /** @inheritDoc */
     public function validationDefault(Validator $validator): Validator
     {
-        return $validator->inList(ValidationCommentTemplate::FIELD_DECISION, ['accepter', 'refuser'])->notEmptyString(ValidationCommentTemplate::FIELD_DECISION)
-            ->scalar(ValidationCommentTemplate::FIELD_LABEL)->maxLength(ValidationCommentTemplate::FIELD_LABEL, 120)->notEmptyString(ValidationCommentTemplate::FIELD_LABEL)
-            ->scalar(ValidationCommentTemplate::FIELD_CONTENT)->notEmptyString(ValidationCommentTemplate::FIELD_CONTENT)
-            ->nonNegativeInteger(ValidationCommentTemplate::FIELD_POSITION)->notEmptyString(ValidationCommentTemplate::FIELD_POSITION)
-            ->boolean(ValidationCommentTemplate::FIELD_ACTIVE)->notEmptyString(ValidationCommentTemplate::FIELD_ACTIVE);
+        return $validator
+            ->inList(ValidationCommentTemplate::FIELD_DECISION, ['accepter', 'refuser'])
+            ->notEmptyString(ValidationCommentTemplate::FIELD_DECISION)
+            ->scalar(ValidationCommentTemplate::FIELD_LABEL)
+            ->maxLength(ValidationCommentTemplate::FIELD_LABEL, 120)
+            ->notEmptyString(ValidationCommentTemplate::FIELD_LABEL)
+            ->scalar(ValidationCommentTemplate::FIELD_CONTENT)
+            ->notEmptyString(ValidationCommentTemplate::FIELD_CONTENT)
+            ->nonNegativeInteger(ValidationCommentTemplate::FIELD_POSITION)
+            ->notEmptyString(ValidationCommentTemplate::FIELD_POSITION)
+            ->boolean(ValidationCommentTemplate::FIELD_ACTIVE)
+            ->notEmptyString(ValidationCommentTemplate::FIELD_ACTIVE);
     }
 }

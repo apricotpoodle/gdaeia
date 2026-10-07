@@ -5,11 +5,11 @@ namespace App\Service\DataGrid;
 
 use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\Paging\PaginatedInterface;
-use Cake\Http\ServerRequest;
 use Cake\Http\Exception\UnprocessableContentException;
-use DateTimeImmutable;
+use Cake\Http\ServerRequest;
 use Cake\ORM\Query\SelectQuery;
 use Cake\Utility\Inflector;
+use DateTimeImmutable;
 
 /**
  * Class TabulatorAdapter
@@ -167,11 +167,15 @@ class TabulatorAdapter
         $validEnd = $endDate !== false && $endDate->format('Y-m-d') === $end;
 
         if (!$validStart || !$validEnd) {
-            throw new UnprocessableContentException(__('Les dates de la plage doivent respecter le format AAAA-MM-JJ.'));
+            throw new UnprocessableContentException(
+                __('Les dates de la plage doivent respecter le format AAAA-MM-JJ.'),
+            );
         }
 
         if ($startDate > $endDate) {
-            throw new UnprocessableContentException(__('La date de début doit être antérieure ou égale à la date de fin.'));
+            throw new UnprocessableContentException(
+                __('La date de début doit être antérieure ou égale à la date de fin.'),
+            );
         }
     }
 

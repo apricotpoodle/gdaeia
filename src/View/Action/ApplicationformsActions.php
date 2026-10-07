@@ -85,6 +85,29 @@ final class ApplicationformsActions
     }
 
     /**
+     * Commande de duplication d'une demande depuis sa fiche.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform Demande source.
+     * @return \App\View\Action\UiAction Commande API protégée par la Policy.
+     */
+    public static function duplicate(Applicationform $applicationform): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_BUTTON,
+            __('Dupliquer'),
+            'fa-copy',
+            '#',
+            'duplicate',
+            $applicationform,
+            [
+                'class' => 'btn btn-sm btn-outline-primary',
+                'id' => 'duplicate-applicationform',
+                'data-applicationform-id' => $applicationform->id,
+            ],
+        );
+    }
+
+    /**
      * @param \App\Model\Entity\Applicationform $applicationform Demande à supprimer.
      * @return \App\View\Action\UiAction Commande POST de suppression contextuelle.
      */

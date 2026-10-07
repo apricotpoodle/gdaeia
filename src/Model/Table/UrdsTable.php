@@ -92,7 +92,9 @@ class UrdsTable extends Table
     {
         $rules->add($rules->existsIn([Urd::FIELD_USER_ID], 'Users'), ['errorField' => Urd::FIELD_USER_ID]);
         $rules->add($rules->existsIn([Urd::FIELD_ROLE_ID], 'Roles'), ['errorField' => Urd::FIELD_ROLE_ID]);
-        $rules->add($rules->existsIn([Urd::FIELD_DEPARTMENT_ID], 'Departments'), ['errorField' => Urd::FIELD_DEPARTMENT_ID]);
+        $rules->add($rules->existsIn([Urd::FIELD_DEPARTMENT_ID], 'Departments'), [
+            'errorField' => Urd::FIELD_DEPARTMENT_ID,
+        ]);
 
         return $rules;
     }

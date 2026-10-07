@@ -174,6 +174,41 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('"field":"jobtitle","label":"Intitulé du poste","reason":');
     }
 
+    /** Vérifie qu'une duplication crée une DAE brouillon sans réutiliser la source. */
+    public function testLaDuplicationCreeUneNouvelleDaePourLeDemandeurCourant(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/1/duplicate.json');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"success":true');
+        $details = json_decode((string)$this->_response->getBody(), true)['details'];
+        $this->assertNotSame(1, $details['id']);
+
+        $connection = ConnectionManager::get('test');
+        $copy = $connection->execute(
+            'SELECT user_id, jobtitle, deleted, archived FROM applicationforms WHERE id = ' . (int)$details['id'],
+        )->fetch('assoc');
+        $source = $connection->execute('SELECT jobtitle FROM applicationforms WHERE id = 1')->fetch('assoc');
+        $this->assertSame('1', (string)$copy['user_id']);
+        $this->assertSame($source['jobtitle'], $copy['jobtitle']);
+        $this->assertNull($copy['deleted']);
+        $this->assertNull($copy['archived']);
+    }
+
+    /** Vérifie que l'API refuse la duplication d'une DAE hors périmètre. */
+    public function testLaDuplicationEstRefuseeHorsDuPerimetreVisible(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/1/duplicate.json');
+
+        $this->assertResponseCode(403);
+    }
+
     /** Vérifie que le créateur peut lancer un cycle configuré. */
     public function testLeCreateurPeutLancerLeCycleDeValidation(): void
     {

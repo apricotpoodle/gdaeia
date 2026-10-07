@@ -19,6 +19,7 @@ $this->assign('title', __('Demande n°{0}', $applicationform->id));
 
 // Inclusion du script JS pour la gestion dynamique des commentaires
 $this->Html->script('views/Applicationforms/applicationform-comments', ['block' => true]);
+$this->Html->script('views/Applicationforms/duplicate', ['type' => 'module', 'block' => true]);
 $this->Html->script('views/Applicationforms/validation-workflow', ['type' => 'module', 'block' => true]);
 ?>
 
@@ -51,6 +52,7 @@ $this->Html->script('views/Applicationforms/validation-workflow', ['type' => 'mo
         <div class="d-flex gap-2">
             <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index()) ?>
             <?= $this->Action->render(\App\View\Action\ApplicationformsActions::viewPdf($applicationform)) ?>
+            <?= $this->Action->render(\App\View\Action\ApplicationformsActions::duplicate($applicationform)) ?>
 
             <?php $isSuperuser = (bool)($identity?->getOriginalData()?->get('issuperuser') ?? false); ?>
             <?= $this->Action->render(\App\View\Action\ApplicationformsActions::edit($applicationform, $isSuperuser)) ?>

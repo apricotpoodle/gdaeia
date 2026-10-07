@@ -81,7 +81,11 @@ class FieldAuthorizationsTable extends Table
             ->scalar(FieldAuthorization::FIELD_ACCESS_LEVEL)
             ->maxLength(FieldAuthorization::FIELD_ACCESS_LEVEL, 20)
             ->notEmptyString(FieldAuthorization::FIELD_ACCESS_LEVEL)
-            ->inList(FieldAuthorization::FIELD_ACCESS_LEVEL, ['EDIT', 'VIEW', 'NONE'], __('Le niveau d’accès est invalide.'));
+            ->inList(
+                FieldAuthorization::FIELD_ACCESS_LEVEL,
+                ['EDIT', 'VIEW', 'NONE'],
+                __('Le niveau d’accès est invalide.'),
+            );
 
         return $validator;
     }
@@ -95,11 +99,17 @@ class FieldAuthorizationsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique([FieldAuthorization::FIELD_ROLE_ID, FieldAuthorization::FIELD_RESOURCE, FieldAuthorization::FIELD_FIELD]), [
+        $rules->add($rules->isUnique([
+            FieldAuthorization::FIELD_ROLE_ID,
+            FieldAuthorization::FIELD_RESOURCE,
+            FieldAuthorization::FIELD_FIELD,
+        ]), [
             'errorField' => FieldAuthorization::FIELD_ROLE_ID,
             'message' => __('Une autorisation existe déjà pour ce rôle, cette ressource et ce champ.'),
         ]);
-        $rules->add($rules->existsIn([FieldAuthorization::FIELD_ROLE_ID], 'Roles'), ['errorField' => FieldAuthorization::FIELD_ROLE_ID]);
+        $rules->add($rules->existsIn([FieldAuthorization::FIELD_ROLE_ID], 'Roles'), [
+            'errorField' => FieldAuthorization::FIELD_ROLE_ID,
+        ]);
 
         return $rules;
     }

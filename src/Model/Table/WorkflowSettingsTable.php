@@ -39,7 +39,12 @@ final class WorkflowSettingsTable extends Table
     /** @inheritDoc */
     public function validationDefault(Validator $validator): Validator
     {
-        return $validator->scalar(WorkflowSetting::FIELD_NAME)->maxLength(WorkflowSetting::FIELD_NAME, 64)->notEmptyString(WorkflowSetting::FIELD_NAME)
-            ->scalar(WorkflowSetting::FIELD_VALUE)->maxLength(WorkflowSetting::FIELD_VALUE, 255)->notEmptyString(WorkflowSetting::FIELD_VALUE);
+        return $validator
+            ->scalar(WorkflowSetting::FIELD_NAME)
+            ->maxLength(WorkflowSetting::FIELD_NAME, 64)
+            ->notEmptyString(WorkflowSetting::FIELD_NAME)
+            ->scalar(WorkflowSetting::FIELD_VALUE)
+            ->maxLength(WorkflowSetting::FIELD_VALUE, 255)
+            ->notEmptyString(WorkflowSetting::FIELD_VALUE);
     }
 }

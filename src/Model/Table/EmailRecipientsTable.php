@@ -80,7 +80,9 @@ class EmailRecipientsTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->existsIn([EmailRecipient::FIELD_EMAIL_LOG_ID], 'EmailLogs'), ['errorField' => EmailRecipient::FIELD_EMAIL_LOG_ID]);
+        $rules->add($rules->existsIn([EmailRecipient::FIELD_EMAIL_LOG_ID], 'EmailLogs'), [
+            'errorField' => EmailRecipient::FIELD_EMAIL_LOG_ID,
+        ]);
 
         return $rules;
     }

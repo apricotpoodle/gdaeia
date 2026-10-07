@@ -41,22 +41,36 @@ final class ValidationWorkflowRunsTable extends Table
         $this->setPrimaryKey(ValidationWorkflowRun::FIELD_ID);
         $this->addBehavior('Timestamp');
         $this->belongsTo('Applicationforms', ['foreignKey' => ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID]);
-        $this->belongsTo('StartedByUsers', ['className' => 'Users', 'foreignKey' => ValidationWorkflowRun::FIELD_STARTED_BY_USER_ID]);
-        $this->hasMany('Applicationvalidationsteps', ['foreignKey' => Applicationvalidationstep::FIELD_VALIDATION_WORKFLOW_RUN_ID]);
+        $this->belongsTo('StartedByUsers', [
+            'className' => 'Users',
+            'foreignKey' => ValidationWorkflowRun::FIELD_STARTED_BY_USER_ID,
+        ]);
+        $this->hasMany('Applicationvalidationsteps', [
+            'foreignKey' => Applicationvalidationstep::FIELD_VALIDATION_WORKFLOW_RUN_ID,
+        ]);
     }
 
     /** @inheritDoc */
     public function validationDefault(Validator $validator): Validator
     {
-        return $validator->integer(ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID)->notEmptyString(ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID)
-            ->integer(ValidationWorkflowRun::FIELD_STARTED_BY_USER_ID)->notEmptyString(ValidationWorkflowRun::FIELD_STARTED_BY_USER_ID)
-            ->inList(ValidationWorkflowRun::FIELD_STATE, ['en_attente', 'acceptee', 'refusee', 'annulee'])->notEmptyString(ValidationWorkflowRun::FIELD_STATE);
+        return $validator
+            ->integer(ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID)
+            ->notEmptyString(ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID)
+            ->integer(ValidationWorkflowRun::FIELD_STARTED_BY_USER_ID)
+            ->notEmptyString(ValidationWorkflowRun::FIELD_STARTED_BY_USER_ID)
+            ->inList(
+                ValidationWorkflowRun::FIELD_STATE,
+                ['en_attente', 'acceptee', 'refusee', 'annulee'],
+            )
+            ->notEmptyString(ValidationWorkflowRun::FIELD_STATE);
     }
 
     /** @inheritDoc */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique([ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID]), ['errorField' => ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID]);
+        $rules->add($rules->isUnique([ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID]), [
+            'errorField' => ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID,
+        ]);
         $rules->add($rules->existsIn([ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID], 'Applicationforms'));
         $rules->add($rules->existsIn([ValidationWorkflowRun::FIELD_STARTED_BY_USER_ID], 'StartedByUsers'));
 
