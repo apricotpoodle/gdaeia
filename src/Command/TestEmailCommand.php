@@ -43,12 +43,15 @@ class TestEmailCommand extends Command
         $this->createUser = $createUser ?? static function (string $email): User {
             $usersTable = TableRegistry::getTableLocator()->get('Users');
 
-            return $usersTable->newEntity([
+            /** @var \App\Model\Entity\User $user */
+            $user = $usersTable->newEntity([
                 'email' => $email,
                 'firstname' => 'John',
                 'lastname' => 'Doe',
                 'token' => 'TEST-TOKEN-123456789',
             ]);
+
+            return $user;
         };
         $this->sendEmail = $sendEmail ?? static function ($user): bool {
             return (new UserMailer())->safeSend('forgotPassword', [$user]);
@@ -81,7 +84,7 @@ class TestEmailCommand extends Command
      */
     public function execute(Arguments $args, ConsoleIo $io): ?int
     {
-        $email = $args->getArgument('email');
+        $email = (string)$args->getArgument('email');
         $io->info("Préparation du courriel de test (forgotPassword) pour : {$email}");
 
         // Simulation d'une entité User (Skinny Controller / Command logic)
