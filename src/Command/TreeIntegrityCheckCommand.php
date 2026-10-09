@@ -53,6 +53,7 @@ final class TreeIntegrityCheckCommand extends Command
             return (new TreeIntegrityAlertService())->configurationErrors();
         };
         $this->sendAlert = $sendAlert ?? static function (array $reports): bool {
+            /** @var list<array<string, mixed>> $reports */
             return (new TreeIntegrityAlertService())->send($reports);
         };
     }
@@ -95,7 +96,7 @@ final class TreeIntegrityCheckCommand extends Command
         }
         $tableName = $args->getOption('table');
         try {
-            $reports = ($this->checkTrees)(is_string($tableName) ? $tableName : null);
+            $reports = array_values(($this->checkTrees)(is_string($tableName) ? $tableName : null));
         } catch (InvalidArgumentException $exception) {
             $io->error($exception->getMessage());
 
