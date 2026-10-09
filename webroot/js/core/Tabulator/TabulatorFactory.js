@@ -249,6 +249,40 @@ export class TabulatorFactory {
             .build();
     }
 
+    /** Fabrique la grille à défilement infini des cycles de validation bloqués. */
+    static createBlockedValidationGrid(selector = '#blocked-validations-table') {
+        const frenchDate = (cell) => {
+            const value = cell.getValue();
+            return value ? new Date(`${value}T00:00:00`).toLocaleDateString('fr-FR') : '—';
+        };
+        return this._createActionGrid(selector)
+            .setAjaxSource('/api/applicationforms/blocked-validations.json')
+            .setController('applicationforms')
+            .setHeight('calc(100vh - 180px)')
+            .setContinuousScroll(20)
+            .setLayout('fitColumns')
+            .setOptions({
+                placeholder: "<div class='tabulator-empty-msg p-4 text-center text-muted'>Aucun cycle de validation bloqué.</div>",
+            })
+            .setColumns([
+                ColumnsFactory.text('number', 'DAE', { width: 90, widthGrow: 0 }),
+                ColumnsFactory.text('begin_at', 'Date de début', { formatter: frenchDate }),
+                ColumnsFactory.text('department', 'Département'),
+                ColumnsFactory.text('blocked_steps', 'Étapes bloquées et rôles attendus', {
+                    formatter: (cell) => cell.getValue()
+                        .map((step) => `<div><strong>Étape ${step.sequence}</strong> — ${step.role}</div>`)
+                        .join(''),
+                }),
+                ColumnsFactory.text('activated_at', 'Activation', { formatter: frenchDate }),
+                ColumnsFactory.text('blocked_since', 'Début du blocage', { formatter: frenchDate }),
+                ColumnsFactory.text('business_days', 'Ancienneté', {
+                    formatter: (cell) => `${cell.getValue()} jours ouvrés`,
+                }),
+            ])
+            .setWithActions(['overrideValidation'])
+            .build();
+    }
+
     /**
          * Fabrique dédiée à la configuration de l'arbre des Menus (MENUS).
          * @static

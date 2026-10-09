@@ -54,6 +54,26 @@ async function loadDefaultDueHours() {
     document.querySelector('#validation-default-due-hours').value = payload.data.default_due_hours;
 }
 
+async function saveBlockedAfterBusinessDays() {
+    const input = document.querySelector('#validation-blocked-after-business-days');
+    const days = Number(input.value);
+    if (!Number.isInteger(days) || days < 1) {
+        FlashManager.warning('Le délai de blocage doit être un entier positif.');
+        return;
+    }
+    await readJson(await fetch('/api/workflow-settings/blocked-after-business-days.json', {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify({ blocked_after_business_days: days }),
+    }), 'Impossible d’enregistrer le délai de blocage.');
+    FlashManager.success('Délai de détection enregistré.');
+}
+
+async function loadBlockedAfterBusinessDays() {
+    const payload = await readJson(await fetch('/api/workflow-settings/blocked-after-business-days.json', { headers: { Accept: 'application/json' } }), 'Impossible de charger le délai de blocage.');
+    document.querySelector('#validation-blocked-after-business-days').value = payload.data.blocked_after_business_days;
+}
+
 async function saveCommentRequirements() {
     const requirements = {
         accepter: document.querySelector('#validation-comment-required-accept').checked,
@@ -120,9 +140,13 @@ document.querySelector('#save-validation-comment-template')?.addEventListener('c
 document.querySelector('#save-validation-default-due-hours')?.addEventListener('click', () => {
     saveDefaultDueHours().catch((error) => FlashManager.error(error.message));
 });
+document.querySelector('#save-validation-blocked-after-business-days')?.addEventListener('click', () => {
+    saveBlockedAfterBusinessDays().catch((error) => FlashManager.error(error.message));
+});
 document.querySelector('#save-validation-comment-requirements')?.addEventListener('click', () => {
     saveCommentRequirements().catch((error) => FlashManager.error(error.message));
 });
 document.querySelector('#cancel-validation-comment-template')?.addEventListener('click', resetForm);
 loadDefaultDueHours().catch((error) => FlashManager.error(error.message));
+loadBlockedAfterBusinessDays().catch((error) => FlashManager.error(error.message));
 loadCommentRequirements().catch((error) => FlashManager.error(error.message));

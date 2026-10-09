@@ -99,6 +99,7 @@ async function render() {
     if (!root || !id) {
         return;
     }
+    const scrollTop = root.scrollTop;
     const response = await fetch('/api/applicationforms/' + id + '/validation.json', {
         credentials: 'same-origin',
         headers: { Accept: 'application/json' },
@@ -112,6 +113,13 @@ async function render() {
     const progress = data.progress || { completed: 0, total: 0, percentage: 0 };
     const requirements = data.commentRequirements || { accepter: false, refuser: true };
     const templates = data.commentTemplates || { accepter: [], refuser: [] };
+    const legend = '<div class="validation-legend mb-3" aria-label="Légende des états de validation">'
+        + '<span class="validation-legend-item validation-legend--blocked">Bloquée</span>'
+        + '<span class="validation-legend-item validation-legend--upcoming">À venir</span>'
+        + '<span class="validation-legend-item validation-legend--pending">En attente</span>'
+        + '<span class="validation-legend-item validation-legend--accepted">Acceptée</span>'
+        + '<span class="validation-legend-item validation-legend--rejected">Refusée</span>'
+        + '</div>';
     const steps = data.steps.map((step) => {
         const dueAt = step.state === 'en_attente' && step.due_at
             ? '<small class="text-muted">Échéance : ' + escape(new Date(step.due_at).toLocaleString('fr-FR')) + '</small>'
@@ -122,20 +130,30 @@ async function render() {
         const comment = step.comment
             ? '<p class="mb-0 mt-2"><small>Commentaire : ' + escape(step.comment) + '</small></p>'
             : '';
+        const visualState = step.is_blocked ? 'blocked' : step.state === 'a_venir' ? 'upcoming' : step.state;
+        const blockedDetails = step.is_blocked
+            ? '<small class="validation-blocked-details">Blocage détecté le '
+                + escape(new Date(step.blocked_since).toLocaleDateString('fr-FR'))
+                + ' — ' + escape(step.blocked_business_days) + ' jour(s) ouvré(s)</small>'
+            : '';
+        const stateBadge = '<span class="validation-state-badge validation-state-badge--' + visualState + '">'
+            + escape(step.is_blocked ? 'Bloquée' : stateLabels[step.state] || step.state)
+            + '</span>';
 
-        return '<li class="list-group-item">'
-            + '<div class="d-flex justify-content-between align-items-start gap-2">'
-            + '<span>Séquence ' + escape(step.sequence_number) + ' — ' + escape(step.role?.name || 'Rôle') + '</span>'
-            + '<strong>' + escape(stateLabels[step.state] || step.state) + '</strong></div>'
-            + dueAt + completedAt + comment + voteControls(step, requirements, templates) + '</li>';
+        return '<li class="list-group-item validation-step validation-step--' + visualState + '">'
+            + '<div class="d-flex justify-content-start align-items-start gap-2">'
+            + stateBadge
+            + '<span>Séquence ' + escape(step.sequence_number) + ' — ' + escape(step.role?.name || 'Rôle') + '</span></div>'
+            + blockedDetails + dueAt + completedAt + comment + voteControls(step, requirements, templates) + '</li>';
     }).join('');
-    root.innerHTML = '<div class="mb-3"><p class="mb-1"><strong>État : '
+    root.innerHTML = legend + '<div class="mb-3"><p class="mb-1"><strong>État : '
         + escape(stateLabels[data.run.state] || data.run.state)
         + '</strong></p><div class="progress" role="progressbar" aria-label="Avancement de la validation" aria-valuenow="'
         + progress.percentage + '" aria-valuemin="0" aria-valuemax="100"><div class="progress-bar" style="width: '
         + progress.percentage + '%">' + progress.percentage + '%</div></div><small class="text-muted">'
         + progress.completed + ' rôle(s) ayant voté sur ' + progress.total + '</small></div><ul class="list-group">'
         + steps + '</ul>';
+    root.scrollTop = scrollTop;
     root.querySelectorAll('.validation-decision-group').forEach((group) => {
         updateDecisionButtons(group, group.dataset.decision || 'accepter');
         group.querySelectorAll('.validation-decision-button').forEach((button) => button.addEventListener('click', () => {

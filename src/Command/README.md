@@ -7,6 +7,7 @@ Ce répertoire contient les commandes en ligne de commande (CLI) accessibles via
 * **`bin/cake test_email <email>`** : Génère un utilisateur fictif et teste l'expédition d'un courriel transactionnel via `UserMailer` (s'appuie sur `AppMailer::safeSend()`).
 * **`bin/cake tree integrity check [--table departments|menus] [--format text|json]`** : Vérifie, sans modifier les données, les relations `parent_id`, les bornes `lft`/`rght` et le niveau lorsque celui-ci est géré par `TreeBehavior`. Un code de sortie non nul signale une incohérence et permet le branchement à une supervision.
 * **`bin/cake validation remind`** : Relance les validateurs des étapes échues, au plus une fois par étape et par période de vingt-quatre heures.
+* **`bin/cake validation notify-blocked`** : Envoie chaque matin le récapitulatif des cycles bloqués, avec le périmètre de consultation propre à chaque administrateur.
 
 ## Relances de validation
 
@@ -14,6 +15,7 @@ Planifiez la commande chaque heure : son idempotence évite les doublons de cour
 
 ```cron
 0 * * * * cd /chemin/vers/gdaetf2 && docker compose exec -T gdaetf bin/cake validation remind >> /var/log/gdaetf2-validation-remind.log 2>&1
+30 7 * * * cd /chemin/vers/gdaetf2 && docker compose exec -T gdaetf bin/cake validation notify-blocked >> /var/log/gdaetf2-validation-blocked.log 2>&1
 ```
 
 ## Surveillance automatisée des arbres

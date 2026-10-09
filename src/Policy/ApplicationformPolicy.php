@@ -34,6 +34,14 @@ class ApplicationformPolicy extends AppPolicy
         return $user !== null;
     }
 
+    /** L'accès à la synthèse des cycles bloqués est réservé aux administrateurs. */
+    public function canViewBlockedValidations(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        $user = $this->getValidUser($identity);
+
+        return $user !== null && ($user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN));
+    }
+
     /**
      * Autorisation pour l'affichage d'un élément (view)
      *

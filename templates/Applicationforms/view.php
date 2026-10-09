@@ -21,9 +21,10 @@ $this->assign('title', __('Demande n°{0}', $applicationform->id));
 $this->Html->script('views/Applicationforms/applicationform-comments', ['block' => true]);
 $this->Html->script('views/Applicationforms/duplicate', ['type' => 'module', 'block' => true]);
 $this->Html->script('views/Applicationforms/validation-workflow', ['type' => 'module', 'block' => true]);
+$this->Html->css('applicationforms', ['block' => true]);
 ?>
 
-<div class="container-fluid mt-2 mb-4 px-3">
+<div class="container-fluid applicationform-view h-100 d-flex flex-column mt-2 mb-4 px-3">
 
     <!-- =================================================================== -->
     <!-- 1. EN-TÊTE DE PAGE : Titre principal & Poste à pourvoir             -->
@@ -170,7 +171,7 @@ $this->Html->script('views/Applicationforms/validation-workflow', ['type' => 'mo
     </ul>
 
     <!-- Contenu des Onglets -->
-    <div class="tab-content border rounded-bottom bg-white p-3 shadow-sm" id="viewTabsContent">
+    <div class="tab-content flex-grow-1 min-height-0 border rounded-bottom bg-white p-3 shadow-sm" id="viewTabsContent">
 
         <!-- ONGLET 1 : DÉTAILS DE LA DEMANDE -->
         <div class="tab-pane fade show active" id="details-pane" role="tabpanel" aria-labelledby="details-tab" tabindex="0">
@@ -263,8 +264,8 @@ $this->Html->script('views/Applicationforms/validation-workflow', ['type' => 'mo
                 ]) ?>
             </div>
         </div>
-        <div class="tab-pane fade" id="validation-pane" role="tabpanel" aria-labelledby="validation-tab" tabindex="0">
-            <div id="validation-workflow" data-applicationform-id="<?= h($applicationform->id) ?>">
+        <div class="tab-pane fade h-100 min-height-0 overflow-hidden" id="validation-pane" role="tabpanel" aria-labelledby="validation-tab" tabindex="0">
+            <div id="validation-workflow" class="validation-workflow-scroll" data-applicationform-id="<?= h($applicationform->id) ?>">
                 <p class="text-muted mb-0"><?= __('Chargement de l’état de validation…') ?></p>
             </div>
         </div>

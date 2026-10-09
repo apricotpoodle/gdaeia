@@ -50,6 +50,35 @@ class WorkflowSettingsController extends AppController
         return $this->jsonSuccess(['default_due_hours' => $hours]);
     }
 
+    /** Lit ou met à jour le délai de détection des cycles bloqués, en jours ouvrés. */
+    public function blockedAfterBusinessDays(): ?Response
+    {
+        $this->request->allowMethod(['get', 'post']);
+        $settings = $this->fetchTable('WorkflowSettings');
+        $this->Authorization->authorize($settings->newEmptyEntity(), 'manage');
+        $name = 'validation.blocked_after_business_days';
+        $setting = $settings->find()->where(['name' => $name])->first();
+        if ($this->request->is('get')) {
+            $this->set('data', [
+                'blocked_after_business_days' => (int)($setting?->get(WorkflowSetting::FIELD_VALUE) ?? 3),
+            ]);
+            $this->viewBuilder()->setOption('serialize', ['data']);
+
+            return null;
+        }
+        $days = $this->positiveInteger(
+            $this->request->getData('blocked_after_business_days'),
+            'blocked_after_business_days',
+        );
+        $setting ??= $settings->newEntity(['name' => $name]);
+        $setting->set('value', (string)$days);
+        if (!$settings->save($setting)) {
+            return $this->validationErrorResponse($setting, 'WorkflowSettings');
+        }
+
+        return $this->jsonSuccess(['blocked_after_business_days' => $days]);
+    }
+
     /** Lit ou met à jour l'obligation de commentaire par décision. */
     public function commentRequirements(): ?Response
     {

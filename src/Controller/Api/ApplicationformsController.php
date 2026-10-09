@@ -15,6 +15,8 @@ use App\Service\CgrResolverService;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
+use App\Service\Workflow\BlockedValidationCycle;
+use App\Service\Workflow\BlockedValidationStep;
 use App\Service\Workflow\WorkflowStartFailureException;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\NotFoundException;
@@ -71,6 +73,45 @@ class ApplicationformsController extends AppController
         } catch (RuntimeException $exception) {
             return $this->workflowResponse(false, $exception->getMessage(), [], 409);
         }
+    }
+
+    /** Retourne les cycles bloqués sous le contrat de défilement infini Tabulator. */
+    public function blockedValidations(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->authorize($this->Applicationforms->newEmptyEntity(), 'viewBlockedValidations');
+        /** @var \App\Model\Entity\User $viewer */
+        $viewer = $this->request->getAttribute('identity')->getOriginalData();
+        $cycles = (new ApplicationformValidationWorkflow())->findBlockedCycles($viewer);
+        $size = max(1, (int)($this->request->getQuery('size') ?? 20));
+        $page = max(1, (int)($this->request->getQuery('page') ?? 1));
+        $rows = array_map(static function (BlockedValidationCycle $cycle): array {
+            return [
+                'id' => $cycle->applicationformNumber,
+                'number' => $cycle->applicationformNumber,
+                'begin_at' => $cycle->beginAt?->format('Y-m-d'),
+                'department' => $cycle->department->name,
+                'blocked_steps' => array_map(static fn(BlockedValidationStep $step): array => [
+                    'sequence' => $step->step->sequence_number,
+                    'role' => $step->role->name,
+                    'activated_at' => $step->activatedAt->format('Y-m-d'),
+                ], $cycle->blockedSteps),
+                'activated_at' => $cycle->activatedAt->format('Y-m-d'),
+                'blocked_since' => $cycle->blockedSince->format('Y-m-d'),
+                'business_days' => $cycle->businessDays,
+                'override_url' => $cycle->url,
+                'grid_rights' => [
+                    'actions' => [
+                        'overrideValidation' => true,
+                    ],
+                ],
+            ];
+        }, array_slice($cycles, ($page - 1) * $size, $size));
+        $this->set([
+            'data' => $rows,
+            'last_page' => max(1, (int)ceil(count($cycles) / $size)),
+        ]);
+        $this->viewBuilder()->setOption('serialize', ['data', 'last_page']);
     }
 
     /**
@@ -167,6 +208,10 @@ class ApplicationformsController extends AppController
         /** @var \App\Model\Entity\User $actor */
         $actor = $this->request->getAttribute('identity')->getOriginalData();
         $workflow = new ApplicationformValidationWorkflow();
+        $blockedStepDetails = [];
+        foreach ($workflow->findBlockedSteps($applicationform, $actor) as $blockedStep) {
+            $blockedStepDetails[(int)$blockedStep->step->id] = $blockedStep;
+        }
         $commentRequirements = $workflow->commentRequirements();
         $commentTemplates = ['accepter' => [], 'refuser' => []];
         $templates = $this->fetchTable('ValidationCommentTemplates')->find()
@@ -194,11 +239,18 @@ class ApplicationformsController extends AppController
             ->all()
             ->toList();
         $isSuperUser = $actor->isSuperUser();
+        $isSimpleAdministrator = !$isSuperUser && $actor->hasRole(User::ROLE_ADMIN);
         $visibleSteps = $isSuperUser
             ? $rawSteps
             : array_values(array_filter(
                 $rawSteps,
-                function ($step) use ($workflow, $actor): bool {
+                function ($step) use ($workflow, $actor, $isSimpleAdministrator): bool {
+                    if (
+                        $isSimpleAdministrator
+                        && $step->get(Applicationvalidationstep::FIELD_STATE) === 'a_venir'
+                    ) {
+                        return false;
+                    }
                     if (
                         (int)$step->get(Applicationvalidationstep::FIELD_ROLE_ID)
                         === (int)$actor->get(User::FIELD_ROLE_ID)
@@ -209,9 +261,10 @@ class ApplicationformsController extends AppController
                     return $workflow->canOverrideStep($step, $actor);
                 },
             ));
-        $steps = array_map(function ($step) use ($workflow, $applicationform, $actor): array {
+        $steps = array_map(function ($step) use ($workflow, $applicationform, $actor, $blockedStepDetails): array {
             $canVoteNormally = $workflow->canVoteStep($step, $applicationform, $actor, false);
             $canOverride = $workflow->canOverrideStep($step, $actor);
+            $blockedStep = $blockedStepDetails[(int)$step->get(Applicationvalidationstep::FIELD_ID)] ?? null;
 
             return [
                 'id' => (int)$step->get(Applicationvalidationstep::FIELD_ID),
@@ -220,6 +273,9 @@ class ApplicationformsController extends AppController
                 'due_at' => $step->get(Applicationvalidationstep::FIELD_DUE_AT),
                 'completed_at' => $step->get(Applicationvalidationstep::FIELD_COMPLETED_AT),
                 'comment' => $step->validation?->obs,
+                'is_blocked' => $blockedStep !== null,
+                'blocked_since' => $blockedStep?->blockedSince,
+                'blocked_business_days' => $blockedStep?->businessDays,
                 'role' => [
                     'id' => (int)$step->get(Applicationvalidationstep::FIELD_ROLE_ID),
                     'name' => (string)($step->role?->get(Role::FIELD_NAME) ?? __(

@@ -404,6 +404,24 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('Second validateur');
     }
 
+    /** Un administrateur simple ne voit pas les étapes qui ne sont pas encore activées. */
+    public function testLAdministrateurSimpleNeVoitPasLesEtapesAVenir(): void
+    {
+        $this->configureVisibilityWorkflow();
+        ConnectionManager::get('test')->update(
+            'applicationvalidationsteps',
+            ['state' => 'a_venir'],
+            ['id' => self::WORKFLOW_TEST_ID + 1],
+        );
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => false, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/api/applicationforms/1/validation.json');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Validateur de test');
+        $this->assertResponseNotContains('Second validateur');
+    }
+
     /** Vérifie qu'un rôle du cycle peut modifier la demande et laisse une trace d'audit. */
     public function testUnValidateurDuCyclePeutModifierLaDemandeAvecUnCommentaireDAudit(): void
     {

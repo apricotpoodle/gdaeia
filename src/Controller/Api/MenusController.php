@@ -8,6 +8,7 @@ use App\Model\Entity\Menu;
 use App\Model\Entity\Role;
 use App\Model\Entity\User;
 use App\Service\DataGrid\TabulatorAdapter;
+use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
@@ -495,7 +496,19 @@ class MenusController extends AppController
             }
         }
 
-        $menus = $query->all();
+        $menus = $query->all()->toList();
+        $blockedValidationCount = 0;
+        if ($user !== null && ($user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN))) {
+            $blockedValidationCount = (new ApplicationformValidationWorkflow())->countBlockedCycles($user);
+            $menus[] = $this->Menus->newEntity([
+                'id' => 'blocked-validations',
+                'parent_id' => null,
+                'name' => 'Cycles bloqués',
+                'url' => 'applicationforms/blocked-validations',
+                'active' => true,
+                'children' => [],
+            ]);
+        }
 
         /** @var array<string, mixed>|null $userData */
         $userData = null;
@@ -523,7 +536,11 @@ class MenusController extends AppController
             }
         }
 
-        $this->set(compact('menus', 'userData'));
-        $this->viewBuilder()->setOption('serialize', ['menus', 'userData']);
+        $this->set([
+            'menus' => $menus,
+            'userData' => $userData,
+            'blocked_validation_count' => $blockedValidationCount,
+        ]);
+        $this->viewBuilder()->setOption('serialize', ['menus', 'userData', 'blocked_validation_count']);
     }
 }

@@ -1,0 +1,102 @@
+.applicationform-view {
+    min-height: 0;
+}
+
+.applicationform-view #viewTabsContent,
+.applicationform-view #validation-pane {
+    min-height: 0;
+}
+
+.validation-workflow-scroll {
+    height: 100%;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding-right: 0.35rem;
+}
+
+.validation-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.validation-legend-item,
+.validation-state-badge {
+    border: 1px solid transparent;
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+}
+
+.validation-legend--blocked,
+.validation-state-badge--blocked {
+    background-color: #f8d7da;
+    border-color: #dc3545;
+    color: #842029;
+}
+
+.validation-legend--upcoming,
+.validation-state-badge--upcoming {
+    background-color: #e9ecef;
+    border-color: #adb5bd;
+    color: #495057;
+}
+
+.validation-legend--pending,
+.validation-state-badge--en_attente {
+    background-color: #fff3cd;
+    border-color: #ffc107;
+    color: #664d03;
+}
+
+.validation-legend--accepted,
+.validation-state-badge--acceptee {
+    background-color: #d1e7dd;
+    border-color: #198754;
+    color: #0f5132;
+}
+
+.validation-legend--rejected,
+.validation-state-badge--refusee,
+.validation-state-badge--annulee {
+    background-color: #f8d7da;
+    border-color: #b02a37;
+    color: #58151c;
+}
+
+.validation-step {
+    border-left: 0.35rem solid transparent;
+}
+
+.validation-step--blocked {
+    background-color: #fff5f5;
+    border-left-color: #dc3545;
+}
+
+.validation-step--upcoming {
+    background-color: #f8f9fa;
+    border-left-color: #adb5bd;
+}
+
+.validation-step--en_attente {
+    background-color: #fffdf2;
+    border-left-color: #ffc107;
+}
+
+.validation-step--acceptee {
+    border-left-color: #198754;
+}
+
+.validation-step--refusee,
+.validation-step--annulee {
+    border-left-color: #b02a37;
+}
+
+.validation-blocked-details {
+    color: #842029;
+    display: block;
+    margin-top: 0.35rem;
+}
