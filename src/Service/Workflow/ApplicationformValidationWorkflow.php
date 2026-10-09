@@ -9,6 +9,7 @@ use App\Model\Entity\User;
 use App\Model\Entity\Validationsequence;
 use App\Model\Entity\ValidationWorkflowRun;
 use App\Model\Entity\WorkflowSetting;
+use App\Policy\ApplicationformPolicy;
 use Cake\I18n\DateTime;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -17,6 +18,8 @@ use RuntimeException;
 /** Orchestration transactionnelle du cycle de validation d'une demande. */
 final class ApplicationformValidationWorkflow
 {
+    public const BLOCKED_AFTER_BUSINESS_DAYS_SETTING = 'validation.blocked_after_business_days';
+    public const DEFAULT_BLOCKED_AFTER_BUSINESS_DAYS = 3;
     private Table $runs;
     private Table $steps;
     private Table $sequences;
@@ -47,6 +50,158 @@ final class ApplicationformValidationWorkflow
             'accepter' => $this->settingBoolean('validation.comment_required.accept', false),
             'refuser' => $this->settingBoolean('validation.comment_required.reject', true),
         ];
+    }
+
+    /** Retourne le délai de détection, avec sa valeur par défaut métier. */
+    public function blockedAfterBusinessDays(): int
+    {
+        $setting = $this->settings->find()->where(['name' => self::BLOCKED_AFTER_BUSINESS_DAYS_SETTING])->first();
+
+        return max(1, (int)($setting?->get(WorkflowSetting::FIELD_VALUE) ?? self::DEFAULT_BLOCKED_AFTER_BUSINESS_DAYS));
+    }
+
+    /**
+     * Détecte les cycles bloqués, regroupés par DAE et filtrés par le périmètre de consultation.
+     *
+     * @return list<\App\Service\Workflow\BlockedValidationCycle>
+     */
+    public function findBlockedCycles(User $viewer): array
+    {
+        $now = DateTime::now();
+        $threshold = $this->blockedAfterBusinessDays();
+        /** @var list<\App\Model\Entity\Applicationvalidationstep> $steps */
+        $steps = $this->steps->find()
+            ->contain(['Applicationforms' => ['Departments'], 'Roles', 'ValidationWorkflowRuns'])
+            ->where([
+                'Applicationvalidationsteps.state' => 'en_attente',
+                'Applicationvalidationsteps.activated_at IS NOT' => null,
+                'ValidationWorkflowRuns.state' => ValidationWorkflowRun::STATE_PENDING,
+                'Applicationforms.deleted IS' => null,
+            ])
+            ->orderByAsc('Applicationforms.begin_at')
+            ->orderByAsc('Applicationvalidationsteps.activated_at')
+            ->orderByAsc('Applicationforms.id')
+            ->all()->toList();
+
+        $policy = new ApplicationformPolicy();
+        /** @var array<int, list<\App\Service\Workflow\BlockedValidationStep>> $groupedSteps */
+        $groupedSteps = [];
+        /** @var array<int, \App\Model\Entity\Applicationform> $forms */
+        $forms = [];
+        foreach ($steps as $step) {
+            $applicationform = $step->applicationform;
+            if (!$policy->canView($viewer, $applicationform)) {
+                continue;
+            }
+            $activatedAt = $step->activated_at;
+            if (!$activatedAt instanceof DateTime) {
+                continue;
+            }
+            $businessDays = $this->businessDaysSince($activatedAt, $now);
+            if ($businessDays < $threshold) {
+                continue;
+            }
+            $blockedSince = $this->addBusinessDays($activatedAt, $threshold);
+            $id = (int)$applicationform->id;
+            $groupedSteps[$id][] = new BlockedValidationStep(
+                $step,
+                $step->role,
+                $activatedAt,
+                $blockedSince,
+                $businessDays,
+            );
+            $forms[$id] = $applicationform;
+        }
+
+        $cycles = [];
+        foreach ($forms as $id => $applicationform) {
+            $stepsForForm = $groupedSteps[$id];
+            usort(
+                $stepsForForm,
+                static function (BlockedValidationStep $left, BlockedValidationStep $right): int {
+                    return $left->activatedAt <=> $right->activatedAt
+                        ?: $left->step->id <=> $right->step->id;
+                },
+            );
+            $cycles[] = new BlockedValidationCycle(
+                $applicationform,
+                (int)$applicationform->id,
+                $applicationform->begin_at,
+                $applicationform->department,
+                $stepsForForm,
+                '/applicationforms/view/' . $applicationform->id . '?tab=validation',
+            );
+        }
+        usort($cycles, static function (BlockedValidationCycle $left, BlockedValidationCycle $right): int {
+            $begin = ($left->beginAt === null ? 1 : 0) <=> ($right->beginAt === null ? 1 : 0);
+            if ($begin !== 0) {
+                return $begin;
+            }
+            if ($left->beginAt !== null && $right->beginAt !== null) {
+                $leftDate = $left->beginAt->format('Y-m-d');
+                $rightDate = $right->beginAt->format('Y-m-d');
+                if ($leftDate !== $rightDate) {
+                    return $leftDate <=> $rightDate;
+                }
+            }
+
+            return $left->activatedAt->format('Y-m-d H:i:s') <=> $right->activatedAt->format('Y-m-d H:i:s')
+                ?: $left->applicationformNumber <=> $right->applicationformNumber;
+        });
+
+        return $cycles;
+    }
+
+    /** Compte les DAE distinctes visibles comportant une étape bloquée. */
+    public function countBlockedCycles(User $viewer): int
+    {
+        return count($this->findBlockedCycles($viewer));
+    }
+
+    /**
+     * Retourne les étapes bloquées d'une DAE dans le périmètre du lecteur.
+     *
+     * @return list<\App\Service\Workflow\BlockedValidationStep>
+     */
+    public function findBlockedSteps(Applicationform $applicationform, User $viewer): array
+    {
+        foreach ($this->findBlockedCycles($viewer) as $cycle) {
+            if ((int)$cycle->applicationform->id === (int)$applicationform->id) {
+                return $cycle->blockedSteps;
+            }
+        }
+
+        return [];
+    }
+
+    /** Compte les jours ouvrés écoulés, sans compter le jour d'activation. */
+    private function businessDaysSince(DateTime $activation, DateTime $now): int
+    {
+        $cursor = $activation;
+        $days = 0;
+        while ($cursor->format('Y-m-d') < $now->format('Y-m-d')) {
+            $cursor = $cursor->addDays(1);
+            if ((int)$cursor->format('N') <= 5) {
+                $days++;
+            }
+        }
+
+        return $days;
+    }
+
+    /** Retourne la date atteinte après un nombre donné de jours ouvrés. */
+    private function addBusinessDays(DateTime $activation, int $days): DateTime
+    {
+        $cursor = $activation;
+        $added = 0;
+        while ($added < $days) {
+            $cursor = $cursor->addDays(1);
+            if ((int)$cursor->format('N') <= 5) {
+                $added++;
+            }
+        }
+
+        return $cursor;
     }
 
     /** Retourne une valeur booléenne de paramétrage avec son défaut métier. */

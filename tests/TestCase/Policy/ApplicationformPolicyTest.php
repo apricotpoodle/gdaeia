@@ -38,6 +38,29 @@ class ApplicationformPolicyTest extends TestCase
         $this->assertTrue($this->policy->canEdit(new User(['id' => 11, 'issuperuser' => true]), $applicationform));
     }
 
+    /** Vérifie que la synthèse des validations bloquées est réservée aux administrateurs. */
+    public function testLaSyntheseDesValidationsBloqueesEstReserveeAuxAdministrateurs(): void
+    {
+        $applicationform = new Applicationform(['id' => 42]);
+
+        $this->assertFalse($this->policy->canViewBlockedValidations(
+            $this->identity([]),
+            $applicationform,
+        ));
+        $this->assertFalse($this->policy->canViewBlockedValidations(
+            $this->identity(new User(['role_id' => User::ROLE_DEMANDEUR])),
+            $applicationform,
+        ));
+        $this->assertTrue($this->policy->canViewBlockedValidations(
+            $this->identity(new User(['role_id' => User::ROLE_ADMIN])),
+            $applicationform,
+        ));
+        $this->assertTrue($this->policy->canViewBlockedValidations(
+            $this->identity(new User(['issuperuser' => true])),
+            $applicationform,
+        ));
+    }
+
     public function testLaModificationEtLaSuppressionSontRefuseesAuDemandeurEtranger(): void
     {
         $applicationform = new Applicationform(['user_id' => 10]);

@@ -403,6 +403,10 @@ export class TabulatorBuilder {
                     generatedUrl = `/${targetController}/${action}/${id}`;
                 }
 
+                if (action === 'overrideValidation' && rowData.override_url) {
+                    generatedUrl = rowData.override_url;
+                }
+
                 if (isEvent) {
                     if (typeof globalTabulatorObserver !== 'undefined') {
                         rowData._actionUrl = generatedUrl;

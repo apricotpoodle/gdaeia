@@ -39,7 +39,7 @@ export class MenuManager {
             })
             .then(payload => {
                 if (payload && payload.menus) {
-                    this.renderMenus(menuContainer, payload.menus);
+                    this.renderMenus(menuContainer, payload.menus, payload.blocked_validation_count || 0);
                 }
                 if (payload && payload.userData && userContainer) {
                     this.renderUserZone(userContainer, payload.userData);
@@ -55,7 +55,7 @@ export class MenuManager {
      * @param {Array<Object>} menuTree - L'arbre hiérarchique des entités menus.
      * @returns {void}
      */
-    static renderMenus(container, menuTree) {
+    static renderMenus(container, menuTree, blockedValidationCount = 0) {
         let html = '';
         menuTree.forEach(node => {
             const hasChildren = node.children && node.children.length > 0;
@@ -63,7 +63,7 @@ export class MenuManager {
                 if (!node.url || node.url === '#') return;
                 html += `
                     <li class="nav-item">
-                        <a class="nav-link text-light" href="/${node.url}">${node.name}</a>
+                    <a class="nav-link text-light" href="/${node.url}">${node.name}${this.badge(node, blockedValidationCount)}</a>
                     </li>
                 `;
             } else {
@@ -71,7 +71,7 @@ export class MenuManager {
                 node.children.forEach(child => {
                     if (child.dividor_before) childrenHtml += `<li><hr class="dropdown-divider"></li>`;
                     const childUrl = (child.url && child.url !== '#') ? `/${child.url}` : '#';
-                    childrenHtml += `<li><a class="dropdown-item" href="${childUrl}">${child.name}</a></li>`;
+                    childrenHtml += `<li><a class="dropdown-item" href="${childUrl}">${child.name}${this.badge(child, blockedValidationCount)}</a></li>`;
                 });
 
                 if (childrenHtml === '') return;
@@ -89,6 +89,12 @@ export class MenuManager {
             }
         });
         container.innerHTML = html;
+    }
+
+    static badge(node, count) {
+        if (node.url !== 'applicationforms/blocked-validations' || count < 1) return '';
+        const label = count === 1 ? '1 DAE est bloquée' : `${count} DAE sont bloquées`;
+        return ` <span class="badge bg-danger" title="${label}">${count}</span>`;
     }
 
     /**

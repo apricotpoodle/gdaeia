@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace App;
 
 use App\Command\BacklogNextCommand;
+use App\Command\BlockedValidationDigestCommand;
 use App\Command\TestEmailCommand;
 use App\Command\TreeIntegrityAlertTestCommand;
 use App\Command\TreeIntegrityCheckCommand;
@@ -251,6 +252,7 @@ class Application extends BaseApplication implements
         $commands->add('backlog next', BacklogNextCommand::class);
         $commands->add('test_email', TestEmailCommand::class);
         $commands->add('validation remind', ValidationReminderCommand::class);
+        $commands->add('validation notify-blocked', BlockedValidationDigestCommand::class);
         $commands->add('tree integrity alert-test', TreeIntegrityAlertTestCommand::class);
         $commands->add('tree integrity check', TreeIntegrityCheckCommand::class);
 

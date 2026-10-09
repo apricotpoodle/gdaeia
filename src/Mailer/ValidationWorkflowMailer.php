@@ -11,6 +11,24 @@ use Cake\Core\Configure;
 final class ValidationWorkflowMailer extends AppMailer
 {
     /**
+     * Prépare le récapitulatif quotidien des cycles bloqués.
+     *
+     * @param list<\App\Service\Workflow\BlockedValidationCycle> $blockedCycles Cycles bloqués.
+     */
+    public function blockedValidationDigest(User $recipient, array $blockedCycles): void
+    {
+        $this->setTo($recipient->get(User::FIELD_EMAIL))
+            ->setSubject(__('Cycles de validation bloqués — {0} DAE', count($blockedCycles)))
+            ->setViewVars([
+                'recipient' => $recipient,
+                'blockedCycles' => $blockedCycles,
+                'count' => count($blockedCycles),
+                'baseUrl' => rtrim((string)Configure::read('App.fullBaseUrl', 'http://localhost'), '/'),
+            ])
+            ->viewBuilder()->setTemplate('blocked_validation_digest');
+    }
+
+    /**
      * Prépare le courriel de notification ou de relance d'une étape de validation.
      *
      * @param \App\Model\Entity\User $recipient Destinataire.

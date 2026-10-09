@@ -33,6 +33,17 @@ $this->Html->script('views/WorkflowSettings/index.js', ['type' => 'module', 'blo
 
     <section class="card mb-4">
         <div class="card-body">
+            <h4 class="h6"><?= __('Détection des cycles bloqués') ?></h4>
+            <label class="form-label" for="validation-blocked-after-business-days"><?= __('Nombre de jours ouvrés avant détection de blocage') ?></label>
+            <div class="input-group">
+                <input class="form-control" id="validation-blocked-after-business-days" type="number" min="1" step="1" required>
+                <button id="save-validation-blocked-after-business-days" class="btn btn-primary" type="button"><?= __('Enregistrer') ?></button>
+            </div>
+        </div>
+    </section>
+
+    <section class="card mb-4">
+        <div class="card-body">
             <h4 class="h6"><?= __('Obligation de commentaire lors d’un vote') ?></h4>
             <div class="row align-items-center g-2">
                 <div class="col-md-5 form-check form-switch">

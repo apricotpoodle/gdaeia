@@ -35,6 +35,13 @@ class ApplicationformsController extends AppController
         $this->Authorization->authorize($this->Applicationforms->newEmptyEntity(), 'index');
     }
 
+    /** Affiche les cycles de validation dont une étape dépasse le délai ouvré. */
+    public function blockedValidations(): void
+    {
+        $subject = $this->Applicationforms->newEmptyEntity();
+        $this->Authorization->authorize($subject, 'viewBlockedValidations');
+    }
+
     /**
      * Action View (GET /applicationforms/view/{id})
      */
