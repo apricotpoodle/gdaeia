@@ -20,11 +20,12 @@ class CommentsControllerTest extends TestCase
         'app.Users',
     ];
 
-    public function testLApiDesCommentairesRedirigeUnVisiteurVersLaConnexion(): void
+    public function testLApiDesCommentairesSignaleUnePerteDeSessionEnJson(): void
     {
         $this->get('/api/comments.json');
 
-        $this->assertRedirectContains('/users/login');
+        $this->assertResponseCode(401);
+        $this->assertResponseContains('Votre session a expiré. Veuillez vous reconnecter.');
     }
 
     public function testLApiDesCommentairesRetourneDuJsonPourUnOperateurConnecte(): void

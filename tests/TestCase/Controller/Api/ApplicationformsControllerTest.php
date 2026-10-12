@@ -44,11 +44,13 @@ class ApplicationformsControllerTest extends TestCase
         'app.ValidationCommentTemplates',
     ];
 
-    public function testLApiDesDemandesRedirigeUnVisiteurVersLaConnexion(): void
+    public function testLApiDesDemandesSignaleUnePerteDeSessionEnJson(): void
     {
         $this->get('/api/applicationforms.json');
 
-        $this->assertRedirectContains('/users/login');
+        $this->assertResponseCode(401);
+        $this->assertHeaderContains('Content-Type', 'application/json');
+        $this->assertResponseContains('Votre session a expiré. Veuillez vous reconnecter.');
     }
 
     public function testLApiDesDemandesRetourneDuJsonPourUnOperateurConnecte(): void

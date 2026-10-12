@@ -1,6 +1,6 @@
 # 0016 — Couvrir le parcours de reconnexion
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Haute
 

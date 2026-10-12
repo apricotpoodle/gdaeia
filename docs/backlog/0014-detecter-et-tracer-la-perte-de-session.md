@@ -1,6 +1,6 @@
 # 0014 — Détecter et tracer la perte de session
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Haute
 

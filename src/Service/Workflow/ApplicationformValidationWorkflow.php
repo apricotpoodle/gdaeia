@@ -402,6 +402,20 @@ final class ApplicationformValidationWorkflow
             $comment,
             $isProxy,
         ) {
+            /** @var \App\Model\Entity\Applicationvalidationstep|null $step */
+            // Verrouiller l'étape avant toute décision garantit qu'un second
+            // vote concurrent observe le premier vote une fois la transaction
+            // précédente validée.
+            $step = $this->steps->find()
+                ->where(['id' => $stepId, 'applicationform_id' => $applicationform->id])
+                ->epilog('FOR UPDATE')
+                ->first();
+            $hasVote = $step !== null && $this->validations->find()->where([
+                'applicationvalidationstep_id' => $step->id,
+            ])->count() > 0;
+            if ($hasVote) {
+                throw new RuntimeException(__('Votre collègue a déjà voté pour cette étape de validation.'));
+            }
             /** @var \App\Model\Entity\ValidationWorkflowRun|null $run */
             $run = $this->runs->find()->where([
                 'applicationform_id' => $applicationform->id,
@@ -410,19 +424,10 @@ final class ApplicationformValidationWorkflow
             if ($run === null) {
                 throw new RuntimeException(__('Aucun cycle actif ne permet ce vote.'));
             }
-            /** @var \App\Model\Entity\Applicationvalidationstep|null $step */
-            $step = $this->steps->find()->where([
-                'id' => $stepId,
-                'validation_workflow_run_id' => $run->id,
-            ])->epilog('FOR UPDATE')->first();
-            $hasVote = $step !== null && $this->validations->find()->where([
-                'applicationvalidationstep_id' => $step->id,
-            ])->count() > 0;
-            if ($hasVote) {
-                throw new RuntimeException(__('Votre collègue a déjà voté pour cette étape de validation.'));
-            }
             if (
-                $step === null || !$this->canVoteStep(
+                $step === null
+                || (int)$step->validation_workflow_run_id !== (int)$run->id
+                || !$this->canVoteStep(
                     $step,
                     $applicationform,
                     $actor,

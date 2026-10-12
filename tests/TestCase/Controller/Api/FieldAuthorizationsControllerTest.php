@@ -16,11 +16,12 @@ class FieldAuthorizationsControllerTest extends TestCase
 
     protected array $fixtures = ['app.Roles', 'app.FieldAuthorizations', 'app.FieldDefinitions'];
 
-    public function testLApiDesAutorisationsRedirigeUnVisiteurVersLaConnexion(): void
+    public function testLApiDesAutorisationsSignaleUnePerteDeSessionEnJson(): void
     {
         $this->get('/api/field-authorizations.json');
 
-        $this->assertRedirectContains('/users/login');
+        $this->assertResponseCode(401);
+        $this->assertResponseContains('Votre session a expiré. Veuillez vous reconnecter.');
     }
 
     public function testLApiDesAutorisationsRetourneDuJsonPourUnOperateurConnecte(): void

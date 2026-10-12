@@ -25,11 +25,12 @@ class MenusControllerTest extends TestCase
     ];
 
     /** Vérifie que l'API historique des menus protège ses données d'un visiteur. */
-    public function testLApiDesMenusRedirigeUnVisiteurVersLaConnexion(): void
+    public function testLApiDesMenusSignaleUnePerteDeSessionEnJson(): void
     {
         $this->get('/api/menus/grid.json');
 
-        $this->assertRedirectContains('/users/login');
+        $this->assertResponseCode(401);
+        $this->assertResponseContains('Votre session a expiré. Veuillez vous reconnecter.');
     }
 
     /** Vérifie le contrat JSON de la grille de menus pour un opérateur identifié. */
