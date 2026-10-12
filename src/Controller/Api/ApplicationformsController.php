@@ -270,8 +270,11 @@ class ApplicationformsController extends AppController
                 'id' => (int)$step->get(Applicationvalidationstep::FIELD_ID),
                 'sequence_number' => (int)$step->get(Applicationvalidationstep::FIELD_SEQUENCE_NUMBER),
                 'state' => (string)$step->get(Applicationvalidationstep::FIELD_STATE),
-                'due_at' => $step->get(Applicationvalidationstep::FIELD_DUE_AT),
+                'due_at' => $step->get(Applicationvalidationstep::FIELD_STATE) === 'en_attente'
+                    ? $step->get(Applicationvalidationstep::FIELD_DUE_AT)
+                    : null,
                 'completed_at' => $step->get(Applicationvalidationstep::FIELD_COMPLETED_AT),
+                'validated_at' => $step->validation?->validated,
                 'comment' => $step->validation?->obs,
                 'is_blocked' => $blockedStep !== null,
                 'blocked_since' => $blockedStep?->blockedSince,

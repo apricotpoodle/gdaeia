@@ -410,13 +410,17 @@ final class ApplicationformValidationWorkflow
             if ($run === null) {
                 throw new RuntimeException(__('Aucun cycle actif ne permet ce vote.'));
             }
-            $stepStates = $isProxy ? ['en_attente', 'a_venir'] : ['en_attente'];
             /** @var \App\Model\Entity\Applicationvalidationstep|null $step */
             $step = $this->steps->find()->where([
                 'id' => $stepId,
                 'validation_workflow_run_id' => $run->id,
-                'state IN' => $stepStates,
-            ])->first();
+            ])->epilog('FOR UPDATE')->first();
+            $hasVote = $step !== null && $this->validations->find()->where([
+                'applicationvalidationstep_id' => $step->id,
+            ])->count() > 0;
+            if ($hasVote) {
+                throw new RuntimeException(__('Votre collègue a déjà voté pour cette étape de validation.'));
+            }
             if (
                 $step === null || !$this->canVoteStep(
                     $step,

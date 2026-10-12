@@ -124,8 +124,8 @@ async function render() {
         const dueAt = step.state === 'en_attente' && step.due_at
             ? '<small class="text-muted">Échéance : ' + escape(new Date(step.due_at).toLocaleString('fr-FR')) + '</small>'
             : '';
-        const completedAt = ['acceptee', 'refusee'].includes(step.state) && step.completed_at
-            ? '<small class="text-muted">Vote enregistré le ' + escape(new Date(step.completed_at).toLocaleString('fr-FR')) + '</small>'
+        const completedAt = ['acceptee', 'refusee'].includes(step.state) && (step.validated_at || step.completed_at)
+            ? '<small class="text-muted">Vote enregistré le ' + escape(new Date(step.validated_at || step.completed_at).toLocaleString('fr-FR')) + '</small>'
             : '';
         const comment = step.comment
             ? '<p class="mb-0 mt-2"><small>Commentaire : ' + escape(step.comment) + '</small></p>'
