@@ -152,6 +152,42 @@ class ApplicationformValidationWorkflowServiceTest extends TestCase
         }
     }
 
+    public function testUnSecondVoteSurLaMemeEtapeEstRefuseAvecUnMessageMetier(): void
+    {
+        [$applicationform, $actor, $workflow] = $this->workflowContext();
+        $started = $workflow->start($applicationform, $actor);
+        $step = TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->find()
+            ->where(['validation_workflow_run_id' => $started['run']->id])
+            ->firstOrFail();
+
+        $workflow->vote($applicationform, $actor, (int)$step->id, true, 'Accord.', false);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Votre collègue a déjà voté pour cette étape de validation.');
+        try {
+            $workflow->vote($applicationform, $actor, (int)$step->id, true, 'Nouvel accord.', false);
+        } finally {
+            $this->assertSame(1, TableRegistry::getTableLocator()->get('Validations')->find()
+                ->where(['applicationvalidationstep_id' => $step->id])
+                ->count());
+        }
+    }
+
+    public function testUnSecondVoteApresUnRefusEstEgalementRefuse(): void
+    {
+        [$applicationform, $actor, $workflow] = $this->workflowContext();
+        $started = $workflow->start($applicationform, $actor);
+        $step = TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->find()
+            ->where(['validation_workflow_run_id' => $started['run']->id])
+            ->firstOrFail();
+
+        $workflow->vote($applicationform, $actor, (int)$step->id, false, 'Refus motivé.', false);
+
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('Votre collègue a déjà voté pour cette étape de validation.');
+        $workflow->vote($applicationform, $actor, (int)$step->id, false, 'Second refus.', false);
+    }
+
     /** Vérifie qu'une étape échue est relancée une seule fois par période de vingt-quatre heures. */
     public function testLesRelancesDesEtapesEchuesSontIdempotentesPendantVingtQuatreHeures(): void
     {
