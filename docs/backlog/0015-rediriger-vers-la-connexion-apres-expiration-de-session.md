@@ -1,6 +1,6 @@
 # 0015 — Rediriger vers la connexion après expiration de session
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Haute
 

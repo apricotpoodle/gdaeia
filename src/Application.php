@@ -24,6 +24,7 @@ use App\Command\TreeIntegrityAlertTestCommand;
 use App\Command\TreeIntegrityCheckCommand;
 use App\Command\ValidationReminderCommand;
 use App\Middleware\HostHeaderMiddleware;
+use App\Middleware\UnauthenticatedApiMiddleware;
 use Authentication\AuthenticationService;
 use Authentication\AuthenticationServiceInterface;
 use Authentication\AuthenticationServiceProviderInterface;
@@ -114,6 +115,8 @@ class Application extends BaseApplication implements
             // Add the AuthenticationMiddleware. It should be
             // after routing and body parser.
             ->add(new AuthenticationMiddleware($this))
+            // Les appels API doivent recevoir un 401 JSON, les pages HTML gardent la redirection.
+            ->add(new UnauthenticatedApiMiddleware())
             // Add Authorization after routing, body parsing, and authentication.
             ->add(new AuthorizationMiddleware($this, [
                 'identityDecorator' => function ($auth, $user) {

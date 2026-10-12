@@ -43,6 +43,10 @@ class UsersController extends AppController
      */
     public function login(): ?Response
     {
+        if ($this->request->getQuery('session_expired') === '1') {
+            $this->Flash->error(__('Votre session a expiré. Veuillez vous reconnecter.'));
+        }
+
         $result = $this->Authentication->getResult();
 
         if ($result && $result->isValid()) {

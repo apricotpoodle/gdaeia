@@ -26,11 +26,12 @@ class UsersControllerTest extends TestCase
         'app.UserDepartments',
     ];
 
-    public function testLApiDesUtilisateursRedirigeUnVisiteurVersLaConnexion(): void
+    public function testLApiDesUtilisateursSignaleUnePerteDeSessionEnJson(): void
     {
         $this->get('/api/users.json');
 
-        $this->assertRedirectContains('/users/login');
+        $this->assertResponseCode(401);
+        $this->assertResponseContains('Votre session a expiré. Veuillez vous reconnecter.');
     }
 
     public function testLApiDesUtilisateursRetourneDuJsonPourUnOperateurConnecte(): void
@@ -224,6 +225,14 @@ class UsersControllerTest extends TestCase
         $this->get('/users/forgot-password');
         $this->assertResponseOk();
         $this->assertResponseContains('Retour à la connexion');
+    }
+
+    public function testLaConnexionAfficheLeMessageDExpirationDeSession(): void
+    {
+        $this->get('/users/login?session_expired=1');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Votre session a expiré. Veuillez vous reconnecter.');
     }
 
     public function testLeFormulaireWebAfficheLeChampInvalideDeLUtilisateur(): void

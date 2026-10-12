@@ -21,11 +21,12 @@ class RolesControllerTest extends TestCase
      */
     protected array $fixtures = ['app.Roles', 'app.Users', 'app.FieldDefinitions'];
 
-    public function testLApiDesRolesRedirigeUnVisiteurVersLaConnexion(): void
+    public function testLApiDesRolesSignaleUnePerteDeSessionEnJson(): void
     {
         $this->get('/api/roles.json');
 
-        $this->assertRedirectContains('/users/login');
+        $this->assertResponseCode(401);
+        $this->assertResponseContains('Votre session a expiré. Veuillez vous reconnecter.');
     }
 
     public function testLeCrudApiDesRolesEstReserveAuSuperAdministrateur(): void

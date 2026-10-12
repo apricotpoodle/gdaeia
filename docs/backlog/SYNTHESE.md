@@ -9,9 +9,9 @@ reste à faire, pas seulement le statut historique écrit dans une fiche.
 
 | Périmètre | Total | Entièrement traité | Partiellement traité | Reste à faire |
 |---|---:|---:|---:|---:|
-| Backlog technique racine (`0001`–`0016`) | 16 | 10 | 1 | 5 |
+| Backlog technique racine (`0001`–`0016`) | 16 | 13 | 1 | 2 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 12 | 0 | 1 |
-| **Total** | **29** | **22** | **1** | **6** |
+| **Total** | **29** | **25** | **1** | **3** |
 
 Le ticket 0002 est compté comme partiellement traité ; il reste donc six
 tickets à réaliser complètement, auxquels s’ajoutent les compléments du 0002.
@@ -23,9 +23,6 @@ tickets à réaliser complètement, auxquels s’ajoutent les compléments du 00
 | [0001 — Gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) | Moyenne | À faire | Choisir et mettre en service l’outil, documenter le processus, migrer les fiches actives et décider du sort de `docs/backlog/`. | Aucun gestionnaire ni migration externe n’est documenté ; le dépôt reste le backlog transitoire. |
 | [0002 — Couverture de tests](0002-etendre-la-couverture-de-tests.md) | Haute | **Partiel** | Mesurer et documenter la couverture cible, décider de l’automatisation des seuils (80 % global, 90 % critique, objectif branches), puis traiter l’écart restant. | Tests HTTP, workflow/vues SQL, PCOV et rapports Clover/HTML existent ; la fiche indique elle-même 61,5 % de lignes et des seuils différés. |
 | [0007 — Accès menus et permissions](0007-separer-acces-menus-et-permissions-administration.md) | Haute | À faire | Introduire `role_permissions`/`manage_menus`, centraliser la résolution des accès, migrer les données et ajouter les tests HTTP, Policy et intégration. | `src/Policy/MenuPolicy.php` autorise encore via `isSuperUser()` ; aucune table `role_permissions` ni permission `manage_menus` n’a été trouvée. |
-| [0014 — Perte de session](0014-detecter-et-tracer-la-perte-de-session.md) | Haute | À faire | Standardiser le `401`, distinguer perte de session et erreur réseau, tracer sans secret et respecter le contrat JSON. | L’authentification CakePHP et la redirection non authentifiée existent, mais aucun composant de détection/tracé dédié ni test de perte de session n’a été trouvé. |
-| [0015 — Reconnexion après expiration](0015-rediriger-vers-la-connexion-apres-expiration-de-session.md) | Haute | À faire | Mutualiser côté JavaScript le traitement des `401`, afficher le message prévu, ne jamais rejouer une écriture et ignorer réseau/timeout/`5xx`. | La configuration de connexion existe ; aucun gestionnaire client centralisé de `401` correspondant au contrat n’a été identifié. |
-| [0016 — Parcours de reconnexion](0016-couvrir-le-parcours-de-reconnexion.md) | Haute | À faire | Ajouter les tests Web/API perte de session → connexion → `/users/index`, ainsi que les cas réseau, timeout et non-rejeu. | Les tests de contrôleurs existent, mais aucun test ciblé sur ce parcours de reconnexion n’a été trouvé. |
 | [Workflow 0021 — Concurrence des votes](validation-applicationform/0021-concurrence-votes-meme-role.md) | Urgente | **Partiel non validant** | Garantir atomiquement un seul vote concurrent, définir le retour métier du second votant, rafraîchir l’IHM, afficher `validated` plutôt que `due_at` et couvrir acceptation/refus/API/IHM. | La migration possède `validations_step_un` et le service utilise une transaction ; il n’y a toutefois ni verrouillage explicite ni test de concurrence, et l’API expose encore `due_at` sans l’horodatage métier attendu. |
 
 ## Tickets déjà traités — contrôle de non-réouverture
@@ -42,6 +39,9 @@ tickets à réaliser complètement, auxquels s’ajoutent les compléments du 00
 | 0011 — Conformité PHPStan | Clôturé | Fiche explicitement clôturée ; les erreurs restantes éventuelles relèvent d’un nouveau ticket. |
 | 0012 — Verrouiller une AF pendant la validation | Terminé | Workflow, Policy et tests de verrouillage présents. |
 | 0013 — Présentation des erreurs de validation | Terminé | `ValidationErrorPresenter`, ADR 0052 et tests présents. |
+| 0014 — Perte de session | Terminé | Middleware API 401 JSON, journalisation sans secret et tests HTTP présents. |
+| 0015 — Reconnexion après expiration | Terminé | Gestionnaire `fetch` mutualisé, message de connexion et tests JavaScript présents. |
+| 0016 — Parcours de reconnexion | Terminé | Tests API/Web et tests réseau, timeout et non-rejeu présents. |
 | Workflow 0009 à 0020 | Terminé | Les treize entrées correspondantes du manifeste sont `Terminé` ; les fiches, migrations, services et tests associés sont présents. |
 
 ## Conclusion opérationnelle
