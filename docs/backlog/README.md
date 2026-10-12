@@ -8,6 +8,10 @@ Chaque fiche porte un numéro stable et un intitulé explicite. Elle précise le
 
 Les statuts utilisés sont : `À planifier`, `Prêt`, `En cours`, `Bloqué` et `Terminé`.
 
+La [synthèse exhaustive du backlog](SYNTHESE.md) recense les tickets racine et
+le sous-workflow `validation-applicationform`, avec vérification de leur état
+dans le code et les tests.
+
 ## Tickets actifs
 
 - [0001 — Mettre en place un gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) — priorité moyenne.
