@@ -59,9 +59,10 @@ require CAKE . 'functions.php';
 /*
  * See https://github.com/josegonzalez/php-dotenv for API details.
  *
- * Uncomment block of code below if you want to use `.env` file during development.
- * You should copy `config/.env.example` to `config/.env` and set/modify the
- * variables as required.
+ * Load the project-level `.env` file during development. The CakePHP
+ * application lives in `app/`, while the shared environment file is located
+ * one directory above it. Keep `config/.env` as a local fallback for the
+ * standard CakePHP layout.
  *
  * The purpose of the .env file is to emulate the presence of the environment
  * variables like they would be present in production.
@@ -70,13 +71,17 @@ require CAKE . 'functions.php';
  * security risks. See https://github.com/josegonzalez/php-dotenv#general-security-information
  * for more information for recommended practices.
 */
-// if (!env('APP_NAME') && file_exists(CONFIG . '.env')) {
-//     $dotenv = new \josegonzalez\Dotenv\Loader([CONFIG . '.env']);
-//     $dotenv->parse()
-//         ->putenv()
-//         ->toEnv()
-//         ->toServer();
-// }
+$projectEnv = dirname(ROOT) . DS . '.env';
+$localEnv = CONFIG . '.env';
+$envFile = file_exists($projectEnv) ? $projectEnv : $localEnv;
+
+if (!env('APP_NAME') && file_exists($envFile)) {
+    $dotenv = new \josegonzalez\Dotenv\Loader([$envFile]);
+    $dotenv->parse()
+        ->putenv()
+        ->toEnv()
+        ->toServer();
+}
 
 /*
  * Initializes default Config store and loads the main configuration file (app.php)
