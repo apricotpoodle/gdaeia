@@ -1,6 +1,6 @@
 # 0021 — Concurrence des votes d’un même rôle
 
-**Statut :** À faire  
+**Statut :** Terminé  
 **Priorité :** Urgente  
 **Dépendances :** 0014, 0016
 
