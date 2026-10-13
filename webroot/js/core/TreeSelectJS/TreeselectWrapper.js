@@ -246,7 +246,7 @@ export default class TreeselectWrapper {
 
         TreeselectWrapper.#treeselectLoader = new Promise((resolve, reject) => {
             const script = document.createElement('script');
-            script.src = '/js/vendor/treeselect/treeselectjs.umd.js';
+            script.src = '/assets/treeselectjs/treeselectjs.umd.js';
             script.async = true;
             script.onload = () => {
                 if (window.Treeselect) {

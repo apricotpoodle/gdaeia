@@ -23,8 +23,8 @@ $this->Breadcrumbs->add(__('Demandes de recrutement'), ['action' => 'index']);
 $this->Breadcrumbs->add(__('Nouvelle demande'));
 
 // Inclusion des assets CSS et JS requis
-$this->Html->css('vendor/treeselect/treeselectjs', ['block' => true]);
-$this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
+$this->Html->css('/assets/treeselectjs/treeselectjs', ['block' => true]);
+$this->Html->script('/assets/treeselectjs/treeselectjs.umd', ['block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-treeselect', ['type' => 'module', 'block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-candidate', ['block' => true]);

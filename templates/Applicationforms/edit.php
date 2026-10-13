@@ -19,8 +19,8 @@
 $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
 
 // Inclusion des assets CSS et JS requis
-$this->Html->css('vendor/treeselect/treeselectjs', ['block' => true]);
-$this->Html->script('vendor/treeselect/treeselectjs.umd', ['block' => true]);
+$this->Html->css('/assets/treeselectjs/treeselectjs', ['block' => true]);
+$this->Html->script('/assets/treeselectjs/treeselectjs.umd', ['block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-treeselect', ['type' => 'module', 'block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-comments', ['block' => true]);

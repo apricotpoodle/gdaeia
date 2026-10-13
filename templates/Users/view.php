@@ -11,8 +11,8 @@
 $this->assign('title', __('Profil Utilisateur #{0}', $user->id));
 
 // Ingestion des assets TreeselectJS
-$this->Html->css('vendor/treeselect/treeselectjs.css', ['block' => true]);
-$this->Html->script('vendor/treeselect/treeselectjs.umd.js', ['block' => 'scriptBottom']);
+$this->Html->css('/assets/treeselectjs/treeselectjs.css', ['block' => true]);
+$this->Html->script('/assets/treeselectjs/treeselectjs.umd.js', ['block' => 'scriptBottom']);
 $this->Html->script('views/Users/user-departments-tree.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>
 

@@ -37,13 +37,13 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <?= $this->Html->css('flash') ?>
 
-    <!-- Tabulator & Luxon (Local Vendor) -->
-    <?= $this->Html->css('vendor/tabulator/tabulator.min.css') ?>
+    <!-- Tabulator & Luxon (assets locaux) -->
+    <?= $this->Html->css('/assets/tabulator/css/tabulator_bootstrap5.min.css') ?>
     <?= $this->Html->css('tabulator/custom-theme.css') ?>
 
     <?= $this->Html->script('app', ['type' => 'module']) ?>
-    <?= $this->Html->script('vendor/luxon/luxon.min.js') ?>
-    <?= $this->Html->script('vendor/tabulator/tabulator.min.js') ?>
+    <?= $this->Html->script('/assets/luxon/luxon.min.js') ?>
+    <?= $this->Html->script('/assets/tabulator/js/tabulator.min.js') ?>
     <?= $this->Html->script('views/Users/user-departments-tree.js', ['type' => 'module', 'block' => 'scriptBottom']) ?>
 
     <!-- Infrastructure Tabulator (ADR ES6 Modules) -->
