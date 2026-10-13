@@ -1,6 +1,6 @@
 # Synthèse du backlog
 
-État vérifié le **12 octobre 2026** à partir des fiches de tickets, du
+État vérifié le **13 octobre 2026** à partir des fiches de tickets, du
 manifeste `validation-applicationform/manifest.json`, du code, des migrations
 et des tests présents dans le dépôt. Les statuts ci-dessous décrivent le
 reste à faire, pas seulement le statut historique écrit dans une fiche.
@@ -22,7 +22,7 @@ tickets à réaliser complètement, auxquels s’ajoutent les compléments du 00
 |---|---|---|---|---|
 | [0001 — Gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) | Moyenne | À faire | Choisir et mettre en service l’outil, documenter le processus, migrer les fiches actives et décider du sort de `docs/backlog/`. | Aucun gestionnaire ni migration externe n’est documenté ; le dépôt reste le backlog transitoire. |
 | [0002 — Couverture de tests](0002-etendre-la-couverture-de-tests.md) | Haute | **Partiel** | Mesurer et documenter la couverture cible, décider de l’automatisation des seuils (80 % global, 90 % critique, objectif branches), puis traiter l’écart restant. | Tests HTTP, workflow/vues SQL, PCOV et rapports Clover/HTML existent ; la fiche indique elle-même 61,5 % de lignes et des seuils différés. |
-| [0007 — Accès menus et permissions](0007-separer-acces-menus-et-permissions-administration.md) | Haute | À faire | Introduire `role_permissions`/`manage_menus`, centraliser la résolution des accès, migrer les données et ajouter les tests HTTP, Policy et intégration. | `src/Policy/MenuPolicy.php` autorise encore via `isSuperUser()` ; aucune table `role_permissions` ni permission `manage_menus` n’a été trouvée. |
+| [0007 — Accès menus et permissions](0007-separer-acces-menus-et-permissions-administration.md) | Haute | À faire | Introduire `permissions`/`role_permissions` et `manage_menus`, centraliser la résolution des accès, migrer les données et ajouter les tests HTTP, Policy et intégration. La V1 couvre `self`, les départements directement affectés (`assigned`) et `all` ; les descendants et les droits individuels sont différés. | `src/Policy/MenuPolicy.php` autorise encore via `isSuperUser()` ; aucune table `permissions`/`role_permissions` ni permission `manage_menus` n’a été trouvée. Les Policies et custom finders existants constituent le socle de migration ; le ticket écarte provisoirement ARO/ACO. |
 
 ## Tickets déjà traités — contrôle de non-réouverture
 
