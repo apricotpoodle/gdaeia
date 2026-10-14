@@ -11,6 +11,31 @@ Le dépôt actuel fournit principalement un environnement de développement. Il
 ne faut donc pas démarrer la préproduction avec la configuration locale sans
 la contrôler et l’adapter.
 
+## Décisions d’architecture pour la préproduction
+
+Deux règles distinguent la préproduction de l’environnement local :
+
+- **Mailpit n’est pas déployé sur `websrv30` par défaut.** Il sert à intercepter
+  les courriels en développement, mais il ne permet pas de valider le relais
+  SMTP, le TLS, l’authentification ni le comportement réel de la délivrabilité.
+  La préproduction utilise le relais SMTP dédié et autorisé par l’équipe
+  système. Un Mailpit temporaire ne peut être conservé que pour une recette
+  explicitement isolée, avec des destinataires de test et sans exposition du
+  port SMTP ou de l’interface Web au réseau utilisateur.
+- **La version de l’image PHP est verrouillée.** La base recommandée est PHP
+  **8.3 Apache sur Debian Bookworm**, conformément à l’ADR 0001 et à la
+  compatibilité déclarée par l’application. Il faut retenir le dernier correctif
+  PHP 8.3 supporté et validé par les tests, puis déployer la référence complète
+  `php:8.3.<correctif>-apache-bookworm@sha256:<digest>`. Le numéro de correctif
+  et le digest réellement utilisés doivent être consignés dans le compte rendu
+  de livraison ; une référence `latest` ou flottante n’est pas acceptable.
+
+PHP 8.4 ou une autre famille ne doit pas être introduite dans cette livraison :
+elle nécessiterait une campagne de compatibilité et une décision séparée. Le
+verrouillage concerne aussi les autres images utilisées pour construire ou
+exécuter l’application, notamment Composer ; ne pas conserver
+`composer:latest` dans l’image de préproduction.
+
 ## Décision de transfert : Git ou FileZilla ?
 
 Le déploiement recommandé se fait par SSH, avec une version applicative
@@ -174,19 +199,35 @@ chmod 600 /srv/gdaetf2/.env
 Le `docker-compose.yml` actuel est orienté développement. Avant son utilisation
 en préproduction, valider une configuration dédiée ou une surcharge qui :
 
-- supprime le service Mailpit ;
+- supprime le service Mailpit et vérifie que `MAIL_HOST` pointe vers le relais
+  SMTP de préproduction, jamais vers `mailpit`, `mailhog` ou `localhost` ;
 - désactive ou retire Xdebug et PCOV ;
 - désactive DebugKit ;
 - n’utilise pas les certificats `localhost` ;
 - utilise le certificat TLS correspondant au nom DNS de préproduction ;
 - limite les ports publiés aux flux nécessaires ;
+- construit l’image applicative depuis `php:8.3.<correctif>-apache-bookworm`
+  référencée par son digest SHA-256, après validation de ce correctif par les
+  tests ;
+- copie un binaire Composer dont la version est elle aussi explicitement
+  verrouillée, et non `composer:latest` ;
 - conserve les versions verrouillées par `composer.lock` ;
 - limite les volumes montés à ceux nécessaires au fonctionnement ;
 - conserve les permissions d’exécution de `www-data` ;
 - définit une politique de rotation et de conservation des logs.
 
-Ne pas utiliser une image ou une dépendance `latest` sans validation préalable.
-La version effectivement déployée doit être reproductible.
+Ne pas utiliser d’image ou de dépendance `latest`. Avant la construction,
+enregistrer la référence complète de l’image PHP et son digest, par exemple :
+
+```bash
+docker pull php:8.3.<correctif>-apache-bookworm
+docker image inspect php:8.3.<correctif>-apache-bookworm \
+  --format '{{index .RepoDigests 0}}'
+```
+
+La valeur retournée doit être reportée dans la configuration de build dédiée à
+la préproduction et dans le compte rendu de livraison. La version effectivement
+déployée doit être reproductible.
 
 ## 6. Préparer la base de données
 
@@ -391,7 +432,10 @@ La mise en service peut être considérée comme prête lorsque :
 - emplacement final de l’application, proposé ici : `/srv/gdaetf2` ;
 - dépôt Git et commit ou tag à livrer ;
 - serveur MySQL, base et comptes préproduction ;
-- relais SMTP et adresse d’expédition ;
+- relais SMTP de préproduction, mode TLS, adresse d’expédition et destinataires
+  de test ;
+- numéro de correctif et digest SHA-256 de l’image PHP 8.3 Apache Bookworm,
+  ainsi que la version verrouillée de Composer ;
 - certificat TLS ;
 - compte technique et politique d’accès Docker ;
 - stratégie de sauvegarde et de supervision ;
