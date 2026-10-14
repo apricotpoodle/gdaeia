@@ -59,7 +59,7 @@ class UserCreateForm {
 
             if (accessLevel === 'NONE') {
                 container.classList.add('d-none'); // Masquage total
-            } else if (accessLevel === 'VIEW' || accessLevel === 'READONLY') { // 💡 FIX : Intercepte "READONLY"
+            } else if (accessLevel === 'VIEW') {
                 input.setAttribute('disabled', 'disabled');
                 input.classList.add('bg-light', 'pe-none'); // Passage en lecture seule
             }

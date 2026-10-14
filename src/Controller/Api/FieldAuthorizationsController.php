@@ -76,6 +76,9 @@ class FieldAuthorizationsController extends AppController
         $output['data'] = array_map(
             static function ($authorization) use ($metadata): array {
                 $data = $authorization->toArray();
+                $data[FieldAuthorization::FIELD_ACCESS_LEVEL] = FieldAuthorization::normalizeAccessLevel(
+                    (string)$authorization->get(FieldAuthorization::FIELD_ACCESS_LEVEL),
+                );
                 $resource = (string)$authorization->get(FieldAuthorization::FIELD_RESOURCE);
                 $field = (string)$authorization->get(FieldAuthorization::FIELD_FIELD);
                 $data['field_label'] = $metadata->label($resource, $field);

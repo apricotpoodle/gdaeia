@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Entity\FieldAuthorization;
 use App\Model\Table\FieldAuthorizationsTable;
 use Cake\TestSuite\TestCase;
 
@@ -71,6 +72,19 @@ class FieldAuthorizationsTableTest extends TestCase
         $this->assertArrayHasKey('resource', $authorization->getErrors());
         $this->assertArrayHasKey('field', $authorization->getErrors());
         $this->assertArrayHasKey('access_level', $authorization->getErrors());
+    }
+
+    public function testLeNiveauDAccesEstNormaliseEnMajuscules(): void
+    {
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => 1,
+            'resource' => 'Applicationforms',
+            'field' => 'email',
+            'access_level' => 'view',
+        ]);
+
+        $this->assertSame(FieldAuthorization::ACCESS_LEVEL_VIEW, $authorization->access_level);
+        $this->assertArrayNotHasKey('access_level', $authorization->getErrors());
     }
 
     /**

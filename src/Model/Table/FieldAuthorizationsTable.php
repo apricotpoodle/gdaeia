@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Model\Entity\FieldAuthorization;
+use ArrayObject;
+use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -54,6 +56,24 @@ class FieldAuthorizationsTable extends Table
     }
 
     /**
+     * Normalise les variantes historiques du niveau d'accès avant validation.
+     *
+     * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event Événement de marshalling.
+     * @param \ArrayObject<string, mixed> $data Données reçues par l'ORM.
+     * @param \ArrayObject<string, mixed> $options Options de marshalling.
+     * @return void
+     */
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options): void
+    {
+        $value = $data[FieldAuthorization::FIELD_ACCESS_LEVEL] ?? null;
+        if (!is_string($value)) {
+            return;
+        }
+
+        $data[FieldAuthorization::FIELD_ACCESS_LEVEL] = FieldAuthorization::normalizeAccessLevel($value);
+    }
+
+    /**
      * Default validation rules.
      *
      * @param \Cake\Validation\Validator $validator Validator instance.
@@ -83,7 +103,7 @@ class FieldAuthorizationsTable extends Table
             ->notEmptyString(FieldAuthorization::FIELD_ACCESS_LEVEL)
             ->inList(
                 FieldAuthorization::FIELD_ACCESS_LEVEL,
-                ['EDIT', 'VIEW', 'NONE'],
+                FieldAuthorization::ACCESS_LEVELS,
                 __('Le niveau d’accès est invalide.'),
             );
 
