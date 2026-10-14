@@ -165,11 +165,17 @@ class FieldAuthorizationsController extends AppController
         $fieldAuthorization = $this->FieldAuthorizations->patchEntity($fieldAuthorization, $filteredData);
 
         if ($this->FieldAuthorizations->save($fieldAuthorization)) {
+            $fieldAuthorization = $this->FieldAuthorizations->get(
+                $fieldAuthorization->get('id'),
+                contain: ['Roles'],
+            );
+
             return $this->response->withType('application/json')
                 ->withStringBody((string)json_encode([
                     'success' => true,
                     'message' => __('La règle d’autorisation a été modifiée avec succès.'),
                     'errors' => null,
+                    'data' => $fieldAuthorization->toArray(),
                 ], JSON_UNESCAPED_UNICODE));
         }
 

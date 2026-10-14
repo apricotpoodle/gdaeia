@@ -131,6 +131,33 @@ Le framework de grille intègre un mécanisme automatique d'application des droi
 1. **Permissions sur les Boutons (Lignes)** : Le `formatter` de la colonne d'actions (compilé automatiquement lors du `build()`) intercepte l'objet `grid_rights.actions` de la ligne courante. Si une clé vaut `false`, la `ButtonFactory` injecte l'attribut HTML `disabled="disabled"` et applique les classes d'invalidation de pointeur et d'opacité Bootstrap (`disabled pe-none opacity-25`).
 2. **Permissions sur les Colonnes (Structure)** : Gérées au niveau du callback natif `ajaxResponse` dans `TabulatorBuilder.js`. Dès réception du JSON, le premier enregistrement est analysé. L'application des méthodes `hideColumn()` est enveloppée dans un `setTimeout` de 10ms afin de forcer l'exécution du masquage juste après la stabilisation de l'arbre DOM par Tabulator, éliminant tout clignotement ou anomalie graphique.
 
+## Édition inline et mise à jour d'une seule ligne
+
+Le socle fournit `TabulatorCellEditHandler` et `TabulatorMutationClient` pour
+persister une cellule éditée sans recharger la grille. La stratégie métier
+fournit l'URL et le payload ; l'API doit retourner la représentation complète
+de la ligne recalculée dans `data`. Le handler applique cette représentation
+avec l'API native Tabulator `row.update(data)`.
+
+```javascript
+const handler = new TabulatorCellEditHandler({
+    editableFields: ['access_level'],
+    requestFactory: (cell) => ({
+        url: `/api/field-authorizations/edit/${cell.getRow().getData().id}.json`,
+        method: 'POST',
+        body: new URLSearchParams({ access_level: cell.getValue() }),
+    }),
+});
+
+TabulatorFactory.createFieldAuthorizationsGrid('#fieldauthorizations-grid', {
+    cellEditHandler: handler,
+});
+```
+
+`ajaxURL` reste réservé au chargement des données. `replaceData()` et
+`setData()` ne doivent pas être utilisés pour ce cas d'usage : ils rechargent
+la grille au lieu de mettre à jour uniquement la ligne courante.
+
 ## Cinématique d'Interception des Événements et Routage Dynamique
 
 L'architecture orchestre les interactions utilisateurs (clics sur les lignes et pressions sur les boutons d'actions) à travers quatre couches hermétiques afin de garantir la performance, l'étanchéité de la sécurité graphique et un découplage total (DRY/SOLID).

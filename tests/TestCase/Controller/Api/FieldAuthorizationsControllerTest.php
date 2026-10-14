@@ -16,6 +16,21 @@ class FieldAuthorizationsControllerTest extends TestCase
 
     protected array $fixtures = ['app.Roles', 'app.FieldAuthorizations', 'app.FieldDefinitions'];
 
+    public function testLaModificationRetourneLaLigneActualiseePourTabulator(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/field-authorizations/edit/1.json', ['access_level' => 'VIEW']);
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertTrue($payload['success']);
+        $this->assertSame(1, $payload['data']['id']);
+        $this->assertSame('VIEW', $payload['data']['access_level']);
+        $this->assertArrayHasKey('role', $payload['data']);
+    }
+
     public function testLApiDesAutorisationsSignaleUnePerteDeSessionEnJson(): void
     {
         $this->get('/api/field-authorizations.json');

@@ -6,54 +6,21 @@
 import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js';
 import { globalTabulatorObserver } from '../../core/Tabulator/TabulatorObserver.js';
 import { FlashManager } from '../../core/FlashManager.js';
+import { TabulatorCellEditHandler } from '../../core/Tabulator/TabulatorCellEditHandler.js';
 
 const tableSelector = "#fieldauthorizations-grid";
 
 // 1. Instanciation directe de la grille via la Factory
-const fieldAuthTable = TabulatorFactory.createFieldAuthorizationsGrid(tableSelector);
-
-/**
- * Enregistre la modification inline du niveau d'accès auprès de l'API.
- * La grille conserve temporairement la nouvelle valeur ; elle est restaurée
- * si le serveur refuse la mutation ou si la requête échoue.
- *
- * @param {Object} cell Cellule Tabulator modifiée.
- * @returns {Promise<void>}
- */
-async function persistAccessLevel(cell) {
-    const row = cell.getRow().getData();
-    const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
-    if (!csrfToken) {
-        cell.restoreOldValue();
-        throw new Error('Jeton CSRF manquant.');
-    }
-
-    const response = await fetch(`/api/field-authorizations/edit/${row.id}.json`, {
-        method: 'POST',
-        headers: {
-            Accept: 'application/json',
-            'X-CSRF-Token': csrfToken,
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-        body: new URLSearchParams({ access_level: cell.getValue() }),
-    });
-    const payload = await response.json();
-    if (!response.ok || !payload.success) {
-        throw new Error(payload.message || 'Impossible de modifier le niveau d’accès.');
-    }
-
-    FlashManager.success(payload.message || 'Niveau d’accès mis à jour.');
-}
-
-fieldAuthTable.on('cellEdited', (cell) => {
-    if (cell.getField() !== 'access_level') return;
-
-    persistAccessLevel(cell).catch((error) => {
-        cell.restoreOldValue();
-        FlashManager.error(error instanceof Error
-            ? error.message
-            : 'Impossible de modifier le niveau d’accès.');
-    });
+const fieldAuthTable = TabulatorFactory.createFieldAuthorizationsGrid(tableSelector, {
+    cellEditHandler: new TabulatorCellEditHandler({
+        editableFields: ['access_level'],
+        requestFactory: (cell) => ({
+            url: `/api/field-authorizations/edit/${cell.getRow().getData().id}.json`,
+            method: 'POST',
+            body: new URLSearchParams({ access_level: cell.getValue() }),
+        }),
+        onSuccess: (payload) => FlashManager.success(payload.message || 'Niveau d’accès mis à jour.'),
+    }),
 });
 
 // 2. Écouteurs d'événements (Identique à Users/index.js)

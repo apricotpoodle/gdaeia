@@ -236,6 +236,19 @@ export class TabulatorBuilder {
         return this;
     }
 
+    /**
+     * Configure la persistance d'une édition inline par un handler spécialisé.
+     * @param {Object} handler Handler exposant handle(cell).
+     * @returns {TabulatorBuilder}
+     */
+    setCellEditHandler(handler) {
+        if (!handler || typeof handler.handle !== 'function') {
+            throw new TypeError('Le handler d’édition Tabulator doit exposer handle(cell).');
+        }
+        this.config.cellEdited = (cell) => handler.handle(cell);
+        return this;
+    }
+
     setSecurityStrategy(strategy, placeholder = 'Masqué') {
         this.securityStrategy = strategy;
         this.maskPlaceholder = placeholder;

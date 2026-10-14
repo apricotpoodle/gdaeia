@@ -188,8 +188,8 @@ export class TabulatorFactory {
         ];
     }
 
-    static createFieldAuthorizationsGrid(selector = "#fieldauthorizations-grid") {
-        return this._createActionGrid(selector)
+    static createFieldAuthorizationsGrid(selector = "#fieldauthorizations-grid", options = {}) {
+        const builder = this._createActionGrid(selector)
             .setAjaxSource('/api/field-authorizations.json')
             .setController('field-authorizations')
             .setHeight('calc(100vh - 240px)')
@@ -226,8 +226,11 @@ export class TabulatorFactory {
                     },
                 }),
             ])
-            .setWithActions(['edit', 'delete'])
-            .build();
+            .setWithActions(['edit', 'delete']);
+
+        if (options.cellEditHandler) builder.setCellEditHandler(options.cellEditHandler);
+
+        return builder.build();
     }
 
     /**
@@ -236,17 +239,20 @@ export class TabulatorFactory {
      * @param {string} [selector="#applicationforms-table"] - Le sélecteur CSS cible.
      * @returns {Tabulator} L'instance finale de la grille Tabulator.
      */
-    static createApplicationformsGrid(selector = "#applicationforms-table") {
+    static createApplicationformsGrid(selector = "#applicationforms-table", options = {}) {
         const metadata = JSON.parse(document.querySelector(selector)?.dataset.fieldMetadata || '{}');
-        return this._createActionGrid(selector)
+        const builder = this._createActionGrid(selector)
             .setAjaxSource('/api/applicationforms.json')
             // 💡 SUPPRESSION DE fitColumns : On autorise le comportement fitDataFill
             .setLayout("fitDataFill")
             .setController('applicationforms')
             .setHeight("calc(100vh - 180px)")
             .setColumns(getApplicationformColumns(metadata))
-            .setWithActions(['view', 'viewpdf', 'edit', 'duplicate', 'launchValidation', 'resetValidation', 'delete'])
-            .build();
+            .setWithActions(['view', 'viewpdf', 'edit', 'duplicate', 'launchValidation', 'resetValidation', 'delete']);
+
+        if (options.cellEditHandler) builder.setCellEditHandler(options.cellEditHandler);
+
+        return builder.build();
     }
 
     /** Fabrique la grille à défilement infini des cycles de validation bloqués. */
