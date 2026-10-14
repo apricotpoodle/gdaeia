@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         colors="true"
+         processIsolation="false"
+         stopOnFailure="false"
+         bootstrap="config/bootstrap.php"
+         cacheDirectory=".phpunit.cache/unit"
+         xsi:noNamespaceSchemaLocation="https://schema.phpunit.de/10.1/phpunit.xsd">
+    <php>
+        <ini name="memory_limit" value="-1"/>
+    </php>
+
+    <testsuites>
+        <testsuite name="unit">
+            <directory suffix="Test.php">tests/TestCase/Policy</directory>
+            <directory suffix="Test.php">tests/TestCase/Model/Entity</directory>
+            <directory suffix="Test.php">tests/TestCase/Service</directory>
+            <file>tests/TestCase/Model/Table/ApplicationformsValidationTest.php</file>
+            <file>tests/TestCase/Model/Table/UsersValidationTest.php</file>
+            <file>tests/TestCase/Model/Table/CommentsValidationTest.php</file>
+            <file>tests/TestCase/Model/Table/DepartmentsTreeSelectTest.php</file>
+            <exclude>tests/TestCase/Policy/ApplicationformPolicyTest.php</exclude>
+        </testsuite>
+    </testsuites>
+
+    <source>
+        <include>
+            <directory suffix=".php">src/</directory>
+        </include>
+        <exclude>
+            <file>src/Console/Installer.php</file>
+        </exclude>
+    </source>
+</phpunit>
