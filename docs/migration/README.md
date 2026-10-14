@@ -12,6 +12,83 @@ doivent être exécutées avec un client SQL puis exportées avec leurs en-tête
 Le fichier CSV est ensuite contrôlé avant tout import dans l’application
 courante.
 
+## Utilisation avec Docker
+
+Le client MySQL historique est isolé dans `docker-compose.migration.yml`. Il
+ne démarre pas avec l’application et son conteneur est supprimé après chaque
+commande.
+
+Configurer les variables `LEGACY_DB_*` dans le `.env` racine, puis vérifier la
+connexion :
+
+```bash
+make migration.connection-check
+```
+
+Pour exporter automatiquement les résultats :
+
+```bash
+make migration.export
+```
+
+La commande lit chaque `SELECT` identifié dans `export-habilitations.sql`,
+exécute les requêtes séparément via PDO et écrit un fichier CSV UTF-8 par
+requête dans `app/tmp/migration/exports`. Les mots de passe et jetons sont
+refusés par le script même s’ils étaient ajoutés par erreur au SQL.
+
+Enfin, contrôler les fichiers :
+
+```bash
+make migration.quality
+```
+
+Les rapports sont écrits dans `app/tmp/migration/reports`. Aucun de ces deux
+répertoires ne doit être versionné.
+
+Pour construire les référentiels historiques à rapprocher des départements
+actuels :
+
+```bash
+make migration.mapping
+```
+
+La commande écrit :
+
+- `app/tmp/migration/mappings/old-departments.csv` : sociétés et services
+  historiques, avec une proposition de rapprochement (`rapprochement_propose`)
+  et un commentaire indiquant le contrôle restant à effectuer ; les
+  identifiants cibles restent vides tant que le référentiel courant n’est pas
+  fourni ;
+- `app/tmp/migration/mappings/cgr-department-correspondence.csv` : couples
+  société/service/CGR dédoublonnés, avec les deux colonnes de départements
+  cibles laissées vides.
+
+Ces fichiers sont des supports de rapprochement. Ils ne créent encore aucun
+département et ne modifient aucune table de la nouvelle application.
+
+## Contrôle local des CSV
+
+Après l’export, contrôler les trois fichiers principaux sans accéder à MySQL :
+
+```bash
+docker compose exec -T gdaetf bin/cake migration_quality /chemin/vers/exports
+```
+
+La commande vérifie les fichiers utilisateurs, rôles et rôles contextualisés,
+signale les courriels absents ou dupliqués ainsi que les liens orphelins. Elle
+refuse tout fichier contenant un mot de passe ou un jeton. Elle ne modifie ni
+le répertoire source ni la base applicative.
+
+Pour produire les rapports CSV de qualité dans un répertoire séparé :
+
+```bash
+docker compose exec -T gdaetf bin/cake migration_quality /chemin/vers/exports \
+    --report-dir /chemin/vers/rapports
+```
+
+Les rapports sont des résultats de contrôle, pas des fichiers d’import : les
+doublons et les correspondances ambiguës doivent être arbitrés avant le lot 2.
+
 Les identifiants source (`USR_ID`, `RLE_ID`, etc.) sont conservés pour le
 rapprochement, mais ne doivent pas être injectés directement dans les tables
 cibles.
