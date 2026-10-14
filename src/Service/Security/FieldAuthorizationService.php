@@ -46,7 +46,7 @@ class FieldAuthorizationService
 
         $schema = [];
         foreach ($records as $record) {
-            $schema[$record->field] = strtoupper($record->access_level);
+            $schema[$record->field] = FieldAuthorization::normalizeAccessLevel($record->access_level);
         }
 
         return $schema;
@@ -66,9 +66,9 @@ class FieldAuthorizationService
         }
 
         foreach ($data as $field => $value) {
-            $access = $fieldSchema[$field] ?? 'EDIT';
+            $access = $fieldSchema[$field] ?? FieldAuthorization::ACCESS_LEVEL_EDIT;
 
-            if ($access !== 'EDIT') {
+            if ($access !== FieldAuthorization::ACCESS_LEVEL_EDIT) {
                 unset($data[$field]);
             }
         }

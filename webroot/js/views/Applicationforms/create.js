@@ -59,7 +59,7 @@ class ApplicationformCreateForm {
 
             if (accessLevel === 'NONE') {
                 container.classList.add('d-none');
-            } else if (accessLevel === 'VIEW' || accessLevel === 'READONLY') {
+            } else if (accessLevel === 'VIEW') {
                 input.setAttribute('disabled', 'disabled');
                 input.classList.add('bg-light', 'pe-none');
             }

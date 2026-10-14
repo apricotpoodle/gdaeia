@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Controller\Api;
 
+use App\Model\Entity\FieldAuthorization;
 use App\Model\Entity\User;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
@@ -29,6 +30,18 @@ class FieldAuthorizationsControllerTest extends TestCase
         $this->assertSame(1, $payload['data']['id']);
         $this->assertSame('VIEW', $payload['data']['access_level']);
         $this->assertArrayHasKey('role', $payload['data']);
+    }
+
+    public function testLApiRetourneLeNiveauLectureSeuleSousLaValeurCanoniqueView(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/field-authorizations/edit/1.json', ['access_level' => 'view']);
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(FieldAuthorization::ACCESS_LEVEL_VIEW, $payload['data']['access_level']);
     }
 
     public function testLApiDesAutorisationsSignaleUnePerteDeSessionEnJson(): void

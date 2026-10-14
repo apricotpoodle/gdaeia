@@ -20,6 +20,17 @@ use Cake\ORM\Entity;
  */
 class FieldAuthorization extends Entity
 {
+    public const ACCESS_LEVEL_EDIT = 'EDIT';
+    public const ACCESS_LEVEL_VIEW = 'VIEW';
+    public const ACCESS_LEVEL_NONE = 'NONE';
+
+    /** @var list<string> Valeurs techniques persistées par l'ACL des champs. */
+    public const ACCESS_LEVELS = [
+        self::ACCESS_LEVEL_EDIT,
+        self::ACCESS_LEVEL_VIEW,
+        self::ACCESS_LEVEL_NONE,
+    ];
+
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
      *
@@ -47,4 +58,15 @@ class FieldAuthorization extends Entity
     public const FIELD_CREATED = 'created';
     public const FIELD_MODIFIED = 'modified';
     public const FIELD_ROLE = 'role';
+
+    /**
+     * Retourne la valeur canonique d'un niveau d'accès.
+     *
+     * @param string $value Niveau d'accès soumis ou lu depuis la base.
+     * @return string Niveau d'accès canonique.
+     */
+    public static function normalizeAccessLevel(string $value): string
+    {
+        return strtoupper(trim($value));
+    }
 }
