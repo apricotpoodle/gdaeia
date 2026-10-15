@@ -502,12 +502,9 @@ class ApplicationformsController extends AppController
 
         $applicationform = $this->Applicationforms->newEmptyEntity();
 
-        $authService = new FieldAuthorizationService();
+        // Double protection : filtrage des champs contre la matrice ACL (ADR 0042)
         $identity = $this->request->getAttribute('identity');
-
-        // Double protection : Filtrage des champs contre la matrice ACL (ADR 0042)
-        $schema = $authService->getFieldSchema($identity, 'Applicationforms');
-        $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
+        $filteredData = $this->authorizedRequestData('Applicationforms');
 
         // Assignation automatique de l'utilisateur créateur
         /** @var \App\Model\Entity\User $user */
@@ -565,11 +562,8 @@ class ApplicationformsController extends AppController
         $applicationform = $this->Applicationforms->get($id);
         $this->Authorization->authorize($applicationform, 'edit');
 
-        $authService = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
-
-        $schema = $authService->getFieldSchema($identity, 'Applicationforms');
-        $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
+        $filteredData = $this->authorizedRequestData('Applicationforms');
 
         $activeRun = $this->fetchTable('ValidationWorkflowRuns')->find()
             ->where([

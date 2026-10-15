@@ -70,6 +70,13 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('Département modifié');
 
+        $this->post('/api/departments/' . $id . '.json', ['base' => true]);
+        $this->assertResponseOk();
+        $this->assertTrue((bool)$this->getTableLocator()->get('Departments')->get($id)->get('base'));
+
+        $this->post('/api/departments/' . $id . '.json', ['base' => false]);
+        $this->assertResponseOk();
+
         $this->post('/api/departments/' . $id . '/deactivate.json');
         $this->assertResponseOk();
         $this->assertResponseContains('"success":true');
@@ -97,5 +104,6 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('department-cgr-codes-table');
         $this->assertResponseContains('Modifier le département');
+        $this->assertResponseContains('Département socle');
     }
 }

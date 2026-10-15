@@ -223,8 +223,9 @@ class MenusController extends AppController
         $this->Authorization->authorize($this->Menus->newEmptyEntity(), 'roleAccess');
 
         $user = $this->getRoleAccessOperator();
-        $roleId = $this->positiveInteger($this->request->getData('role_id'), 'role_id');
-        $selectedMenuIds = $this->resolveSelectedMenuIds($this->request->getData('menu_ids'), $user);
+        $data = $this->authorizedRequestData('RoleMenus');
+        $roleId = $this->positiveInteger($data['role_id'] ?? null, 'role_id');
+        $selectedMenuIds = $this->resolveSelectedMenuIds($data['menu_ids'] ?? null, $user);
         $menuIds = $this->resolveSelectedMenuAndDescendantIds($selectedMenuIds, $user);
 
         $roles = $this->fetchTable('Roles');
@@ -290,8 +291,9 @@ class MenusController extends AppController
         $this->Authorization->authorize($this->Menus->newEmptyEntity(), 'roleAccess');
 
         $user = $this->getRoleAccessOperator();
-        $roleId = $this->positiveInteger($this->request->getData('role_id'), 'role_id');
-        $selectedMenuIds = $this->resolveSelectedMenuIds($this->request->getData('menu_ids'), $user);
+        $data = $this->authorizedRequestData('RoleMenus');
+        $roleId = $this->positiveInteger($data['role_id'] ?? null, 'role_id');
+        $selectedMenuIds = $this->resolveSelectedMenuIds($data['menu_ids'] ?? null, $user);
         $menuIds = $this->resolveSelectedMenuAndDescendantIds($selectedMenuIds, $user);
 
         $roleIsVisible = $this->fetchTable('Roles')->find('roleAccessVisibleTo', user: $user)

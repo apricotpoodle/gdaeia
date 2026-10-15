@@ -3,9 +3,15 @@ declare(strict_types=1);
 
 /** @var \App\View\AppView $this */
 /** @var \App\Model\Entity\Department $department */
+/** @var \Authorization\IdentityInterface|null $identity */
+/** @var array<string, string> $fieldSchema */
 use App\View\Action\DepartmentsActions;
 
 $isEdit = $mode === 'edit';
+$currentUser = $identity?->getOriginalData();
+$isSuperUser = $currentUser instanceof \App\Model\Entity\User
+    && (bool)$currentUser->get(\App\Model\Entity\User::FIELD_ISSUPERUSER);
+$canEditBase = $isSuperUser || (($fieldSchema['base'] ?? 'NONE') === 'EDIT');
 $this->assign('title', $isEdit ? __('Modifier un département') : __('Nouveau département'));
 $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>
@@ -42,6 +48,11 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
             <div class="col-md-6">
                 <?= $this->Form->control('cgr_code_id', ['label' => __('CGR par défaut'), 'type' => 'number', 'min' => 1, 'empty' => __('Aucun')]) ?>
             </div>
+            <?php if ($isEdit && $canEditBase): ?>
+                <div class="col-md-4">
+                    <?= $this->Form->control('base', ['label' => __('Département socle'), 'type' => 'checkbox']) ?>
+                </div>
+            <?php endif; ?>
         </div>
     </div>
     <div class="d-flex gap-2 mb-4">

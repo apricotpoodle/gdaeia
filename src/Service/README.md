@@ -20,6 +20,18 @@ impacts, blocage des déplacements ou changements de stratégie incompatibles et
 désactivation logique transactionnelle. Le service force les nouveaux
 départements administrés à ne pas être des lignes socle.
 
+## ACL des mutations Web et API
+
+`FieldAuthorizationService` construit le schéma de droits à partir de
+`field_authorizations` et filtre les données reçues avant `patchEntity()`.
+Les contrôleurs Web et API utilisent les helpers communs d’`AppController`.
+Une ressource possédant une matrice active refuse par défaut les champs
+absents ; un super-administrateur conserve l’accès complet. Les commandes CLI,
+imports et workflows internes restent hors du périmètre HTTP et appliquent
+leurs propres listes blanches.
+
+Voir l’[ADR 0065](../docs/adr/0065-acl-automatique-des-mutations-web-api.md).
+
 ## Production PDF des DAE
 
 `Pdf/ApplicationformPdfService` génère le document PDF d'une DAE avec mPDF.

@@ -40,7 +40,8 @@ class WorkflowSettingsController extends AppController
             return null;
         }
 
-        $hours = $this->positiveInteger($this->request->getData('default_due_hours'), 'default_due_hours');
+        $data = $this->authorizedRequestData('WorkflowSettings');
+        $hours = $this->positiveInteger($data['default_due_hours'] ?? null, 'default_due_hours');
         $setting ??= $settings->newEntity(['name' => 'validation.default_due_hours']);
         $setting->set('value', (string)$hours);
         if (!$settings->save($setting)) {
@@ -66,10 +67,8 @@ class WorkflowSettingsController extends AppController
 
             return null;
         }
-        $days = $this->positiveInteger(
-            $this->request->getData('blocked_after_business_days'),
-            'blocked_after_business_days',
-        );
+        $data = $this->authorizedRequestData('WorkflowSettings');
+        $days = $this->positiveInteger($data['blocked_after_business_days'] ?? null, 'blocked_after_business_days');
         $setting ??= $settings->newEntity(['name' => $name]);
         $setting->set('value', (string)$days);
         if (!$settings->save($setting)) {
@@ -106,7 +105,7 @@ class WorkflowSettingsController extends AppController
             return $this->jsonSuccess(['comment_requirements' => $requirements]);
         }
 
-        $data = $this->request->getData();
+        $data = $this->authorizedRequestData('WorkflowSettings');
         $requirements = [
             'accepter' => $this->parseBoolean($data['accepter'] ?? null, $defaults['accepter']),
             'refuser' => $this->parseBoolean($data['refuser'] ?? null, $defaults['refuser']),
@@ -151,7 +150,9 @@ class WorkflowSettingsController extends AppController
         $template = $table->newEmptyEntity();
         $this->Authorization->authorize($template, 'add');
 
-        return $this->saveCommentTemplate($table->patchEntity($template, $this->request->getData(), [
+        return $this->saveCommentTemplate($table->patchEntity($template, $this->authorizedRequestData(
+            'ValidationCommentTemplates',
+        ), [
             'fields' => ['decision', 'label', 'content', 'position', 'active'],
         ]), $table);
     }
@@ -165,7 +166,9 @@ class WorkflowSettingsController extends AppController
         $template = $table->get($this->positiveInteger($id, 'id'));
         $this->Authorization->authorize($template, 'edit');
 
-        return $this->saveCommentTemplate($table->patchEntity($template, $this->request->getData(), [
+        return $this->saveCommentTemplate($table->patchEntity($template, $this->authorizedRequestData(
+            'ValidationCommentTemplates',
+        ), [
             'fields' => ['decision', 'label', 'content', 'position', 'active'],
         ]), $table);
     }

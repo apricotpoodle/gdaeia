@@ -16,7 +16,7 @@ final class DepartmentManagementService
     /** @var list<string> */
     private const EDITABLE_FIELDS = [
         'parent_id', 'cgr_code_id', 'code', 'name', 'sort', 'department_type_id',
-        'cgr_strategy_id', 'current_manager_id',
+        'cgr_strategy_id', 'current_manager_id', 'base',
     ];
 
     /** @param \App\Model\Table\DepartmentsTable|null $departments Table injectable for tests. */
@@ -140,6 +140,9 @@ final class DepartmentManagementService
                 $department->set('base', false);
             }
             $entity = $this->table()->patchEntity($department, $filtered);
+            if ($entity->isNew()) {
+                $entity->set('base', false);
+            }
             $entity->set('parent_id', $parentId);
             $this->table()->save($entity);
 

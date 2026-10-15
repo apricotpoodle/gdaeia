@@ -28,7 +28,7 @@ final class DepartmentsController extends AppController
 
         if ($this->request->is('post')) {
             try {
-                (new DepartmentManagementService())->save($department, $this->request->getData());
+                (new DepartmentManagementService())->save($department, $this->authorizedRequestData('Departments'));
                 $this->Flash->success(__('Le département a été créé.'));
 
                 return $this->redirect(['action' => 'index']);
@@ -53,7 +53,7 @@ final class DepartmentsController extends AppController
 
         if ($this->request->is(['post', 'put', 'patch'])) {
             try {
-                (new DepartmentManagementService())->save($department, $this->request->getData());
+                (new DepartmentManagementService())->save($department, $this->authorizedRequestData('Departments'));
                 $this->Flash->success(__('Le département a été mis à jour.'));
 
                 return $this->redirect(['action' => 'index']);
@@ -74,6 +74,7 @@ final class DepartmentsController extends AppController
         $this->set([
             'department' => $department,
             'mode' => $mode,
+            'fieldSchema' => $this->fieldAuthorizationSchema('Departments'),
             'strategies' => $this->fetchTable('CgrStrategies')->find('list')->toArray(),
             'managers' => $this->fetchTable('Users')->find('list', keyField: 'id', valueField: 'username')
                 ->where(['deleted IS' => null])

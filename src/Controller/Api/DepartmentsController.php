@@ -56,7 +56,10 @@ final class DepartmentsController extends AppController
         $this->Authorization->authorize($department, 'add');
 
         try {
-            $saved = (new DepartmentManagementService())->save($department, $this->request->getData());
+            $saved = (new DepartmentManagementService())->save(
+                $department,
+                $this->authorizedRequestData('Departments'),
+            );
         } catch (DomainException $exception) {
             return $this->domainError($exception);
         }
@@ -75,7 +78,10 @@ final class DepartmentsController extends AppController
         $this->Authorization->authorize($department, 'edit');
 
         try {
-            $saved = (new DepartmentManagementService())->save($department, $this->request->getData());
+            $saved = (new DepartmentManagementService())->save(
+                $department,
+                $this->authorizedRequestData('Departments'),
+            );
         } catch (DomainException $exception) {
             return $this->domainError($exception);
         }
@@ -137,7 +143,7 @@ final class DepartmentsController extends AppController
         $table = $this->fetchTable('CgrCodes');
         $code = $table->newEntity(['department_id' => $department->get('id')]);
         $this->Authorization->authorize($code, 'add');
-        $code = $table->patchEntity($code, $this->request->getData(), [
+        $code = $table->patchEntity($code, $this->authorizedRequestData('CgrCodes'), [
             'accessibleFields' => ['department_id' => false, 'is_system' => false],
         ]);
         if (!$table->save($code)) {
@@ -155,7 +161,7 @@ final class DepartmentsController extends AppController
         /** @var \App\Model\Entity\CgrCode $code */
         $code = $table->find()->where(['id' => $id, 'department_id' => $departmentId, 'active' => true])->firstOrFail();
         $this->Authorization->authorize($code, 'edit');
-        $code = $table->patchEntity($code, $this->request->getData(), [
+        $code = $table->patchEntity($code, $this->authorizedRequestData('CgrCodes'), [
             'accessibleFields' => ['department_id' => false, 'type' => false, 'is_system' => false],
         ]);
         if (!$table->save($code)) {

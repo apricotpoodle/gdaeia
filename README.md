@@ -66,7 +66,9 @@ L’application gère :
 Les restrictions de périmètre sont appliquées côté serveur. Elles déterminent
 à la fois les données consultables et les opérations autorisées. Un mécanisme
 d’usurpation d’identité est prévu pour les utilisateurs habilités au support
-et à l’administration technique.
+et à l’administration technique. Les mutations Web et API filtrent également
+les champs selon la matrice `field_authorizations` avant l’hydratation ORM ;
+les champs non déclarés d’une ressource activée sont refusés par défaut.
 
 ### Référentiels métier
 
@@ -121,6 +123,8 @@ particulier :
   pour la sécurité des comptes et des sessions ;
 - [ADR 0041 — Ségrégation des données](docs/adr/0041-segregation-donnees-model-custom-finders.md)
   pour les périmètres de visibilité ;
+- [ADR 0065 — ACL automatique des mutations Web et API](docs/adr/0065-acl-automatique-des-mutations-web-api.md)
+  pour l’application systématique des droits au niveau des champs ;
 - [ADR 0044 — Recherche FULLTEXT](docs/adr/0044-filtre-recherche-fulltext-search-plugin.md)
   pour la recherche textuelle MySQL.
 

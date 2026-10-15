@@ -102,9 +102,12 @@ class ValidationsequencesController extends AppController
     {
         $this->request->allowMethod(['post']);
         $this->authorizeManagement();
-        $departmentIds = $this->resolveDepartmentIds($this->request->getData('department_ids'));
-        $roleId = $this->positiveInteger($this->request->getData('role_id'), 'role_id');
-        $sequence = $this->positiveInteger($this->request->getData('sequence') ?? 1, 'sequence');
+        $rawData = $this->request->getData();
+        $rawData['sequence'] ??= 1;
+        $data = $this->authorizedRequestData('Validationsequences', $rawData);
+        $departmentIds = $this->resolveDepartmentIds($data['department_ids'] ?? null);
+        $roleId = $this->positiveInteger($data['role_id'] ?? null, 'role_id');
+        $sequence = $this->positiveInteger($data['sequence'] ?? null, 'sequence');
         $operator = $this->getOperator();
         $role = $this->fetchTable('Roles')->find('roleAccessVisibleTo', user: $operator)
             ->where(['Roles.id' => $roleId])
@@ -176,8 +179,9 @@ class ValidationsequencesController extends AppController
     {
         $this->request->allowMethod(['post']);
         $this->authorizeManagement();
-        $departmentIds = $this->resolveDepartmentIds($this->request->getData('department_ids'));
-        $roleId = $this->positiveInteger($this->request->getData('role_id'), 'role_id');
+        $data = $this->authorizedRequestData('Validationsequences');
+        $departmentIds = $this->resolveDepartmentIds($data['department_ids'] ?? null);
+        $roleId = $this->positiveInteger($data['role_id'] ?? null, 'role_id');
         try {
             $deleted = $this->Validationsequences->getConnection()->transactional(
                 function () use ($departmentIds, $roleId): int {
@@ -203,9 +207,10 @@ class ValidationsequencesController extends AppController
     {
         $this->request->allowMethod(['post']);
         $this->authorizeManagement();
-        $departmentIds = $this->resolveDepartmentIds($this->request->getData('department_ids'));
-        $roleId = $this->positiveInteger($this->request->getData('role_id'), 'role_id');
-        $sequence = $this->positiveInteger($this->request->getData('sequence'), 'sequence');
+        $data = $this->authorizedRequestData('Validationsequences');
+        $departmentIds = $this->resolveDepartmentIds($data['department_ids'] ?? null);
+        $roleId = $this->positiveInteger($data['role_id'] ?? null, 'role_id');
+        $sequence = $this->positiveInteger($data['sequence'] ?? null, 'sequence');
         try {
             $updated = $this->Validationsequences->getConnection()->transactional(
                 function () use ($departmentIds, $roleId, $sequence): int {
@@ -231,9 +236,10 @@ class ValidationsequencesController extends AppController
     {
         $this->request->allowMethod(['post']);
         $this->authorizeManagement();
-        $departmentIds = $this->resolveDepartmentIds($this->request->getData('department_ids'));
-        $roleId = $this->positiveInteger($this->request->getData('role_id'), 'role_id');
-        $rawDelay = $this->request->getData('reminder_delay_hours');
+        $data = $this->authorizedRequestData('Validationsequences');
+        $departmentIds = $this->resolveDepartmentIds($data['department_ids'] ?? null);
+        $roleId = $this->positiveInteger($data['role_id'] ?? null, 'role_id');
+        $rawDelay = $data['reminder_delay_hours'] ?? null;
         $delay = $rawDelay === null || $rawDelay === ''
             ? null : $this->positiveInteger($rawDelay, 'reminder_delay_hours');
         $updated = $this->Validationsequences->updateAll(['reminder_delay_hours' => $delay], [

@@ -59,7 +59,11 @@ class RolesController extends AppController
         $this->request->allowMethod(['post']);
         $role = $this->Roles->newEmptyEntity();
         $this->Authorization->authorize($role, 'add');
-        $role = $this->Roles->patchEntity($role, $this->request->getData(), $this->patchOptions());
+        $role = $this->Roles->patchEntity(
+            $role,
+            $this->authorizedRequestData('Roles'),
+            $this->patchOptions(),
+        );
 
         if ($this->Roles->save($role)) {
             return $this->jsonSuccess(['id' => $role->get(Role::FIELD_ID)], __('Le rôle a été créé avec succès.'));
@@ -74,7 +78,11 @@ class RolesController extends AppController
         $this->request->allowMethod(['post', 'put', 'patch']);
         $role = $this->getActiveRole($id);
         $this->Authorization->authorize($role, 'edit');
-        $role = $this->Roles->patchEntity($role, $this->request->getData(), $this->patchOptions());
+        $role = $this->Roles->patchEntity(
+            $role,
+            $this->authorizedRequestData('Roles'),
+            $this->patchOptions(),
+        );
 
         if ($this->Roles->save($role)) {
             return $this->jsonSuccess(message: __('Le rôle a été mis à jour avec succès.'));

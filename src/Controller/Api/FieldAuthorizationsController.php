@@ -127,12 +127,8 @@ class FieldAuthorizationsController extends AppController
 
         $fieldAuthorization = $this->FieldAuthorizations->newEmptyEntity();
 
-        $authService = new FieldAuthorizationService();
-        $identity = $this->request->getAttribute('identity');
-
         // 2. Filtration des données soumises selon le schéma de rôle
-        $schema = $authService->getFieldSchema($identity, 'FieldAuthorizations');
-        $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
+        $filteredData = $this->authorizedRequestData('FieldAuthorizations');
 
         $fieldAuthorization = $this->FieldAuthorizations->patchEntity($fieldAuthorization, $filteredData);
 
@@ -159,11 +155,7 @@ class FieldAuthorizationsController extends AppController
         $fieldAuthorization = $this->FieldAuthorizations->get($id);
         $this->Authorization->authorize($fieldAuthorization, 'edit');
 
-        $authService = new FieldAuthorizationService();
-        $identity = $this->request->getAttribute('identity');
-
-        $schema = $authService->getFieldSchema($identity, 'FieldAuthorizations');
-        $filteredData = $authService->filterRequestData($this->request->getData(), $schema);
+        $filteredData = $this->authorizedRequestData('FieldAuthorizations');
 
         $fieldAuthorization = $this->FieldAuthorizations->patchEntity($fieldAuthorization, $filteredData);
 

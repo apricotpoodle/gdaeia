@@ -88,12 +88,6 @@ class UsersController extends AppController
         $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
 
         $user = $this->Users->newEmptyEntity();
-        $authService = new FieldAuthorizationService();
-        $identity = $this->request->getAttribute('identity');
-
-        $schema = $authService->getFieldSchema($identity, 'Users');
-        $schema['user_departments'] = 'EDIT';
-
         $rawParams = $this->request->getData();
 
         // 💡 FIX : Maintien du tableau user_departments s'il est transmis
@@ -101,7 +95,7 @@ class UsersController extends AppController
             $rawParams['user_departments'] = [];
         }
 
-        $filteredData = $authService->filterRequestData($rawParams, $schema);
+        $filteredData = $this->authorizedRequestData('Users', $rawParams);
 
         $user = $this->Users->patchEntity($user, $filteredData, [
             'associated' => ['UserDepartments'],
@@ -129,12 +123,6 @@ class UsersController extends AppController
         $user = $this->Users->get($id, contain: ['UserDepartments']);
         $this->Authorization->authorize($user, 'edit');
 
-        $authService = new FieldAuthorizationService();
-        $identity = $this->request->getAttribute('identity');
-
-        $schema = $authService->getFieldSchema($identity, 'Users');
-        $schema['user_departments'] = 'EDIT';
-
         $rawParams = $this->request->getData();
         // ==============================================================
         // 🛠️ DÉBUT DES LOGS D'ANALYSE
@@ -150,7 +138,7 @@ class UsersController extends AppController
             $rawParams['user_departments'] = [];
         }
 
-        $filteredData = $authService->filterRequestData($rawParams, $schema);
+        $filteredData = $this->authorizedRequestData('Users', $rawParams);
         Log::debug(
             "2. [SECURITY SERVICE] Données après filtrage : \n"
             . print_r($filteredData['user_departments'] ?? 'PURGÉ PAR LE SERVICE', true),
