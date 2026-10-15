@@ -112,6 +112,52 @@ société. L’application courante possède un rôle principal par utilisateur 
 des départements explicites. Les cas non représentables doivent être placés
 dans un rapport de rapprochement manuel, jamais perdus silencieusement.
 
+## Import des sociétés, services et codes CGR
+
+Le second lot de migration transforme les sociétés et services historiques en
+départements de l’application. Il importe également les codes CGR des services
+de la SEM.
+
+Les données actuellement disponibles représentent 7 sociétés et 60 services
+dans le référentiel historique. Les relations exploitables permettent de
+rapprocher 47 services SEM, dont 43 portent des CGR. Les 123 codes CGR
+distincts proviennent de 270 lignes de périmètre historique et représentent
+134 affectations service-CGR dédupliquées.
+
+Le plan d’import crée une société comme département racine et un service comme
+département enfant. Le département racine SEM doit déjà exister dans la base
+cible. Les services SEM utilisent la stratégie CGR SEM, dont la zone unique
+est SERVICE. Les codes sont importés avec type = SERVICE.
+
+Commencer par une simulation :
+
+~~~bash
+make migration.import.departments
+~~~
+
+La commande affiche le nombre de sociétés, services, codes CGR distincts et
+affectations service-CGR qui seraient importés. Elle écrit aussi
+unmapped-services.csv dans le répertoire de rapports lorsque des services du
+référentiel historique ne possèdent pas de relation société-service exploitable.
+
+Après contrôle du rapport, appliquer le lot explicitement :
+
+~~~bash
+docker compose exec -u www-data gdaetf bin/cake migration_import_departments \
+    --source-dir /var/www/html/tmp/migration/exports \
+    --report-dir /var/www/html/tmp/migration/reports \
+    --apply
+~~~
+
+L’application vérifie avant toute écriture que SEM existe une seule fois et
+que la stratégie SEM possède exactement une zone SERVICE. L’import est
+transactionnel et idempotent : une erreur annule le lot et une nouvelle
+exécution met à jour les libellés sans créer de doublons.
+
+Les services non rapprochés sont conservés dans le rapport et ne sont jamais
+attribués arbitrairement à une société. Les correspondances doivent être
+complétées dans les exports ou validées avant un lot ultérieur.
+
 ## Mots de passe
 
 `users.password` est obligatoire dans l’application courante. L’import ne doit

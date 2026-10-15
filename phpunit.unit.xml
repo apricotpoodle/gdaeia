@@ -19,6 +19,7 @@
             <file>tests/TestCase/Model/Table/UsersValidationTest.php</file>
             <file>tests/TestCase/Model/Table/CommentsValidationTest.php</file>
             <file>tests/TestCase/Model/Table/DepartmentsTreeSelectTest.php</file>
+            <file>tests/TestCase/Command/MigrationImportDepartmentsCommandTest.php</file>
             <exclude>tests/TestCase/Policy/ApplicationformPolicyTest.php</exclude>
         </testsuite>
     </testsuites>
