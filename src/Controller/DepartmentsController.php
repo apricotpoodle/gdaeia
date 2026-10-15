@@ -38,6 +38,7 @@ final class DepartmentsController extends AppController
         }
 
         $this->setFormData($department, 'add');
+        $this->viewBuilder()->setTemplate('form');
 
         return null;
     }
@@ -62,6 +63,7 @@ final class DepartmentsController extends AppController
         }
 
         $this->setFormData($department, 'edit');
+        $this->viewBuilder()->setTemplate('form');
 
         return null;
     }

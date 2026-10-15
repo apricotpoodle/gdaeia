@@ -86,4 +86,16 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertResponseContains('"data"');
         $this->assertResponseContains('Lorem ipsum do');
     }
+
+    public function testLeFormulaireWebDeModificationUtiliseLeTemplatePartage(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+
+        $this->get('/departments/edit/1');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('department-cgr-codes-table');
+        $this->assertResponseContains('Modifier le département');
+    }
 }
