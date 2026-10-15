@@ -360,8 +360,9 @@ final class DepartmentsController extends AppController
     /**
      * Adapte les filtres de la grille aux champs calculés de l'arbre.
      *
-     * Le responsable est exposé par l'API comme « prénom nom », mais ses
-     * valeurs sont stockées dans l'association Users aliasée Managers.
+     * Le responsable et la stratégie CGR sont exposés par l'API comme des
+     * valeurs d'affichage, mais leurs données sont stockées dans les
+     * associations Users aliasée Managers et CgrStrategies.
      *
      * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête des départements.
      * @return \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Department>
@@ -382,6 +383,7 @@ final class DepartmentsController extends AppController
 
         $standardFilters = [];
         $managerFilters = [];
+        $strategyFilters = [];
         foreach ($filters as $filter) {
             if (!is_array($filter)) {
                 continue;
@@ -389,6 +391,10 @@ final class DepartmentsController extends AppController
             $field = $filter['field'] ?? null;
             if ($field === 'manager' || $field === 'managers') {
                 $managerFilters[] = $filter;
+                continue;
+            }
+            if ($field === 'cgr_strategy' || $field === 'cgr_strategies') {
+                $strategyFilters[] = $filter;
                 continue;
             }
             $standardFilters[] = $filter;
@@ -412,6 +418,22 @@ final class DepartmentsController extends AppController
                         'Managers.lastname ' . $operator => $value,
                     ]);
                 });
+            }
+        }
+
+        if ($strategyFilters !== []) {
+            $query->leftJoinWith('CgrStrategies');
+            foreach ($strategyFilters as $filter) {
+                $value = $filter['value'] ?? '';
+                if (!is_string($value) || $value === '') {
+                    continue;
+                }
+                $type = strtolower((string)($filter['type'] ?? 'like'));
+                $operator = in_array($type, ['=', '!=', '<', '<=', '>', '>='], true)
+                    ? $type
+                    : 'LIKE';
+                $value = $operator === 'LIKE' ? '%' . $value . '%' : $value;
+                $query->where(['CgrStrategies.name ' . $operator => $value]);
             }
         }
 

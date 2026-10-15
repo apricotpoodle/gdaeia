@@ -117,6 +117,26 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertSame([2], array_column($payload['data'], 'id'));
     }
 
+    public function testLeFiltreStrategieCgrRechercheDansLeNomAssocie(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll([
+            'deleted' => null,
+            'cgr_strategy_id' => 1,
+        ], ['id' => 2]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+
+        $this->get('/api/departments/tree.json?' . http_build_query([
+            'filters' => [['field' => 'cgr_strategy', 'type' => 'like', 'value' => 'Lorem']],
+        ]));
+
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertResponseOk();
+        $this->assertSame([1], array_column($payload['data'], 'id'));
+        $this->assertSame([2], array_column($payload['data'][0]['children'], 'id'));
+    }
+
     public function testUnSuperAdministrateurCreeModifieEtDesactiveUnDepartementSansDependance(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
