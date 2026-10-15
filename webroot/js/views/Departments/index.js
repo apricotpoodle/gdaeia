@@ -7,11 +7,38 @@ const selector = '#departments-table';
 const table = TabulatorFactory.createDepartmentsGrid(selector);
 const client = new TabulatorMutationClient();
 
+function appendQueryParam(query, value, key) {
+    if (value === null || value === undefined || value === '') return;
+    if (Array.isArray(value)) {
+        value.forEach((item, index) => appendQueryParam(query, item, key + '[' + index + ']'));
+        return;
+    }
+    if (typeof value === 'object') {
+        Object.entries(value).forEach(([childKey, childValue]) => {
+            appendQueryParam(query, childValue, key + '[' + childKey + ']');
+        });
+        return;
+    }
+    query.append(key, String(value));
+}
+
+function currentFilterQuery() {
+    const query = new URLSearchParams();
+    table.getFilters(true).forEach((filter, index) => {
+        appendQueryParam(query, filter.field, 'filters[' + index + '][field]');
+        appendQueryParam(query, filter.type, 'filters[' + index + '][type]');
+        appendQueryParam(query, filter.value, 'filters[' + index + '][value]');
+    });
+    return query;
+}
+
 table.on('dataTreeRowExpanded', async (row) => {
     const data = row.getData();
     if (data._children_loaded || !data.has_children) return;
     try {
-        const response = await fetch(`/api/departments/tree.json?parent_id=${encodeURIComponent(data.id)}`, { headers: { Accept: 'application/json' } });
+        const query = currentFilterQuery();
+        query.set('parent_id', String(data.id));
+        const response = await fetch('/api/departments/tree.json?' + query.toString(), { headers: { Accept: 'application/json' } });
         const payload = await response.json();
         if (!response.ok || payload.success !== true) throw new Error(payload.message || 'Impossible de charger les enfants.');
         await row.update({ children: payload.data, _children_loaded: true });

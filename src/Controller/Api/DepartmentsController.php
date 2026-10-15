@@ -5,9 +5,13 @@ namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Model\Entity\Department;
+use App\Model\Table\DepartmentsTable;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\DepartmentManagementService;
+use Cake\Database\Expression\QueryExpression;
 use Cake\Http\Response;
+use Cake\Http\ServerRequest;
+use Cake\ORM\Query\SelectQuery;
 use DomainException;
 
 /** API de gestion des départements, de leur arbre et de leurs codes CGR. */
@@ -24,14 +28,33 @@ final class DepartmentsController extends AppController
     public function tree(): void
     {
         $this->request->allowMethod(['get']);
+        /** @var \App\Model\Table\DepartmentsTable $table */
         $table = $this->fetchTable('Departments');
         $this->Authorization->authorize($table->newEmptyEntity(), 'index');
         $parentId = $this->request->getQuery('parent_id');
         $parentId = $parentId === null || $parentId === '' ? null : (int)$parentId;
+        $queryParams = $this->request->getQueryParams();
+        $filters = $queryParams['filters'] ?? [];
+        $adapter = new TabulatorAdapter();
+        $allowedIds = is_array($filters) && $filters !== []
+            ? $this->filteredDepartmentIds($table, $adapter)
+            : null;
+
+        $sortQueryParams = $queryParams;
+        unset($sortQueryParams['filters']);
+        $sortRequest = $this->request->withQueryParams($sortQueryParams);
+        $query = $table->find('activeChildren', parentId: $parentId)
+            ->contain(['CgrStrategies', 'Managers']);
+        if ($allowedIds !== null) {
+            $query->where($allowedIds === [] ? ['1 = 0'] : ['Departments.id IN' => $allowedIds]);
+        }
+        $query = $adapter->adaptRequest($sortRequest, $query);
         $service = new DepartmentManagementService();
+        /** @var list<\App\Model\Entity\Department> $departments */
+        $departments = $query->all()->toList();
         $rows = array_map(
-            fn(Department $department): array => $this->departmentRow($department, $service),
-            $service->getChildren($parentId),
+            fn(Department $department): array => $this->departmentRow($department, $service, $allowedIds),
+            $departments,
         );
         $this->set(['success' => true, 'data' => $rows]);
         $this->viewBuilder()->setOption('serialize', ['success', 'data']);
@@ -199,9 +222,19 @@ final class DepartmentsController extends AppController
         return $department;
     }
 
-    /** @return array<string, mixed> */
-    private function departmentRow(Department $department, DepartmentManagementService $service): array
-    {
+    /**
+     * @param list<int>|null $allowedIds Identifiants de la branche filtrée.
+     * @return array<string, mixed>
+     */
+    private function departmentRow(
+        Department $department,
+        DepartmentManagementService $service,
+        ?array $allowedIds = null,
+    ): array {
+        $hasChildren = $allowedIds === null
+            ? $service->hasChildren($department)
+            : $this->hasAllowedChildren($department, $allowedIds);
+
         return [
             'id' => (int)$department->get('id'),
             'parent_id' => $department->get('parent_id') === null ? null : (int)$department->get('parent_id'),
@@ -214,8 +247,8 @@ final class DepartmentsController extends AppController
                 . $department->get('manager')?->get('lastname'),
             'cgr_strategy' => $department->get('cgr_strategy')?->get('name'),
             'default_cgr' => $department->get('default_cgr'),
-            'has_children' => $service->hasChildren($department),
-            'children' => $service->hasChildren($department)
+            'has_children' => $hasChildren,
+            'children' => $hasChildren
                 ? [[
                     'id' => 'loading-' . $department->get('id'),
                     '_tree_placeholder' => true,
@@ -231,6 +264,134 @@ final class DepartmentsController extends AppController
                 'columns' => [],
             ],
         ];
+    }
+
+    /**
+     * Retourne les départements correspondant au filtre et leurs ancêtres.
+     *
+     * @return list<int> Identifiants autorisés dans la branche filtrée.
+     */
+    private function filteredDepartmentIds(DepartmentsTable $table, TabulatorAdapter $adapter): array
+    {
+        $matchingQuery = $table->find()->where(['Departments.deleted IS' => null]);
+        $matchingQuery = $this->adaptDepartmentFilters($matchingQuery, $adapter, $this->request);
+        /** @var list<\App\Model\Entity\Department> $matchingDepartments */
+        $matchingDepartments = $matchingQuery
+            ->select(['id', 'lft', 'rght'])
+            ->all()
+            ->toList();
+
+        if ($matchingDepartments === []) {
+            return [];
+        }
+
+        /** @var list<\App\Model\Entity\Department> $activeDepartments */
+        $activeDepartments = $table->find()
+            ->select(['id', 'lft', 'rght'])
+            ->where(['Departments.deleted IS' => null])
+            ->all()
+            ->toList();
+        $allowedIds = [];
+        foreach ($matchingDepartments as $matchingDepartment) {
+            $matchingLft = (int)$matchingDepartment->get('lft');
+            $matchingRght = (int)$matchingDepartment->get('rght');
+            foreach ($activeDepartments as $candidate) {
+                if (
+                    (int)$candidate->get('lft') <= $matchingLft
+                    && (int)$candidate->get('rght') >= $matchingRght
+                ) {
+                    $id = (int)$candidate->get('id');
+                    $allowedIds[$id] = $id;
+                }
+            }
+        }
+
+        return array_values($allowedIds);
+    }
+
+    /**
+     * Adapte les filtres de la grille aux champs calculés de l'arbre.
+     *
+     * Le responsable est exposé par l'API comme « prénom nom », mais ses
+     * valeurs sont stockées dans l'association Users aliasée Managers.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête des départements.
+     * @return \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Department>
+     */
+    private function adaptDepartmentFilters(
+        SelectQuery $query,
+        TabulatorAdapter $adapter,
+        ServerRequest $request,
+    ): SelectQuery {
+        $queryParams = $request->getQueryParams();
+        $filters = $queryParams['filters'] ?? [];
+        if (!is_array($filters) || $filters === []) {
+            /** @var \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Department> $adaptedQuery */
+            $adaptedQuery = $adapter->adaptRequest($request, $query);
+
+            return $adaptedQuery;
+        }
+
+        $standardFilters = [];
+        $managerFilters = [];
+        foreach ($filters as $filter) {
+            if (!is_array($filter)) {
+                continue;
+            }
+            $field = $filter['field'] ?? null;
+            if ($field === 'manager' || $field === 'managers') {
+                $managerFilters[] = $filter;
+                continue;
+            }
+            $standardFilters[] = $filter;
+        }
+
+        if ($managerFilters !== []) {
+            $query->leftJoinWith('Managers');
+            foreach ($managerFilters as $filter) {
+                $value = $filter['value'] ?? '';
+                if (!is_string($value) || $value === '') {
+                    continue;
+                }
+                $type = strtolower((string)($filter['type'] ?? 'like'));
+                $operator = in_array($type, ['=', '!=', '<', '<=', '>', '>='], true)
+                    ? $type
+                    : 'LIKE';
+                $value = $operator === 'LIKE' ? '%' . $value . '%' : $value;
+                $query->where(function (QueryExpression $expression) use ($operator, $value) {
+                    return $expression->or([
+                        'Managers.firstname ' . $operator => $value,
+                        'Managers.lastname ' . $operator => $value,
+                    ]);
+                });
+            }
+        }
+
+        $queryParams['filters'] = $standardFilters;
+        /** @var \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Department> $adaptedQuery */
+        $adaptedQuery = $adapter->adaptRequest($request->withQueryParams($queryParams), $query);
+
+        return $adaptedQuery;
+    }
+
+    /**
+     * Vérifie qu'un nœud possède un enfant dans la branche filtrée.
+     *
+     * @param list<int> $allowedIds Identifiants de la branche filtrée.
+     */
+    private function hasAllowedChildren(Department $department, array $allowedIds): bool
+    {
+        if ($allowedIds === []) {
+            return false;
+        }
+
+        return $this->fetchTable('Departments')->find()
+            ->where([
+                'Departments.parent_id' => $department->get('id'),
+                'Departments.deleted IS' => null,
+                'Departments.id IN' => $allowedIds,
+            ])
+            ->count() > 0;
     }
 
     /** @param array<string, mixed> $data */

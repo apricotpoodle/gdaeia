@@ -18,7 +18,7 @@ requête, de droit et de règle métier gardent leurs réponses propres.
 * **`FieldAuthorizationsController`** : Gestion CRUD de la matrice de sécurité des champs (`[role_id, resource, field, access_level]`). L’administration est réservée aux super-administrateurs ; les niveaux acceptés sont `EDIT`, `VIEW` et `NONE`. Les pages Web servent les formulaires et les mutations passent par les endpoints JSON `add`/`edit`, avec une suppression hybride compatible Tabulator.
 * **`ValidationsequencesController`** : Administration réservée aux Super Admins des séquences par département.
 * **`WorkflowSettingsController`** : Paramétrage global du workflow via `/default-due-hours.json` et `/comment-requirements.json`, ainsi que catalogue paginé des commentaires prédéfinis. Les modèles servent à préremplir le champ de vote ; seul le texte final est conservé dans `validations.obs`.
-* **`DepartmentsController`** : Arbre lazy des départements, fiche, CRUD, calcul d'impact et désactivation logique. Les codes CGR sont gérés par des routes imbriquées ; les mutations sont autorisées par `DepartmentPolicy` et `CgrCodePolicy`.
+* **`DepartmentsController`** : Arbre lazy des départements, fiche, CRUD, calcul d'impact et désactivation logique. Les filtres sont appliqués côté serveur sur l'arbre complet ; les ancêtres nécessaires au chemin sont conservés, tandis que les branches sans correspondance sont exclues. Les codes CGR sont gérés par des routes imbriquées ; les mutations sont autorisées par `DepartmentPolicy` et `CgrCodePolicy`.
 
 Les mutations de champs reçues par les contrôleurs API passent par
 `AppController::authorizedRequestData()` avant `patchEntity()`. La matrice

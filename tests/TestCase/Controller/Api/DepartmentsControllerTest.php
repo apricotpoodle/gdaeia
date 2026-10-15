@@ -49,6 +49,72 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertArrayHasKey('data', $payload);
     }
 
+    public function testLeFiltreDeLarbreInclutLesAncetresEtExclutLesBranchesSansCorrespondance(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+
+        $this->get('/api/departments/tree.json?' . http_build_query([
+            'filters' => [['field' => 'name', 'type' => 'like', 'value' => 'Service']],
+        ]));
+
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame([1], array_column($payload['data'], 'id'));
+
+        $this->get('/api/departments/tree.json?' . http_build_query([
+            'parent_id' => 1,
+            'filters' => [['field' => 'name', 'type' => 'like', 'value' => 'Service']],
+        ]));
+
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame([2], array_column($payload['data'], 'id'));
+
+        $this->get('/api/departments/tree.json?' . http_build_query([
+            'filters' => [['field' => 'name', 'type' => 'like', 'value' => 'Inexistant']],
+        ]));
+
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame([], $payload['data']);
+
+        $this->get('/api/departments/tree.json?' . http_build_query([
+            'parent_id' => 1,
+            'filters' => [['field' => 'name', 'type' => 'like', 'value' => 'Inexistant']],
+        ]));
+
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertSame([], $payload['data']);
+    }
+
+    public function testLeFiltreResponsableRechercheDansLePrenomEtLeNom(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll([
+            'deleted' => null,
+        ], ['id IN' => [1, 2]]);
+        $this->getTableLocator()->get('Departments')->updateAll([
+            'current_manager_id' => 2,
+        ], ['id' => 2]);
+
+        $this->get('/api/departments/tree.json?' . http_build_query([
+            'filters' => [['field' => 'manager', 'type' => 'like', 'value' => 'Utilisateur']],
+        ]));
+
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertResponseOk();
+        $this->assertSame([1], array_column($payload['data'], 'id'));
+
+        $this->get('/api/departments/tree.json?' . http_build_query([
+            'parent_id' => 1,
+            'filters' => [['field' => 'manager', 'type' => 'like', 'value' => 'Test']],
+        ]));
+
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertResponseOk();
+        $this->assertSame([2], array_column($payload['data'], 'id'));
+    }
+
     public function testUnSuperAdministrateurCreeModifieEtDesactiveUnDepartementSansDependance(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
