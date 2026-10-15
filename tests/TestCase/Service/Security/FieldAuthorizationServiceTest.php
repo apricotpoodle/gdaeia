@@ -33,7 +33,14 @@ class FieldAuthorizationServiceTest extends TestCase
         $data = ['jobtitle' => 'Analyste', 'grossremuneration' => '50000'];
 
         $this->assertSame([], $this->service->getFieldSchema(new User(['issuperuser' => true]), 'Applicationforms'));
-        $this->assertSame($data, $this->service->filterRequestData($data, []));
+        $this->assertSame(
+            $data,
+            $this->service->filterAuthorizedRequestData(
+                new User(['issuperuser' => true]),
+                'Applicationforms',
+                $data,
+            ),
+        );
     }
 
     public function testLeFiltreConserveUniquementLesChampsExplicitementModifiables(): void
@@ -79,14 +86,54 @@ class FieldAuthorizationServiceTest extends TestCase
         ]), 'Applicationforms'));
     }
 
-    public function testUnChampAbsentDeLaMatriceResteModifiable(): void
+    public function testLeFiltrageContextualiseAppliqueLaMatriceDuRole(): void
+    {
+        $records = new ResultSet([
+            new FieldAuthorization(['field' => 'jobtitle', 'access_level' => 'EDIT']),
+        ]);
+        $query = $this->createMock(SelectQuery::class);
+        $query->expects($this->once())->method('where')->with([
+            'role_id' => 4,
+            'resource' => 'Departments',
+        ])->willReturnSelf();
+        $query->expects($this->once())->method('all')->willReturn($records);
+        $authorizations = $this->createMock(FieldAuthorizationsTable::class);
+        $authorizations->expects($this->once())->method('find')->willReturn($query);
+        TableRegistry::getTableLocator()->set('FieldAuthorizations', $authorizations);
+
+        $this->assertSame(
+            ['jobtitle' => 'Analyste'],
+            $this->service->filterAuthorizedRequestData(
+                new User(['issuperuser' => false, 'role_id' => 4]),
+                'Departments',
+                [
+                    'jobtitle' => 'Analyste',
+                    'base' => true,
+                ],
+            ),
+        );
+    }
+
+    public function testUnChampAbsentDeLaMatriceEstRefusePourUneRessourceConfiguree(): void
     {
         $this->assertSame(
-            ['jobtitle' => 'Analyste', 'comment' => 'Information complementaire'],
+            ['jobtitle' => 'Analyste'],
             $this->service->filterRequestData([
                 'jobtitle' => 'Analyste',
                 'comment' => 'Information complementaire',
             ], ['jobtitle' => 'EDIT']),
+        );
+    }
+
+    public function testUneRessourceNonConfigureeConserveSesDonneesPourLaTransition(): void
+    {
+        $this->assertSame(
+            ['jobtitle' => 'Analyste'],
+            $this->service->filterAuthorizedRequestData(
+                new User(['issuperuser' => false, 'role_id' => 4]),
+                'Departments',
+                ['jobtitle' => 'Analyste'],
+            ),
         );
     }
 }

@@ -5,12 +5,22 @@ namespace App\Command;
 
 use Cake\Command\Command;
 use Cake\Console\Arguments;
+use Cake\Console\CommandFactoryInterface;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
 
 /** Affiche le prochain ticket dont toutes les dépendances sont terminées. */
 final class BacklogNextCommand extends Command
 {
+    /**
+     * @param \Cake\Console\CommandFactoryInterface|null $factory Fabrique CakePHP.
+     * @param string|null $manifestPath Chemin de manifeste, surchargeable en test.
+     */
+    public function __construct(?CommandFactoryInterface $factory = null, private readonly ?string $manifestPath = null)
+    {
+        parent::__construct($factory);
+    }
+
     /**
      * Définit les arguments de la commande.
      *
@@ -32,7 +42,7 @@ final class BacklogNextCommand extends Command
     public function execute(Arguments $args, ConsoleIo $io): int
     {
         $workflow = (string)$args->getArgument('workflow');
-        $path = ROOT . DS
+        $path = $this->manifestPath ?? ROOT . DS
             . 'docs' . DS
             . 'backlog' . DS
             . 'validation-applicationform' . DS

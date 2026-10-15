@@ -18,8 +18,16 @@ requête, de droit et de règle métier gardent leurs réponses propres.
 * **`FieldAuthorizationsController`** : Gestion CRUD de la matrice de sécurité des champs (`[role_id, resource, field, access_level]`). L’administration est réservée aux super-administrateurs ; les niveaux acceptés sont `EDIT`, `VIEW` et `NONE`. Les pages Web servent les formulaires et les mutations passent par les endpoints JSON `add`/`edit`, avec une suppression hybride compatible Tabulator.
 * **`ValidationsequencesController`** : Administration réservée aux Super Admins des séquences par département.
 * **`WorkflowSettingsController`** : Paramétrage global du workflow via `/default-due-hours.json` et `/comment-requirements.json`, ainsi que catalogue paginé des commentaires prédéfinis. Les modèles servent à préremplir le champ de vote ; seul le texte final est conservé dans `validations.obs`.
+* **`DepartmentsController`** : Arbre lazy des départements, fiche, CRUD, calcul d'impact et désactivation logique. Les codes CGR sont gérés par des routes imbriquées ; les mutations sont autorisées par `DepartmentPolicy` et `CgrCodePolicy`.
+
+Les mutations de champs reçues par les contrôleurs API passent par
+`AppController::authorizedRequestData()` avant `patchEntity()`. La matrice
+`field_authorizations` est donc appliquée côté serveur en complément des
+Policies et des options `accessibleFields` CakePHP.
 
 ## Liens ADR
 * [ADR 0045 : Administration CRUD de la sécurité des champs](../../docs/adr/0045-gestion-crud-field-authorizations.md)
 * [ADR 0046 : Standardisation du CRUD hybride (FieldAuthorizations)](../../docs/adr/0046-standardisation-crud-field-authorizations.md)
 * [ADR 0058 : Séparation du paramétrage global du workflow](../../docs/adr/0058-separation-parametrage-global-workflow.md)
+* [ADR 0064 : Administration de l'arbre des départements](../../docs/adr/0064-administration-arbre-departements.md)
+* [ADR 0065 : ACL automatique des mutations Web et API](../../docs/adr/0065-acl-automatique-des-mutations-web-api.md)

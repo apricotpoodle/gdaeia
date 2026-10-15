@@ -63,7 +63,11 @@ abstract class ReferenceController extends AppController
         $table = $this->referenceTable();
         $entity = $table->newEmptyEntity();
         $this->Authorization->authorize($entity, 'add');
-        $entity = $table->patchEntity($entity, $this->request->getData(), $this->patchOptions());
+        $entity = $table->patchEntity(
+            $entity,
+            $this->authorizedRequestData($this->referenceAlias()),
+            $this->patchOptions(),
+        );
         $entity->set('base', false);
         if ($table->save($entity)) {
             return $this->jsonSuccess(['id' => $entity->get('id')], __('La référence a été créée avec succès.'));
@@ -79,7 +83,11 @@ abstract class ReferenceController extends AppController
         $table = $this->referenceTable();
         $entity = $this->getActiveReference($id);
         $this->Authorization->authorize($entity, 'edit');
-        $entity = $table->patchEntity($entity, $this->request->getData(), $this->patchOptions());
+        $entity = $table->patchEntity(
+            $entity,
+            $this->authorizedRequestData($this->referenceAlias()),
+            $this->patchOptions(),
+        );
         if ($table->save($entity)) {
             return $this->jsonSuccess(message: __('La référence a été mise à jour.'));
         }

@@ -79,9 +79,10 @@ class CommentsController extends AppController
 
         /** @var \App\Model\Entity\User $user */
         $user = $this->request->getAttribute('identity')->getOriginalData();
-        $data[Comment::FIELD_USER_ID] = $user->get(User::FIELD_ID);
+        $filteredData = $this->authorizedRequestData('Comments', $data);
+        $filteredData[Comment::FIELD_USER_ID] = $user->get(User::FIELD_ID);
 
-        $comment = $commentsTable->patchEntity($comment, $data);
+        $comment = $commentsTable->patchEntity($comment, $filteredData);
         /** @var \App\Model\Entity\Comment $comment */
 
         if ($commentsTable->save($comment)) {
@@ -126,7 +127,7 @@ class CommentsController extends AppController
                 ]));
         }
 
-        $comment = $commentsTable->patchEntity($comment, $this->request->getData(), [
+        $comment = $commentsTable->patchEntity($comment, $this->authorizedRequestData('Comments'), [
             'accessibleFields' => ['content' => true, 'type' => true],
         ]);
 

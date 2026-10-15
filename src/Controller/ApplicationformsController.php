@@ -6,7 +6,6 @@ namespace App\Controller;
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\User;
 use App\Service\Pdf\ApplicationformPdfService;
-use App\Service\Security\FieldAuthorizationService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
@@ -114,7 +113,10 @@ class ApplicationformsController extends AppController
         $this->Authorization->authorize($applicationform, 'add');
 
         if ($this->request->is('post')) {
-            $applicationform = $this->Applicationforms->patchEntity($applicationform, $this->request->getData());
+            $applicationform = $this->Applicationforms->patchEntity(
+                $applicationform,
+                $this->authorizedRequestData('Applicationforms'),
+            );
 
             // Attribution de l'utilisateur créateur
             $identity = $this->request->getAttribute('identity');
@@ -131,9 +133,8 @@ class ApplicationformsController extends AppController
         }
 
         // Récupération des données de référence et de sécurité (ADR 0042 / 0046)
-        $authService = new FieldAuthorizationService();
         $identity = $this->request->getAttribute('identity');
-        $fieldSchema = $authService->getFieldSchema($identity, 'Applicationforms');
+        $fieldSchema = $this->fieldAuthorizationSchema('Applicationforms');
 
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $identity->getOriginalData();
@@ -189,7 +190,10 @@ class ApplicationformsController extends AppController
 
         // 3. Traitement de la soumission POST / PUT / PATCH
         if ($this->request->is(['post', 'put', 'patch'])) {
-            $applicationform = $this->Applicationforms->patchEntity($applicationform, $this->request->getData());
+            $applicationform = $this->Applicationforms->patchEntity(
+                $applicationform,
+                $this->authorizedRequestData('Applicationforms'),
+            );
 
             if ($this->Applicationforms->save($applicationform)) {
                 $this->Flash->success(__(
@@ -204,6 +208,7 @@ class ApplicationformsController extends AppController
         }
 
         // 4. Chargement des listes pour le rendu du formulaire
+        $fieldSchema = $this->fieldAuthorizationSchema('Applicationforms');
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
 
@@ -227,6 +232,7 @@ class ApplicationformsController extends AppController
 
         $this->set(compact(
             'applicationform',
+            'fieldSchema',
             // 'departments',
             'contracttypes',
             'hiringreasons',

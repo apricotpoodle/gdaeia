@@ -1,0 +1,8 @@
+{
+  "workflow": "validation-af",
+  "tickets": [
+    {"id":"0014","path":"0014-vote-et-cloture.md","status":"Terminé","dependsOn":[]},
+    {"id":"0016","path":"0016-relances.md","status":"Terminé","dependsOn":["0014"]},
+    {"id":"0021","path":"0021-concurrence-votes-meme-role.md","status":"À faire","dependsOn":["0014","0016"]}
+  ]
+}

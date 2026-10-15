@@ -12,7 +12,10 @@ class BacklogNextCommandTest extends CommandTestCase
     public function testAfficheLePremierTicketDontLesDependancesSontTerminees(): void
     {
         $streams = $this->createIo();
-        $command = new BacklogNextCommand();
+        $command = new BacklogNextCommand(
+            null,
+            TESTS . DS . 'Fixture' . DS . 'Backlog' . DS . 'manifest-next.json',
+        );
 
         $result = $command->execute(
             new Arguments(['validation-af'], [], ['workflow']),
@@ -21,6 +24,20 @@ class BacklogNextCommandTest extends CommandTestCase
 
         $this->assertSame(BacklogNextCommand::CODE_SUCCESS, $result);
         $this->assertStringContainsString('0021 — 0021-concurrence-votes-meme-role.md', $this->streamContents($streams['out']));
+    }
+
+    public function testSignaleQuandAucunTicketNestExecutableDansLeManifesteCourant(): void
+    {
+        $streams = $this->createIo();
+        $command = new BacklogNextCommand();
+
+        $result = $command->execute(
+            new Arguments(['validation-af'], [], ['workflow']),
+            $streams['io'],
+        );
+
+        $this->assertSame(BacklogNextCommand::CODE_SUCCESS, $result);
+        $this->assertStringContainsString('Aucun ticket exécutable.', $this->streamContents($streams['out']));
     }
 
     public function testRefuseUnWorkflowInconnu(): void

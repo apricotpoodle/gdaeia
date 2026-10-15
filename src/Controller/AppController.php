@@ -17,10 +17,13 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
+use App\Service\Security\FieldAuthorizationService;
 use App\Service\ValidationErrorPresenter;
+use Authorization\IdentityInterface;
 use Cake\Controller\Controller;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
+use Cake\Http\Exception\UnauthorizedException;
 use Cake\Http\Response;
 
 /**
@@ -101,6 +104,50 @@ class AppController extends Controller
                 'message' => $presentation['summary'],
                 'errors' => $presentation['errors'],
             ], JSON_UNESCAPED_UNICODE));
+    }
+
+    /**
+     * Retourne la matrice ACL des champs pour l'identité HTTP courante.
+     *
+     * @param string $resource Ressource ORM concernée.
+     * @return array<string, string> Droits par champ.
+     * @throws \Cake\Http\Exception\UnauthorizedException Si l'identité est absente.
+     */
+    protected function fieldAuthorizationSchema(string $resource): array
+    {
+        return (new FieldAuthorizationService())->getFieldSchema($this->currentIdentity(), $resource);
+    }
+
+    /**
+     * Filtre les données reçues avant toute hydratation ORM.
+     *
+     * @param string $resource Ressource ORM concernée.
+     * @param array<string, mixed>|null $data Données à filtrer, ou données POST par défaut.
+     * @return array<string, mixed> Données autorisées par la matrice ACL.
+     * @throws \Cake\Http\Exception\UnauthorizedException Si l'identité est absente.
+     */
+    protected function authorizedRequestData(string $resource, ?array $data = null): array
+    {
+        $identity = $this->currentIdentity();
+        $data ??= $this->request->getData();
+
+        return (new FieldAuthorizationService())->filterAuthorizedRequestData($identity, $resource, $data);
+    }
+
+    /**
+     * Retourne l'identité authentifiée nécessaire aux opérations protégées.
+     *
+     * @return \Authorization\IdentityInterface Identité authentifiée.
+     * @throws \Cake\Http\Exception\UnauthorizedException Si l'identité est absente.
+     */
+    private function currentIdentity(): IdentityInterface
+    {
+        $identity = $this->request->getAttribute('identity');
+        if (!$identity instanceof IdentityInterface) {
+            throw new UnauthorizedException(__('Authentification requise.'));
+        }
+
+        return $identity;
     }
 
     /**

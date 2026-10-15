@@ -71,7 +71,7 @@ class MenusController extends AppController
         $this->Authorization->authorize($menu, 'add');
 
         if ($this->request->is('post')) {
-            $menu = $this->Menus->patchEntity($menu, $this->request->getData());
+            $menu = $this->Menus->patchEntity($menu, $this->authorizedRequestData('Menus'));
             if ($this->Menus->save($menu)) {
                 $this->Flash->success(__('Menu créé avec succès.'));
 
@@ -98,7 +98,7 @@ class MenusController extends AppController
         $this->Authorization->authorize($menu, 'edit');
 
         if ($this->request->is(['post', 'put', 'patch'])) {
-            $menu = $this->Menus->patchEntity($menu, $this->request->getData());
+            $menu = $this->Menus->patchEntity($menu, $this->authorizedRequestData('Menus'));
             if ($this->Menus->save($menu)) {
                 $this->Flash->success(__('Menu mis à jour.'));
 

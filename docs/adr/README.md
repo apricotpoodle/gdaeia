@@ -72,6 +72,8 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0061** | Gestion unifiée des notifications Flash Web | **Accepté** | [`0061-gestion-unifiee-notifications-flash.md`](./0061-gestion-unifiee-notifications-flash.md) |
 | **ADR 0062** | Export PDF sécurisé des DAE | **Accepté** | [`0062-export-pdf-applicationform.md`](./0062-export-pdf-applicationform.md) |
 | **ADR 0063** | Outrepassement des validations bloquantes du workflow | **Proposé** | [`0063-outrepassement-validations-workflow.md`](./0063-outrepassement-validations-workflow.md) |
+| **ADR 0064** | Administration de l'arbre des départements | **Proposé** | [`0064-administration-arbre-departements.md`](./0064-administration-arbre-departements.md) |
+| **ADR 0065** | ACL automatique des mutations Web et API | **Proposé** | [`0065-acl-automatique-des-mutations-web-api.md`](./0065-acl-automatique-des-mutations-web-api.md) |
 
 ---
 

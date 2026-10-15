@@ -127,6 +127,52 @@ export class TabulatorFactory {
             .build();
     }
 
+    /** Fabrique la grille arborescente lazy des départements. */
+    static createDepartmentsGrid(selector = '#departments-table') {
+        return this._createActionGrid(selector)
+            .setAjaxSource('/api/departments/tree.json')
+            .setController('departments')
+            .disablePagination()
+            .setHeight('calc(100vh - 180px)')
+            .setOptions({
+                dataTree: true,
+                dataTreeChildField: 'children',
+                dataTreeStartExpanded: false,
+                dataTreeCollapseElement: '<i class="fas fa-chevron-right"></i>',
+                dataTreeExpandElement: '<i class="fas fa-chevron-down"></i>',
+                rowFormatter: (row) => {
+                    if (row.getData()._tree_placeholder === true) row.getElement().style.display = 'none';
+                },
+            })
+            .setColumns([
+                ColumnsFactory.id({ visible: false }),
+                ColumnsFactory.text('code', 'Code', { width: 160 }),
+                ColumnsFactory.text('name', 'Département'),
+                ColumnsFactory.text('manager', 'Responsable'),
+                ColumnsFactory.text('cgr_strategy', 'Stratégie CGR'),
+                ColumnsFactory.text('default_cgr', 'CGR par défaut'),
+            ])
+            .setWithActions(['edit', 'deactivate'])
+            .build();
+    }
+
+    /** Fabrique la sous-grille distante des codes CGR d’un département. */
+    static createDepartmentCgrCodesGrid(selector, departmentId) {
+        return this._createActionGrid(selector)
+            .setAjaxSource(`/api/departments/${departmentId}/cgr-codes.json`)
+            .setController('departments')
+            .setHeight('300px')
+            .setColumns([
+                ColumnsFactory.text('type', 'Type'),
+                ColumnsFactory.text('code', 'Code'),
+                ColumnsFactory.text('label', 'Libellé'),
+                ColumnsFactory.boolean('active', 'Actif'),
+                ColumnsFactory.boolean('is_system', 'Système'),
+            ])
+            .setWithActions(['edit', 'deactivate'])
+            .build();
+    }
+
     /**
      * Fabrique de la grille distante des utilisateurs à ajouter à un périmètre.
      * Les filtres d'en-tête sont traduits par l'API Tabulator existante.

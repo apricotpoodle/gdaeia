@@ -12,6 +12,26 @@ Voir le [ticket 0013](../../docs/backlog/0013-mutualiser-la-presentation-des-err
 
 Le référentiel SQL field_definitions est initialisé par migration avec les libellés métier estimés lors de sa création. Il est volontairement en lecture seule dans l’interface ; une correction de libellé doit être portée par une migration ultérieure.
 
+## Gestion des départements
+
+`DepartmentManagementService` centralise les règles de l'administration des
+départements : chargement des enfants actifs, prévention des cycles, calcul des
+impacts, blocage des déplacements ou changements de stratégie incompatibles et
+désactivation logique transactionnelle. Le service force les nouveaux
+départements administrés à ne pas être des lignes socle.
+
+## ACL des mutations Web et API
+
+`FieldAuthorizationService` construit le schéma de droits à partir de
+`field_authorizations` et filtre les données reçues avant `patchEntity()`.
+Les contrôleurs Web et API utilisent les helpers communs d’`AppController`.
+Une ressource possédant une matrice active refuse par défaut les champs
+absents ; un super-administrateur conserve l’accès complet. Les commandes CLI,
+imports et workflows internes restent hors du périmètre HTTP et appliquent
+leurs propres listes blanches.
+
+Voir l’[ADR 0065](../docs/adr/0065-acl-automatique-des-mutations-web-api.md).
+
 ## Production PDF des DAE
 
 `Pdf/ApplicationformPdfService` génère le document PDF d'une DAE avec mPDF.

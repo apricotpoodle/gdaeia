@@ -20,6 +20,21 @@ Après un échec de sauvegarde, les contrôleurs Web appellent `AppController::f
 
 Une sauvegarde échouée sans erreur d'entité reçoit un message générique. Le parcours de demande de réinitialisation du mot de passe garde son message uniforme, qu'une adresse soit connue ou non.
 
+## Autorisation des champs
+
+Les mutations des formulaires Web filtrent leurs données avec les helpers
+`fieldAuthorizationSchema()` et `authorizedRequestData()` hérités de
+`AppController`, avant toute hydratation ORM. La Policy d’action reste
+nécessaire ; la matrice `field_authorizations` ajoute le contrôle au niveau du
+champ.
+
+## Administration des départements
+
+`DepartmentsController` rend l'écran `/departments` réservé aux opérateurs
+autorisés par `DepartmentPolicy`. Il présente l'arbre hiérarchique, le
+formulaire d'édition et la sous-grille des codes CGR ; les mutations et le
+calcul d'impact sont délégués à l'API `DepartmentsController`.
+
 ## Redirections post-authentification
 
 `UsersController` ne suit que les URL de retour locales validées par le composant
@@ -30,3 +45,5 @@ absent après la connexion.
 ## ADRs Associés
 * [ADR 0046 : Standardisation du CRUD hybride](../../docs/adr/0046-standardisation-crud-field-authorizations.md)
 * [ADR 0060 : Un message Flash par champ invalide](../../docs/adr/0060-un-flash-par-champ-invalide-web.md)
+* [ADR 0064 : Administration de l'arbre des départements](../../docs/adr/0064-administration-arbre-departements.md)
+* [ADR 0065 : ACL automatique des mutations Web et API](../../docs/adr/0065-acl-automatique-des-mutations-web-api.md)

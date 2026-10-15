@@ -117,8 +117,7 @@ class UsersController extends AppController
     {
         $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
 
-        $identity = $this->request->getAttribute('identity');
-        $fieldSchema = (new FieldAuthorizationService())->getFieldSchema($identity, 'Users');
+        $fieldSchema = $this->fieldAuthorizationSchema('Users');
         $this->set('canEditDepartments', ($fieldSchema['user_departments'] ?? 'EDIT') === 'EDIT');
     }
 
@@ -188,7 +187,7 @@ class UsersController extends AppController
                 $rawParams['user_departments'] = [];
             }
 
-            $user = $this->Users->patchEntity($user, $rawParams, [
+            $user = $this->Users->patchEntity($user, $this->authorizedRequestData('Users', $rawParams), [
                 'associated' => ['UserDepartments'],
             ]);
             /** @var \App\Model\Entity\User $user */
@@ -206,8 +205,7 @@ class UsersController extends AppController
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $identity->getOriginalData();
 
-        $authService = new FieldAuthorizationService();
-        $fieldSchema = $authService->getFieldSchema($identity, 'Users');
+        $fieldSchema = $this->fieldAuthorizationSchema('Users');
 
         // Récupération de la liste des rôles applicatifs
         $roles = $this->Users->Roles->find('list', keyField: 'id', valueField: 'name')
@@ -253,7 +251,7 @@ class UsersController extends AppController
                 $rawParams['user_departments'] = [];
             }
 
-            $user = $this->Users->patchEntity($user, $rawParams, [
+            $user = $this->Users->patchEntity($user, $this->authorizedRequestData('Users', $rawParams), [
                 'associated' => ['UserDepartments'],
             ]);
             /** @var \App\Model\Entity\User $user */
@@ -290,8 +288,7 @@ class UsersController extends AppController
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $identity->getOriginalData();
 
-        $authService = new FieldAuthorizationService();
-        $fieldSchema = $authService->getFieldSchema($identity, 'Users');
+        $fieldSchema = $this->fieldAuthorizationSchema('Users');
 
         $roles = $this->Users->Roles->find('list', keyField: 'id', valueField: 'name')
             ->orderBy(['Roles.name' => 'ASC'])

@@ -36,7 +36,11 @@ class RolesController extends AppController
         $this->Authorization->authorize($role, 'add');
 
         if ($this->request->is('post')) {
-            $role = $this->Roles->patchEntity($role, $this->request->getData(), $this->patchOptions());
+            $role = $this->Roles->patchEntity(
+                $role,
+                $this->authorizedRequestData('Roles'),
+                $this->patchOptions(),
+            );
             if ($this->Roles->save($role)) {
                 $this->Flash->success(__('Le rôle a été créé avec succès.'));
 
@@ -57,7 +61,11 @@ class RolesController extends AppController
         $this->Authorization->authorize($role, 'edit');
 
         if ($this->request->is(['post', 'put', 'patch'])) {
-            $role = $this->Roles->patchEntity($role, $this->request->getData(), $this->patchOptions());
+            $role = $this->Roles->patchEntity(
+                $role,
+                $this->authorizedRequestData('Roles'),
+                $this->patchOptions(),
+            );
             if ($this->Roles->save($role)) {
                 $this->Flash->success(__('Le rôle a été mis à jour avec succès.'));
 

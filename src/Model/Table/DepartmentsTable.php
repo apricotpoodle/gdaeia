@@ -6,7 +6,9 @@ namespace App\Model\Table;
 use App\Model\Entity\Department;
 use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
+use Cake\ORM\RulesChecker;
 use Cake\ORM\TableRegistry;
+use Cake\Validation\Validator;
 use Traversable;
 
 /**
@@ -120,6 +122,78 @@ class DepartmentsTable extends AppTable
         return $this->find('visibleTo', user: $user)
             ->find('threaded')
             ->orderBy(['Departments.lft' => 'ASC']);
+    }
+
+    /**
+     * Retourne les enfants actifs directs d’un nœud.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Department> $query
+     * @return \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Department>
+     */
+    public function findActiveChildren(SelectQuery $query, ?int $parentId): SelectQuery
+    {
+        $conditions = ['Departments.' . Department::FIELD_DELETED . ' IS' => null];
+        $conditions['Departments.' . Department::FIELD_PARENT_ID . ($parentId === null ? ' IS' : '')] = $parentId;
+
+        return $query->where($conditions)->orderBy([
+            'Departments.' . Department::FIELD_LFT => 'ASC',
+            'Departments.' . Department::FIELD_SORT => 'ASC',
+            'Departments.' . Department::FIELD_NAME => 'ASC',
+        ]);
+    }
+
+    /** Règles de validation des champs métier administrables. */
+    public function validationDefault(Validator $validator): Validator
+    {
+        $validator
+            ->scalar(Department::FIELD_CODE)
+            ->maxLength(Department::FIELD_CODE, 32)
+            ->requirePresence(Department::FIELD_CODE, 'create')
+            ->notEmptyString(Department::FIELD_CODE);
+        $validator
+            ->scalar(Department::FIELD_NAME)
+            ->maxLength(Department::FIELD_NAME, 64)
+            ->requirePresence(Department::FIELD_NAME, 'create')
+            ->notEmptyString(Department::FIELD_NAME);
+        $validator->scalar(Department::FIELD_SORT)
+            ->maxLength(Department::FIELD_SORT, 64)
+            ->allowEmptyString(Department::FIELD_SORT);
+        $validator->nonNegativeInteger(Department::FIELD_DEPARTMENT_TYPE_ID)
+            ->notEmptyString(Department::FIELD_DEPARTMENT_TYPE_ID);
+        $validator->nonNegativeInteger(Department::FIELD_PARENT_ID)
+            ->allowEmptyString(Department::FIELD_PARENT_ID);
+        $validator->nonNegativeInteger(Department::FIELD_CGR_STRATEGY_ID)
+            ->allowEmptyString(Department::FIELD_CGR_STRATEGY_ID);
+        $validator->nonNegativeInteger(Department::FIELD_CGR_CODE_ID)
+            ->allowEmptyString(Department::FIELD_CGR_CODE_ID);
+        $validator->nonNegativeInteger(Department::FIELD_CURRENT_MANAGER_ID)
+            ->allowEmptyString(Department::FIELD_CURRENT_MANAGER_ID);
+
+        return $validator;
+    }
+
+    /** Règles d’intégrité du référentiel des départements. */
+    public function buildRules(RulesChecker $rules): RulesChecker
+    {
+        $rules->add($rules->isUnique([Department::FIELD_CODE]), [
+            'errorField' => Department::FIELD_CODE,
+            'message' => __('Ce code de département existe déjà.'),
+        ]);
+        $rules->add($rules->isUnique([Department::FIELD_NAME]), [
+            'errorField' => Department::FIELD_NAME,
+            'message' => __('Ce nom de département existe déjà.'),
+        ]);
+        $rules->add($rules->existsIn([Department::FIELD_PARENT_ID], 'ParentDepartments'), [
+            'errorField' => Department::FIELD_PARENT_ID,
+        ]);
+        $rules->add($rules->existsIn([Department::FIELD_CGR_STRATEGY_ID], 'CgrStrategies'), [
+            'errorField' => Department::FIELD_CGR_STRATEGY_ID,
+        ]);
+        $rules->add($rules->existsIn([Department::FIELD_CGR_CODE_ID], 'DefaultCgrCode'), [
+            'errorField' => Department::FIELD_CGR_CODE_ID,
+        ]);
+
+        return $rules;
     }
 
     /**

@@ -66,7 +66,7 @@ class FieldAuthorizationService
         }
 
         foreach ($data as $field => $value) {
-            $access = $fieldSchema[$field] ?? FieldAuthorization::ACCESS_LEVEL_EDIT;
+            $access = $fieldSchema[$field] ?? FieldAuthorization::ACCESS_LEVEL_NONE;
 
             if ($access !== FieldAuthorization::ACCESS_LEVEL_EDIT) {
                 unset($data[$field]);
@@ -74,5 +74,27 @@ class FieldAuthorizationService
         }
 
         return $data;
+    }
+
+    /**
+     * Filtre une requête pour une ressource selon l'identité courante.
+     *
+     * Une matrice absente signifie que la ressource n'est pas encore activée
+     * dans le déploiement progressif de l'ACL. Dès qu'elle contient au moins
+     * une règle, les champs non déclarés sont refusés par défaut.
+     *
+     * @param \Authorization\IdentityInterface $identity Identité authentifiée.
+     * @param string $resource Ressource ORM concernée.
+     * @param array<string, mixed> $data Données issues de la requête.
+     * @return array<string, mixed> Données filtrées avant le patch ORM.
+     */
+    public function filterAuthorizedRequestData(
+        IdentityInterface $identity,
+        string $resource,
+        array $data,
+    ): array {
+        $fieldSchema = $this->getFieldSchema($identity, $resource);
+
+        return $this->filterRequestData($data, $fieldSchema);
     }
 }
