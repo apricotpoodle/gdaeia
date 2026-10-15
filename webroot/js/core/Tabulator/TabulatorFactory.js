@@ -473,7 +473,7 @@ export class TabulatorFactory {
             .setAjaxSource('/api/workflow-settings/comment-templates.json')
             .setController('workflow-settings')
             .setRemotePagination()
-            .setHeight('calc(100vh - 420px)')
+            .setHeight('360px')
             .setColumns([
                 { title: 'Décision', field: 'decision', headerFilter: 'input' },
                 { title: 'Libellé', field: 'label', headerFilter: 'input' },

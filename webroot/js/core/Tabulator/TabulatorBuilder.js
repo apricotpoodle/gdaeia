@@ -675,7 +675,7 @@ export class TabulatorBuilder {
             return;
         }
 
-        document.addEventListener('click', (event) => {
+        tableElement.addEventListener('click', (event) => {
             const toggleButton = event.target.closest?.('.action-menu-btn');
             if (toggleButton && tableElement.contains(toggleButton)) {
                 event.preventDefault();
@@ -730,6 +730,6 @@ export class TabulatorBuilder {
                 menu.style.display = 'none';
                 menu.classList.remove('show');
             }
-        });
+        }, true);
     }
 }
