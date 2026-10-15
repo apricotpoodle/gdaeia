@@ -9,6 +9,8 @@ Ce répertoire contient les commandes en ligne de commande (CLI) accessibles via
 * **`bin/cake validation remind`** : Relance les validateurs des étapes échues, au plus une fois par étape et par période de vingt-quatre heures.
 * **`bin/cake validation notify-blocked`** : Envoie chaque matin le récapitulatif des cycles bloqués, avec le périmètre de consultation propre à chaque administrateur.
 
+* **migration_import_departments --source-dir <répertoire> [--dry-run|--apply]** : Prépare ou applique l’import transactionnel des sociétés, services et codes CGR historiques.
+
 ## Relances de validation
 
 Planifiez la commande chaque heure : son idempotence évite les doublons de courriel sur une période de vingt-quatre heures.
