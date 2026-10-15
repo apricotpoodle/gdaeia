@@ -64,6 +64,10 @@ table.on('dataTreeRowExpanded', async (row) => {
     }
 });
 
+globalTabulatorObserver.subscribe(`${selector}:action:create`, () => {
+    window.location.href = '/departments/add';
+});
+
 globalTabulatorObserver.subscribe(`${selector}:action:edit`, (department) => {
     window.location.href = `/departments/edit/${department.id}`;
 });

@@ -48,7 +48,7 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
             <div class="col-md-6">
                 <?= $this->Form->control('cgr_code_id', ['label' => __('CGR par défaut'), 'type' => 'number', 'min' => 1, 'empty' => __('Aucun')]) ?>
             </div>
-            <?php if ($isEdit && $canEditBase): ?>
+            <?php if ($canEditBase): ?>
                 <div class="col-md-4">
                     <?= $this->Form->control('base', ['label' => __('Département socle'), 'type' => 'checkbox']) ?>
                 </div>

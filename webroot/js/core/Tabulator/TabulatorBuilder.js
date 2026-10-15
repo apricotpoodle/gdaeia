@@ -12,6 +12,24 @@ import { globalTabulatorObserver } from './TabulatorObserver.js';
 import { FlashManager } from '../FlashManager.js';
 import { ButtonFactory } from './ButtonFactory.js';
 
+/**
+ * Extrait l’action d’un bouton du menu global d’une grille.
+ *
+ * @param {Element|null} target Élément à l’origine du clic.
+ * @returns {string|null} Identifiant de l’action ou null si le clic est sans effet.
+ */
+export function resolveGlobalAction(target) {
+    const actionButton = target?.closest?.('.action-create')
+        || target?.closest?.('.action-reset');
+
+    if (!actionButton) {
+        return null;
+    }
+
+    return actionButton.dataset.action
+        || (actionButton.classList.contains('action-create') ? 'create' : 'reset');
+}
+
 export class TabulatorBuilder {
 
     /**
@@ -286,6 +304,11 @@ export class TabulatorBuilder {
         this.config.filterMode = "remote";
         this.config.paginationSize = size;
         this.config.dataSendParams = { "sort": "sorters", "filter": "filters" };
+        // Tabulator interdit d'utiliser simultanément la pagination et le
+        // chargement progressif. Cette méthode remplace donc explicitement
+        // le mode progressif activé par le socle commun.
+        delete this.config.progressiveLoad;
+        delete this.config.progressiveLoadScrollMargin;
         return this;
     }
 
@@ -436,70 +459,6 @@ export class TabulatorBuilder {
                     }
                 }
             },
-            headerClick: function (e, column) {
-                const toggleBtn = e.target.closest('.action-menu-btn');
-                if (toggleBtn) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const dropdownContainer = toggleBtn.closest('.dropdown');
-                    const menu = dropdownContainer ? dropdownContainer.querySelector('.dropdown-menu') : null;
-
-                    if (menu) {
-                        const isVisible = menu.style.display === 'block';
-                        document.querySelectorAll('.dropdown-menu').forEach(m => {
-                            m.style.display = 'none';
-                            m.classList.remove('show');
-                        });
-
-                        if (!isVisible) {
-                            menu.style.display = 'block';
-                            menu.classList.add('show');
-                            const closeOnOutsideClick = (event) => {
-                                if (!dropdownContainer.contains(event.target)) {
-                                    menu.style.display = 'none';
-                                    menu.classList.remove('show');
-                                    document.removeEventListener('click', closeOnOutsideClick);
-                                }
-                            };
-                            setTimeout(() => document.addEventListener('click', closeOnOutsideClick), 10);
-                        }
-                    }
-                    return;
-                }
-
-                const actionBtn = e.target.closest('.action-create') || e.target.closest('.action-reset') || e.target.closest('[data-action]');
-                if (actionBtn) {
-                    e.stopPropagation();
-                    e.preventDefault();
-
-                    let action = actionBtn.dataset.action;
-                    if (!action) {
-                        action = actionBtn.classList.contains('action-create') ? 'create' : 'reset';
-                    }
-
-                    if (action === 'reset') {
-                        const currentTable = column.getTable();
-                        currentTable.clearHeaderFilter();
-                        currentTable.clearSort();
-                        if (typeof FlashManager !== 'undefined') {
-                            FlashManager.info("Filtres et tris réinitialisés.");
-                        }
-                    }
-
-                    const tableElement = column.getTable().element;
-                    const currentSelector = tableElement && tableElement.id ? `#${tableElement.id}` : '#users-table';
-
-                    if (typeof globalTabulatorObserver !== 'undefined') {
-                        globalTabulatorObserver.publish(`${currentSelector}:action:${action}`);
-                    }
-
-                    const menuToHide = e.target.closest('.dropdown-menu');
-                    if (menuToHide) {
-                        menuToHide.style.display = 'none';
-                        menuToHide.classList.remove('show');
-                    }
-                }
-            }
         };
 
         const tableElement = document.querySelector(this.selector);
@@ -685,7 +644,9 @@ export class TabulatorBuilder {
             };
         }
 
+        const hostElement = document.querySelector(this.selector);
         const table = new Tabulator(this.selector, this.config);
+        this._installGlobalActionDelegation(table, hostElement);
 
         if (!this.config.ajaxURL && !this.config.isLocalDataSource) {
             console.warn("TabulatorBuilder: Aucune source Ajax configurée avant l'appel à build().");
@@ -698,5 +659,77 @@ export class TabulatorBuilder {
         });
 
         return table;
+    }
+
+    /**
+     * Installe le traitement délégué des actions du menu global de la grille.
+     *
+     * @param {Tabulator} table Instance Tabulator construite.
+     * @param {Element|null} hostElement Conteneur DOM demandé par la vue.
+     * @returns {void}
+     * @private
+     */
+    _installGlobalActionDelegation(table, hostElement = null) {
+        const tableElement = hostElement || table.element;
+        if (!tableElement || !this.actionButtons.length) {
+            return;
+        }
+
+        document.addEventListener('click', (event) => {
+            const toggleButton = event.target.closest?.('.action-menu-btn');
+            if (toggleButton && tableElement.contains(toggleButton)) {
+                event.preventDefault();
+                event.stopPropagation();
+                const dropdownContainer = toggleButton.closest('.dropdown');
+                const menu = dropdownContainer?.querySelector('.dropdown-menu');
+                if (!menu) {
+                    return;
+                }
+
+                const isVisible = menu.style.display === 'block';
+                tableElement.querySelectorAll('.dropdown-menu').forEach((dropdownMenu) => {
+                    dropdownMenu.style.display = 'none';
+                    dropdownMenu.classList.remove('show');
+                });
+                if (!isVisible) {
+                    menu.style.display = 'block';
+                    menu.classList.add('show');
+                    const closeOnOutsideClick = (outsideEvent) => {
+                        if (!dropdownContainer.contains(outsideEvent.target)) {
+                            menu.style.display = 'none';
+                            menu.classList.remove('show');
+                            document.removeEventListener('click', closeOnOutsideClick);
+                        }
+                    };
+                    setTimeout(() => document.addEventListener('click', closeOnOutsideClick), 10);
+                }
+                return;
+            }
+
+            const action = resolveGlobalAction(event.target);
+            const actionButton = event.target.closest?.('.action-create, .action-reset');
+            if (!action || !actionButton || !tableElement.contains(actionButton)) {
+                return;
+            }
+
+            event.preventDefault();
+            event.stopPropagation();
+            if (action === 'reset') {
+                table.clearHeaderFilter();
+                table.clearSort();
+                FlashManager.info('Filtres et tris réinitialisés.');
+            }
+
+            if (typeof globalTabulatorObserver !== 'undefined') {
+                const selector = tableElement.id ? `#${tableElement.id}` : this.selector;
+                globalTabulatorObserver.publish(`${selector}:action:${action}`);
+            }
+
+            const menu = actionButton.closest('.dropdown-menu');
+            if (menu) {
+                menu.style.display = 'none';
+                menu.classList.remove('show');
+            }
+        });
     }
 }

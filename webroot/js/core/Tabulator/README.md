@@ -73,6 +73,12 @@ Le bouton `create` (Create / Bouton Success Vert) est quant à lui inclus de bas
 builder.setWithActions();
 ```
 
+Le menu d’actions global est traité par délégation de clic sur le conteneur de
+la grille. Les commandes `create` et `reset` publient respectivement
+`{sélecteur}:action:create` et `{sélecteur}:action:reset` via
+`globalTabulatorObserver`. Les vues peuvent ainsi réagir au menu sans dépendre
+du mécanisme interne de clic sur l’en-tête Tabulator.
+
 ### Cumuler ou masquer les actions de ligne (CRUD et Spécifiques)
 Par défaut, le Monteur pré-configure les boutons CRUD classiques (`view`, `edit`, `delete`). Vous pouvez affiner cette liste grâce au chaînage :
 
