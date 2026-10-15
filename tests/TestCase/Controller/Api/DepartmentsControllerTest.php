@@ -194,4 +194,14 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertResponseContains('Modifier le département');
         $this->assertResponseContains('Département socle');
     }
+
+    public function testLeFormulaireWebDeCreationExposeLeChampDepartementSocle(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/departments/add');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Département socle');
+    }
 }
