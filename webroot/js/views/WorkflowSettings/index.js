@@ -110,17 +110,6 @@ globalTabulatorObserver.subscribe(`${tableSelector}:action:create`, () => {
         FlashManager.error(error.message);
     }
 });
-
-document.addEventListener('click', (event) => {
-    const createButton = event.target.closest?.(`${tableSelector} .action-create`);
-    if (!createButton) return;
-
-    try {
-        showCreateForm();
-    } catch (error) {
-        FlashManager.error(error.message);
-    }
-}, true);
 globalTabulatorObserver.subscribe(`${tableSelector}:action:edit`, editTemplate);
 globalTabulatorObserver.subscribe(`${tableSelector}:action:delete`, async (template) => {
     if (!confirm(`Supprimer le commentaire « ${template.label} » ?`)) return;

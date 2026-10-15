@@ -102,6 +102,15 @@ class WorkflowSettingsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('validation-comment-templates-grid');
+        $this->assertResponseContains('name="position"');
+        $this->assertResponseContains('placeholder="Position"');
+        $this->assertResponseContains('class="content workflow-settings-page flex-grow-1 overflow-y-auto" style="min-height: 0;"');
+        $responseBody = (string)$this->_response->getBody();
+        $this->assertLessThan(
+            strpos($responseBody, 'validation-comment-templates-grid'),
+            strpos($responseBody, 'validation-comment-template-form'),
+            'Le formulaire de création doit précéder la grille pour rester visible dans le layout verrouillé.',
+        );
     }
 
     public function testLesParametresInvalidesRetournentLeContratDErreurApi(): void

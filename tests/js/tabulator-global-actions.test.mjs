@@ -41,3 +41,26 @@ test('la pagination distante désactive le chargement progressif', () => {
     assert.equal(builder.config.progressiveLoad, undefined);
     assert.equal(builder.config.progressiveLoadScrollMargin, undefined);
 });
+
+test('délègue les actions globales au conteneur de grille en phase de capture', () => {
+    const listeners = [];
+    const hostElement = {
+        addEventListener: (...args) => listeners.push(args),
+        contains: () => true,
+    };
+    const previousDocument = globalThis.document;
+    globalThis.document = {
+        addEventListener: () => {},
+    };
+
+    try {
+        const builder = new TabulatorBuilder('#comments-grid').setWithActions(['edit']);
+        builder._installGlobalActionDelegation({ element: hostElement }, hostElement);
+
+        assert.equal(listeners.length, 1);
+        assert.equal(listeners[0][0], 'click');
+        assert.equal(listeners[0][2], true);
+    } finally {
+        globalThis.document = previousDocument;
+    }
+});
