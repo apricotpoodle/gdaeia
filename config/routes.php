@@ -120,6 +120,15 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/workflow-settings/comment-templates/create', ['controller' => 'WorkflowSettings', 'action' => 'createCommentTemplate', '_ext' => 'json']);
         $builder->connect('/workflow-settings/comment-templates/{id}', ['controller' => 'WorkflowSettings', 'action' => 'updateCommentTemplate', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/workflow-settings/comment-templates/{id}/delete', ['controller' => 'WorkflowSettings', 'action' => 'deleteCommentTemplate', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/departments/tree', ['controller' => 'Departments', 'action' => 'tree', '_ext' => 'json']);
+        $builder->connect('/departments/add', ['controller' => 'Departments', 'action' => 'add', '_ext' => 'json']);
+        $builder->connect('/departments/{departmentId}/impact', ['controller' => 'Departments', 'action' => 'impact', '_ext' => 'json'], ['pass' => ['departmentId']]);
+        $builder->connect('/departments/{departmentId}/cgr-codes', ['controller' => 'Departments', 'action' => 'cgrCodes', '_ext' => 'json'], ['pass' => ['departmentId']]);
+        $builder->connect('/departments/{departmentId}/cgr-codes/add', ['controller' => 'Departments', 'action' => 'addCgrCode', '_ext' => 'json'], ['pass' => ['departmentId']]);
+        $builder->connect('/departments/{departmentId}/cgr-codes/{id}', ['controller' => 'Departments', 'action' => 'editCgrCode', '_ext' => 'json'], ['pass' => ['departmentId', 'id']]);
+        $builder->connect('/departments/{departmentId}/cgr-codes/{id}/deactivate', ['controller' => 'Departments', 'action' => 'deactivateCgrCode', '_ext' => 'json'], ['pass' => ['departmentId', 'id']]);
+        $builder->connect('/departments/{id}/deactivate', ['controller' => 'Departments', 'action' => 'deactivate', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/departments/{id}', ['controller' => 'Departments', 'action' => 'edit', '_ext' => 'json'], ['pass' => ['id'], 'methods' => ['POST']]);
         $builder->connect('/applicationforms/{id}/validation/start', ['controller' => 'Applicationforms', 'action' => 'startValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/vote', ['controller' => 'Applicationforms', 'action' => 'voteValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/reset', ['controller' => 'Applicationforms', 'action' => 'resetValidation', '_ext' => 'json'], ['pass' => ['id']]);
@@ -128,6 +137,7 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/applicationforms/{id}/duplicate', ['controller' => 'Applicationforms', 'action' => 'duplicate', '_ext' => 'json'], ['pass' => ['id']]);
 
         $builder->resources('Users'); // Crée automatiquement les routes RESTful (GET /api/users)
+        $builder->resources('Departments');
         $builder->resources('Roles');
         $builder->resources('FieldAuthorizations');
         $builder->resources('Applicationforms');
