@@ -61,6 +61,8 @@ final class DepartmentsControllerTest extends TestCase
 
         $payload = (array)json_decode((string)$this->_response->getBody(), true);
         $this->assertSame([1], array_column($payload['data'], 'id'));
+        $this->assertSame([2], array_column($payload['data'][0]['children'], 'id'));
+        $this->assertFalse($payload['data'][0]['children'][0]['_tree_placeholder'] ?? false);
 
         $this->get('/api/departments/tree.json?' . http_build_query([
             'parent_id' => 1,

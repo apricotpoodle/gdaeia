@@ -32,9 +32,25 @@ function currentFilterQuery() {
     return query;
 }
 
+function hasActiveFilters() {
+    return currentFilterQuery().toString() !== '';
+}
+
+function expandFilteredTree(row) {
+    const children = row.getTreeChildren();
+    if (children.length === 0) return;
+    row.treeExpand();
+    children.forEach(expandFilteredTree);
+}
+
+table.on('dataLoaded', () => {
+    if (!hasActiveFilters()) return;
+    setTimeout(() => table.getRows().forEach(expandFilteredTree), 0);
+});
+
 table.on('dataTreeRowExpanded', async (row) => {
     const data = row.getData();
-    if (data._children_loaded || !data.has_children) return;
+    if (hasActiveFilters() || data._children_loaded || !data.has_children) return;
     try {
         const query = currentFilterQuery();
         query.set('parent_id', String(data.id));

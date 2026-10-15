@@ -43,19 +43,30 @@ final class DepartmentsController extends AppController
         $sortQueryParams = $queryParams;
         unset($sortQueryParams['filters']);
         $sortRequest = $this->request->withQueryParams($sortQueryParams);
-        $query = $table->find('activeChildren', parentId: $parentId)
-            ->contain(['CgrStrategies', 'Managers']);
-        if ($allowedIds !== null) {
-            $query->where($allowedIds === [] ? ['1 = 0'] : ['Departments.id IN' => $allowedIds]);
-        }
-        $query = $adapter->adaptRequest($sortRequest, $query);
         $service = new DepartmentManagementService();
-        /** @var list<\App\Model\Entity\Department> $departments */
-        $departments = $query->all()->toList();
-        $rows = array_map(
-            fn(Department $department): array => $this->departmentRow($department, $service, $allowedIds),
-            $departments,
-        );
+        if ($allowedIds !== null && $parentId === null) {
+            $query = $table->find()
+                ->where($allowedIds === [] ? ['1 = 0'] : ['Departments.id IN' => $allowedIds])
+                ->orderBy(['Departments.lft' => 'ASC'])
+                ->contain(['CgrStrategies', 'Managers']);
+            $query = $adapter->adaptRequest($sortRequest, $query);
+            /** @var list<\App\Model\Entity\Department> $departments */
+            $departments = $query->all()->toList();
+            $rows = $this->filteredDepartmentRows($departments, $service, $allowedIds);
+        } else {
+            $query = $table->find('activeChildren', parentId: $parentId)
+                ->contain(['CgrStrategies', 'Managers']);
+            if ($allowedIds !== null) {
+                $query->where($allowedIds === [] ? ['1 = 0'] : ['Departments.id IN' => $allowedIds]);
+            }
+            $query = $adapter->adaptRequest($sortRequest, $query);
+            /** @var list<\App\Model\Entity\Department> $departments */
+            $departments = $query->all()->toList();
+            $rows = array_map(
+                fn(Department $department): array => $this->departmentRow($department, $service, $allowedIds),
+                $departments,
+            );
+        }
         $this->set(['success' => true, 'data' => $rows]);
         $this->viewBuilder()->setOption('serialize', ['success', 'data']);
     }
@@ -224,16 +235,20 @@ final class DepartmentsController extends AppController
 
     /**
      * @param list<int>|null $allowedIds Identifiants de la branche filtrée.
+     * @param list<array<string, mixed>>|null $loadedChildren Enfants déjà construits.
      * @return array<string, mixed>
      */
     private function departmentRow(
         Department $department,
         DepartmentManagementService $service,
         ?array $allowedIds = null,
+        ?array $loadedChildren = null,
     ): array {
-        $hasChildren = $allowedIds === null
-            ? $service->hasChildren($department)
-            : $this->hasAllowedChildren($department, $allowedIds);
+        $hasChildren = $loadedChildren !== null
+            ? $loadedChildren !== []
+            : ($allowedIds === null
+                ? $service->hasChildren($department)
+                : $this->hasAllowedChildren($department, $allowedIds));
 
         return [
             'id' => (int)$department->get('id'),
@@ -248,13 +263,13 @@ final class DepartmentsController extends AppController
             'cgr_strategy' => $department->get('cgr_strategy')?->get('name'),
             'default_cgr' => $department->get('default_cgr'),
             'has_children' => $hasChildren,
-            'children' => $hasChildren
+            'children' => $loadedChildren ?? ($hasChildren
                 ? [[
                     'id' => 'loading-' . $department->get('id'),
                     '_tree_placeholder' => true,
                     'name' => __('Chargement…'),
                 ]]
-                : [],
+                : []),
             'grid_rights' => [
                 'actions' => [
                     'view' => $this->Authorization->can($department, 'view'),
@@ -264,6 +279,39 @@ final class DepartmentsController extends AppController
                 'columns' => [],
             ],
         ];
+    }
+
+    /**
+     * Construit les branches complètes lorsque la grille est filtrée.
+     *
+     * @param list<\App\Model\Entity\Department> $departments Départements autorisés.
+     * @param list<int> $allowedIds Identifiants de la branche filtrée.
+     * @return list<array<string, mixed>>
+     */
+    private function filteredDepartmentRows(
+        array $departments,
+        DepartmentManagementService $service,
+        array $allowedIds,
+    ): array {
+        $childrenByParent = [];
+        foreach ($departments as $department) {
+            $parentId = $department->get('parent_id');
+            $key = $parentId === null ? 'root' : (string)$parentId;
+            $childrenByParent[$key][] = $department;
+        }
+
+        $buildRows = function (?int $parentId) use (&$buildRows, $childrenByParent, $service, $allowedIds): array {
+            $key = $parentId === null ? 'root' : (string)$parentId;
+            $rows = [];
+            foreach ($childrenByParent[$key] ?? [] as $department) {
+                $children = $buildRows((int)$department->get('id'));
+                $rows[] = $this->departmentRow($department, $service, $allowedIds, $children);
+            }
+
+            return $rows;
+        };
+
+        return $buildRows(null);
     }
 
     /**
