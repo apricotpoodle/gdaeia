@@ -8,6 +8,7 @@ Ce répertoire contient les commandes en ligne de commande (CLI) accessibles via
 * **`bin/cake tree integrity check [--table departments|menus] [--format text|json]`** : Vérifie, sans modifier les données, les relations `parent_id`, les bornes `lft`/`rght` et le niveau lorsque celui-ci est géré par `TreeBehavior`. Un code de sortie non nul signale une incohérence et permet le branchement à une supervision.
 * **`bin/cake validation remind`** : Relance les validateurs des étapes échues, au plus une fois par étape et par période de vingt-quatre heures.
 * **`bin/cake validation notify-blocked`** : Envoie chaque matin le récapitulatif des cycles bloqués, avec le périmètre de consultation propre à chaque administrateur.
+* **`bin/cake validation repair-orphaned-sequences [--apply]`** : Détecte les références de séquences orphelines et applique uniquement les réalignements uniques avec `--apply`.
 
 * **migration_import_departments --source-dir <répertoire> [--dry-run|--apply]** : Prépare ou applique l’import transactionnel des sociétés, services et codes CGR historiques.
 

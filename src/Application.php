@@ -23,6 +23,7 @@ use App\Command\TestEmailCommand;
 use App\Command\TreeIntegrityAlertTestCommand;
 use App\Command\TreeIntegrityCheckCommand;
 use App\Command\ValidationReminderCommand;
+use App\Command\ValidationWorkflowSequenceRepairCommand;
 use App\Middleware\HostHeaderMiddleware;
 use App\Middleware\UnauthenticatedApiMiddleware;
 use Authentication\AuthenticationService;
@@ -256,6 +257,10 @@ class Application extends BaseApplication implements
         $commands->add('test_email', TestEmailCommand::class);
         $commands->add('validation remind', ValidationReminderCommand::class);
         $commands->add('validation notify-blocked', BlockedValidationDigestCommand::class);
+        $commands->add(
+            'validation repair-orphaned-sequences',
+            ValidationWorkflowSequenceRepairCommand::class,
+        );
         $commands->add('tree integrity alert-test', TreeIntegrityAlertTestCommand::class);
         $commands->add('tree integrity check', TreeIntegrityCheckCommand::class);
 

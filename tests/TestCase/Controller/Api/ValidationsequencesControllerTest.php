@@ -21,6 +21,8 @@ class ValidationsequencesControllerTest extends TestCase
         'app.Departments',
         'app.Roles',
         'app.Validationsequences',
+        'app.Applicationforms',
+        'app.Applicationvalidationsteps',
     ];
 
     public function testUnSuperAdministrateurConfigureUnSousArbreEtSonNumeroDeSequence(): void
@@ -115,5 +117,57 @@ class ValidationsequencesControllerTest extends TestCase
         $this->get('/validationsequences');
 
         $this->assertResponseCode(403);
+    }
+
+    public function testLaDesactivationConserveUneSequenceReferenceeParUneEtape(): void
+    {
+        $connection = $this->getTableLocator()->get('Validationsequences')->getConnection();
+        $connection->update('departments', ['deleted' => null], ['id' => 1]);
+        $connection->update('roles', ['deleted' => null], ['id' => 1]);
+        $connection->update('validationsequences', ['deleted' => null], ['id' => 1]);
+        $connection->update('applicationforms', ['deleted' => null], ['id' => 1]);
+        $connection->update('applicationvalidationsteps', ['deleted' => null], ['id' => 1]);
+        $connection->delete('validationsequences', ['department_id' => 1, 'role_id' => 1]);
+        $connection->insert('validationsequences', [
+            'id' => 900,
+            'department_id' => 1,
+            'name' => '',
+            'description' => null,
+            'role_id' => 1,
+            'sequence' => 1,
+            'deleted' => null,
+            'modified' => date('Y-m-d H:i:s'),
+            'created' => date('Y-m-d H:i:s'),
+        ]);
+        $connection->update('applicationvalidationsteps', ['validationsequence_id' => 900], ['id' => 1]);
+
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/validationsequences/unassign-role.json', [
+            'department_ids' => [1],
+            'role_id' => 1,
+        ]);
+
+        $this->assertResponseOk();
+        $sequence = $connection->execute(
+            'SELECT id, deleted FROM validationsequences WHERE id = 900',
+        )->fetch('assoc');
+        $this->assertSame(900, (int)$sequence['id']);
+        $this->assertNotNull($sequence['deleted']);
+
+        $this->post('/api/validationsequences/assign-role.json', [
+            'department_ids' => [1],
+            'role_id' => 1,
+            'sequence' => 1,
+        ]);
+
+        $this->assertResponseOk();
+        $sequence = $connection->execute(
+            'SELECT id, deleted FROM validationsequences WHERE id = 900',
+        )->fetch('assoc');
+        $this->assertSame(900, (int)$sequence['id']);
+        $this->assertNull($sequence['deleted']);
     }
 }
