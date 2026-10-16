@@ -9,6 +9,7 @@ use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
+use Cake\I18n\DateTime;
 use RuntimeException;
 
 /**
@@ -185,10 +186,12 @@ class ValidationsequencesController extends AppController
         try {
             $deleted = $this->Validationsequences->getConnection()->transactional(
                 function () use ($departmentIds, $roleId): int {
-                    $deleted = $this->Validationsequences->deleteAll([
-                    'department_id IN' => $departmentIds,
-                    'role_id' => $roleId,
-                    'deleted IS' => null,
+                    $deleted = $this->Validationsequences->updateAll([
+                    'deleted' => DateTime::now(),
+                    ], [
+                        'department_id IN' => $departmentIds,
+                        'role_id' => $roleId,
+                        'deleted IS' => null,
                     ]);
                     $this->assertContiguousSequences($departmentIds);
 
