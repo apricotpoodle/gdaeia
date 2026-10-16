@@ -18,8 +18,10 @@ final class CgrCodePolicyTest extends TestCase
 
         $this->assertTrue($policy->canIndex($superAdministrator, $code));
         $this->assertTrue($policy->canAdd($superAdministrator, $code));
+        $this->assertTrue($policy->canView($superAdministrator, $code));
         $this->assertTrue($policy->canEdit($superAdministrator, $code));
         $this->assertTrue($policy->canDeactivate($superAdministrator, $code));
+        $this->assertTrue($policy->canDelete($superAdministrator, $code));
     }
 
     public function testUnCodeSystemeNePeutPasEtreModifie(): void

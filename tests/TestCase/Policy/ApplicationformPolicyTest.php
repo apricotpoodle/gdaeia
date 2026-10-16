@@ -202,6 +202,22 @@ class ApplicationformPolicyTest extends TestCase
         $this->assertTrue($this->policy->canEdit($operator, $withoutAttribute));
     }
 
+    /** Vérifie les droits de relance selon l’identité et le rôle. */
+    public function testLaRelanceEstReserveeAuxAdministrateursVisibles(): void
+    {
+        $applicationform = new Applicationform(['user_id' => 10]);
+        $administrator = $this->identity(new User(['id' => 10, 'role_id' => User::ROLE_ADMIN]));
+        $operator = $this->identity(new User(['id' => 10, 'role_id' => User::ROLE_DEMANDEUR]));
+
+        $this->assertTrue($this->policy->canRemindValidation($administrator, $applicationform));
+        $this->assertFalse($this->policy->canRemindValidation($operator, $applicationform));
+        $this->assertFalse($this->policy->canRemindValidation($this->identity([]), $applicationform));
+        $this->assertFalse($this->policy->canRemindValidation(
+            $this->identity(new User(['id' => 11, 'role_id' => User::ROLE_ADMIN])),
+            $applicationform,
+        ));
+    }
+
     public function testUneDemandeAvecWorkflowEstEvalueePendantLEdition(): void
     {
         ConnectionManager::get('test')->insert('validation_workflow_runs', [

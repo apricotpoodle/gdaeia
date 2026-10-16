@@ -19,6 +19,7 @@ namespace App;
 
 use App\Command\BacklogNextCommand;
 use App\Command\BlockedValidationDigestCommand;
+use App\Command\IntegrityAuditCommand;
 use App\Command\TestEmailCommand;
 use App\Command\TreeIntegrityAlertTestCommand;
 use App\Command\TreeIntegrityCheckCommand;
@@ -263,6 +264,7 @@ class Application extends BaseApplication implements
         );
         $commands->add('tree integrity alert-test', TreeIntegrityAlertTestCommand::class);
         $commands->add('tree integrity check', TreeIntegrityCheckCommand::class);
+        $commands->add('integrity audit', IntegrityAuditCommand::class);
 
         return $commands;
     }
