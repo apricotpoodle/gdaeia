@@ -132,6 +132,7 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/applicationforms/{id}/validation/start', ['controller' => 'Applicationforms', 'action' => 'startValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/vote', ['controller' => 'Applicationforms', 'action' => 'voteValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/reset', ['controller' => 'Applicationforms', 'action' => 'resetValidation', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/applicationforms/{id}/validation/remind', ['controller' => 'Applicationforms', 'action' => 'remindValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation', ['controller' => 'Applicationforms', 'action' => 'validationState', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/blocked-validations', ['controller' => 'Applicationforms', 'action' => 'blockedValidations', '_ext' => 'json']);
         $builder->connect('/applicationforms/{id}/duplicate', ['controller' => 'Applicationforms', 'action' => 'duplicate', '_ext' => 'json'], ['pass' => ['id']]);

@@ -219,6 +219,16 @@ class ApplicationformPolicy extends AppPolicy
             ->count() === 1;
     }
 
+    /** Seul un administrateur visible peut relancer un cycle bloqué. */
+    public function canRemindValidation(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        $user = $this->getValidUser($identity);
+
+        return $user !== null
+            && $this->canView($identity, $applicationform)
+            && ($user->hasRole(User::ROLE_ADMIN) || $user->isSuperUser());
+    }
+
     /** Le service réévalue ensuite le rôle courant, l'échéance et la suppléance. */
     public function canVoteValidation(IdentityInterface $identity, Applicationform $applicationform): bool
     {

@@ -20,6 +20,13 @@ impacts, blocage des déplacements ou changements de stratégie incompatibles et
 désactivation logique transactionnelle. Le service force les nouveaux
 départements administrés à ne pas être des lignes socle.
 
+`deactivateWithCleanup()` produit un plan vérifiable avant exécution : les
+formulaires actifs et les codes CGR système restent bloquants ; les autres
+catégories doivent être confirmées explicitement par le super-administrateur.
+Le nettoyage détache les utilisateurs sans désactiver leurs comptes, désactive
+les séquences et codes CGR non système, puis désactive le département (ou son
+sous-arbre) dans une transaction unique.
+
 ## ACL des mutations Web et API
 
 `FieldAuthorizationService` construit le schéma de droits à partir de

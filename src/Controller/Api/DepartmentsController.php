@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use App\Mailer\DepartmentDeactivationMailer;
 use App\Model\Entity\Department;
 use App\Model\Table\DepartmentsTable;
 use App\Service\DataGrid\TabulatorAdapter;
@@ -141,13 +142,52 @@ final class DepartmentsController extends AppController
         $this->request->allowMethod(['post', 'delete']);
         $department = $this->activeDepartment($id);
         $this->Authorization->authorize($department, 'deactivate');
+        /** @var \App\Model\Entity\User $actor */
+        $actor = $this->request->getAttribute('identity')->getOriginalData();
+        $cleanup = $this->request->getData('cleanup', []);
+        if (!is_array($cleanup)) {
+            $cleanup = [];
+        }
+        $service = new DepartmentManagementService();
+        $recipients = $service->notificationRecipients($department, $actor);
+        $fullReportRecipientIds = $service->fullReportRecipientIds($department, $actor);
         try {
-            (new DepartmentManagementService())->deactivate($department);
+            $report = $service->deactivateWithCleanup(
+                $department,
+                array_values(array_map('strval', $cleanup)),
+            );
         } catch (DomainException $exception) {
             return $this->domainError($exception);
         }
 
-        return $this->jsonSuccess(message: __('Le département a été désactivé.'));
+        $sent = 0;
+        $failed = 0;
+        foreach ($recipients as $recipient) {
+            $recipientId = (int)$recipient->get('id');
+            $fullReport = in_array($recipientId, $fullReportRecipientIds, true)
+                || !in_array($recipientId, $report['detached_user_ids'], true);
+            if ((new DepartmentDeactivationMailer())->safeSend('report', [$recipient, $report, $fullReport])) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+        foreach ($this->auditRecipients() as $recipient) {
+            if ((new DepartmentDeactivationMailer())->safeSend('auditReport', [$recipient, $report])) {
+                $sent++;
+            } else {
+                $failed++;
+            }
+        }
+
+        $message = $failed === 0
+            ? __('Le département a été désactivé et le compte rendu a été envoyé.')
+            : __('Le département a été désactivé, mais {0} courriel(s) n’ont pas été remis.', $failed);
+
+        return $this->jsonSuccess([
+            'report' => $report,
+            'email' => ['sent' => $sent, 'failed' => $failed],
+        ], $message);
     }
 
     /** Retourne les codes CGR actifs d’un département. */
@@ -231,6 +271,18 @@ final class DepartmentsController extends AppController
             ->firstOrFail();
 
         return $department;
+    }
+
+    /** @return list<string> */
+    private function auditRecipients(): array
+    {
+        $configured = (string)env('DEPARTMENT_DEACTIVATION_AUDIT_RECIPIENTS', '');
+        $recipients = preg_split('/[,;]+/', $configured) ?: [];
+
+        return array_values(array_filter(
+            array_map(static fn(string $recipient): string => trim($recipient), $recipients),
+            static fn(string $recipient): bool => filter_var($recipient, FILTER_VALIDATE_EMAIL) !== false,
+        ));
     }
 
     /**

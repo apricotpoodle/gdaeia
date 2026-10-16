@@ -174,6 +174,23 @@ final class ApplicationformValidationWorkflow
         return [];
     }
 
+    /**
+     * Retourne les personnes éligibles aux étapes bloquées d'un cycle, sans doublon.
+     *
+     * @return list<\App\Model\Entity\User>
+     */
+    public function recipientsForBlockedCycle(BlockedValidationCycle $cycle): array
+    {
+        $recipients = [];
+        foreach ($cycle->blockedSteps as $blockedStep) {
+            foreach ($this->eligibleUsers($cycle->applicationform, (int)$blockedStep->step->role_id) as $user) {
+                $recipients[(int)$user->id] = $user;
+            }
+        }
+
+        return array_values($recipients);
+    }
+
     /** Compte les jours ouvrés écoulés, sans compter le jour d'activation. */
     private function businessDaysSince(DateTime $activation, DateTime $now): int
     {

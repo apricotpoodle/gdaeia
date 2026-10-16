@@ -26,6 +26,22 @@ class ValidationWorkflowMailerTest extends TestCase
         $this->assertSame('validation_step', $mailer->viewBuilder()->getTemplate());
     }
 
+    /** Vérifie que la relance porte un objet explicitement identifié comme tel. */
+    public function testLeCourrielDeRelanceEstAdresseAuValidateur(): void
+    {
+        $mailer = new ValidationWorkflowMailer();
+
+        $mailer->validationReminder(
+            new User(['email' => 'validateur@example.test']),
+            new Applicationform(['id' => 42]),
+        );
+
+        $this->assertArrayHasKey('validateur@example.test', $mailer->getTo());
+        $subject = iconv_mime_decode($mailer->getSubject(), ICONV_MIME_DECODE_CONTINUE_ON_ERROR, 'UTF-8');
+        $this->assertStringContainsString('Relance de validation', (string)$subject);
+        $this->assertSame('validation_step', $mailer->viewBuilder()->getTemplate());
+    }
+
     /** Vérifie la composition du courriel de clôture par acceptation. */
     public function testLeCourrielFinalDAcceptationCibleLeDemandeur(): void
     {

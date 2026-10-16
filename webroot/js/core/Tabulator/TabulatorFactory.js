@@ -331,7 +331,7 @@ export class TabulatorFactory {
                     formatter: (cell) => `${cell.getValue()} jours ouvrés`,
                 }),
             ])
-            .setWithActions(['overrideValidation'])
+            .setWithActions(['overrideValidation', 'resendValidation'])
             .build();
     }
 

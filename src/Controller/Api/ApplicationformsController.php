@@ -103,6 +103,7 @@ class ApplicationformsController extends AppController
                 'grid_rights' => [
                     'actions' => [
                         'overrideValidation' => true,
+                        'resendValidation' => true,
                     ],
                 ],
             ];
@@ -189,6 +190,51 @@ class ApplicationformsController extends AppController
         } catch (RuntimeException $exception) {
             return $this->workflowResponse(false, $exception->getMessage(), [], 409);
         }
+    }
+
+    /**
+     * Relance par courriel les personnes concernées par les étapes bloquées.
+     *
+     * @param string $id Identifiant de la demande.
+     * @return \Cake\Http\Response Réponse JSON.
+     */
+    public function remindValidation(string $id): Response
+    {
+        $this->request->allowMethod(['post']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'remindValidation');
+        /** @var \App\Model\Entity\User $viewer */
+        $viewer = $this->request->getAttribute('identity')->getOriginalData();
+        $workflow = new ApplicationformValidationWorkflow();
+        $cycle = null;
+        foreach ($workflow->findBlockedCycles($viewer) as $candidate) {
+            if ((int)$candidate->applicationform->id === (int)$applicationform->id) {
+                $cycle = $candidate;
+                break;
+            }
+        }
+        if ($cycle === null) {
+            return $this->workflowResponse(false, __('Le cycle de validation n’est plus bloqué.'), [], 409);
+        }
+
+        $recipients = $workflow->recipientsForBlockedCycle($cycle);
+        if ($recipients === []) {
+            return $this->workflowResponse(
+                false,
+                __('Aucun validateur concerné ne possède une adresse courriel.'),
+                [],
+                409,
+            );
+        }
+        foreach ($recipients as $recipient) {
+            (new ValidationWorkflowMailer())->safeSend('validationReminder', [$recipient, $applicationform]);
+        }
+
+        return $this->workflowResponse(
+            true,
+            __('La relance a été envoyée à {0} personne(s).', count($recipients)),
+            ['recipients' => count($recipients)],
+        );
     }
 
     /**

@@ -28,6 +28,7 @@ export class ButtonFactory {
         deactivate: { icon: 'fas fa-ban', color: 'warning', title: 'Désactiver l’enregistrement', isEvent: true },
         launchValidation: { icon: 'fas fa-rocket', color: 'success', title: 'Lancer le cycle de validation', isEvent: true },
         resetValidation: { icon: 'fas fa-rotate-left', color: 'warning', title: 'Remettre le cycle de validation à zéro', isEvent: true },
+        resendValidation: { icon: 'fas fa-envelope', color: 'info', title: 'Relancer les validateurs par courriel', isEvent: true },
         overrideValidation: { icon: 'fas fa-user-shield', color: 'warning', title: 'Ouvrir l’outrepassement de la validation', target: '_self' },
         viewpdf: { icon: 'fas fa-file-pdf', color: 'warning', title: 'Ouvrir le document PDF', target: '_blank' },
         duplicate: { icon: 'fas fa-copy', color: 'primary', title: 'Dupliquer la demande', isEvent: true },

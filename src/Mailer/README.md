@@ -8,6 +8,17 @@ Afin de ne pas polluer les contrôleurs avec des logiques de formatage de courri
 1. **`AppMailer.php`** : La classe mère abstraite. Elle configure le socle commun (Adresse d'expédition par défaut, format HTML/Texte fallback). Ne contient aucune méthode métier.
 2. **Mailers Métiers (ex: `UserMailer.php`)** : Classes enfants définissant les méthodes spécifiques à un domaine (ex: `forgotPassword`, `welcomeEmail`). Elles injectent les variables (`setViewVars`) et définissent le template à utiliser.
 
+`ValidationWorkflowMailer::validationReminder()` est utilisé par l'action de
+relance des cycles bloqués. Le service de workflow détermine au préalable les
+validateurs concernés par les étapes bloquées et dédoublonne les destinataires ;
+le mailer ne reçoit donc jamais une liste de destinataires non autorisée.
+
+`DepartmentDeactivationMailer` envoie le compte rendu de chaque désactivation.
+Les responsables, administrateurs du périmètre et le super-administrateur
+exécutant reçoivent le rapport complet ; les utilisateurs détachés reçoivent
+uniquement l'information concernant leur rattachement. Les adresses d'audit
+peuvent être configurées par `DEPARTMENT_DEACTIVATION_AUDIT_RECIPIENTS`.
+
 ## Convention d'Utilisation
 
 Les mailers sont appelés via `AppMailer::safeSend()`. Cette méthode journalise

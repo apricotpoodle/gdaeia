@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Model\Entity\Department;
+use App\Model\Entity\User;
 use App\Model\Table\DepartmentsTable;
 use Cake\I18n\DateTime;
 use Cake\ORM\Table;
@@ -13,6 +14,15 @@ use DomainException;
 /** Centralise les règles d’administration de l’arbre des départements. */
 final class DepartmentManagementService
 {
+    /** @var list<string> */
+    public const CLEANUP_KEYS = [
+        'children',
+        'users',
+        'validationsequences',
+        'cgr_codes',
+        'default_cgr',
+    ];
+
     /** @var list<string> */
     private const EDITABLE_FIELDS = [
         'parent_id', 'cgr_code_id', 'code', 'name', 'sort', 'department_type_id',
@@ -66,6 +76,8 @@ final class DepartmentManagementService
                 'count' => $this->countActiveByDepartment('Validationsequences', $ids)],
             ['key' => 'cgr_codes', 'label' => __('Codes CGR actifs'),
                 'count' => $this->countActiveCgrCodes($ids)],
+            ['key' => 'cgr_system', 'label' => __('Codes CGR système actifs'),
+                'count' => $this->countActiveSystemCgrCodes($ids)],
             ['key' => 'default_cgr', 'label' => __('Départements utilisant un CGR par défaut'),
                 'count' => $this->countDefaultCgrs($ids)],
         ];
@@ -163,6 +175,246 @@ final class DepartmentManagementService
         return $this->table()->saveOrFail($department);
     }
 
+    /**
+     * Nettoie les dépendances sélectionnées puis désactive le département.
+     *
+     * Les formulaires actifs et les codes CGR système restent toujours
+     * bloquants. Les comptes utilisateurs ne sont jamais désactivés.
+     *
+     * @param list<string> $cleanup Catégories explicitement confirmées.
+     * @return array{
+     *     department_ids: list<int>,
+     *     detached_user_ids: list<int>,
+     *     deactivated_sequence_ids: list<int>,
+     *     deactivated_cgr_ids: list<int>,
+     *     cleared_default_department_ids: list<int>
+     * }
+     */
+    public function deactivateWithCleanup(Department $department, array $cleanup): array
+    {
+        $unknownKeys = array_diff($cleanup, self::CLEANUP_KEYS);
+        if ($unknownKeys !== []) {
+            throw new DomainException(__('Une catégorie de nettoyage est invalide.'));
+        }
+        if ($department->get('deleted') !== null) {
+            throw new DomainException(__('Le département est déjà désactivé.'));
+        }
+        if ((bool)$department->get('base')) {
+            throw new DomainException(__('Un département socle ne peut pas être désactivé.'));
+        }
+
+        $cleanup = array_values(array_unique($cleanup));
+        $impact = $this->getImpact($department);
+        $impactByKey = [];
+        foreach ($impact['dependencies'] as $dependency) {
+            $impactByKey[$dependency['key']] = $dependency['count'];
+        }
+        if (($impactByKey['applicationforms'] ?? 0) > 0) {
+            throw new DomainException(__('La désactivation reste bloquée : des formulaires actifs existent.'));
+        }
+        if (($impactByKey['cgr_system'] ?? 0) > 0) {
+            throw new DomainException(__('La désactivation reste bloquée : des codes CGR système actifs existent.'));
+        }
+        foreach (['children', 'users', 'validationsequences', 'cgr_codes', 'default_cgr'] as $key) {
+            if (($impactByKey[$key] ?? 0) > 0 && !in_array($key, $cleanup, true)) {
+                throw new DomainException(__(
+                    'La désactivation reste bloquée : la dépendance « {0} » doit être confirmée.',
+                    $key,
+                ));
+            }
+        }
+
+        $departmentIds = $this->subtreeIds($department);
+        if (!in_array('children', $cleanup, true)) {
+            $departmentIds = [(int)$department->get('id')];
+        }
+        $now = DateTime::now();
+
+        return $this->table()->getConnection()->transactional(
+            function () use ($cleanup, $departmentIds, $now): array {
+                $detachedUserIds = [];
+                $deactivatedSequenceIds = [];
+                $deactivatedCgrIds = [];
+                $clearedDefaultDepartmentIds = [];
+
+                if (in_array('users', $cleanup, true)) {
+                    $userDepartments = $this->tableFor('UserDepartments');
+                    $detachedUserIds = $userDepartments->find()
+                        ->select(['user_id'])
+                        ->where(['department_id IN' => $departmentIds])
+                        ->all()
+                        ->extract('user_id')
+                        ->toList();
+                    $userDepartments->deleteAll(['department_id IN' => $departmentIds]);
+                }
+
+                if (in_array('validationsequences', $cleanup, true)) {
+                    $sequences = $this->tableFor('Validationsequences');
+                    $deactivatedSequenceIds = $sequences->find()
+                        ->select(['id'])
+                        ->where([
+                            'department_id IN' => $departmentIds,
+                            'deleted IS' => null,
+                        ])
+                        ->all()
+                        ->extract('id')
+                        ->toList();
+                    $sequences->updateAll(['deleted' => $now], [
+                        'department_id IN' => $departmentIds,
+                        'deleted IS' => null,
+                    ]);
+                }
+
+                if (in_array('cgr_codes', $cleanup, true)) {
+                    $cgrCodes = $this->tableFor('CgrCodes');
+                    $deactivatedCgrIds = $cgrCodes->find()
+                        ->select(['id'])
+                        ->where([
+                            'department_id IN' => $departmentIds,
+                            'active' => true,
+                            'is_system' => false,
+                        ])
+                        ->all()
+                        ->extract('id')
+                        ->toList();
+                    $cgrCodes->updateAll(['active' => false], [
+                        'department_id IN' => $departmentIds,
+                        'active' => true,
+                        'is_system' => false,
+                    ]);
+                }
+
+                if (in_array('default_cgr', $cleanup, true)) {
+                    $codes = $this->tableFor('CgrCodes')->find()
+                        ->select(['id'])
+                        ->where(['department_id IN' => $departmentIds])
+                        ->all()
+                        ->extract('id')
+                        ->toList();
+                    if ($codes !== []) {
+                        $departments = $this->table();
+                        $clearedDefaultDepartmentIds = $departments->find()
+                            ->select(['id'])
+                            ->where([
+                                'cgr_code_id IN' => $codes,
+                                'deleted IS' => null,
+                            ])
+                            ->all()
+                            ->extract('id')
+                            ->toList();
+                        $departments->updateAll(['cgr_code_id' => null], [
+                            'cgr_code_id IN' => $codes,
+                            'deleted IS' => null,
+                        ]);
+                    }
+                }
+
+                $this->table()->updateAll(['deleted' => $now], [
+                    'id IN' => $departmentIds,
+                    'deleted IS' => null,
+                ]);
+
+                return [
+                    'department_ids' => $departmentIds,
+                    'detached_user_ids' => array_map('intval', $detachedUserIds),
+                    'deactivated_sequence_ids' => array_map('intval', $deactivatedSequenceIds),
+                    'deactivated_cgr_ids' => array_map('intval', $deactivatedCgrIds),
+                    'cleared_default_department_ids' => array_map('intval', $clearedDefaultDepartmentIds),
+                ];
+            },
+        );
+    }
+
+    /** @return list<\App\Model\Entity\User> */
+    public function notificationRecipients(Department $department, User $actor): array
+    {
+        $departmentIds = $this->subtreeIds($department);
+        $userIds = [(int)$actor->get('id')];
+        $managerIds = $this->table()->find()
+            ->select(['current_manager_id'])
+            ->where([
+                'id IN' => $departmentIds,
+                'current_manager_id IS NOT' => null,
+            ])
+            ->all()
+            ->extract('current_manager_id')
+            ->toList();
+        $userIds = array_merge($userIds, array_map('intval', $managerIds));
+
+        $userDepartments = $this->tableFor('UserDepartments');
+        $assignedUserIds = $userDepartments->find()
+            ->select(['user_id'])
+            ->where(['department_id IN' => $departmentIds])
+            ->all()
+            ->extract('user_id')
+            ->toList();
+        $userIds = array_merge($userIds, array_map('intval', $assignedUserIds));
+
+        $administrators = $this->tableFor('Users')->find()
+            ->innerJoinWith('UserDepartments', static function ($query) use ($departmentIds) {
+                return $query->where(['UserDepartments.department_id IN' => $departmentIds]);
+            })
+            ->select(['Users.id'])
+            ->where([
+                'Users.role_id' => User::ROLE_ADMIN,
+                'Users.deleted IS' => null,
+            ])
+            ->all()
+            ->extract('id')
+            ->toList();
+        $userIds = array_values(array_unique(array_merge($userIds, array_map('intval', $administrators))));
+
+        /** @var list<\App\Model\Entity\User> $recipients */
+        $recipients = $this->tableFor('Users')->find()
+            ->where([
+                'Users.id IN' => $userIds,
+                'Users.deleted IS' => null,
+            ])
+            ->all()
+            ->toList();
+        if (!$recipients && $actor->get('email')) {
+            return [$actor];
+        }
+
+        return $recipients;
+    }
+
+    /**
+     * Retourne les destinataires autorisés à recevoir les identifiants détaillés.
+     *
+     * @return list<int>
+     */
+    public function fullReportRecipientIds(Department $department, User $actor): array
+    {
+        $departmentIds = $this->subtreeIds($department);
+        $managerIds = $this->table()->find()
+            ->select(['current_manager_id'])
+            ->where([
+                'id IN' => $departmentIds,
+                'current_manager_id IS NOT' => null,
+            ])
+            ->all()
+            ->extract('current_manager_id')
+            ->toList();
+        $administratorIds = $this->tableFor('Users')->find()
+            ->innerJoinWith('UserDepartments', static function ($query) use ($departmentIds) {
+                return $query->where(['UserDepartments.department_id IN' => $departmentIds]);
+            })
+            ->select(['Users.id'])
+            ->where([
+                'Users.role_id' => User::ROLE_ADMIN,
+                'Users.deleted IS' => null,
+            ])
+            ->all()
+            ->extract('id')
+            ->toList();
+
+        return array_values(array_unique(array_map(
+            'intval',
+            array_merge([(int)$actor->get('id')], $managerIds, $administratorIds),
+        )));
+    }
+
     /** Retourne la table des départements, éventuellement injectée. */
     private function table(): DepartmentsTable
     {
@@ -233,6 +485,16 @@ final class DepartmentManagementService
         return $this->tableFor('CgrCodes')->find()->where([
             'department_id IN' => $ids,
             'active' => true,
+        ])->count();
+    }
+
+    /** @param list<int> $ids */
+    private function countActiveSystemCgrCodes(array $ids): int
+    {
+        return $this->tableFor('CgrCodes')->find()->where([
+            'department_id IN' => $ids,
+            'active' => true,
+            'is_system' => true,
         ])->count();
     }
 

@@ -78,14 +78,38 @@ globalTabulatorObserver.subscribe(`${selector}:action:deactivate`, async (depart
         const impactPayload = await impactResponse.json();
         if (!impactResponse.ok || impactPayload.success !== true) throw new Error(impactPayload.message || 'Impossible de calculer les impacts.');
         const blockers = impactPayload.data.blockers || [];
-        if (blockers.length > 0) {
-            FlashManager.warning('La désactivation est bloquée par des dépendances actives.');
+        const hardBlockers = blockers.filter((dependency) =>
+            ['applicationforms', 'cgr_system'].includes(dependency.key));
+        if (hardBlockers.length > 0) {
+            FlashManager.warning(`Désactivation impossible : ${hardBlockers.map((item) => item.label).join(', ')}.`);
             return;
         }
-        if (!window.confirm(`Désactiver le département « ${department.name} » ?`)) return;
-        await client.send({ url: `/api/departments/${department.id}/deactivate.json` });
+        const cleanup = blockers
+            .filter((dependency) => dependency.count > 0)
+            .map((dependency) => dependency.key);
+        const summary = blockers.length === 0
+            ? 'Aucune dépendance active détectée.'
+            : blockers.map((dependency) => `${dependency.label} : ${dependency.count}`).join('\n');
+        const confirmation = [
+            `Désactiver le département « ${department.name} » ?`,
+            summary,
+            cleanup.length > 0
+                ? 'Les dépendances listées seront nettoyées. Les utilisateurs seront uniquement détachés, jamais désactivés.'
+                : '',
+            'Cette opération est réservée au superutilisateur et est irréversible.',
+        ].filter(Boolean).join('\n\n');
+        if (!window.confirm(confirmation)) return;
+        const payload = await client.send({
+            url: `/api/departments/${department.id}/deactivate.json`,
+            body: JSON.stringify({ cleanup }),
+            headers: { 'Content-Type': 'application/json' },
+        });
         await table.replaceData();
-        FlashManager.success('Département désactivé.');
+        const email = payload.email || { sent: 0, failed: 0 };
+        const emailMessage = email.failed > 0
+            ? ` Désactivation effectuée, mais ${email.failed} courriel(s) n’ont pas été remis.`
+            : ' Le compte rendu a été envoyé.';
+        FlashManager.success(`Département désactivé.${emailMessage}`);
     } catch (error) {
         FlashManager.error(error.message);
     }

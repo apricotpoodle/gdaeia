@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Test\TestCase\Model\Table;
 
 use App\Service\Workflow\ApplicationformValidationWorkflow;
+use App\Service\Workflow\BlockedValidationCycle;
+use App\Service\Workflow\BlockedValidationStep;
 use Cake\Datasource\ConnectionManager;
 use Cake\I18n\DateTime;
 use Cake\ORM\TableRegistry;
@@ -15,6 +17,7 @@ class ApplicationformValidationWorkflowServiceTest extends TestCase
 {
     protected array $fixtures = [
         'app.Applicationforms',
+        'app.Departments',
         'app.Users',
         'app.Roles',
         'app.UserDepartments',
@@ -32,6 +35,7 @@ class ApplicationformValidationWorkflowServiceTest extends TestCase
         $connection = ConnectionManager::get('test');
         $now = '2026-09-17 12:00:00';
         $connection->update('applicationforms', ['deleted' => null], ['id' => 1]);
+        $connection->update('users', ['deleted' => null], ['id' => 1]);
         $connection->update('users', ['role_id' => 2, 'deleted' => null], ['id' => 2]);
         $connection->insert('roles', [
             'id' => 2,
@@ -208,6 +212,40 @@ class ApplicationformValidationWorkflowServiceTest extends TestCase
         $persistedStep = TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->get($step->id);
         $this->assertSame(1, (int)$persistedStep->reminder_count);
         $this->assertNotNull($persistedStep->last_reminded_at);
+    }
+
+    /** Vérifie que la relance d'un cycle cible tous ses validateurs sans doublon. */
+    public function testLaRelanceDuCycleRetourneTousLesValidateursDesEtapesBloqueesSansDoublon(): void
+    {
+        [$applicationform, $actor, $workflow] = $this->workflowContext();
+        $started = $workflow->start($applicationform, $actor);
+        $step = TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->find()
+            ->where(['validation_workflow_run_id' => $started['run']->id])
+            ->firstOrFail();
+        $step->activated_at = DateTime::now()->subDays(5);
+        TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->saveOrFail($step);
+
+        $applicationform->department = TableRegistry::getTableLocator()->get('Departments')->get(1);
+        $blockedStep = new BlockedValidationStep(
+            $step,
+            TableRegistry::getTableLocator()->get('Roles')->get(2),
+            $step->activated_at,
+            $step->activated_at,
+            5,
+        );
+        $cycle = new BlockedValidationCycle(
+            $applicationform,
+            1,
+            $applicationform->begin_at,
+            $applicationform->department,
+            [$blockedStep],
+            '/applicationforms/view/1?tab=validation',
+        );
+
+        $recipients = $workflow->recipientsForBlockedCycle($cycle);
+
+        $this->assertCount(1, $recipients);
+        $this->assertSame(2, (int)$recipients[0]->id);
     }
 
     /** Vérifie qu'un refus commenté clôt immédiatement le cycle. */

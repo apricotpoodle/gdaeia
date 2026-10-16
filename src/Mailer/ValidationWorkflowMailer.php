@@ -36,14 +36,21 @@ final class ValidationWorkflowMailer extends AppMailer
      */
     public function validationStep(User $recipient, Applicationform $applicationform): void
     {
-        $this->setTo($recipient->get(User::FIELD_EMAIL))
-            ->setSubject(__('Validation attendue — demande n°{0}', $applicationform->get(Applicationform::FIELD_ID)))
-            ->setViewVars([
-                'recipient' => $recipient,
-                'applicationform' => $applicationform,
-                'url' => $this->url($applicationform),
-            ])
-            ->viewBuilder()->setTemplate('validation_step');
+        $this->prepareValidationStep(
+            $recipient,
+            $applicationform,
+            __('Validation attendue — demande n°{0}', $applicationform->get(Applicationform::FIELD_ID)),
+        );
+    }
+
+    /** Prépare une relance adressée à un validateur concerné par une étape bloquée. */
+    public function validationReminder(User $recipient, Applicationform $applicationform): void
+    {
+        $this->prepareValidationStep(
+            $recipient,
+            $applicationform,
+            __('Relance de validation — demande n°{0}', $applicationform->get(Applicationform::FIELD_ID)),
+        );
     }
 
     /**
@@ -101,5 +108,18 @@ final class ValidationWorkflowMailer extends AppMailer
     {
         return rtrim((string)Configure::read('App.fullBaseUrl', 'http://localhost'), '/')
             . '/applicationforms/view/' . $applicationform->id . '?tab=validation';
+    }
+
+    /** Configure le courriel commun aux notifications et relances de validation. */
+    private function prepareValidationStep(User $recipient, Applicationform $applicationform, string $subject): void
+    {
+        $this->setTo($recipient->get(User::FIELD_EMAIL))
+            ->setSubject($subject)
+            ->setViewVars([
+                'recipient' => $recipient,
+                'applicationform' => $applicationform,
+                'url' => $this->url($applicationform),
+            ])
+            ->viewBuilder()->setTemplate('validation_step');
     }
 }

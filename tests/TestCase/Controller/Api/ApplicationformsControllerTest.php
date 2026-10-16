@@ -541,6 +541,37 @@ class ApplicationformsControllerTest extends TestCase
         }
     }
 
+    /** Vérifie qu'un opérateur ordinaire ne peut pas déclencher une relance. */
+    public function testUnOperateurNePeutPasRelancerUnCycleBloque(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_DEMANDEUR])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/1/validation/remind.json');
+
+        $this->assertResponseCode(403);
+    }
+
+    /** Vérifie que l'administrateur relance les validateurs du cycle bloqué. */
+    public function testUnAdministrateurPeutRelancerLesValidateursDUnCycleBloque(): void
+    {
+        $this->configureVotableWorkflow();
+        $stepId = $this->startVotableWorkflow();
+        $connection = ConnectionManager::get('test');
+        $connection->update(
+            'applicationvalidationsteps',
+            ['activated_at' => '2026-09-10 10:00:00'],
+            ['id' => $stepId],
+        );
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/1/validation/remind.json');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"recipients":1');
+    }
+
     /** Prépare une demande, une séquence et un validateur actifs pour le lancement. */
     private function configureStartableWorkflow(): void
     {

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Test\TestCase\Controller\Api;
 
 use App\Model\Entity\User;
+use Cake\Datasource\ConnectionManager;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
@@ -168,6 +169,71 @@ final class DepartmentsControllerTest extends TestCase
         $this->post('/api/departments/' . $id . '/deactivate.json');
         $this->assertResponseOk();
         $this->assertResponseContains('"success":true');
+    }
+
+    /** Vérifie que l'API refuse le nettoyage des dépendances à un administrateur ordinaire. */
+    public function testUnAdministrateurOrdinaireNePeutPasNettoyerLesDependances(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/departments/2/deactivate.json', [
+            'cleanup' => ['users', 'validationsequences'],
+        ]);
+
+        $this->assertResponseCode(403);
+    }
+
+    /** Vérifie que le superadministrateur confirme et exécute le nettoyage sélectionné. */
+    public function testLeSuperAdministrateurNettoieLesDependancesSelectionnees(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $now = '2026-10-16 10:00:00';
+        $connection->update('departments', ['base' => 0, 'deleted' => null], ['id' => 2]);
+        $connection->update('users', ['deleted' => null], ['id' => 1]);
+        $connection->insert('user_departments', [
+            'id' => 2,
+            'user_id' => 1,
+            'department_id' => 2,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->insert('validationsequences', [
+            'id' => 2,
+            'department_id' => 2,
+            'name' => 'Séquence API',
+            'role_id' => 1,
+            'sequence' => 1,
+            'deleted' => null,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->insert('cgr_codes', [
+            'id' => 2,
+            'department_id' => 2,
+            'type' => 'test',
+            'code' => 'CGR-API',
+            'label' => 'Code API',
+            'active' => 1,
+            'is_system' => 0,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/departments/2/deactivate.json', [
+            'cleanup' => ['users', 'validationsequences', 'cgr_codes'],
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"success":true');
+        $this->assertResponseContains('"detached_user_ids"');
+        $this->assertNotNull($connection->execute(
+            'SELECT deleted FROM applicationforms WHERE id = 1',
+        )->fetchColumn(0));
     }
 
     public function testLesCodesCgrSontExposesParLeEndpointImbrique(): void
