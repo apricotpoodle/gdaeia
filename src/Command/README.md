@@ -9,6 +9,7 @@ Ce répertoire contient les commandes en ligne de commande (CLI) accessibles via
 * **`bin/cake validation remind`** : Relance les validateurs des étapes échues, au plus une fois par étape et par période de vingt-quatre heures.
 * **`bin/cake validation notify-blocked`** : Envoie chaque matin le récapitulatif des cycles bloqués, avec le périmètre de consultation propre à chaque administrateur.
 * **`bin/cake validation repair-orphaned-sequences [--apply]`** : Détecte les références de séquences orphelines et applique uniquement les réalignements uniques avec `--apply`.
+* **`bin/cake integrity audit [--scope all|references|workflow|trees|comments|views] [--format text|json]`** : Exécute l’audit transversal en lecture seule. Le code `1` signale une anomalie de données et le code `2` une erreur technique.
 
 * **migration_import_departments --source-dir <répertoire> [--dry-run|--apply]** : Prépare ou applique l’import transactionnel des sociétés, services et codes CGR historiques.
 
@@ -22,6 +23,20 @@ Planifiez la commande chaque heure : son idempotence évite les doublons de cour
 ```
 
 ## Surveillance automatisée des arbres
+
+## Surveillance globale de l’intégrité
+
+Planifiez l’audit global selon la criticité de l’instance. Il n’effectue aucune
+réparation ; une anomalie doit être analysée avec le contrôle spécialisé du
+domaine concerné.
+
+```cron
+15 * * * * cd /chemin/vers/gdaetf2 && docker compose exec -T gdaetf bin/cake integrity audit --format=json >> /var/log/gdaetf2-integrity.log 2>&1
+```
+
+Pour une supervision, utilisez le code de sortie et conservez le JSON comme
+artefact de diagnostic. Les références et les étapes de validation ne doivent
+pas être fusionnées dans une commande de réparation automatique.
 
 La commande envoie une alerte détaillée lorsque le diagnostic échoue. Configurez sur chaque instance les variables non sensibles suivantes dans le fichier `.env` racine :
 

@@ -76,6 +76,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0065** | ACL automatique des mutations Web et API | **Proposé** | [`0065-acl-automatique-des-mutations-web-api.md`](./0065-acl-automatique-des-mutations-web-api.md) |
 | **ADR 0066** | Nettoyage gradué lors de la désactivation des départements | **Proposé** | [`0066-nettoyage-gradue-desactivation-departements.md`](./0066-nettoyage-gradue-desactivation-departements.md) |
 | **ADR 0067** | Intégrité des références de séquences du workflow | **Proposé** | 0067-integrite-references-sequences-workflow.md |
+| **ADR 0068** | Audit global d’intégrité en lecture seule | **Proposé** | 0068-audit-global-integrite-lecture-seule.md |
 
 ---
 
