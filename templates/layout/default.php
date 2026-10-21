@@ -15,6 +15,7 @@
  * @var \App\View\AppView $this
  */
 
+/** @var \Authorization\IdentityInterface|null $identity */
 $cakeDescription = 'Gestion des Droits (GDAETF2)';
 ?>
 <!DOCTYPE html>
@@ -88,7 +89,9 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
     <footer>
     </footer>
 
-    <?= $this->Html->script('core/Navigation/MenuManager.js', ['type' => 'module', 'block' => 'scriptBottom']) ?>
+    <?php if ($identity !== null): ?>
+        <?= $this->Html->script('core/Navigation/MenuManager.js', ['type' => 'module', 'block' => 'scriptBottom']) ?>
+    <?php endif; ?>
     <?= $this->fetch('script') ?>
     <?= $this->fetch('scriptBottom') ?>
 </body>
