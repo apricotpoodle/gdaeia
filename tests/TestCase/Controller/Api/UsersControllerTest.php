@@ -225,6 +225,17 @@ class UsersControllerTest extends TestCase
         $this->get('/users/forgot-password');
         $this->assertResponseOk();
         $this->assertResponseContains('Retour à la connexion');
+        $this->assertResponseNotContains('core/Navigation/MenuManager.js');
+    }
+
+    public function testUnePageAuthentifieeChargeLeMenu(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/users');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('core/Navigation/MenuManager.js');
     }
 
     public function testLaConnexionAfficheLeMessageDExpirationDeSession(): void
