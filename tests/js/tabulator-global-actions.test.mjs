@@ -29,6 +29,12 @@ test('ignore une action de ligne qui n’appartient pas au menu global', () => {
     assert.equal(resolveGlobalAction(target), null);
 });
 
+test('configure le message de chargement Tabulator par défaut en français', () => {
+    const builder = new TabulatorBuilder('#comments-grid');
+
+    assert.equal(builder.config.dataLoaderLoading, 'Chargement en cours...');
+});
+
 test('la pagination distante désactive le chargement progressif', () => {
     const builder = new TabulatorBuilder('#comments-grid');
     builder.config.progressiveLoad = 'scroll';

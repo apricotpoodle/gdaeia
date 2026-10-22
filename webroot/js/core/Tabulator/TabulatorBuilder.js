@@ -61,7 +61,7 @@ export class TabulatorBuilder {
             headerFilterLiveFilterDelay: 300,
             placeholder: "<div class='tabulator-empty-msg p-4 text-center text-muted'>Aucune donnée trouvée !</div>",
             ajaxLoader: true,
-            ajaxLoaderLoading: "<div class='tabulator-loading-msg'><span>Chargement des données en cours...</span></div>",
+            dataLoaderLoading: "Chargement en cours...",
             paginationPosition: "top",
             locale: "fr-fr",
             langs: {
