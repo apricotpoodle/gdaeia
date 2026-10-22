@@ -1,7 +1,7 @@
 # ADR 0065 — ACL automatique des mutations Web et API
 
 - Date : 2026-10-15
-- Statut : Proposé
+- Statut : Accepté
 - Dépendances : ADR 0042, ADR 0045, ADR 0046 et ADR 0052
 
 ## Contexte

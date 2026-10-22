@@ -1,7 +1,7 @@
 # ADR 0068 — Audit global d’intégrité en lecture seule
 
 - **Date :** 2026-10-16
-- **Statut :** Proposé
+- **Statut :** Accepté
 - **Dépendances :** ADR 0005, ADR 0006, ADR 0010, ADR 0067
 
 ## Contexte

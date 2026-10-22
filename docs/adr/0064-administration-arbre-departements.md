@@ -1,7 +1,7 @@
 # ADR 0064 — Administration de l'arbre des départements
 
 - Date : 2026-10-15
-- Statut : Proposé
+- Statut : Accepté
 - Dépendances : ADR 0004, ADR 0013, ADR 0026, ADR 0041 et ADR 0054
 
 ## Contexte

@@ -1,7 +1,7 @@
 # ADR 0063 : Outrepassement des validations bloquantes du workflow
 
 **Date :** 05 octobre 2026  
-**Statut :** Proposé  
+**Statut :** Accepté  
 **Dépendances :** [ADR 0055](./0055-workflow-validation-applicationforms.md), [ADR 0056](./0056-remise-a-zero-cycle-validation.md), [ADR 0057](./0057-point-entree-fiche-reinitialisation-cycle.md)
 
 ## Contexte

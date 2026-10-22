@@ -5,7 +5,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 
 ---
 
-## Index Général des Décisions d'Architecture (ADR 0001 à 0062)
+## Index Général des Décisions d'Architecture (ADR 0001 à 0068)
 
 | Référence | Sujet Technique / Décision | Statut | Fichier Source |
 | :--- | :--- | :---: | :--- |
@@ -55,8 +55,8 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0044** | Recherche FULLTEXT MySQL via Callback FriendsOfCake/Search | **Accepté** | [`0044-filtre-recherche-fulltext-search-plugin.md`](./0044-filtre-recherche-fulltext-search-plugin.md) |
 | **ADR 0045** | Administration CRUD de la sécurité des champs (FieldAuthorizations) | **Accepté** | [`0045-gestion-crud-field-authorizations.md`](./0045-gestion-crud-field-authorizations.md) |
 | **ADR 0046** | Standardisation du CRUD hybride (FieldAuthorizations) | **Accepté** | [`0046-standardisation-crud-field-authorizations.md`](./0046-standardisation-crud-field-authorizations.md) |
-| **ADR 0047** | Découpage de l'IHM Applicationform en 5 zones fonctionnelles | **Accepté** | [`0048-decoupage-ihm-zones-applicationform.md`](./0048-decoupage-ihm-zones-applicationform.md) |
-| **ADR 0048** | Centralisation de l'identité dans AppView et gestion des scripts | **Accepté** | [`0047-normalisation-vues-identity-assets-js.md`](./0047-normalisation-vues-identity-assets-js.md) |
+| **ADR 0047** | Centralisation de l'identité dans AppView et gestion des scripts | **Accepté** | [`0047-normalisation-vues-identity-assets-js.md`](./0047-normalisation-vues-identity-assets-js.md) |
+| **ADR 0048** | Découpage de l'IHM Applicationform en 5 zones fonctionnelles | **Accepté** | [`0048-decoupage-ihm-zones-applicationform.md`](./0048-decoupage-ihm-zones-applicationform.md) |
 | **ADR 0049** | Intégration de TreeselectJS pour les structures hiérarchiques | **Accepté** | [`0049-integrationtreeselectjs_pour_structures_hierarchiques_departments.md`](./0049-integrationtreeselectjs_pour_structures_hierarchiques_departments.md) |
 | **ADR 0050** | Sémantique des périmètres hiérarchiques utilisateur | **Accepté** | [`0050-semantique-perimetres-hierarchiques-utilisateur.md`](./0050-semantique-perimetres-hierarchiques-utilisateur.md) |
 | **ADR 0051** | Français comme langue applicative par défaut | **Accepté** | [`0051-francais-langue-applicative-par-defaut.md`](./0051-francais-langue-applicative-par-defaut.md) |
@@ -71,11 +71,12 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0060** | Un message Flash par champ invalide dans les formulaires Web | **Accepté** | [`0060-un-flash-par-champ-invalide-web.md`](./0060-un-flash-par-champ-invalide-web.md) |
 | **ADR 0061** | Gestion unifiée des notifications Flash Web | **Accepté** | [`0061-gestion-unifiee-notifications-flash.md`](./0061-gestion-unifiee-notifications-flash.md) |
 | **ADR 0062** | Export PDF sécurisé des DAE | **Accepté** | [`0062-export-pdf-applicationform.md`](./0062-export-pdf-applicationform.md) |
-| **ADR 0063** | Outrepassement des validations bloquantes du workflow | **Proposé** | [`0063-outrepassement-validations-workflow.md`](./0063-outrepassement-validations-workflow.md) |
-| **ADR 0064** | Administration de l'arbre des départements | **Proposé** | [`0064-administration-arbre-departements.md`](./0064-administration-arbre-departements.md) |
-| **ADR 0065** | ACL automatique des mutations Web et API | **Proposé** | [`0065-acl-automatique-des-mutations-web-api.md`](./0065-acl-automatique-des-mutations-web-api.md) |
-| **ADR 0066** | Nettoyage gradué lors de la désactivation des départements | **Proposé** | [`0066-nettoyage-gradue-desactivation-departements.md`](./0066-nettoyage-gradue-desactivation-departements.md) |
-| **ADR 0067** | Intégrité des références de séquences du workflow | **Proposé** | 0067-integrite-references-sequences-workflow.md |
+| **ADR 0063** | Outrepassement des validations bloquantes du workflow | **Accepté** | [`0063-outrepassement-validations-workflow.md`](./0063-outrepassement-validations-workflow.md) |
+| **ADR 0064** | Administration de l'arbre des départements | **Accepté** | [`0064-administration-arbre-departements.md`](./0064-administration-arbre-departements.md) |
+| **ADR 0065** | ACL automatique des mutations Web et API | **Accepté** | [`0065-acl-automatique-des-mutations-web-api.md`](./0065-acl-automatique-des-mutations-web-api.md) |
+| **ADR 0066** | Nettoyage gradué lors de la désactivation des départements | **Accepté** | [`0066-nettoyage-gradue-desactivation-departements.md`](./0066-nettoyage-gradue-desactivation-departements.md) |
+| **ADR 0067** | Intégrité des références de séquences du workflow | **Accepté** | [`0067-integrite-references-sequences-workflow.md`](./0067-integrite-references-sequences-workflow.md) |
+| **ADR 0068** | Audit global d'intégrité en lecture seule | **Accepté** | [`0068-audit-global-integrite-lecture-seule.md`](./0068-audit-global-integrite-lecture-seule.md) |
 
 ---
 

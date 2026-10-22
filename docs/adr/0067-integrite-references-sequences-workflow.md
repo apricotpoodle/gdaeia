@@ -1,7 +1,7 @@
 # ADR 0067 : Intégrité des références de séquences du workflow
 
 **Date :** 16 Octobre 2026  
-**Statut :** Proposé  
+**Statut :** Accepté  
 **Dépendances :** ADR 0055 — Workflow de validation des Applicationforms
 
 ## Contexte
