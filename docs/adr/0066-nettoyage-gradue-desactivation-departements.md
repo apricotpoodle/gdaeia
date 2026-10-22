@@ -1,7 +1,7 @@
 # ADR 0066 — Nettoyage gradué lors de la désactivation des départements
 
 - Date : 2026-10-16
-- Statut : Proposé
+- Statut : Accepté
 - Dépendances : ADR 0064, ADR 0054 et ADR 0065
 
 ## Contexte
