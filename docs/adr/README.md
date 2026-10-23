@@ -5,7 +5,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 
 ---
 
-## Index Général des Décisions d'Architecture (ADR 0001 à 0069)
+## Index Général des Décisions d'Architecture (ADR 0001 à 0070)
 
 | Référence | Sujet Technique / Décision | Statut | Fichier Source |
 | :--- | :--- | :---: | :--- |
@@ -78,6 +78,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0067** | Intégrité des références de séquences du workflow | **Accepté** | [`0067-integrite-references-sequences-workflow.md`](./0067-integrite-references-sequences-workflow.md) |
 | **ADR 0068** | Audit global d'intégrité en lecture seule | **Accepté** | [`0068-audit-global-integrite-lecture-seule.md`](./0068-audit-global-integrite-lecture-seule.md) |
 | **ADR 0069** | Habilitations par rôles et périmètres | **Proposé** | [`0069-habilitations-par-roles-et-perimetres.md`](./0069-habilitations-par-roles-et-perimetres.md) |
+| **ADR 0070** | Circuits courts locaux selon le type de contrat | **Accepté** | [`0070-circuits-courts-locaux-par-contrat.md`](./0070-circuits-courts-locaux-par-contrat.md) |
 
 ---
 

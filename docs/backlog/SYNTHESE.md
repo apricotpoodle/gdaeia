@@ -5,15 +5,17 @@ manifeste `validation-applicationform/manifest.json`, du code, des migrations
 et des tests présents dans le dépôt. Les statuts ci-dessous décrivent le
 reste à faire, pas seulement le statut historique écrit dans une fiche.
 
+Le ticket 0017 a été ajouté le **23 octobre 2026** sans nouvel audit global.
+
 ## Vue d’ensemble
 
 | Périmètre | Total | Entièrement traité | Partiellement traité | Reste à faire |
 |---|---:|---:|---:|---:|
-| Backlog technique racine (`0001`–`0016`) | 16 | 13 | 1 | 2 |
+| Backlog technique racine (`0001`–`0017`) | 17 | 13 | 1 | 3 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
-| **Total** | **29** | **26** | **1** | **2** |
+| **Total** | **30** | **26** | **1** | **3** |
 
-Le ticket 0002 est compté comme partiellement traité ; il reste donc deux
+Le ticket 0002 est compté comme partiellement traité ; il reste donc trois
 tickets à réaliser complètement, auxquels s’ajoutent les compléments du 0002.
 
 ## Tickets restant à effectuer
@@ -23,6 +25,7 @@ tickets à réaliser complètement, auxquels s’ajoutent les compléments du 00
 | [0001 — Gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) | Moyenne | À faire | Choisir et mettre en service l’outil, documenter le processus, migrer les fiches actives et décider du sort de `docs/backlog/`. | Aucun gestionnaire ni migration externe n’est documenté ; le dépôt reste le backlog transitoire. |
 | [0002 — Couverture de tests](0002-etendre-la-couverture-de-tests.md) | Haute | **Partiel** | Mesurer et documenter la couverture cible, décider de l’automatisation des seuils (80 % global, 90 % critique, objectif branches), puis traiter l’écart restant. | Tests HTTP, workflow/vues SQL, PCOV et rapports Clover/HTML existent ; la fiche indique elle-même 61,5 % de lignes et des seuils différés. |
 | [0007 — Accès menus et permissions](0007-separer-acces-menus-et-permissions-administration.md) | Haute | À faire | Introduire `permissions`/`role_permissions` et `manage_menus`, centraliser la résolution des accès, migrer les données et ajouter les tests HTTP, Policy et intégration. La V1 couvre `self`, les départements directement affectés (`assigned`) et `all` ; les descendants et les droits individuels sont différés. | `src/Policy/MenuPolicy.php` autorise encore via `isSuperUser()` ; aucune table `permissions`/`role_permissions` ni permission `manage_menus` n’a été trouvée. Les Policies et custom finders existants constituent le socle de migration ; le ticket écarte provisoirement ARO/ACO. |
+| [0017 — Circuits courts locaux](0017-implementer-les-circuits-courts-locaux.md) | Moyenne | À planifier | Implémenter les exceptions par contrat et département, l'administration locale et les contrôles de lancement de l'ADR 0070. | Nouveau ticket créé après l'audit du 13 octobre ; aucune implémentation engagée. |
 
 ## Tickets déjà traités — contrôle de non-réouverture
 
@@ -53,6 +56,8 @@ L’ordre recommandé est :
 2. **0007**, après validation de l’ADR et du modèle de permissions ;
 3. **0002**, pour décider des seuils et résorber l’écart de couverture ;
 4. **0001**, qui relève de la gouvernance et de la migration du backlog.
+5. **0017**, lorsque l'évolution de la rédaction SEM sera programmée ; suivre
+   l'ADR 0070 sans étendre l'exception aux autres sociétés.
 
 Cette synthèse est un audit statique du dépôt. Elle confirme la présence des
 implémentations et tests versionnés ; elle ne remplace pas l’exécution des
