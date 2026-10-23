@@ -17,6 +17,7 @@ dans le code et les tests.
 - [0001 — Mettre en place un gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) — priorité moyenne.
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute ; permissions génériques, Policies CakePHP et périmètres V1 directs, avec la gestion des descendants et des droits individuels différée.
+- [0017 — Implémenter les circuits courts locaux de validation](0017-implementer-les-circuits-courts-locaux.md) — priorité moyenne ; à planifier selon l'ADR 0070.
 
 ## Tickets terminés
 
