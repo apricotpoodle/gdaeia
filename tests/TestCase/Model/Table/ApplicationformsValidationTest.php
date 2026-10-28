@@ -61,6 +61,19 @@ class ApplicationformsValidationTest extends TestCase
         $this->assertArrayHasKey('collaborator_id', $errors);
     }
 
+    public function testLesNouveauxChampsV3RefusentLesValeursInvalides(): void
+    {
+        $errors = $this->validator()->validate([
+            'applicant_first_name' => str_repeat('a', 256),
+            'applicant_last_name' => str_repeat('b', 256),
+            'working_days' => -1,
+        ], true);
+
+        $this->assertArrayHasKey('applicant_first_name', $errors);
+        $this->assertArrayHasKey('applicant_last_name', $errors);
+        $this->assertArrayHasKey('working_days', $errors);
+    }
+
     private function validator(): Validator
     {
         return $this->table->validationDefault(new Validator());

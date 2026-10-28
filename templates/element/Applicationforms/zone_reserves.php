@@ -26,6 +26,33 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditReserves): boo
     <div class="card-body">
         <div class="row g-3">
 
+            <div class="col-12">
+                <?= $this->Form->control('hr_description', [
+                    'type' => 'textarea',
+                    'label' => __('Descriptif / motif RH'),
+                    'rows' => 3,
+                    'disabled' => !$canEditReserves,
+                ]) ?>
+            </div>
+
+            <div class="col-12">
+                <?= $this->Form->control('control_management_validation', [
+                    'type' => 'textarea',
+                    'label' => __('Validation Contrôle de gestion'),
+                    'rows' => 2,
+                    'disabled' => !$canEditReserves,
+                ]) ?>
+            </div>
+
+            <div class="col-12">
+                <?= $this->Form->control('final_argument', [
+                    'type' => 'textarea',
+                    'label' => __('Argumentaire final'),
+                    'rows' => 3,
+                    'disabled' => !$canEditReserves,
+                ]) ?>
+            </div>
+
             <!-- Caractéristique budgétaire -->
             <div class="col-md-6">
                 <label for="budgetfeature-id" class="form-label fw-bold">

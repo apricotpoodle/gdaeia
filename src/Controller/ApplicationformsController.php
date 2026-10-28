@@ -157,6 +157,8 @@ class ApplicationformsController extends AppController
         $collaborators = $this->Applicationforms->Users
             ->find('visibleTo', user: $currentUser)
             ->find('list', keyField: 'id', valueField: 'display_name')->toArray();
+        $assistants = $collaborators;
+        $managers = $collaborators;
 
         $this->set(compact(
             'applicationform',
@@ -169,6 +171,8 @@ class ApplicationformsController extends AppController
             'budgetfeatures',
             'yesnos',
             'collaborators',
+            'assistants',
+            'managers',
         ));
 
         return null;
@@ -229,6 +233,8 @@ class ApplicationformsController extends AppController
             ->find('visibleTo', user: $currentUser)
             ->find('list', keyField: 'id', valueField: 'display_name')
             ->toArray();
+        $assistants = $collaborators;
+        $managers = $collaborators;
 
         $this->set(compact(
             'applicationform',
@@ -242,6 +248,8 @@ class ApplicationformsController extends AppController
             'budgetfeatures',
             'yesnos',
             'collaborators',
+            'assistants',
+            'managers',
         ));
 
         return null;

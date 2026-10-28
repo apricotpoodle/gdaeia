@@ -13,6 +13,8 @@
  * @var array<int, string> $budgetfeatures
  * @var array<int, string> $yesnos
  * @var array<int, string> $collaborators
+ * @var array<int, string> $assistants
+ * @var array<int, string> $managers
  * @var array<string, string> $fieldSchema
  */
 
@@ -25,6 +27,7 @@ $this->Html->script('views/Applicationforms/applicationform-cgr', ['block' => tr
 $this->Html->script('views/Applicationforms/applicationform-treeselect', ['type' => 'module', 'block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-comments', ['block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-candidate', ['block' => true]);
+$this->Html->script('views/Applicationforms/salary-calculation', ['type' => 'module', 'block' => true]);
 ?>
 
 <div class="container-fluid mt-3">
@@ -61,6 +64,8 @@ $this->Html->script('views/Applicationforms/applicationform-candidate', ['block'
                 <?= $this->element('Applicationforms/zone_admin', [
                     'applicationform' => $applicationform,
                     'collaborators' => $collaborators ?? [],
+                    'assistants' => $assistants ?? [],
+                    'managers' => $managers ?? [],
                     'fieldSchema' => $fieldSchema ?? [],
                     'canEditAdmin' => $identity->can('editZoneAdmin', $applicationform),
                 ]) ?>

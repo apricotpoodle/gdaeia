@@ -67,4 +67,71 @@ class ApplicationformValidationWorkflowStartTest extends TestCase
         $this->assertGreaterThanOrEqual($beforeStart->addHours(24)->getTimestamp(), $step->due_at->getTimestamp());
         $this->assertLessThanOrEqual(DateTime::now()->addHours(24)->getTimestamp(), $step->due_at->getTimestamp());
     }
+
+    /** Une règle locale arrête le snapshot à la séquence du rôle final configuré. */
+    public function testLeCircuitCourtNeCopiePasLesSequencesSuivantes(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('contracttypes', ['deleted' => null, 'code' => 'FACTURE'], ['id' => 1]);
+        $connection->insert('roles', [
+            'id' => 2,
+            'base' => 1,
+            'code' => 'ROLE_SGR',
+            'name' => 'SGR',
+            'sort' => 'SGR',
+            'deleted' => null,
+            'created' => date('Y-m-d H:i:s'),
+            'modified' => date('Y-m-d H:i:s'),
+        ]);
+        $connection->insert('users', [
+            'id' => 3,
+            'username' => 'sgr-test',
+            'email' => 'sgr-test@example.test',
+            'password' => 'test',
+            'firstname' => 'SGR',
+            'lastname' => 'Test',
+            'issuperuser' => 0,
+            'role_id' => 2,
+            'deleted' => null,
+            'created' => date('Y-m-d H:i:s'),
+            'modified' => date('Y-m-d H:i:s'),
+        ]);
+        $connection->insert('user_departments', [
+            'user_id' => 3,
+            'department_id' => 1,
+            'created' => date('Y-m-d H:i:s'),
+            'modified' => date('Y-m-d H:i:s'),
+        ]);
+        $connection->insert('validationsequences', [
+            'id' => 2,
+            'department_id' => 1,
+            'name' => 'SGR',
+            'description' => '',
+            'role_id' => 2,
+            'sequence' => 2,
+            'deleted' => null,
+            'reminder_delay_hours' => 24,
+            'created' => date('Y-m-d H:i:s'),
+            'modified' => date('Y-m-d H:i:s'),
+        ]);
+        $connection->update('applicationforms', ['contracttype_id' => 1], ['id' => 1]);
+        $connection->insert('validation_circuit_rules', [
+            'department_id' => 1,
+            'contracttype_id' => 1,
+            'final_role_id' => 1,
+            'created' => date('Y-m-d H:i:s'),
+            'modified' => date('Y-m-d H:i:s'),
+        ]);
+
+        $applicationform = TableRegistry::getTableLocator()->get('Applicationforms')->get(1);
+        $actor = TableRegistry::getTableLocator()->get('Users')->get(1);
+        $result = (new ApplicationformValidationWorkflow())->start($applicationform, $actor);
+
+        $this->assertSame([], $result['issues']);
+        $steps = TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->find()
+            ->where(['validation_workflow_run_id' => $result['run']->id])
+            ->orderByAsc('sequence_number')->all()->toList();
+        $this->assertCount(1, $steps);
+        $this->assertSame(1, (int)$steps[0]->role_id);
+    }
 }

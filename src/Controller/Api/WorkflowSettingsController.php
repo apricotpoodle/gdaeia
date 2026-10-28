@@ -122,6 +122,66 @@ class WorkflowSettingsController extends AppController
         return $this->jsonSuccess(['comment_requirements' => $requirements]);
     }
 
+    /** Lit ou met à jour le coefficient de conversion k/mois. */
+    public function kCoefficient(): ?Response
+    {
+        $this->request->allowMethod(['get', 'post']);
+        $settings = $this->fetchTable('WorkflowSettings');
+        $this->Authorization->authorize($settings->newEmptyEntity(), 'manage');
+        $name = 'salary.k_coefficient';
+        $setting = $settings->find()->where(['name' => $name])->first();
+        $coefficient = (float)($setting?->get(WorkflowSetting::FIELD_VALUE) ?? 17.46);
+        if ($this->request->is('get')) {
+            return $this->jsonSuccess(['k_coefficient' => $coefficient]);
+        }
+
+        $value = str_replace(',', '.', trim((string)$this->request->getData('k_coefficient')));
+        if (!is_numeric($value) || (float)$value <= 0) {
+            return $this->jsonError(__('Le coefficient k doit être un nombre strictement positif.'), [], 422);
+        }
+        $setting ??= $settings->newEntity(['name' => $name]);
+        $setting->set('value', number_format((float)$value, 4, '.', ''));
+        if (!$settings->save($setting)) {
+            return $this->validationErrorResponse($setting, 'WorkflowSettings');
+        }
+
+        return $this->jsonSuccess(['k_coefficient' => (float)$value]);
+    }
+
+    /** Lit ou met à jour la liste des champs réinitialisés lors d'une duplication. */
+    public function duplicateResetFields(): ?Response
+    {
+        $this->request->allowMethod(['get', 'post']);
+        $settings = $this->fetchTable('WorkflowSettings');
+        $this->Authorization->authorize($settings->newEmptyEntity(), 'manage');
+        $name = 'applicationform.duplicate_reset_fields';
+        $setting = $settings->find()->where(['name' => $name])->first();
+        $fields = array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string)($setting?->get(WorkflowSetting::FIELD_VALUE) ?? '')),
+        )));
+        if ($this->request->is('get')) {
+            return $this->jsonSuccess(['fields' => $fields]);
+        }
+
+        $reserved = ['user_id', 'applicantname', 'salary_base', 'control_management_validation', 'final_argument'];
+        $received = $this->request->getData('fields', []);
+        if (!is_array($received)) {
+            return $this->jsonError(__('La liste des champs à réinitialiser est invalide.'), [], 422);
+        }
+        $fields = array_values(array_unique(array_merge(
+            $reserved,
+            array_filter($received, static fn(mixed $field): bool => is_string($field) && trim($field) !== ''),
+        )));
+        $setting ??= $settings->newEntity(['name' => $name]);
+        $setting->set('value', implode(',', $fields));
+        if (!$settings->save($setting)) {
+            return $this->validationErrorResponse($setting, 'WorkflowSettings');
+        }
+
+        return $this->jsonSuccess(['fields' => $fields]);
+    }
+
     /** Retourne le catalogue de commentaires sous le contrat distant Tabulator. */
     public function commentTemplates(): void
     {

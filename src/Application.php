@@ -23,6 +23,8 @@ use App\Command\IntegrityAuditCommand;
 use App\Command\TestEmailCommand;
 use App\Command\TreeIntegrityAlertTestCommand;
 use App\Command\TreeIntegrityCheckCommand;
+use App\Command\ValidationAcceptedDigestCommand;
+use App\Command\ValidationPendingDigestCommand;
 use App\Command\ValidationReminderCommand;
 use App\Command\ValidationWorkflowSequenceRepairCommand;
 use App\Middleware\HostHeaderMiddleware;
@@ -257,6 +259,8 @@ class Application extends BaseApplication implements
         $commands->add('backlog next', BacklogNextCommand::class);
         $commands->add('test_email', TestEmailCommand::class);
         $commands->add('validation remind', ValidationReminderCommand::class);
+        $commands->add('validation notify-pending', ValidationPendingDigestCommand::class);
+        $commands->add('validation notify-accepted', ValidationAcceptedDigestCommand::class);
         $commands->add('validation notify-blocked', BlockedValidationDigestCommand::class);
         $commands->add(
             'validation repair-orphaned-sequences',

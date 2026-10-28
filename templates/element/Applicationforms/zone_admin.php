@@ -6,6 +6,8 @@
  *
  * @var \App\View\AppView $this
  * @var array<int, string> $collaborators
+ * @var array<int, string> $assistants
+ * @var array<int, string> $managers
  * @var bool $canEditAdmin
  */
 
@@ -19,6 +21,26 @@
     </div>
     <div class="card-body">
         <div class="row g-3">
+
+            <div class="col-md-6">
+                <?= $this->Form->control('assistant_id', [
+                    'label' => __('Assistante'),
+                    'options' => $assistants ?? [],
+                    'empty' => __('-- Sélectionner --'),
+                    'class' => 'form-select form-select-sm',
+                    'disabled' => !$canEditAdmin,
+                ]) ?>
+            </div>
+
+            <div class="col-md-6">
+                <?= $this->Form->control('manager_id', [
+                    'label' => __('Chef de service'),
+                    'options' => $managers ?? [],
+                    'empty' => __('-- Sélectionner --'),
+                    'class' => 'form-select form-select-sm',
+                    'disabled' => !$canEditAdmin,
+                ]) ?>
+            </div>
 
             <!-- Intitulé du poste -->
             <div class="col-md-12">
@@ -45,6 +67,22 @@
             </div>
 
             <!-- Champ Texte Candidat Externe / Nom du poste -->
+            <div class="col-md-6">
+                <?= $this->Form->control('applicant_first_name', [
+                    'label' => __('Prénom du candidat'),
+                    'class' => 'form-control form-control-sm',
+                    'disabled' => !$canEditAdmin,
+                ]) ?>
+            </div>
+
+            <div class="col-md-6">
+                <?= $this->Form->control('applicant_last_name', [
+                    'label' => __('Nom du candidat'),
+                    'class' => 'form-control form-control-sm',
+                    'disabled' => !$canEditAdmin,
+                ]) ?>
+            </div>
+
             <div class="col-md-6">
                 <?= $this->Form->control('applicantname', [
                     'id' => 'applicantname',

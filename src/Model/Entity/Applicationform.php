@@ -9,6 +9,8 @@ namespace App\Model\Entity;
  * @property int $id
  * @property int $department_id
  * @property int $user_id
+ * @property int|null $assistant_id
+ * @property int|null $manager_id
  * @property string|null $cgr
  * @property int $contracttype_id
  * @property int $hiringreason_id
@@ -24,6 +26,13 @@ namespace App\Model\Entity;
  * @property \Cake\I18n\Date|null $begin_at
  * @property \Cake\I18n\Date|null $end_at
  * @property string|null $applicantname
+ * @property string|null $applicant_first_name
+ * @property string|null $applicant_last_name
+ * @property int|null $working_days
+ * @property string|null $salary_base
+ * @property string|null $hr_description
+ * @property string|null $control_management_validation
+ * @property string|null $final_argument
  * @property int $yesno_id
  * @property int|null $collaborator_id
  * @property \Cake\I18n\DateTime|null $archived
@@ -33,6 +42,8 @@ namespace App\Model\Entity;
  *
  * @property \App\Model\Entity\Department $department
  * @property \App\Model\Entity\User $user
+ * @property \App\Model\Entity\User|null $assistant
+ * @property \App\Model\Entity\User|null $manager
  * @property \App\Model\Entity\Contracttype $contracttype
  * @property \App\Model\Entity\Hiringreason $hiringreason
  * @property \App\Model\Entity\Budgetfeature $budgetfeature
@@ -86,6 +97,8 @@ class Applicationform extends AppEntity
     protected array $_accessible = [
         'department_id' => true,
         'user_id' => true,
+        'assistant_id' => true,
+        'manager_id' => true,
         'cgr' => true,
         'contracttype_id' => true,
         'hiringreason_id' => true,
@@ -101,6 +114,13 @@ class Applicationform extends AppEntity
         'begin_at' => true,
         'end_at' => true,
         'applicantname' => true,
+        'applicant_first_name' => true,
+        'applicant_last_name' => true,
+        'working_days' => true,
+        'salary_base' => true,
+        'hr_description' => true,
+        'control_management_validation' => true,
+        'final_argument' => true,
         'yesno_id' => true,
         'deleted' => true,
         'created' => true,
@@ -164,9 +184,23 @@ class Applicationform extends AppEntity
         return '-';
     }
 
+    /** Synchronise le champ historique avec les champs nom et prénom V3. */
+    public function synchronizeApplicantName(): void
+    {
+        $firstName = trim((string)$this->get(self::FIELD_APPLICANT_FIRST_NAME));
+        $lastName = trim((string)$this->get(self::FIELD_APPLICANT_LAST_NAME));
+        $name = trim($firstName . ' ' . $lastName);
+
+        if ($name !== '') {
+            $this->set(self::FIELD_APPLICANTNAME, $name);
+        }
+    }
+
     public const FIELD_ID = 'id';
     public const FIELD_DEPARTMENT_ID = 'department_id';
     public const FIELD_USER_ID = 'user_id';
+    public const FIELD_ASSISTANT_ID = 'assistant_id';
+    public const FIELD_MANAGER_ID = 'manager_id';
     public const FIELD_CGR = 'cgr';
     public const FIELD_CONTRACTTYPE_ID = 'contracttype_id';
     public const FIELD_HIRINGREASON_ID = 'hiringreason_id';
@@ -182,6 +216,13 @@ class Applicationform extends AppEntity
     public const FIELD_BEGIN_AT = 'begin_at';
     public const FIELD_END_AT = 'end_at';
     public const FIELD_APPLICANTNAME = 'applicantname';
+    public const FIELD_APPLICANT_FIRST_NAME = 'applicant_first_name';
+    public const FIELD_APPLICANT_LAST_NAME = 'applicant_last_name';
+    public const FIELD_WORKING_DAYS = 'working_days';
+    public const FIELD_SALARY_BASE = 'salary_base';
+    public const FIELD_HR_DESCRIPTION = 'hr_description';
+    public const FIELD_CONTROL_MANAGEMENT_VALIDATION = 'control_management_validation';
+    public const FIELD_FINAL_ARGUMENT = 'final_argument';
     public const FIELD_YESNO_ID = 'yesno_id';
     public const FIELD_COLLABORATOR_ID = 'collaborator_id';
     public const FIELD_ARCHIVED = 'archived';

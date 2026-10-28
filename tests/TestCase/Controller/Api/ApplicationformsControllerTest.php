@@ -176,6 +176,42 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('"field":"jobtitle","label":"Intitulé du poste","reason":');
     }
 
+    public function testLApiCalculeLeSalaireDeBaseAvecUneVirgule(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/calculate-salary.json', [
+            'period_code' => 'EUR_PER_DAY',
+            'grossremuneration' => '125,50',
+            'working_days' => 4,
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertSame([
+            'success' => true,
+            'message' => 'Salaire de base calculé.',
+            'salary_base' => '502.0000',
+        ], json_decode((string)$this->_response->getBody(), true));
+    }
+
+    public function testUnAdministrateurArchiveUnePigeOuUneFacture(): void
+    {
+        ConnectionManager::get('test')->update('contracttypes', ['code' => 'PIGE'], ['id' => 1]);
+        ConnectionManager::get('test')->update('applicationforms', ['archived' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => false, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/1/archive.json');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"success":true');
+        $archived = ConnectionManager::get('test')->execute(
+            'SELECT archived FROM applicationforms WHERE id = 1',
+        )->fetchColumn(0);
+        $this->assertNotNull($archived);
+    }
+
     /** Vérifie qu'une duplication crée une DAE brouillon sans réutiliser la source. */
     public function testLaDuplicationCreeUneNouvelleDaePourLeDemandeurCourant(): void
     {

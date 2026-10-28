@@ -229,6 +229,28 @@ class ApplicationformPolicy extends AppPolicy
             && ($user->hasRole(User::ROLE_ADMIN) || $user->isSuperUser());
     }
 
+    /** Autorise l'archivage des factures et piges par les administrateurs concernés. */
+    public function canArchive(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        $user = $this->getValidUser($identity);
+        if ($user === null || !$this->canView($identity, $applicationform)) {
+            return false;
+        }
+        if (
+            !$user->isSuperUser()
+            && !in_array((int)$user->get(User::FIELD_ROLE_ID), [User::ROLE_ADMIN, User::ROLE_5_VALIDEUR_DIR], true)
+        ) {
+            return false;
+        }
+
+        $contract = TableRegistry::getTableLocator()->get('Contracttypes')->find()
+            ->select(['code'])
+            ->where(['id' => $applicationform->get(Applicationform::FIELD_CONTRACTTYPE_ID)])
+            ->first();
+
+        return $contract !== null && in_array(strtoupper(trim((string)$contract->get('code'))), ['PIGE', 'FACTURE'], true);
+    }
+
     /** Le service réévalue ensuite le rôle courant, l'échéance et la suppléance. */
     public function canVoteValidation(IdentityInterface $identity, Applicationform $applicationform): bool
     {
