@@ -13,6 +13,7 @@ use App\Model\Entity\ValidationCommentTemplate;
 use App\Model\Entity\ValidationWorkflowRun;
 use App\Service\CgrResolverService;
 use App\Service\DataGrid\TabulatorAdapter;
+use App\Service\SalaryCalculationService;
 use App\Service\Security\FieldAuthorizationService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use App\Service\Workflow\BlockedValidationCycle;
@@ -25,6 +26,7 @@ use Cake\Http\Response;
 use Cake\I18n\DateTime;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\TableRegistry;
+use InvalidArgumentException;
 use RuntimeException;
 
 /**
@@ -384,16 +386,39 @@ class ApplicationformsController extends AppController
     {
         $loaded = $this->Applicationforms->get(
             $applicationform->get(Applicationform::FIELD_ID),
-            contain: ['Users', 'Departments' => ['Managers']],
+            contain: ['Users', 'Managers', 'Departments' => ['Managers']],
         );
         $recipients = [$loaded->user];
+        if ($loaded->manager !== null) {
+            $recipients[] = $loaded->manager;
+        }
         if ($loaded->department->manager !== null) {
             $recipients[] = $loaded->department->manager;
         }
+        /** @var \App\Model\Entity\Applicationvalidationstep|null $lastStep */
+        $lastStep = $this->fetchTable('Applicationvalidationsteps')->find()
+            ->where(['applicationform_id' => $loaded->id])
+            ->orderByDesc('sequence_number')->first();
+        if ($lastStep !== null) {
+            $sgrUsers = $this->fetchTable('Users')->find()
+                ->innerJoinWith('UserDepartments', function (SelectQuery $query) use ($loaded): SelectQuery {
+                    return $query->where(['UserDepartments.department_id' => $loaded->department_id]);
+                })
+                ->where([
+                    'Users.role_id' => $lastStep->get(Applicationvalidationstep::FIELD_ROLE_ID),
+                    'Users.deleted IS' => null,
+                ])->all();
+            /** @var iterable<\App\Model\Entity\User> $sgrUsers */
+            $sgrUsers = $sgrUsers;
+            foreach ($sgrUsers as $sgrUser) {
+                $recipients[] = $sgrUser;
+            }
+        }
         $sent = [];
         foreach ($recipients as $recipient) {
-            if ($recipient !== null && !isset($sent[$recipient->email])) {
-                $sent[$recipient->email] = true;
+            $email = $recipient?->get(User::FIELD_EMAIL);
+            if ($recipient !== null && is_string($email) && !isset($sent[$email])) {
+                $sent[$email] = true;
                 (new ValidationWorkflowMailer())->safeSend('finalResult', [$recipient, $loaded, $state, $comment]);
             }
         }
@@ -538,6 +563,49 @@ class ApplicationformsController extends AppController
         ]);
     }
 
+    /** Calcule le salaire de base sans persister la demande. */
+    public function calculateSalary(): Response
+    {
+        $this->request->allowMethod(['post']);
+        $this->Authorization->authorize($this->Applicationforms->newEmptyEntity(), 'add');
+
+        try {
+            $periodCode = (string)$this->request->getData('period_code');
+            if ($periodCode === '' && $this->request->getData('period_id') !== null) {
+                $period = $this->fetchTable('Periods')->get((int)$this->request->getData('period_id'));
+                $periodCode = (string)$period->get('code');
+            }
+            $salaryBase = (new SalaryCalculationService())->calculateForPeriodCode(
+                $periodCode,
+                (string)$this->request->getData('grossremuneration'),
+                $this->request->getData('working_days') === null
+                    ? null
+                    : (int)$this->request->getData('working_days'),
+                $this->configuredKCoefficient(),
+            );
+        } catch (InvalidArgumentException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 422);
+        }
+
+        return $this->response->withType('application/json')->withStringBody((string)json_encode([
+            'success' => true,
+            'message' => __('Salaire de base calculé.'),
+            'salary_base' => $salaryBase,
+        ]));
+    }
+
+    /** Retourne le coefficient k global, avec le défaut historique. */
+    private function configuredKCoefficient(): float
+    {
+        $setting = $this->fetchTable('WorkflowSettings')->find()
+            ->where(['name' => 'salary.k_coefficient'])->first();
+        $value = $setting?->get('value');
+
+        return is_numeric($value) && (float)$value > 0
+            ? (float)$value
+            : SalaryCalculationService::DEFAULT_K_COEFFICIENT;
+    }
+
     /**
      * Endpoint : POST /api/applicationforms/add.json
      */
@@ -596,6 +664,24 @@ class ApplicationformsController extends AppController
             __('La demande a été dupliquée en brouillon.'),
             ['id' => $duplicate->get(Applicationform::FIELD_ID)],
         );
+    }
+
+    /** Archive logiquement une pige ou une facture sans supprimer son historique. */
+    public function archive(string $id): Response
+    {
+        $this->request->allowMethod(['post']);
+        $applicationform = $this->Applicationforms->get($id);
+        $this->Authorization->authorize($applicationform, 'archive');
+        if ($applicationform->get(Applicationform::FIELD_ARCHIVED) !== null) {
+            return $this->workflowResponse(true, __('La demande est déjà archivée.'), []);
+        }
+
+        $applicationform->set(Applicationform::FIELD_ARCHIVED, DateTime::now());
+        if (!$this->Applicationforms->save($applicationform, ['checkRules' => false])) {
+            return $this->workflowResponse(false, __('La demande ne peut pas être archivée.'), [], 422);
+        }
+
+        return $this->workflowResponse(true, __('La demande a été archivée.'), []);
     }
 
     /**
@@ -718,6 +804,10 @@ class ApplicationformsController extends AppController
             ->select([
                 'validation_status' => 'Applicationformstatuses.validationstatus_id',
             ]);
+        if (!$this->request->getQuery('include_archived')) {
+            $query->where(['Applicationforms.archived IS' => null]);
+        }
+        $this->applyApplicationformSearchFilters($query);
 
         // 2. Application des tris et filtres Tabulator
         try {
@@ -758,6 +848,42 @@ class ApplicationformsController extends AppController
         $this->viewBuilder()->setOption('serialize', array_keys($output));
 
         return null;
+    }
+
+    /**
+     * Applique les filtres métier complémentaires à la grille distante.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Applicationform> $query Requête distante.
+     */
+    private function applyApplicationformSearchFilters(SelectQuery $query): void
+    {
+        $search = trim((string)$this->request->getQuery('search', ''));
+        if ($search !== '') {
+            $like = '%' . $search . '%';
+            $query->where(['OR' => [
+                'Applicationforms.applicantname LIKE' => $like,
+                'Applicationforms.applicant_first_name LIKE' => $like,
+                'Applicationforms.applicant_last_name LIKE' => $like,
+            ]]);
+        }
+        $cgr = trim((string)$this->request->getQuery('cgr', ''));
+        if ($cgr !== '') {
+            $query->where(['Applicationforms.cgr LIKE' => '%' . $cgr . '%']);
+        }
+        $contractTypeId = $this->request->getQuery('contracttype_id');
+        if (filter_var($contractTypeId, FILTER_VALIDATE_INT) !== false) {
+            $query->where(['Applicationforms.contracttype_id' => (int)$contractTypeId]);
+        }
+        foreach (['begin_from' => 'begin_at >=', 'begin_to' => 'begin_at <=', 'end_from' => 'end_at >=', 'end_to' => 'end_at <='] as $parameter => $condition) {
+            $value = trim((string)$this->request->getQuery($parameter, ''));
+            if ($value !== '') {
+                $query->where(['Applicationforms.' . $condition => $value]);
+            }
+        }
+        $workflowStatus = trim((string)$this->request->getQuery('workflow_status', ''));
+        if ($workflowStatus !== '') {
+            $query->where(['ValidationWorkflowRuns.state' => $workflowStatus]);
+        }
     }
 
     /**

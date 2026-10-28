@@ -6,11 +6,16 @@ namespace App\Model\Table;
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\Contracttype;
 use App\Model\Entity\User;
+use App\Service\SalaryCalculationService;
+use ArrayObject;
+use Cake\Datasource\EntityInterface;
+use Cake\Event\EventInterface;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use InvalidArgumentException;
 use Search\Model\Filter\Callback;
 
 /**
@@ -18,6 +23,8 @@ use Search\Model\Filter\Callback;
  *
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\DepartmentsTable> $Departments
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\UsersTable> $Users
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\UsersTable> $Assistants
+ * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\UsersTable> $Managers
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\ContracttypesTable> $Contracttypes
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\HiringreasonsTable> $Hiringreasons
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\BudgetfeaturesTable> $Budgetfeatures
@@ -52,6 +59,91 @@ use Search\Model\Filter\Callback;
  */
 class ApplicationformsTable extends Table
 {
+    /**
+     * Normalise les saisies décimales avant le marshalling CakePHP.
+     *
+     * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event Événement ORM.
+     * @param \ArrayObject<string, mixed> $data Données reçues.
+     * @param \ArrayObject<string, mixed> $options Options de marshalling.
+     * @return void
+     */
+    public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options): void
+    {
+        foreach (
+            [
+            Applicationform::FIELD_GROSSREMUNERATION,
+            Applicationform::FIELD_SALARY_BASE,
+            ] as $field
+        ) {
+            if (isset($data[$field]) && is_string($data[$field])) {
+                $data[$field] = str_replace(',', '.', trim($data[$field]));
+            }
+        }
+    }
+
+    /**
+     * Synchronise les données dérivées et calcule le salaire avant persistance.
+     *
+     * @param \Cake\Event\EventInterface<\Cake\ORM\Table> $event Événement ORM.
+     * @param \Cake\Datasource\EntityInterface $entity Entité sauvegardée.
+     * @param \ArrayObject<string, mixed> $options Options de sauvegarde.
+     * @return void
+     */
+    public function beforeSave(EventInterface $event, EntityInterface $entity, ArrayObject $options): void
+    {
+        if (!$entity instanceof Applicationform) {
+            return;
+        }
+
+        $entity->synchronizeApplicantName();
+        $periodId = $entity->get(Applicationform::FIELD_PERIOD_ID);
+        if ($periodId === null || $entity->get(Applicationform::FIELD_GROSSREMUNERATION) === null) {
+            return;
+        }
+
+        $period = $this->Periods->get($periodId);
+        $periodCode = strtoupper(trim((string)$period->get('code')));
+        if (
+            !in_array($periodCode, [
+            SalaryCalculationService::UNIT_EUR_PER_DAY,
+            SalaryCalculationService::UNIT_K_PER_MONTH,
+            SalaryCalculationService::UNIT_EUR_PER_MONTH,
+            SalaryCalculationService::UNIT_EUR_PER_HOUR,
+            ], true)
+        ) {
+            return;
+        }
+
+        try {
+            $entity->set(
+                Applicationform::FIELD_SALARY_BASE,
+                (new SalaryCalculationService())->calculateForPeriodCode(
+                    $periodCode,
+                    $entity->get(Applicationform::FIELD_GROSSREMUNERATION),
+                    $entity->get(Applicationform::FIELD_WORKING_DAYS),
+                    $this->configuredKCoefficient(),
+                ),
+            );
+        } catch (InvalidArgumentException $exception) {
+            $entity->setError(Applicationform::FIELD_SALARY_BASE, ['calculation' => $exception->getMessage()]);
+            $event->setResult(false);
+
+            return;
+        }
+    }
+
+    /** Retourne le coefficient k administré dans les réglages du workflow. */
+    private function configuredKCoefficient(): float
+    {
+        $setting = TableRegistry::getTableLocator()->get('WorkflowSettings')->find()
+            ->where(['name' => 'salary.k_coefficient'])->first();
+        $value = $setting?->get('value');
+
+        return is_numeric($value) && (float)$value > 0
+            ? (float)$value
+            : SalaryCalculationService::DEFAULT_K_COEFFICIENT;
+    }
+
     /**
      * Initialize method
      *
@@ -112,6 +204,16 @@ class ApplicationformsTable extends Table
         $this->belongsTo('Users', [
             'foreignKey' => Applicationform::FIELD_USER_ID,
             'joinType' => 'INNER',
+        ]);
+        $this->belongsTo('Assistants', [
+            'className' => 'Users',
+            'foreignKey' => Applicationform::FIELD_ASSISTANT_ID,
+            'joinType' => 'LEFT',
+        ]);
+        $this->belongsTo('Managers', [
+            'className' => 'Users',
+            'foreignKey' => Applicationform::FIELD_MANAGER_ID,
+            'joinType' => 'LEFT',
         ]);
         $this->belongsTo('Contracttypes', [
             'foreignKey' => Applicationform::FIELD_CONTRACTTYPE_ID,
@@ -182,6 +284,10 @@ class ApplicationformsTable extends Table
         $validator
             ->integer(Applicationform::FIELD_USER_ID)
             ->notEmptyString(Applicationform::FIELD_USER_ID);
+
+        foreach ([Applicationform::FIELD_ASSISTANT_ID, Applicationform::FIELD_MANAGER_ID] as $field) {
+            $validator->nonNegativeInteger($field)->allowEmptyString($field);
+        }
 
         $validator
             ->scalar(Applicationform::FIELD_CGR)
@@ -297,6 +403,29 @@ class ApplicationformsTable extends Table
             ->maxLength(Applicationform::FIELD_APPLICANTNAME, 255)
             ->allowEmptyString(Applicationform::FIELD_APPLICANTNAME);
 
+        foreach ([Applicationform::FIELD_APPLICANT_FIRST_NAME, Applicationform::FIELD_APPLICANT_LAST_NAME] as $field) {
+            $validator->scalar($field)->maxLength($field, 120)->allowEmptyString($field);
+        }
+
+        $validator
+            ->integer(Applicationform::FIELD_WORKING_DAYS)
+            ->greaterThanOrEqual(Applicationform::FIELD_WORKING_DAYS, 0)
+            ->allowEmptyString(Applicationform::FIELD_WORKING_DAYS);
+
+        $validator
+            ->decimal(Applicationform::FIELD_SALARY_BASE)
+            ->allowEmptyString(Applicationform::FIELD_SALARY_BASE);
+
+        foreach (
+            [
+                Applicationform::FIELD_HR_DESCRIPTION,
+                Applicationform::FIELD_CONTROL_MANAGEMENT_VALIDATION,
+                Applicationform::FIELD_FINAL_ARGUMENT,
+            ] as $field
+        ) {
+            $validator->scalar($field)->allowEmptyString($field);
+        }
+
         $validator
             ->integer(Applicationform::FIELD_YESNO_ID)
             ->notEmptyString(Applicationform::FIELD_YESNO_ID);
@@ -331,6 +460,14 @@ class ApplicationformsTable extends Table
         $rules->add($rules->existsIn([Applicationform::FIELD_USER_ID], 'Users'), [
             'errorField' => Applicationform::FIELD_USER_ID,
         ]);
+        foreach (
+            [
+                Applicationform::FIELD_ASSISTANT_ID => 'Assistants',
+                Applicationform::FIELD_MANAGER_ID => 'Managers',
+            ] as $field => $association
+        ) {
+            $rules->add($rules->existsIn([$field], $association), ['errorField' => $field]);
+        }
         $rules->add($rules->existsIn([Applicationform::FIELD_CONTRACTTYPE_ID], 'Contracttypes'), [
             'errorField' => Applicationform::FIELD_CONTRACTTYPE_ID,
         ]);
@@ -423,6 +560,25 @@ class ApplicationformsTable extends Table
             Applicationform::FIELD_COLLABORATOR_ID,
         ];
         $data = $source->extract($fields);
+        $resetSetting = TableRegistry::getTableLocator()->get('WorkflowSettings')->find()
+            ->where(['name' => 'applicationform.duplicate_reset_fields'])->first();
+        $resetFields = array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string)$resetSetting?->get('value')),
+        )));
+        $fieldsToReset = array_unique(array_merge(
+            $resetFields,
+            [
+                Applicationform::FIELD_USER_ID,
+                Applicationform::FIELD_APPLICANTNAME,
+                Applicationform::FIELD_SALARY_BASE,
+                Applicationform::FIELD_CONTROL_MANAGEMENT_VALIDATION,
+                Applicationform::FIELD_FINAL_ARGUMENT,
+            ],
+        ));
+        foreach ($fieldsToReset as $field) {
+            unset($data[$field]);
+        }
         $data[Applicationform::FIELD_USER_ID] = $actor->get(User::FIELD_ID);
 
         $duplicate = $this->newEntity($data);

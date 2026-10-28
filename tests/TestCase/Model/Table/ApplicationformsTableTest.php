@@ -166,6 +166,38 @@ class ApplicationformsTableTest extends TestCase
         $this->assertCount(2, $results);
     }
 
+    public function testLaSauvegardeSynchroniseLeNomHistoriqueV3(): void
+    {
+        $applicationform = $this->Applicationforms->newEntity($this->validData([
+            'applicant_first_name' => 'Ada',
+            'applicant_last_name' => 'Lovelace',
+        ]));
+
+        $this->assertSame('Ada', $applicationform->applicant_first_name);
+        $this->assertSame('Lovelace', $applicationform->applicant_last_name);
+
+        $this->Applicationforms->saveOrFail($applicationform);
+
+        $this->assertSame('Ada Lovelace', $applicationform->applicantname);
+    }
+
+    public function testLaSauvegardeCalculeLeSalaireDeBaseDepuisLaPeriodicite(): void
+    {
+        $this->getTableLocator()->get('Periods')->updateAll(
+            ['code' => 'EUR_PER_DAY'],
+            ['id' => 1],
+        );
+        $applicationform = $this->Applicationforms->newEntity($this->validData([
+            'grossremuneration' => '125,50',
+            'period_id' => 1,
+            'working_days' => 4,
+        ]));
+
+        $this->Applicationforms->saveOrFail($applicationform);
+
+        $this->assertSame('502.0000', $applicationform->salary_base);
+    }
+
     /**
      * @param array<string, mixed> $overrides
      * @return array<string, mixed>

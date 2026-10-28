@@ -98,6 +98,30 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditRemuneration):
                 ]) ?>
             </div>
 
+            <div class="col-md-6">
+                <?= $this->Form->control('working_days', [
+                    'type' => 'number',
+                    'min' => 0,
+                    'step' => 1,
+                    'label' => __('Nombre de jours travaillés'),
+                    'class' => 'form-control',
+                    'id' => 'working-days',
+                    'disabled' => !$isEditable('working_days'),
+                ]) ?>
+            </div>
+
+            <div class="col-md-6">
+                <?= $this->Form->control('salary_base', [
+                    'type' => 'number',
+                    'step' => '0.0001',
+                    'label' => __('Salaire de base calculé'),
+                    'class' => 'form-control bg-light',
+                    'id' => 'salary-base',
+                    'readonly' => true,
+                    'disabled' => !$isEditable('salary_base'),
+                ]) ?>
+            </div>
+
         </div>
     </div>
 </div>

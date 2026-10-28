@@ -10,6 +10,7 @@ use App\Model\Entity\Validationsequence;
 use App\Model\Entity\ValidationWorkflowRun;
 use App\Model\Entity\WorkflowSetting;
 use App\Policy\ApplicationformPolicy;
+use Cake\Database\Exception\DatabaseException;
 use Cake\I18n\DateTime;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -28,6 +29,7 @@ final class ApplicationformValidationWorkflow
     private Table $validations;
     private Table $settings;
     private Table $applicationforms;
+    private Table $circuitRules;
 
     /** Initialise les tables utilisées par le workflow. */
     public function __construct()
@@ -41,6 +43,7 @@ final class ApplicationformValidationWorkflow
         $this->validations = $locator->get('Validations');
         $this->settings = $locator->get('WorkflowSettings');
         $this->applicationforms = $locator->get('Applicationforms');
+        $this->circuitRules = $locator->get('ValidationCircuitRules');
     }
 
     /** @return array{accepter: bool, refuser: bool} Règles courantes d'obligation de commentaire. */
@@ -255,6 +258,42 @@ final class ApplicationformValidationWorkflow
         if ($sequences === []) {
             $issues[] = __('Aucune séquence de validation n’est configurée pour ce département.');
         }
+        /** @var \App\Model\Entity\ValidationCircuitRule|null $rule */
+        $rule = null;
+        try {
+            $rule = $this->circuitRules->find()
+                ->where([
+                    'department_id' => $applicationform->department_id,
+                    'contracttype_id' => $applicationform->contracttype_id,
+                ])
+                ->first();
+        } catch (DatabaseException) {
+            // Compatibilité avec les environnements n'ayant pas encore appliqué V3.
+        }
+        if ($rule !== null) {
+            $finalSequence = null;
+            foreach ($sequences as $sequence) {
+                if ((int)$sequence->role_id === (int)$rule->get('final_role_id')) {
+                    $finalSequence = (int)$sequence->sequence;
+                    break;
+                }
+            }
+            if ($finalSequence === null) {
+                /** @var \App\Model\Entity\Role|null $role */
+                $role = $this->roles->find()->where(['Roles.id' => $rule->get('final_role_id')])->first();
+                $roleName = $role?->get('name') ?? __('Rôle n°{0}', $rule->get('final_role_id'));
+                $issues[] = __(
+                    'La règle de circuit pour le contrat {0} demande le rôle final « {1} », absent du circuit du département.',
+                    $applicationform->contracttype_id,
+                    $roleName,
+                );
+            } else {
+                $sequences = array_values(array_filter(
+                    $sequences,
+                    static fn(Validationsequence $sequence): bool => (int)$sequence->sequence <= $finalSequence,
+                ));
+            }
+        }
         foreach ($sequences as $sequence) {
             if ($this->eligibleUsers($applicationform, (int)$sequence->role_id) === []) {
                 $roleName = $sequence->role->name ?? __('Rôle n°{0}', $sequence->role_id);
@@ -285,10 +324,7 @@ final class ApplicationformValidationWorkflow
                 if (!$this->runs->save($run)) {
                     throw new WorkflowStartFailureException(__('Impossible de créer le cycle de validation.'));
                 }
-                $firstSequence = min(array_map(
-                    static fn(Validationsequence $item): int => $item->sequence,
-                    $sequences,
-                ));
+                $firstSequence = (int)$sequences[0]->sequence;
                 foreach ($sequences as $sequence) {
                     $active = (int)$sequence->sequence === $firstSequence;
                     /** @var \App\Model\Entity\Applicationvalidationstep $step */
@@ -648,6 +684,33 @@ final class ApplicationformValidationWorkflow
         }
 
         return $result;
+    }
+
+    /**
+     * Collecte les demandes en attente par validateur, dans l'ordre métier.
+     *
+     * @return array<int, array{recipient: \App\Model\Entity\User, applicationforms: list<\App\Model\Entity\Applicationform>}>
+     */
+    public function collectPendingDigest(): array
+    {
+        /** @var list<\App\Model\Entity\Applicationvalidationstep> $steps */
+        $steps = $this->steps->find()->contain(['Applicationforms'])
+            ->where(['Applicationvalidationsteps.state' => 'en_attente'])
+            ->orderByAsc('Applicationforms.begin_at')
+            ->orderByAsc('Applicationforms.id')->all()->toList();
+        $grouped = [];
+        foreach ($steps as $step) {
+            foreach ($this->eligibleUsers($step->applicationform, (int)$step->role_id) as $recipient) {
+                $grouped[(int)$recipient->id]['recipient'] = $recipient;
+                $grouped[(int)$recipient->id]['applicationforms'][(int)$step->applicationform->id] = $step->applicationform;
+            }
+        }
+        foreach ($grouped as &$entry) {
+            $entry['applicationforms'] = array_values($entry['applicationforms']);
+        }
+        unset($entry);
+
+        return array_values($grouped);
     }
 
     /** @return list<\App\Model\Entity\User> */

@@ -113,9 +113,15 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/validationsequences/unassign-role', ['controller' => 'Validationsequences', 'action' => 'unassignRole', '_ext' => 'json']);
         $builder->connect('/validationsequences/update-sequence', ['controller' => 'Validationsequences', 'action' => 'updateSequence', '_ext' => 'json']);
         $builder->connect('/validationsequences/update-delay', ['controller' => 'Validationsequences', 'action' => 'updateDelay', '_ext' => 'json']);
+        $builder->connect('/validation-circuit-rules', ['controller' => 'ValidationCircuitRules', 'action' => 'index', '_ext' => 'json']);
+        $builder->connect('/validation-circuit-rules/add', ['controller' => 'ValidationCircuitRules', 'action' => 'add', '_ext' => 'json']);
+        $builder->connect('/validation-circuit-rules/{id}', ['controller' => 'ValidationCircuitRules', 'action' => 'edit', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/validation-circuit-rules/{id}/delete', ['controller' => 'ValidationCircuitRules', 'action' => 'delete', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/workflow-settings/default-due-hours', ['controller' => 'WorkflowSettings', 'action' => 'defaultDueHours', '_ext' => 'json']);
         $builder->connect('/workflow-settings/blocked-after-business-days', ['controller' => 'WorkflowSettings', 'action' => 'blockedAfterBusinessDays', '_ext' => 'json']);
         $builder->connect('/workflow-settings/comment-requirements', ['controller' => 'WorkflowSettings', 'action' => 'commentRequirements', '_ext' => 'json']);
+        $builder->connect('/workflow-settings/k-coefficient', ['controller' => 'WorkflowSettings', 'action' => 'kCoefficient', '_ext' => 'json']);
+        $builder->connect('/workflow-settings/duplicate-reset-fields', ['controller' => 'WorkflowSettings', 'action' => 'duplicateResetFields', '_ext' => 'json']);
         $builder->connect('/workflow-settings/comment-templates', ['controller' => 'WorkflowSettings', 'action' => 'commentTemplates', '_ext' => 'json']);
         $builder->connect('/workflow-settings/comment-templates/create', ['controller' => 'WorkflowSettings', 'action' => 'createCommentTemplate', '_ext' => 'json']);
         $builder->connect('/workflow-settings/comment-templates/{id}', ['controller' => 'WorkflowSettings', 'action' => 'updateCommentTemplate', '_ext' => 'json'], ['pass' => ['id']]);
@@ -134,8 +140,10 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/applicationforms/{id}/validation/reset', ['controller' => 'Applicationforms', 'action' => 'resetValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/remind', ['controller' => 'Applicationforms', 'action' => 'remindValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation', ['controller' => 'Applicationforms', 'action' => 'validationState', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/applicationforms/calculate-salary', ['controller' => 'Applicationforms', 'action' => 'calculateSalary', '_ext' => 'json']);
         $builder->connect('/applicationforms/blocked-validations', ['controller' => 'Applicationforms', 'action' => 'blockedValidations', '_ext' => 'json']);
         $builder->connect('/applicationforms/{id}/duplicate', ['controller' => 'Applicationforms', 'action' => 'duplicate', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/applicationforms/{id}/archive', ['controller' => 'Applicationforms', 'action' => 'archive', '_ext' => 'json'], ['pass' => ['id']]);
 
         $builder->resources('Users'); // Crée automatiquement les routes RESTful (GET /api/users)
         $builder->resources('Departments');

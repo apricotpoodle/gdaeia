@@ -17,4 +17,17 @@ class ApplicationformTest extends TestCase
         ]))->candidate_name);
         $this->assertSame('-', (new Applicationform())->candidate_name);
     }
+
+    public function testSynchroniseLeNomHistoriqueDepuisLeNomEtLePrenom(): void
+    {
+        $applicationform = new Applicationform([
+            'applicant_first_name' => ' Ada ',
+            'applicant_last_name' => ' Lovelace ',
+            'applicantname' => 'Ancienne valeur',
+        ]);
+
+        $applicationform->synchronizeApplicantName();
+
+        $this->assertSame('Ada Lovelace', $applicationform->applicantname);
+    }
 }

@@ -29,6 +29,36 @@ final class ValidationWorkflowMailer extends AppMailer
     }
 
     /**
+     * Prépare la synthèse quotidienne des demandes en attente.
+     *
+     * @param list<\App\Model\Entity\Applicationform> $applicationforms Demandes.
+     */
+    public function pendingValidationDigest(User $recipient, array $applicationforms): void
+    {
+        $this->setTo($recipient->get(User::FIELD_EMAIL))
+            ->setSubject(__('Demandes à valider — {0} DAE', count($applicationforms)))
+            ->setViewVars([
+                'recipient' => $recipient,
+                'applicationforms' => $applicationforms,
+                'baseUrl' => rtrim((string)Configure::read('App.fullBaseUrl', 'http://localhost'), '/'),
+            ])
+            ->viewBuilder()->setTemplate('pending_validation_digest');
+    }
+
+    /**
+     * Prépare la synthèse hebdomadaire des demandes entièrement validées.
+     *
+     * @param list<\App\Model\Entity\Applicationform> $applicationforms Demandes.
+     */
+    public function acceptedValidationDigest(User $recipient, array $applicationforms): void
+    {
+        $this->setTo($recipient->get(User::FIELD_EMAIL))
+            ->setSubject(__('Demandes validées cette semaine — {0} DAE', count($applicationforms)))
+            ->setViewVars(['recipient' => $recipient, 'applicationforms' => $applicationforms])
+            ->viewBuilder()->setTemplate('accepted_validation_digest');
+    }
+
+    /**
      * Prépare le courriel de notification ou de relance d'une étape de validation.
      *
      * @param \App\Model\Entity\User $recipient Destinataire.
