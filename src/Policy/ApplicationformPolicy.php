@@ -248,7 +248,12 @@ class ApplicationformPolicy extends AppPolicy
             ->where(['id' => $applicationform->get(Applicationform::FIELD_CONTRACTTYPE_ID)])
             ->first();
 
-        return $contract !== null && in_array(strtoupper(trim((string)$contract->get('code'))), ['PIGE', 'FACTURE'], true);
+        return $contract !== null
+            && in_array(
+                strtoupper(trim((string)$contract->get('code'))),
+                ['PIGE', 'FACTURE'],
+                true,
+            );
     }
 
     /** Le service réévalue ensuite le rôle courant, l'échéance et la suppléance. */

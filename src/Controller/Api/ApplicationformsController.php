@@ -874,7 +874,13 @@ class ApplicationformsController extends AppController
         if (filter_var($contractTypeId, FILTER_VALIDATE_INT) !== false) {
             $query->where(['Applicationforms.contracttype_id' => (int)$contractTypeId]);
         }
-        foreach (['begin_from' => 'begin_at >=', 'begin_to' => 'begin_at <=', 'end_from' => 'end_at >=', 'end_to' => 'end_at <='] as $parameter => $condition) {
+        $dateFilters = [
+            'begin_from' => 'begin_at >=',
+            'begin_to' => 'begin_at <=',
+            'end_from' => 'end_at >=',
+            'end_to' => 'end_at <=',
+        ];
+        foreach ($dateFilters as $parameter => $condition) {
             $value = trim((string)$this->request->getQuery($parameter, ''));
             if ($value !== '') {
                 $query->where(['Applicationforms.' . $condition => $value]);
