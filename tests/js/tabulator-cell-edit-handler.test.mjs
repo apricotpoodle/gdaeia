@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { TabulatorCellEditHandler } from '../../webroot/js/core/Tabulator/TabulatorCellEditHandler.js';
+import { TabulatorBuilder } from '../../webroot/js/core/Tabulator/TabulatorBuilder.js';
 
 function createCell(field = 'access_level', value = 'EDIT') {
     const calls = { update: [], restored: 0 };
@@ -80,4 +81,23 @@ test('ignore un champ qui ne fait pas partie de la stratégie', async () => {
 
     assert.equal(called, false);
     assert.equal(editedCell.calls.restored, 0);
+});
+
+test('branche le handler sur l’événement externe cellEdited de Tabulator', () => {
+    const builder = new TabulatorBuilder('#grid');
+    const editedCell = {};
+    const handledCells = [];
+    const handler = { handle: async (cell) => handledCells.push(cell) };
+    const subscriptions = [];
+    const table = {
+        on: (eventName, callback) => subscriptions.push({ eventName, callback }),
+    };
+
+    builder.setCellEditHandler(handler);
+    builder.attachCellEditHandler(table);
+
+    assert.equal(subscriptions.length, 1);
+    assert.equal(subscriptions[0].eventName, 'cellEdited');
+    subscriptions[0].callback(editedCell);
+    assert.deepEqual(handledCells, [editedCell]);
 });

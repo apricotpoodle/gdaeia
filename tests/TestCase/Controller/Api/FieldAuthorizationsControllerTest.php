@@ -44,6 +44,27 @@ class FieldAuthorizationsControllerTest extends TestCase
         $this->assertSame(FieldAuthorization::ACCESS_LEVEL_VIEW, $payload['data']['access_level']);
     }
 
+    public function testLEditionInlineAccepteLesLibellesFrancaisDesNiveaux(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        foreach (
+            [
+                'Modification' => FieldAuthorization::ACCESS_LEVEL_EDIT,
+                'Lecture seule' => FieldAuthorization::ACCESS_LEVEL_VIEW,
+                'Aucun accès' => FieldAuthorization::ACCESS_LEVEL_NONE,
+            ] as $label => $expectedLevel
+        ) {
+            $this->post('/api/field-authorizations/edit/1.json', ['access_level' => $label]);
+
+            $this->assertResponseOk();
+            $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertTrue($payload['success']);
+            $this->assertSame($expectedLevel, $payload['data']['access_level']);
+        }
+    }
+
     public function testLApiDesAutorisationsSignaleUnePerteDeSessionEnJson(): void
     {
         $this->get('/api/field-authorizations.json');

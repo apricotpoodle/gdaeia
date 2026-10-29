@@ -90,6 +90,9 @@ export class TabulatorBuilder {
                 }
             }
         };
+
+        /** @type {{handle: Function}|null} Handler de persistance des éditions de cellules. */
+        this.cellEditHandler = null;
     }
 
     // =========================================================================
@@ -263,8 +266,20 @@ export class TabulatorBuilder {
         if (!handler || typeof handler.handle !== 'function') {
             throw new TypeError('Le handler d’édition Tabulator doit exposer handle(cell).');
         }
-        this.config.cellEdited = (cell) => handler.handle(cell);
+        this.cellEditHandler = handler;
         return this;
+    }
+
+    /**
+     * Branche le handler sur l’événement externe émis par Tabulator après une édition.
+     *
+     * @param {Tabulator} table Instance Tabulator construite.
+     * @returns {void}
+     */
+    attachCellEditHandler(table) {
+        if (this.cellEditHandler) {
+            table.on('cellEdited', (cell) => this.cellEditHandler.handle(cell));
+        }
     }
 
     setSecurityStrategy(strategy, placeholder = 'Masqué') {
@@ -646,6 +661,7 @@ export class TabulatorBuilder {
 
         const hostElement = document.querySelector(this.selector);
         const table = new Tabulator(this.selector, this.config);
+        this.attachCellEditHandler(table);
         this._installGlobalActionDelegation(table, hostElement);
 
         if (!this.config.ajaxURL && !this.config.isLocalDataSource) {
