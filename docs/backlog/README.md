@@ -18,6 +18,8 @@ dans le code et les tests.
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute ; permissions génériques, Policies CakePHP et périmètres V1 directs, avec la gestion des descendants et des droits individuels différée.
 - [0017 — Implémenter les circuits courts locaux de validation](0017-implementer-les-circuits-courts-locaux.md) — priorité moyenne ; à planifier selon l'ADR 0070.
+- [0018 — Sécuriser la saisie des jours ouvrés d'une DAE](0018-securiser-la-saisie-des-jours-ouvres-dae.md) — priorité haute ; champ calculé et borné dans l'édition des DAE.
+- [0019 — Reprendre les quatre zones dans la vue d'une DAE](0019-reprendre-les-quatre-zones-dans-la-vue-dae.md) — priorité moyenne ; aligner l'onglet « Détails de la demande » sur l'édition en lecture seule.
 
 ## Tickets terminés
 
