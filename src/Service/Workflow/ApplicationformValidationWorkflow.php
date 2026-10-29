@@ -260,15 +260,17 @@ final class ApplicationformValidationWorkflow
         }
         /** @var \App\Model\Entity\ValidationCircuitRule|null $rule */
         $rule = null;
-        try {
-            $rule = $this->circuitRules->find()
-                ->where([
-                    'department_id' => $applicationform->department_id,
-                    'contracttype_id' => $applicationform->contracttype_id,
-                ])
-                ->first();
-        } catch (DatabaseException) {
-            // Compatibilité avec les environnements n'ayant pas encore appliqué V3.
+        if ($applicationform->contracttype_id !== null) {
+            try {
+                $rule = $this->circuitRules->find()
+                    ->where([
+                        'department_id' => $applicationform->department_id,
+                        'contracttype_id' => $applicationform->contracttype_id,
+                    ])
+                    ->first();
+            } catch (DatabaseException) {
+                // Compatibilité avec les environnements n'ayant pas encore appliqué V3.
+            }
         }
         if ($rule !== null) {
             $finalSequence = null;
@@ -283,7 +285,8 @@ final class ApplicationformValidationWorkflow
                 $role = $this->roles->find()->where(['Roles.id' => $rule->get('final_role_id')])->first();
                 $roleName = $role?->get('name') ?? __('Rôle n°{0}', $rule->get('final_role_id'));
                 $issues[] = __(
-                    'La règle de circuit pour le contrat {0} demande le rôle final « {1} », absent du circuit du département.',
+                    'La règle de circuit pour le contrat {0} demande le rôle final « {1} », '
+                    . 'absent du circuit du département.',
                     $applicationform->contracttype_id,
                     $roleName,
                 );
@@ -702,7 +705,8 @@ final class ApplicationformValidationWorkflow
         foreach ($steps as $step) {
             foreach ($this->eligibleUsers($step->applicationform, (int)$step->role_id) as $recipient) {
                 $grouped[(int)$recipient->id]['recipient'] = $recipient;
-                $grouped[(int)$recipient->id]['applicationforms'][(int)$step->applicationform->id] = $step->applicationform;
+                $grouped[(int)$recipient->id]['applicationforms'][(int)$step->applicationform->id]
+                    = $step->applicationform;
             }
         }
         foreach ($grouped as &$entry) {

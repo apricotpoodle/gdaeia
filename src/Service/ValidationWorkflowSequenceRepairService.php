@@ -4,8 +4,10 @@ declare(strict_types=1);
 namespace App\Service;
 
 use Cake\Database\Connection;
-use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\ConnectionInterface;
+use Cake\Datasource\ConnectionManager;
+use InvalidArgumentException;
+use RuntimeException;
 
 /**
  * Détecte et réaligne les étapes de workflow dont la séquence de configuration
@@ -19,7 +21,7 @@ final class ValidationWorkflowSequenceRepairService
     public function __construct(?ConnectionInterface $connection = null)
     {
         if ($connection !== null && !$connection instanceof Connection) {
-            throw new \InvalidArgumentException('La connexion doit être une connexion SQL CakePHP.');
+            throw new InvalidArgumentException('La connexion doit être une connexion SQL CakePHP.');
         }
         $this->connection = $connection;
     }
@@ -75,11 +77,12 @@ final class ValidationWorkflowSequenceRepairService
         ];
     }
 
+    /** Retourne la connexion SQL injectée ou la connexion par défaut. */
     private function getConnection(): Connection
     {
         $connection = $this->connection ?? ConnectionManager::get('default');
         if (!$connection instanceof Connection) {
-            throw new \RuntimeException('La connexion SQL par défaut est indisponible.');
+            throw new RuntimeException('La connexion SQL par défaut est indisponible.');
         }
 
         return $connection;

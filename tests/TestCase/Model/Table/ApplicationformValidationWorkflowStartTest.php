@@ -14,6 +14,8 @@ class ApplicationformValidationWorkflowStartTest extends TestCase
 {
     protected array $fixtures = [
         'app.Applicationforms',
+        'app.Departments',
+        'app.Contracttypes',
         'app.Users',
         'app.Roles',
         'app.UserDepartments',
