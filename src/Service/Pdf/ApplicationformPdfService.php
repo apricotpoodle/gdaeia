@@ -5,6 +5,7 @@ namespace App\Service\Pdf;
 
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\Applicationvalidationstep;
+use App\Model\Entity\Period;
 use App\Service\Metadata\FieldMetadataService;
 use App\Service\Security\FieldAuthorizationService;
 use Authorization\IdentityInterface;
@@ -110,7 +111,7 @@ final class ApplicationformPdfService
             ],
             'period_id' => [
                 $metadata->label('Applicationforms', 'period_id'),
-                $applicationform->period->name,
+                $applicationform->period->get(Period::FIELD_NAME),
             ],
             'qualification' => [
                 $metadata->label('Applicationforms', 'qualification'),

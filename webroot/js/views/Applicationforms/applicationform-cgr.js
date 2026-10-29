@@ -2,6 +2,8 @@
  * @file applicationform-cgr.js
  * @description Génération dynamique des sélecteurs CGR et écoute du Treeselect.
  */
+import { isStructuredCgrValue } from './applicationform-cgr-utils.js';
+
 document.addEventListener('DOMContentLoaded', function() {
     const departmentSelect = document.getElementById('department-id');
     const cgrContainer = document.getElementById('cgr-components-container');
@@ -61,6 +63,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 cgrFinalInput.readOnly = true;
                 const currentParts = initialValue ? initialValue.split('-') : [];
+                const preserveFreeValue = Boolean(
+                    initialValue && !isStructuredCgrValue(initialValue, data.schema, data.options),
+                );
+                if (preserveFreeValue) {
+                    cgrFinalInput.readOnly = false;
+                }
 
                 data.schema.forEach((segmentType, index) => {
                     const select = document.createElement('select');
@@ -105,7 +113,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     cgrContainer.appendChild(select);
                 });
 
-                updateFinalCgrValue();
+                if (!preserveFreeValue) {
+                    updateFinalCgrValue();
+                }
             })
             .catch(err => console.error('[Erreur CGR] Le chargement a échoué :', err));
     }

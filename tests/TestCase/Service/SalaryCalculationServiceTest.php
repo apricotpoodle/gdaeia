@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Service;
 
+use App\Model\Entity\Period;
 use App\Service\SalaryCalculationService;
 use InvalidArgumentException;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -25,9 +26,9 @@ class SalaryCalculationServiceTest extends TestCase
     /** @return iterable<string, array{string, string, int|null, string}> */
     public static function unitCalculations(): iterable
     {
-        yield 'euros par jour' => ['EUR_PER_DAY', '125,50', 4, '502.0000'];
-        yield 'milliers par mois' => ['K_PER_MONTH', '2,5', null, '43.6500'];
-        yield 'euros par mois' => ['EUR_PER_MONTH', '2450,75', null, '2450.7500'];
+        yield 'euros par jour' => [Period::CODE_EUR_PER_DAY, '125,50', 4, '502.0000'];
+        yield 'milliers par mois' => [Period::CODE_K_PER_MONTH, '2,5', null, '43.6500'];
+        yield 'euros par mois' => [Period::CODE_EUR_PER_MONTH, '2450,75', null, '2450.7500'];
     }
 
     public function testRefuseLeCalculHoraireNonDefini(): void
@@ -35,7 +36,7 @@ class SalaryCalculationServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Le calcul horaire n’est pas configuré.');
 
-        (new SalaryCalculationService())->calculateBaseSalary('EUR_PER_HOUR', '25', 1);
+        (new SalaryCalculationService())->calculateBaseSalary(Period::CODE_EUR_PER_HOUR, '25', 1);
     }
 
     public function testRefuseUnePigeSansNombreDeJours(): void
@@ -43,7 +44,7 @@ class SalaryCalculationServiceTest extends TestCase
         $this->expectException(InvalidArgumentException::class);
         $this->expectExceptionMessage('Le nombre de jours travaillés est obligatoire.');
 
-        (new SalaryCalculationService())->calculateBaseSalary('EUR_PER_DAY', '125', null);
+        (new SalaryCalculationService())->calculateBaseSalary(Period::CODE_EUR_PER_DAY, '125', null);
     }
 
     public function testCalculeDepuisLeCodeDePeriodicite(): void
@@ -52,7 +53,7 @@ class SalaryCalculationServiceTest extends TestCase
 
         $this->assertSame(
             '502.0000',
-            $service->calculateForPeriodCode('EUR_PER_DAY', '125,50', 4),
+            $service->calculateForPeriodCode(Period::CODE_EUR_PER_DAY, '125,50', 4),
         );
     }
 }

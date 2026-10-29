@@ -5,7 +5,7 @@
  * @var \App\View\AppView $this
  */
 
-$this->Html->script('views/Applicationforms/index.js', ['type' => 'module', 'block' => true]);
+$this->Html->script('views/Applicationforms/index.js?v=20261029180000', ['type' => 'module', 'block' => true]);
 ?>
 
 <div class="applicationforms index content h-100 d-flex flex-column">

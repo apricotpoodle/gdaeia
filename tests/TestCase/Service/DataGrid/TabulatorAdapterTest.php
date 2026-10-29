@@ -69,6 +69,34 @@ class TabulatorAdapterTest extends TestCase
         ]);
     }
 
+    public function testLaRequetePeutUtiliserUnMappingDistinctPourLeTri(): void
+    {
+        $query = $this->queryForAlias('Applicationforms');
+        $query->expects($this->once())->method('orderBy')
+            ->with(['validation_sort' => 'DESC'])
+            ->willReturnSelf();
+        $query->expects($this->once())->method('where')
+            ->with(['Applicationformstatuses.validationstatus_id' => 5])
+            ->willReturnSelf();
+        $request = new ServerRequest([
+            'query' => [
+                'sorters' => [['field' => 'validation_status', 'dir' => 'desc']],
+                'filters' => [[
+                    'field' => 'validation_status',
+                    'type' => '=',
+                    'value' => '5',
+                ]],
+            ],
+        ]);
+
+        (new TabulatorAdapter())->adaptRequest(
+            $request,
+            $query,
+            ['validation_status' => 'Applicationformstatuses.validationstatus_id'],
+            ['validation_status' => 'validation_sort'],
+        );
+    }
+
     public function testLaRequeteTraduitUneBorneInferieureDePlageDeDates(): void
     {
         $query = $this->queryForAlias('Users');

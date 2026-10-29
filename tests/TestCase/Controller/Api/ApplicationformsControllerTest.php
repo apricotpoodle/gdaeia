@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Controller\Api;
 
+use App\Model\Entity\Period;
 use App\Model\Entity\User;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Datasource\ConnectionManager;
@@ -60,6 +61,79 @@ class ApplicationformsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertHeaderContains('Content-Type', 'application/json');
+    }
+
+    public function testLApiDesDemandesExposeLesReferentielsNecessairesAuxColonnes(): void
+    {
+        ConnectionManager::get('test')->update('applicationforms', ['deleted' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->get('/api/applicationforms.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $row = $body['data'][0] ?? [];
+
+        $this->assertArrayHasKey('budgetfeature', $row);
+        $this->assertArrayHasKey('period', $row);
+        $this->assertArrayHasKey('final_argument', $row);
+        $this->assertArrayHasKey('working_days', $row);
+        $this->assertArrayHasKey('begin_at', $row);
+        $this->assertArrayHasKey('end_at', $row);
+    }
+
+    public function testLApiCalculeLeSalaireDeBaseManquantPourLaGrille(): void
+    {
+        ConnectionManager::get('test')->update('periods', ['code' => Period::CODE_EUR_PER_MONTH], ['id' => 1]);
+        ConnectionManager::get('test')->update('applicationforms', [
+            'deleted' => null,
+            'grossremuneration' => '2450.75',
+            'period_id' => 1,
+            'salary_base' => null,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->get('/api/applicationforms.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('2450.7500', $body['data'][0]['salary_base']);
+    }
+
+    public function testLApiEstimeLesJoursJournaliersManquantsPourLaGrille(): void
+    {
+        ConnectionManager::get('test')->update('periods', ['code' => Period::CODE_EUR_PER_DAY], ['id' => 1]);
+        ConnectionManager::get('test')->update('applicationforms', [
+            'deleted' => null,
+            'grossremuneration' => '100.00',
+            'period_id' => 1,
+            'working_days' => null,
+            'begin_at' => '2026-10-01',
+            'end_at' => '2026-10-10',
+            'salary_base' => null,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->get('/api/applicationforms.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('700.0000', $body['data'][0]['salary_base']);
+    }
+
+    public function testLApiRecalculeLaRemunerationJournaliereVide(): void
+    {
+        ConnectionManager::get('test')->update('periods', ['code' => Period::CODE_EUR_PER_DAY], ['id' => 1]);
+        ConnectionManager::get('test')->update('applicationforms', [
+            'deleted' => null,
+            'grossremuneration' => '2.00',
+            'period_id' => 1,
+            'working_days' => 2,
+            'salary_base' => null,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->get('/api/applicationforms.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('4.0000', $body['data'][0]['salary_base']);
     }
 
     public function testLApiFiltreEtTrieLesDemandesSurLeStatutDeValidation(): void
@@ -163,6 +237,20 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('"field":"jobtitle","label":"Intitulé du poste","reason":');
     }
 
+    public function testLEditionIgnoreLesValeursNullesEncodeesZeroPourAssistantEtManager(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/edit/1.json', [
+            'assistant_id' => '0',
+            'manager_id' => '0',
+            'jobtitle' => 'Poste conservé',
+        ]);
+
+        $this->assertResponseOk();
+    }
+
     public function testLaCreationApiRetourneLesErreursExploitablesParLeFormulaire(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
@@ -182,7 +270,7 @@ class ApplicationformsControllerTest extends TestCase
         $this->enableCsrfToken();
 
         $this->post('/api/applicationforms/calculate-salary.json', [
-            'period_code' => 'EUR_PER_DAY',
+            'period_code' => Period::CODE_EUR_PER_DAY,
             'grossremuneration' => '125,50',
             'working_days' => 4,
         ]);

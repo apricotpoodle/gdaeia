@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\Applicationform;
 use App\Model\Entity\Period;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
@@ -45,7 +46,7 @@ class PeriodsTable extends AppTable
         $this->addBehavior('Timestamp');
 
         $this->hasMany('Applicationforms', [
-            'foreignKey' => 'period_id',
+            'foreignKey' => Applicationform::FIELD_PERIOD_ID,
         ]);
     }
 

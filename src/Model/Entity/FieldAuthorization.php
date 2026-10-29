@@ -67,6 +67,13 @@ class FieldAuthorization extends Entity
      */
     public static function normalizeAccessLevel(string $value): string
     {
-        return strtoupper(trim($value));
+        $normalized = strtolower(trim($value));
+
+        return match ($normalized) {
+            'modification' => self::ACCESS_LEVEL_EDIT,
+            'lecture seule' => self::ACCESS_LEVEL_VIEW,
+            'aucun accès' => self::ACCESS_LEVEL_NONE,
+            default => strtoupper($normalized),
+        };
     }
 }

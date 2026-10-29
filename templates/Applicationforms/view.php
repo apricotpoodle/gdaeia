@@ -13,6 +13,7 @@
  * @var \App\Model\Entity\Department $department
  */
 
+use App\Model\Entity\Period;
 use Cake\I18n\Number;
 
 $this->assign('title', __('Demande n°{0}', $applicationform->id));
@@ -224,7 +225,7 @@ $this->Html->css('applicationforms', ['block' => true]);
                         <?= $applicationform->grossremuneration !== null
                             ? Number::currency($applicationform->grossremuneration, 'EUR', ['locale' => 'fr_FR'])
                             : '-' ?>
-                        <small class="text-muted font-normal fs-8">(<?= h($applicationform->period->name ?? '-') ?>)</small>
+                        <small class="text-muted font-normal fs-8">(<?= h($applicationform->period?->get(Period::FIELD_NAME) ?? '-') ?>)</small>
                     </span>
                 </div>
                 <div class="col">
