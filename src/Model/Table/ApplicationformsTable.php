@@ -5,6 +5,7 @@ namespace App\Model\Table;
 
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\Contracttype;
+use App\Model\Entity\Period;
 use App\Model\Entity\User;
 use App\Service\SalaryCalculationService;
 use ArrayObject;
@@ -69,6 +70,17 @@ class ApplicationformsTable extends Table
      */
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options): void
     {
+        foreach ([Applicationform::FIELD_ASSISTANT_ID, Applicationform::FIELD_MANAGER_ID] as $field) {
+            if (!$data->offsetExists($field)) {
+                continue;
+            }
+
+            $value = $data[$field];
+            if ($value === 0 || (is_string($value) && trim($value) === '0')) {
+                $data[$field] = null;
+            }
+        }
+
         foreach (
             [
             Applicationform::FIELD_GROSSREMUNERATION,
@@ -102,25 +114,22 @@ class ApplicationformsTable extends Table
         }
 
         $period = $this->Periods->get($periodId);
-        $periodCode = strtoupper(trim((string)$period->get('code')));
-        if (
-            !in_array($periodCode, [
-            SalaryCalculationService::UNIT_EUR_PER_DAY,
-            SalaryCalculationService::UNIT_K_PER_MONTH,
-            SalaryCalculationService::UNIT_EUR_PER_MONTH,
-            SalaryCalculationService::UNIT_EUR_PER_HOUR,
-            ], true)
-        ) {
+        $periodCode = strtoupper(trim((string)$period->get(Period::FIELD_CODE)));
+        if (!in_array($periodCode, [...Period::CODES,], true)) {
             return;
         }
 
         try {
+            $workingDaysValue = $entity->get(Applicationform::FIELD_WORKING_DAYS);
+            $workingDays = $workingDaysValue === null || $workingDaysValue === ''
+                ? null
+                : (int)$workingDaysValue;
             $entity->set(
                 Applicationform::FIELD_SALARY_BASE,
                 (new SalaryCalculationService())->calculateForPeriodCode(
                     $periodCode,
                     $entity->get(Applicationform::FIELD_GROSSREMUNERATION),
-                    $entity->get(Applicationform::FIELD_WORKING_DAYS),
+                    $workingDays,
                     $this->configuredKCoefficient(),
                 ),
             );

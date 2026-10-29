@@ -7,7 +7,7 @@
  * @var \App\View\AppView $this
  * @var array<int, string> $collaborators
  * @var array<int, string> $assistants
- * @var array<int, string> $managers
+ * @var \App\Model\Entity\User|null $departmentManager
  * @var bool $canEditAdmin
  */
 
@@ -33,13 +33,16 @@
             </div>
 
             <div class="col-md-6">
-                <?= $this->Form->control('manager_id', [
-                    'label' => __('Chef de service'),
-                    'options' => $managers ?? [],
-                    'empty' => __('-- Sélectionner --'),
-                    'class' => 'form-select form-select-sm',
-                    'disabled' => !$canEditAdmin,
-                ]) ?>
+                <label class="form-label"><?= __('Chef de service') ?></label>
+                <?php if ($departmentManager !== null): ?>
+                    <div class="form-control form-control-sm bg-light">
+                        <?= h($departmentManager->get('display_name')) ?>
+                    </div>
+                <?php else: ?>
+                    <div class="form-control form-control-sm text-danger bg-light">
+                        <?= __('Aucun chef de service associé') ?>
+                    </div>
+                <?php endif; ?>
             </div>
 
             <!-- Intitulé du poste -->

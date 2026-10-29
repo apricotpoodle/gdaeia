@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Test\TestCase\Controller;
 
 use App\Model\Entity\User;
+use Cake\Datasource\ConnectionManager;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 
@@ -50,5 +51,68 @@ class ApplicationformsControllerTest extends TestCase
         $this->get('/applicationforms/viewpdf/1');
 
         $this->assertResponseCode(403);
+    }
+
+    public function testLaCreationPreselectionneLOperateurCommeAssistante(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/add');
+
+        $this->assertResponseOk();
+        $this->assertMatchesRegularExpression(
+            '/<select[^>]+name="assistant_id"[^>]*>.*<option(?=[^>]*value="1")(?=[^>]*selected)[^>]*>/s',
+            (string)$this->_response->getBody(),
+        );
+    }
+
+    public function testLEditionUtiliseLeDemandeurCommeAssistanteParDefaut(): void
+    {
+        ConnectionManager::get('test')->update('applicationforms', ['assistant_id' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $this->assertMatchesRegularExpression(
+            '/<select[^>]+name="assistant_id"[^>]*>.*<option(?=[^>]*value="1")(?=[^>]*selected)[^>]*>/s',
+            (string)$this->_response->getBody(),
+        );
+    }
+
+    public function testLaFicheAfficheLAbsenceDeChefDeServiceSansChampDeSaisie(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Aucun chef de service associé');
+        $this->assertStringNotContainsString('name="manager_id"', (string)$this->_response->getBody());
+    }
+
+    public function testLaFicheAfficheLeChefDeServiceDuDepartement(): void
+    {
+        ConnectionManager::get('test')->update('departments', ['current_manager_id' => 1], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Chef de service');
+        $this->assertStringNotContainsString('name="manager_id"', (string)$this->_response->getBody());
+    }
+
+    public function testLaSoumissionAvecDesListesAssistantEtManagerVidesNeProduitPasDErreurDExistence(): void
+    {
+        $this->enableCsrfToken();
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->post('/applicationforms/edit/1', [
+            'assistant_id' => '',
+            'manager_id' => '',
+            'jobtitle' => 'Poste modifié',
+        ]);
+
+        $this->assertRedirect(['controller' => 'Applicationforms', 'action' => 'index']);
     }
 }

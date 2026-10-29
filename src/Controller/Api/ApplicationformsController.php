@@ -7,6 +7,7 @@ use App\Controller\AppController;
 use App\Mailer\ValidationWorkflowMailer;
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\Applicationvalidationstep;
+use App\Model\Entity\Period;
 use App\Model\Entity\Role;
 use App\Model\Entity\User;
 use App\Model\Entity\ValidationCommentTemplate;
@@ -26,6 +27,8 @@ use Cake\Http\Response;
 use Cake\I18n\DateTime;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\TableRegistry;
+use DateTimeImmutable;
+use DateTimeInterface;
 use InvalidArgumentException;
 use RuntimeException;
 
@@ -518,7 +521,7 @@ class ApplicationformsController extends AppController
 
         $periods = $periodsTable
             ->find('visibleTo', user: $currentUser)
-            ->find('list', keyField: 'id', valueField: 'name')
+            ->find('list', keyField: Period::FIELD_ID, valueField: Period::FIELD_NAME)
             ->toArray();
 
         $budgetfeatures = $budgetfeaturesTable
@@ -573,7 +576,7 @@ class ApplicationformsController extends AppController
             $periodCode = (string)$this->request->getData('period_code');
             if ($periodCode === '' && $this->request->getData('period_id') !== null) {
                 $period = $this->fetchTable('Periods')->get((int)$this->request->getData('period_id'));
-                $periodCode = (string)$period->get('code');
+                $periodCode = (string)$period->get(Period::FIELD_CODE);
             }
             $salaryBase = (new SalaryCalculationService())->calculateForPeriodCode(
                 $periodCode,
@@ -794,15 +797,26 @@ class ApplicationformsController extends AppController
                 'Users',
                 'Contracttypes',
                 'Hiringreasons',
+                'Budgetfeatures',
+                'Periods',
                 'Applicationformstatuses',
                 'ValidationWorkflowRuns',
                 'Comments',
                 'Comments' => ['Users'], // Charge le fil de discussion et ses auteurs
             ])
-            ->leftJoinWith('Applicationformstatuses')
+            ->leftJoinWith('Applicationformstatuses');
+        $query
             ->enableAutoFields(true)
             ->select([
                 'validation_status' => 'Applicationformstatuses.validationstatus_id',
+                'validation_sort' => $query->expr(
+                    'CASE '
+                    . 'WHEN Applicationformstatuses.rejected = 1 THEN 4 '
+                    . 'WHEN Applicationformstatuses.accepted = 1 THEN 3 '
+                    . 'WHEN Applicationformstatuses.en_cours = 1 THEN 2 '
+                    . 'ELSE 1 END * 1000 '
+                    . '+ COALESCE(Applicationformstatuses.valid_percentage, 0)',
+                ),
             ]);
         if (!$this->request->getQuery('include_archived')) {
             $query->where(['Applicationforms.archived IS' => null]);
@@ -813,6 +827,8 @@ class ApplicationformsController extends AppController
         try {
             $query = $adapter->adaptRequest($this->request, $query, [
                 'validation_status' => 'Applicationformstatuses.validationstatus_id',
+            ], [
+                'validation_status' => 'validation_sort',
             ]);
         } catch (UnprocessableContentException $exception) {
             return $this->workflowResponse(false, $exception->getMessage(), [], 422);
@@ -833,6 +849,10 @@ class ApplicationformsController extends AppController
             ]);
         }
 
+        foreach ($paginatedData->items() as $applicationform) {
+            $this->hydrateMissingSalaryBase($applicationform);
+        }
+
         // 4. Droits dynamiques de la grille
         $rightsFormatter = $this->createGridRightsFormatter([
             'launchValidation',
@@ -848,6 +868,90 @@ class ApplicationformsController extends AppController
         $this->viewBuilder()->setOption('serialize', array_keys($output));
 
         return null;
+    }
+
+    /**
+     * Calcule à la volée le salaire absent des anciennes demandes pour la grille.
+     * La valeur n'est pas persistée ; les nouvelles sauvegardes restent calculées
+     * par le callback ORM de la table Applicationforms.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform Demande affichée.
+     * @return void
+     */
+    private function hydrateMissingSalaryBase(Applicationform $applicationform): void
+    {
+        $salaryBase = $applicationform->get(Applicationform::FIELD_SALARY_BASE);
+        if ($salaryBase !== null && $salaryBase !== '') {
+            return;
+        }
+
+        $period = $applicationform->get(Applicationform::FIELD_PERIOD);
+        $periodCode = strtoupper(trim((string)$period?->get(Period::FIELD_CODE)));
+        if ($periodCode === '' || $applicationform->get(Applicationform::FIELD_GROSSREMUNERATION) === null) {
+            return;
+        }
+
+        try {
+            $workingDays = $applicationform->get(Applicationform::FIELD_WORKING_DAYS);
+            if ($workingDays === null && $periodCode === Period::CODE_EUR_PER_DAY) {
+                $workingDays = $this->estimateWorkingDaysForGrid($applicationform);
+            }
+
+            $applicationform->set(
+                Applicationform::FIELD_SALARY_BASE,
+                (new SalaryCalculationService())->calculateForPeriodCode(
+                    $periodCode,
+                    $applicationform->get(Applicationform::FIELD_GROSSREMUNERATION),
+                    $workingDays,
+                    $this->configuredKCoefficient(),
+                ),
+            );
+        } catch (InvalidArgumentException) {
+            // Une demande incomplète reste affichable sans valeur calculée.
+        }
+    }
+
+    /**
+     * Estime les jours ouvrés inclusifs pour une ancienne demande journalière.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform Demande affichée.
+     * @return int|null Nombre de jours ouvrés, ou null si les dates sont invalides.
+     */
+    private function estimateWorkingDaysForGrid(Applicationform $applicationform): ?int
+    {
+        $begin = $this->gridDate($applicationform->get(Applicationform::FIELD_BEGIN_AT));
+        $end = $this->gridDate($applicationform->get(Applicationform::FIELD_END_AT));
+        if ($begin === null || $end === null || $end < $begin) {
+            return null;
+        }
+
+        $workingDays = 0;
+        for ($date = $begin; $date <= $end; $date = $date->modify('+1 day')) {
+            if ((int)$date->format('N') <= 5) {
+                $workingDays++;
+            }
+        }
+
+        return $workingDays;
+    }
+
+    /** Convertit une date ORM ou textuelle en date civile exploitable. */
+    private function gridDate(mixed $value): ?DateTimeImmutable
+    {
+        if ($value instanceof DateTimeInterface) {
+            return DateTimeImmutable::createFromInterface($value)->setTime(0, 0);
+        }
+        if (is_object($value) && method_exists($value, 'format')) {
+            $value = $value->format('Y-m-d');
+        }
+        if (!is_string($value) || $value === '') {
+            return null;
+        }
+
+        $dateText = substr($value, 0, 10);
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d', $dateText);
+
+        return $date !== false && $date->format('Y-m-d') === $dateText ? $date : null;
     }
 
     /**

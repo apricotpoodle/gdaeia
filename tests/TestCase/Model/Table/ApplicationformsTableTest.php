@@ -3,6 +3,8 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Entity\Applicationform;
+use App\Model\Entity\Period;
 use App\Model\Table\ApplicationformsTable;
 use Cake\TestSuite\Fixture\FixtureStrategyInterface;
 use Cake\TestSuite\Fixture\TruncateStrategy;
@@ -184,7 +186,7 @@ class ApplicationformsTableTest extends TestCase
     public function testLaSauvegardeCalculeLeSalaireDeBaseDepuisLaPeriodicite(): void
     {
         $this->getTableLocator()->get('Periods')->updateAll(
-            ['code' => 'EUR_PER_DAY'],
+            ['code' => Period::CODE_EUR_PER_DAY],
             ['id' => 1],
         );
         $applicationform = $this->Applicationforms->newEntity($this->validData([
@@ -196,6 +198,23 @@ class ApplicationformsTableTest extends TestCase
         $this->Applicationforms->saveOrFail($applicationform);
 
         $this->assertSame('502.0000', $applicationform->salary_base);
+    }
+
+    public function testLaSauvegardeAccepteUnNombreDeJoursTransmisCommeChaine(): void
+    {
+        $this->getTableLocator()->get('Periods')->updateAll(
+            ['code' => Period::CODE_EUR_PER_DAY],
+            ['id' => 1],
+        );
+        $applicationform = $this->Applicationforms->newEntity($this->validData([
+            'grossremuneration' => '2.00',
+            'period_id' => 1,
+        ]));
+        $applicationform->set(Applicationform::FIELD_WORKING_DAYS, '2');
+
+        $this->Applicationforms->saveOrFail($applicationform);
+
+        $this->assertSame('4.0000', $applicationform->salary_base);
     }
 
     /**

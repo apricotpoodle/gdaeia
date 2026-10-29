@@ -14,7 +14,7 @@
  * @var array<int, string> $yesnos
  * @var array<int, string> $collaborators
  * @var array<int, string> $assistants
- * @var array<int, string> $managers
+ * @var \App\Model\Entity\User|null $departmentManager
  * @var array<string, string> $fieldSchema
  */
 
@@ -58,7 +58,7 @@ $this->Html->script('views/Applicationforms/salary-calculation', ['type' => 'mod
                     'applicationform' => $applicationform,
                     'collaborators' => $collaborators ?? [],
                     'assistants' => $assistants ?? [],
-                    'managers' => $managers ?? [],
+                    'departmentManager' => $departmentManager ?? null,
                     'fieldSchema' => $fieldSchema ?? [],
                     'canEditAdmin' => $identity->can('editZoneAdmin', $applicationform),
                 ]) ?>

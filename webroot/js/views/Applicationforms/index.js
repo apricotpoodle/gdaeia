@@ -4,10 +4,10 @@
 // Standard : Module ES6 & Event-Driven (Miroir de Users/index.js)
 // ==============================================================================
 
-import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js';
+import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js?v=20261029180000';
 import { globalTabulatorObserver } from '../../core/Tabulator/TabulatorObserver.js';
 import { FlashManager } from '../../core/FlashManager.js';
-import { getApplicationformColumns } from './applicationform-columns.js?v=20261002150000';
+import { getApplicationformColumns } from './applicationform-columns.js?v=20261029170000';
 
 const tableSelector = "#applicationforms-table";
 

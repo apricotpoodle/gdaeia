@@ -29,10 +29,15 @@ class TabulatorAdapter
      * @param \Cake\Http\ServerRequest $request L'objet requête HTTP courant.
      * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query La requête ORM initiale.
      * @param array<string, string> $fieldMap Correspondance entre champs JSON et champs ORM.
+     * @param array<string, string> $sortFieldMap Correspondance spécifique aux tris.
      * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> La requête ORM modifiée.
      */
-    public function adaptRequest(ServerRequest $request, SelectQuery $query, array $fieldMap = []): SelectQuery
-    {
+    public function adaptRequest(
+        ServerRequest $request,
+        SelectQuery $query,
+        array $fieldMap = [],
+        array $sortFieldMap = [],
+    ): SelectQuery {
         $queryParams = $request->getQueryParams();
         $mainAlias = $query->getRepository()->getAlias();
 
@@ -43,7 +48,7 @@ class TabulatorAdapter
                 $direction = strtoupper($sorter['dir'] ?? 'ASC');
 
                 if (is_string($field) && in_array($direction, ['ASC', 'DESC'], true)) {
-                    $ormField = $this->resolveOrmField($field, $mainAlias, $fieldMap);
+                    $ormField = $this->resolveOrmField($field, $mainAlias, $sortFieldMap ?: $fieldMap);
                     $query->orderBy([$ormField => $direction]);
                 }
             }

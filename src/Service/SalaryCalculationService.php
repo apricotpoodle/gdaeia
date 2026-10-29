@@ -3,15 +3,12 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use App\Model\Entity\Period;
 use InvalidArgumentException;
 
 /** Calcule le salaire de base à partir de l'unité de rémunération choisie. */
 final class SalaryCalculationService
 {
-    public const UNIT_EUR_PER_DAY = 'EUR_PER_DAY';
-    public const UNIT_K_PER_MONTH = 'K_PER_MONTH';
-    public const UNIT_EUR_PER_MONTH = 'EUR_PER_MONTH';
-    public const UNIT_EUR_PER_HOUR = 'EUR_PER_HOUR';
     public const DEFAULT_K_COEFFICIENT = 17.46;
 
     /**
@@ -32,10 +29,10 @@ final class SalaryCalculationService
         $normalizedAmount = $this->decimalValue($amount);
 
         $baseSalary = match ($unit) {
-            self::UNIT_EUR_PER_DAY => $this->calculatePerDay($normalizedAmount, $workingDays),
-            self::UNIT_K_PER_MONTH => $normalizedAmount * $kCoefficient,
-            self::UNIT_EUR_PER_MONTH => $normalizedAmount,
-            self::UNIT_EUR_PER_HOUR => throw new InvalidArgumentException(
+            Period::CODE_EUR_PER_DAY => $this->calculatePerDay($normalizedAmount, $workingDays),
+            Period::CODE_K_PER_MONTH => $normalizedAmount * $kCoefficient,
+            Period::CODE_EUR_PER_MONTH => $normalizedAmount,
+            Period::CODE_EUR_PER_HOUR => throw new InvalidArgumentException(
                 'Le calcul horaire n’est pas configuré.',
             ),
             default => throw new InvalidArgumentException('Unité de rémunération inconnue.'),

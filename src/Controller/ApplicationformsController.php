@@ -111,6 +111,10 @@ class ApplicationformsController extends AppController
     {
         $applicationform = $this->Applicationforms->newEmptyEntity();
         $this->Authorization->authorize($applicationform, 'add');
+        $identity = $this->request->getAttribute('identity');
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $identity->getOriginalData();
+        $applicationform->set(Applicationform::FIELD_ASSISTANT_ID, $currentUser->get(User::FIELD_ID));
 
         if ($this->request->is('post')) {
             $applicationform = $this->Applicationforms->patchEntity(
@@ -119,9 +123,6 @@ class ApplicationformsController extends AppController
             );
 
             // Attribution de l'utilisateur créateur
-            $identity = $this->request->getAttribute('identity');
-            /** @var \App\Model\Entity\User $currentUser */
-            $currentUser = $identity->getOriginalData();
             $applicationform->set(Applicationform::FIELD_USER_ID, $currentUser->get(User::FIELD_ID));
 
             if ($this->Applicationforms->save($applicationform)) {
@@ -133,11 +134,7 @@ class ApplicationformsController extends AppController
         }
 
         // Récupération des données de référence et de sécurité (ADR 0042 / 0046)
-        $identity = $this->request->getAttribute('identity');
         $fieldSchema = $this->fieldAuthorizationSchema('Applicationforms');
-
-        /** @var \App\Model\Entity\User $currentUser */
-        $currentUser = $identity->getOriginalData();
 
         // Listes de références filtrées par le périmètre (visibleTo)
         $contracttypes = $this->Applicationforms->Contracttypes
@@ -154,11 +151,12 @@ class ApplicationformsController extends AppController
             ->find('visibleTo', user: $currentUser)->find('list')->toArray();
         $yesnos = $this->Applicationforms->Yesnos
             ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+        /** @var array<int, string> $collaborators */
         $collaborators = $this->Applicationforms->Users
             ->find('visibleTo', user: $currentUser)
             ->find('list', keyField: 'id', valueField: 'display_name')->toArray();
-        $assistants = $collaborators;
-        $managers = $collaborators;
+        $assistants = $this->ensureUserOption($collaborators, $currentUser->get(User::FIELD_ID));
+        $departmentManager = null;
 
         $this->set(compact(
             'applicationform',
@@ -172,7 +170,7 @@ class ApplicationformsController extends AppController
             'yesnos',
             'collaborators',
             'assistants',
-            'managers',
+            'departmentManager',
         ));
 
         return null;
@@ -187,10 +185,18 @@ class ApplicationformsController extends AppController
     public function edit(string $id): ?Response
     {
         // 1. Chargement de l'entité
-        $applicationform = $this->Applicationforms->get($id, contain: ['Comments']);
+        $applicationform = $this->Applicationforms->get($id, contain: ['Comments', 'Departments' => ['Managers']]);
 
         // 2. Verrou d'autorisation strict (exécuté avant tout traitement)
         $this->Authorization->authorize($applicationform, 'edit');
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        if ($applicationform->get(Applicationform::FIELD_ASSISTANT_ID) === null) {
+            $applicationform->set(
+                Applicationform::FIELD_ASSISTANT_ID,
+                $applicationform->get(Applicationform::FIELD_USER_ID),
+            );
+        }
 
         // 3. Traitement de la soumission POST / PUT / PATCH
         if ($this->request->is(['post', 'put', 'patch'])) {
@@ -213,9 +219,6 @@ class ApplicationformsController extends AppController
 
         // 4. Chargement des listes pour le rendu du formulaire
         $fieldSchema = $this->fieldAuthorizationSchema('Applicationforms');
-        /** @var \App\Model\Entity\User $currentUser */
-        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
-
         // Récupération des départements autorisés sous forme d'arbre
         // $departments = $this->Applicationforms->Departments
         //     ->find('treeVisibleTo', user: $currentUser)
@@ -229,12 +232,16 @@ class ApplicationformsController extends AppController
         $yesnos = $this->Applicationforms->Yesnos->getVisibleList($currentUser);
 
         // 💡 FILTRAGE STRICT DES COLLABORATEURS SELON LE PÉRIMÈTRE UTILISATEUR
+        /** @var array<int, string> $collaborators */
         $collaborators = $this->Applicationforms->Users
             ->find('visibleTo', user: $currentUser)
             ->find('list', keyField: 'id', valueField: 'display_name')
             ->toArray();
-        $assistants = $collaborators;
-        $managers = $collaborators;
+        $assistants = $this->ensureUserOption(
+            $collaborators,
+            (int)$applicationform->get(Applicationform::FIELD_ASSISTANT_ID),
+        );
+        $departmentManager = $applicationform->get('department')?->get('manager');
 
         $this->set(compact(
             'applicationform',
@@ -249,10 +256,33 @@ class ApplicationformsController extends AppController
             'yesnos',
             'collaborators',
             'assistants',
-            'managers',
+            'departmentManager',
         ));
 
         return null;
+    }
+
+    /**
+     * Ajoute uniquement l'utilisateur sélectionné à une liste filtrée si nécessaire.
+     *
+     * @param array<int|string, string> $options Options déjà restreintes au périmètre.
+     * @param int $userId Identifiant à conserver dans le formulaire.
+     * @return array<int|string, string> Options complétées sans élargir la liste.
+     */
+    private function ensureUserOption(array $options, int $userId): array
+    {
+        if ($userId <= 0 || array_key_exists($userId, $options)) {
+            return $options;
+        }
+
+        $user = $this->Applicationforms->Users->find()
+            ->where(['Users.id' => $userId])
+            ->first();
+        if ($user instanceof User) {
+            $options[$userId] = $user->get('display_name');
+        }
+
+        return $options;
     }
 
     /**

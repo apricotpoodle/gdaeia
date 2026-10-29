@@ -21,6 +21,18 @@ use Cake\ORM\Entity;
  */
 class Period extends Entity
 {
+    public const CODE_EUR_PER_DAY = 'EUR_PER_DAY';
+    public const CODE_K_PER_MONTH = 'K_PER_MONTH';
+    public const CODE_EUR_PER_MONTH = 'EUR_PER_MONTH';
+    public const CODE_EUR_PER_HOUR = 'EUR_PER_HOUR';
+
+    public const CODES = [
+        self::CODE_EUR_PER_DAY,
+        self::CODE_K_PER_MONTH,
+        self::CODE_EUR_PER_MONTH,
+        self::CODE_EUR_PER_HOUR,
+    ];
+
     /**
      * Fields that can be mass assigned using newEntity() or patchEntity().
      *
@@ -31,14 +43,14 @@ class Period extends Entity
      * @var array<string, bool>
      */
     protected array $_accessible = [
-        'base' => true,
-        'code' => true,
-        'name' => true,
-        'sort' => true,
-        'deleted' => true,
-        'created' => true,
-        'modified' => true,
-        'applicationforms' => true,
+        self::FIELD_BASE => true,
+        self::FIELD_CODE => true,
+        self::FIELD_NAME => true,
+        self::FIELD_SORT => true,
+        self::FIELD_DELETED => true,
+        self::FIELD_CREATED => true,
+        self::FIELD_MODIFIED => true,
+        self::FIELD_APPLICATIONFORMS => true,
     ];
 
     public const FIELD_ID = 'id';
