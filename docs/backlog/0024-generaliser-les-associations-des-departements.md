@@ -1,6 +1,6 @@
 # 0024 — Généraliser les associations des départements
 
-**Statut :** Prêt
+**Statut :** Terminé
 
 **Priorité :** Haute — chantier prioritaire
 
@@ -42,68 +42,68 @@ CGR principal.
 
 ### Modèle de données et migration
 
-- [ ] Créer `department_managers` avec `department_id`, `user_id`, une clé
+- [x] Créer `department_managers` avec `department_id`, `user_id`, une clé
   primaire composite et les contraintes étrangères adaptées.
-- [ ] Créer `department_cgr_codes` avec `department_id`, `cgr_code_id`, une
+- [x] Créer `department_cgr_codes` avec `department_id`, `cgr_code_id`, une
   clé primaire composite et les contraintes étrangères adaptées.
-- [ ] Supprimer `departments.current_manager_id`, `departments.cgr_code_id`,
+- [x] Supprimer `departments.current_manager_id`, `departments.cgr_code_id`,
   `departments.default_cgr` et `cgr_codes.department_id`.
-- [ ] Remplacer l'index d'unicité des CGR par une unicité globale sur
+- [x] Remplacer l'index d'unicité des CGR par une unicité globale sur
   `cgr_codes.type` et `cgr_codes.code`.
-- [ ] Migrer chaque valeur non nulle de `current_manager_id` vers
+- [x] Migrer chaque valeur non nulle de `current_manager_id` vers
   `department_managers`.
-- [ ] Migrer les rattachements de `cgr_codes.department_id` et de
+- [x] Migrer les rattachements de `cgr_codes.department_id` et de
   `departments.cgr_code_id` vers `department_cgr_codes`, en dédoublonnant les
   couples identiques.
-- [ ] Produire avant suppression un contrôle des valeurs non vides de
+- [x] Produire avant suppression un contrôle des valeurs non vides de
   `default_cgr`, puis documenter leur abandon conformément à la décision de
   supprimer toute notion de CGR par défaut.
-- [ ] Prévoir une migration transactionnelle et vérifier les contraintes,
+- [x] Prévoir une migration MySQL reprenable et vérifier les contraintes,
   index et comportements de suppression sur une base MySQL de test.
 
 ### ORM et services métier
 
-- [ ] Remplacer les relations directes de `DepartmentsTable` et
+- [x] Remplacer les relations directes de `DepartmentsTable` et
   `CgrCodesTable` par les relations Many-to-Many nommées explicitement.
-- [ ] Mettre à jour les entités, constantes, propriétés PHPDoc, champs
+- [x] Mettre à jour les entités, constantes, propriétés PHPDoc, champs
   accessibles, validations, règles d'existence et catalogue d'intégrité.
-- [ ] Adapter `DepartmentManagementService` pour enregistrer les deux listes
+- [x] Adapter `DepartmentManagementService` pour enregistrer les deux listes
   d'associations dans une transaction et gérer la suppression d'une liaison
   sans supprimer l'utilisateur, le département ou le code CGR.
-- [ ] Adapter `CgrResolverService`, les finders, les imports et tout service
+- [x] Adapter `CgrResolverService`, les finders, les imports et tout service
   consommant le rattachement direct d'un CGR.
-- [ ] Supprimer les lectures, calculs et libellés liés à `default_cgr`.
-- [ ] Vérifier les associations compilées avec la procédure de l'ADR 0010.
+- [x] Supprimer les lectures, calculs et libellés liés à `default_cgr`.
+- [x] Vérifier les associations compilées avec la procédure de l'ADR 0010.
 
 ### API et interface d'administration
 
-- [ ] Remplacer le champ de responsable unique de la fiche département par
+- [x] Remplacer le champ de responsable unique de la fiche département par
   une sélection multiple des utilisateurs responsables.
-- [ ] Permettre depuis la fiche département d'associer et de dissocier
+- [x] Permettre depuis la fiche département d'associer et de dissocier
   plusieurs codes du catalogue CGR partagé.
-- [ ] Séparer dans l'API la gestion du catalogue global CGR de la gestion des
+- [x] Séparer dans l'API la gestion du catalogue global CGR de la gestion des
   associations entre un département et ses codes.
-- [ ] Adapter les réponses JSON, les routes imbriquées, les grilles
+- [x] Adapter les réponses JSON, les routes imbriquées, les grilles
   Tabulator et les scripts de vue sans introduire de JavaScript inline.
-- [ ] Supprimer les colonnes, filtres, champs et textes « CGR par défaut ».
-- [ ] Conserver les contrôles d'autorisation sur la fiche, le catalogue et
+- [x] Supprimer les colonnes, filtres, champs et textes « CGR par défaut ».
+- [x] Conserver les contrôles d'autorisation sur la fiche, le catalogue et
   chaque mutation d'association.
-- [ ] Prévoir les états vides, les doublons, les codes inactifs et les
+- [x] Prévoir les états vides, les doublons, les codes inactifs et les
   erreurs de validation dans les écrans et les réponses API en français.
 
 ### Tests et documentation
 
-- [ ] Mettre à jour les fixtures et ajouter les tests d'intégration des deux
+- [x] Mettre à jour les fixtures et ajouter les tests d'intégration des deux
   tables de liaison et des contraintes d'unicité.
-- [ ] Tester la migration sur des données contenant un responsable unique,
+- [x] Tester la migration sur des données contenant un responsable unique,
   plusieurs rattachements CGR, des doublons et des valeurs `default_cgr`.
-- [ ] Ajouter les tests unitaires des services et les tests fonctionnels HTTP
+- [x] Ajouter les tests unitaires des services et les tests fonctionnels HTTP
   des associations, des autorisations et des erreurs de validation.
-- [ ] Ajouter ou adapter les tests d'écran et de grille concernés.
-- [ ] Ajouter un ADR applicatif proposé décrivant le modèle cible et mettre à
+- [x] Ajouter ou adapter les tests d'écran et de grille concernés.
+- [x] Ajouter un ADR applicatif proposé décrivant le modèle cible et mettre à
   jour les ADR 0005 et 0012 si nécessaire, sans modifier rétroactivement une
   décision acceptée pour masquer l'historique.
-- [ ] Mettre à jour les README locaux et la documentation du backlog.
+- [x] Mettre à jour les README locaux et la documentation du backlog.
 
 ## Critères d'acceptation
 

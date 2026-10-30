@@ -25,7 +25,6 @@ class CgrCodesTableTest extends TestCase
      */
     protected array $fixtures = [
         'app.CgrCodes',
-        'app.Departments',
     ];
 
     /**
@@ -61,7 +60,6 @@ class CgrCodesTableTest extends TestCase
     public function testValidationParDefaut(): void
     {
         $code = $this->CgrCodes->newEntity([
-            'department_id' => -1,
             'type' => '',
             'code' => str_repeat('a', 17),
             'label' => '',
@@ -69,7 +67,6 @@ class CgrCodesTableTest extends TestCase
             'is_system' => 'invalide',
         ]);
 
-        $this->assertArrayHasKey('department_id', $code->getErrors());
         $this->assertArrayHasKey('type', $code->getErrors());
         $this->assertArrayHasKey('code', $code->getErrors());
         $this->assertArrayHasKey('label', $code->getErrors());
@@ -86,15 +83,14 @@ class CgrCodesTableTest extends TestCase
     public function testReglesIntegrite(): void
     {
         $code = $this->CgrCodes->newEntity([
-            'department_id' => 99999,
-            'type' => 'AXE',
-            'code' => 'A1',
-            'label' => 'Axe un',
+            'type' => 'Lorem ipsum dolor sit amet',
+            'code' => 'Lorem ipsum do',
+            'label' => 'Autre libellé',
             'active' => true,
             'is_system' => false,
         ]);
 
         $this->assertFalse($this->CgrCodes->save($code));
-        $this->assertArrayHasKey('department_id', $code->getErrors());
+        $this->assertArrayHasKey('code', $code->getErrors());
     }
 }

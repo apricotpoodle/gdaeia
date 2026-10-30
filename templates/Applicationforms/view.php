@@ -108,18 +108,21 @@ $this->Html->css('applicationforms', ['block' => true]);
                     </nav>
                 </div>
 
-                <!-- Chef de service rattaché ($department->manager) -->
+                <!-- Responsables rattachés au département -->
                 <div class="col-md-3 border-start">
                     <span class="text-muted fs-8 d-block fw-semibold text-uppercase">
                         <i class="fa-solid fa-user-tie me-1 text-primary"></i><?= __('Chef de service') ?>
                     </span>
                     <span class="fw-medium text-dark">
                         <?php
-                        $manager = $applicationform->department->manager ?? null;
-                        if ($manager) {
-                            echo h($manager->full_name ?? $manager->display_name ?? $manager->email);
+                        $managers = $applicationform->department->managers ?? [];
+                        if ($managers !== []) {
+                            echo h(implode(', ', array_map(
+                                static fn($manager): string => (string)$manager->get('display_name'),
+                                $managers,
+                            )));
                         } else {
-                            echo __('Non assigné');
+                            echo __('Aucun responsable associé');
                         }
                         ?>
                     </span>

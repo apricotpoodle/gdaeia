@@ -15,10 +15,10 @@ use Traversable;
  * Departments Model
  *
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\DepartmentsTable> $ParentDepartments
- * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\CgrCodesTable> $DefaultCgrCode
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\CgrStrategiesTable> $CgrStrategies
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\DepartmentsTable> $ChildDepartments
- * @property \Cake\ORM\Association\HasMany<\App\Model\Table\CgrCodesTable> $OwnedCgrCodes
+ * @property \Cake\ORM\Association\BelongsToMany<\App\Model\Table\CgrCodesTable> $CgrCodes
+ * @property \Cake\ORM\Association\BelongsToMany<\App\Model\Table\UsersTable> $Managers
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationformsTable> $Applicationforms
  * @method \App\Model\Entity\Department newEmptyEntity()
  * @method \App\Model\Entity\Department newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
@@ -63,13 +63,11 @@ class DepartmentsTable extends AppTable
             'className' => 'Departments',
             'foreignKey' => Department::FIELD_PARENT_ID,
         ]);
-        $this->belongsTo('DefaultCgrCode', [
+        $this->belongsToMany('CgrCodes', [
             'className' => 'CgrCodes',
-            'foreignKey' => Department::FIELD_CGR_CODE_ID,
-        ]);
-        $this->hasMany('OwnedCgrCodes', [
-            'className' => 'CgrCodes',
+            'joinTable' => 'department_cgr_codes',
             'foreignKey' => 'department_id',
+            'targetForeignKey' => 'cgr_code_id',
         ]);
         $this->belongsTo('CgrStrategies', [
             'foreignKey' => Department::FIELD_CGR_STRATEGY_ID,
@@ -77,10 +75,11 @@ class DepartmentsTable extends AppTable
         $this->hasMany('Applicationforms', [
             'foreignKey' => 'department_id',
         ]);
-        $this->belongsTo('Managers', [
+        $this->belongsToMany('Managers', [
             'className' => 'Users',
-            'foreignKey' => Department::FIELD_CURRENT_MANAGER_ID,
-            'propertyName' => Department::FIELD_MANAGER,
+            'joinTable' => 'department_managers',
+            'foreignKey' => 'department_id',
+            'targetForeignKey' => 'user_id',
         ]);
     }
 
@@ -164,10 +163,6 @@ class DepartmentsTable extends AppTable
             ->allowEmptyString(Department::FIELD_PARENT_ID);
         $validator->nonNegativeInteger(Department::FIELD_CGR_STRATEGY_ID)
             ->allowEmptyString(Department::FIELD_CGR_STRATEGY_ID);
-        $validator->nonNegativeInteger(Department::FIELD_CGR_CODE_ID)
-            ->allowEmptyString(Department::FIELD_CGR_CODE_ID);
-        $validator->nonNegativeInteger(Department::FIELD_CURRENT_MANAGER_ID)
-            ->allowEmptyString(Department::FIELD_CURRENT_MANAGER_ID);
 
         return $validator;
     }
@@ -188,9 +183,6 @@ class DepartmentsTable extends AppTable
         ]);
         $rules->add($rules->existsIn([Department::FIELD_CGR_STRATEGY_ID], 'CgrStrategies'), [
             'errorField' => Department::FIELD_CGR_STRATEGY_ID,
-        ]);
-        $rules->add($rules->existsIn([Department::FIELD_CGR_CODE_ID], 'DefaultCgrCode'), [
-            'errorField' => Department::FIELD_CGR_CODE_ID,
         ]);
 
         return $rules;

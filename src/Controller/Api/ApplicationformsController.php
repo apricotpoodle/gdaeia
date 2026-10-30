@@ -396,8 +396,8 @@ class ApplicationformsController extends AppController
         if ($loaded->manager !== null) {
             $recipients[] = $loaded->manager;
         }
-        if ($loaded->department->manager !== null) {
-            $recipients[] = $loaded->department->manager;
+        foreach ($loaded->department->get('managers') ?? [] as $manager) {
+            $recipients[] = $manager;
         }
         /** @var \App\Model\Entity\Applicationvalidationstep|null $lastStep */
         $lastStep = $this->fetchTable('Applicationvalidationsteps')->find()

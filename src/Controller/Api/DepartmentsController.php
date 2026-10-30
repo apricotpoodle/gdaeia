@@ -196,10 +196,14 @@ final class DepartmentsController extends AppController
         $department = $this->activeDepartment($departmentId);
         $this->Authorization->authorize($department, 'view');
         $table = $this->fetchTable('CgrCodes');
-        $query = (new TabulatorAdapter())->adaptRequest($this->request, $table->find()->where([
-            'department_id' => $department->get('id'),
-            'active' => true,
-        ]));
+        $query = (new TabulatorAdapter())->adaptRequest(
+            $this->request,
+            $table->find()
+                ->matching('Departments', static function ($query) use ($department): SelectQuery {
+                    return $query->where(['Departments.id' => $department->get('id')]);
+                })
+                ->where(['CgrCodes.active' => true]),
+        );
         $data = $this->paginate($query, [
             'limit' => (int)($this->request->getQuery('size') ?? 20),
             'page' => (int)($this->request->getQuery('page') ?? 1),
@@ -215,14 +219,17 @@ final class DepartmentsController extends AppController
     {
         $department = $this->activeDepartment($departmentId);
         $table = $this->fetchTable('CgrCodes');
-        $code = $table->newEntity(['department_id' => $department->get('id')]);
+        $code = $table->newEmptyEntity();
         $this->Authorization->authorize($code, 'add');
         $code = $table->patchEntity($code, $this->authorizedRequestData('CgrCodes'), [
-            'accessibleFields' => ['department_id' => false, 'is_system' => false],
+            'accessibleFields' => ['is_system' => false],
         ]);
         if (!$table->save($code)) {
             return $this->validationErrorResponse($code, 'CgrCodes');
         }
+        /** @var \Cake\ORM\Association\BelongsToMany<\App\Model\Table\CgrCodesTable> $cgrAssociation */
+        $cgrAssociation = $this->fetchTable('Departments')->getAssociation('CgrCodes');
+        $cgrAssociation->link($department, [$code]);
 
         return $this->jsonSuccess(['id' => $code->get('id'), 'data' => $code], __('Le code CGR a été créé.'));
     }
@@ -233,10 +240,15 @@ final class DepartmentsController extends AppController
         $this->activeDepartment($departmentId);
         $table = $this->fetchTable('CgrCodes');
         /** @var \App\Model\Entity\CgrCode $code */
-        $code = $table->find()->where(['id' => $id, 'department_id' => $departmentId, 'active' => true])->firstOrFail();
+        $code = $table->find()
+            ->matching('Departments', static function ($query) use ($departmentId): SelectQuery {
+                return $query->where(['Departments.id' => $departmentId]);
+            })
+            ->where(['CgrCodes.id' => $id, 'CgrCodes.active' => true])
+            ->firstOrFail();
         $this->Authorization->authorize($code, 'edit');
         $code = $table->patchEntity($code, $this->authorizedRequestData('CgrCodes'), [
-            'accessibleFields' => ['department_id' => false, 'type' => false, 'is_system' => false],
+            'accessibleFields' => ['type' => false, 'is_system' => false],
         ]);
         if (!$table->save($code)) {
             return $this->validationErrorResponse($code, 'CgrCodes');
@@ -251,7 +263,12 @@ final class DepartmentsController extends AppController
         $this->activeDepartment($departmentId);
         $table = $this->fetchTable('CgrCodes');
         /** @var \App\Model\Entity\CgrCode $code */
-        $code = $table->find()->where(['id' => $id, 'department_id' => $departmentId, 'active' => true])->firstOrFail();
+        $code = $table->find()
+            ->matching('Departments', static function ($query) use ($departmentId): SelectQuery {
+                return $query->where(['Departments.id' => $departmentId]);
+            })
+            ->where(['CgrCodes.id' => $id, 'CgrCodes.active' => true])
+            ->firstOrFail();
         $this->Authorization->authorize($code, 'deactivate');
         $code->set('active', false);
         if (!$table->save($code)) {
@@ -266,7 +283,7 @@ final class DepartmentsController extends AppController
     {
         /** @var \App\Model\Entity\Department $department */
         $department = $this->fetchTable('Departments')->find()
-            ->contain(['CgrStrategies', 'Managers'])
+            ->contain(['CgrStrategies', 'Managers', 'CgrCodes'])
             ->where(['Departments.id' => $id, 'Departments.deleted IS' => null])
             ->firstOrFail();
 
@@ -310,10 +327,21 @@ final class DepartmentsController extends AppController
             'sort' => $department->get('sort'),
             'level' => (int)$department->get('level'),
             'department_type_id' => (int)$department->get('department_type_id'),
-            'manager' => $department->get('manager')?->get('firstname') . ' '
-                . $department->get('manager')?->get('lastname'),
+            'managers' => array_values(array_filter(array_map(
+                static fn($manager): string => (string)$manager->get('display_name'),
+                $department->get('managers') ?: [],
+            ))),
             'cgr_strategy' => $department->get('cgr_strategy')?->get('name'),
-            'default_cgr' => $department->get('default_cgr'),
+            'cgr_codes' => array_values(array_map(
+                static fn($code): array => [
+                    'id' => (int)$code->get('id'),
+                    'type' => (string)$code->get('type'),
+                    'code' => (string)$code->get('code'),
+                    'label' => (string)$code->get('label'),
+                    'active' => (bool)$code->get('active'),
+                ],
+                $department->get('cgr_codes') ?: [],
+            )),
             'has_children' => $hasChildren,
             'children' => $loadedChildren ?? ($hasChildren
                 ? [[

@@ -216,14 +216,12 @@ final class MigrationImportDepartmentsCommand extends Command
                 foreach ($service['cgrs'] as $cgr) {
                     $code = $cgrCodes->find()
                         ->where([
-                            'department_id' => $department->get('id'),
                             'type' => $cgr['type'],
                             'code' => $cgr['code'],
                         ])
                         ->first();
                     if ($code === null) {
                         $code = $cgrCodes->newEntity([
-                            'department_id' => $department->get('id'),
                             'type' => $cgr['type'],
                             'code' => $cgr['code'],
                             'label' => $cgr['label'],
@@ -235,6 +233,9 @@ final class MigrationImportDepartmentsCommand extends Command
                         $code->set('active', true);
                     }
                     $cgrCodes->saveOrFail($code);
+                    /** @var \Cake\ORM\Association\BelongsToMany<\App\Model\Table\CgrCodesTable> $cgrAssociation */
+                    $cgrAssociation = $departments->getAssociation('CgrCodes');
+                    $cgrAssociation->link($department, [$code]);
                     $cgrCount++;
                 }
             }

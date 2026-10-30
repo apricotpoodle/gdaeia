@@ -48,7 +48,10 @@ final class DepartmentsController extends AppController
     {
         $table = $this->fetchTable('Departments');
         /** @var \App\Model\Entity\Department $department */
-        $department = $table->find()->where(['id' => $id, 'deleted IS' => null])->firstOrFail();
+        $department = $table->find()
+            ->contain(['Managers', 'CgrCodes'])
+            ->where(['id' => $id, 'deleted IS' => null])
+            ->firstOrFail();
         $this->Authorization->authorize($department, 'edit');
 
         if ($this->request->is(['post', 'put', 'patch'])) {
@@ -78,6 +81,10 @@ final class DepartmentsController extends AppController
             'strategies' => $this->fetchTable('CgrStrategies')->find('list')->toArray(),
             'managers' => $this->fetchTable('Users')->find('list', keyField: 'id', valueField: 'username')
                 ->where(['deleted IS' => null])
+                ->toArray(),
+            'cgrCodes' => $this->fetchTable('CgrCodes')->find('list', keyField: 'id', valueField: 'label')
+                ->where(['active' => true])
+                ->orderBy(['type' => 'ASC', 'code' => 'ASC'])
                 ->toArray(),
             'parents' => $this->fetchTable('Departments')->find('list', keyField: 'id', valueField: 'name')
                 ->where(['deleted IS' => null])

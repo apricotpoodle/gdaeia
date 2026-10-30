@@ -40,13 +40,13 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
                 <?= $this->Form->control('department_type_id', ['label' => __('Type de département'), 'type' => 'number', 'min' => 1, 'required' => true]) ?>
             </div>
             <div class="col-md-4">
-                <?= $this->Form->control('current_manager_id', ['label' => __('Responsable'), 'empty' => __('Aucun'), 'options' => $managers]) ?>
+                <?= $this->Form->control('manager_ids', ['label' => __('Responsables'), 'multiple' => true, 'options' => $managers, 'value' => array_map(static fn($manager): int => (int)$manager->get('id'), $department->get('managers') ?: [])]) ?>
             </div>
             <div class="col-md-6">
                 <?= $this->Form->control('cgr_strategy_id', ['label' => __('Stratégie CGR'), 'empty' => __('Aucune'), 'options' => $strategies]) ?>
             </div>
             <div class="col-md-6">
-                <?= $this->Form->control('cgr_code_id', ['label' => __('CGR par défaut'), 'type' => 'number', 'min' => 1, 'empty' => __('Aucun')]) ?>
+                <?= $this->Form->control('cgr_code_ids', ['label' => __('Codes CGR associés'), 'multiple' => true, 'options' => $cgrCodes, 'value' => array_map(static fn($code): int => (int)$code->get('id'), $department->get('cgr_codes') ?: [])]) ?>
             </div>
             <?php if ($canEditBase): ?>
                 <div class="col-md-4">

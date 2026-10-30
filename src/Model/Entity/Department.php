@@ -10,7 +10,6 @@ use Cake\ORM\Entity;
  *
  * @property int $id
  * @property int|null $parent_id
- * @property int|null $cgr_code_id
  * @property int|null $lft
  * @property int|null $rght
  * @property int|null $level
@@ -20,18 +19,15 @@ use Cake\ORM\Entity;
  * @property string|null $sort
  * @property int $department_type_id
  * @property int|null $cgr_strategy_id
- * @property string|null $default_cgr
- * @property int|null $current_manager_id
  * @property \Cake\I18n\DateTime|null $deleted
  * @property \Cake\I18n\DateTime $created
  * @property \Cake\I18n\DateTime|null $modified
  *
  * @property \App\Model\Entity\Department|null $parent_department
  * @property list<\App\Model\Entity\Department> $child_departments
- * @property \App\Model\Entity\CgrCode $default_cgr_code
- * @property \App\Model\Entity\CgrCode[] $owned_cgr_codes
+ * @property list<\App\Model\Entity\CgrCode> $cgr_codes
  * @property \App\Model\Entity\CgrStrategy $cgr_strategy
- * @property \App\Model\Entity\User|null $manager
+ * @property list<\App\Model\Entity\User> $managers
  * @property \App\Model\Entity\Applicationform[] $applicationforms
  */
 class Department extends Entity
@@ -47,7 +43,6 @@ class Department extends Entity
      */
     protected array $_accessible = [
         'parent_id' => true,
-        'cgr_code_id' => true,
         'lft' => true,
         'rght' => true,
         'level' => true,
@@ -57,22 +52,19 @@ class Department extends Entity
         'sort' => true,
         'department_type_id' => true,
         'cgr_strategy_id' => true,
-        'default_cgr' => true,
-        'current_manager_id' => true,
         'deleted' => true,
         'created' => true,
         'modified' => true,
         'parent_department' => true,
         'child_departments' => true,
-        'default_cgr_code' => true,
-        'owned_cgr_codes' => true,
+        'cgr_codes' => true,
+        'managers' => true,
         'cgr_strategy' => true,
         'applicationforms' => true,
     ];
 
     public const FIELD_ID = 'id';
     public const FIELD_PARENT_ID = 'parent_id';
-    public const FIELD_CGR_CODE_ID = 'cgr_code_id';
     public const FIELD_LFT = 'lft';
     public const FIELD_RGHT = 'rght';
     public const FIELD_LEVEL = 'level';
@@ -82,16 +74,13 @@ class Department extends Entity
     public const FIELD_SORT = 'sort';
     public const FIELD_DEPARTMENT_TYPE_ID = 'department_type_id';
     public const FIELD_CGR_STRATEGY_ID = 'cgr_strategy_id';
-    public const FIELD_DEFAULT_CGR = 'default_cgr';
-    public const FIELD_CURRENT_MANAGER_ID = 'current_manager_id';
     public const FIELD_DELETED = 'deleted';
     public const FIELD_CREATED = 'created';
     public const FIELD_MODIFIED = 'modified';
     public const FIELD_PARENT_DEPARTMENT = 'parent_department';
     public const FIELD_CHILD_DEPARTMENTS = 'child_departments';
-    public const FIELD_DEFAULT_CGR_CODE = 'default_cgr_code';
-    public const FIELD_OWNED_CGR_CODES = 'owned_cgr_codes';
+    public const FIELD_CGR_CODES = 'cgr_codes';
     public const FIELD_CGR_STRATEGY = 'cgr_strategy';
-    public const FIELD_MANAGER = 'manager';
+    public const FIELD_MANAGERS = 'managers';
     public const FIELD_APPLICATIONFORMS = 'applicationforms';
 }

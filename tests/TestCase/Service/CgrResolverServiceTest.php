@@ -62,8 +62,10 @@ class CgrResolverServiceTest extends TestCase
             new CgrCode(['type' => 'NIVEAU', 'code' => 'N2', 'label' => 'Niveau deux']),
         ]);
         $query = $this->createMock(SelectQuery::class);
+        $query->expects($this->once())->method('matching')
+            ->with('Departments', $this->isType('callable'))
+            ->willReturnSelf();
         $query->expects($this->once())->method('where')->with([
-            'CgrCodes.department_id' => 12,
             'CgrCodes.active' => true,
         ])->willReturnSelf();
         $query->expects($this->once())->method('orderBy')->with([

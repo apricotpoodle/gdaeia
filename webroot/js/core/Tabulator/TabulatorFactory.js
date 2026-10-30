@@ -148,9 +148,9 @@ export class TabulatorFactory {
                 ColumnsFactory.id({ visible: false }),
                 ColumnsFactory.text('code', 'Code', { width: 160 }),
                 ColumnsFactory.text('name', 'Département'),
-                ColumnsFactory.text('manager', 'Responsable'),
+                ColumnsFactory.text('managers', 'Responsables'),
                 ColumnsFactory.text('cgr_strategy', 'Stratégie CGR'),
-                ColumnsFactory.text('default_cgr', 'CGR par défaut'),
+                ColumnsFactory.text('cgr_codes', 'Codes CGR'),
             ])
             .setWithActions(['edit', 'deactivate'])
             .build();

@@ -32,8 +32,9 @@ champ.
 
 `DepartmentsController` rend l'écran `/departments` réservé aux opérateurs
 autorisés par `DepartmentPolicy`. Il présente l'arbre hiérarchique, le
-formulaire d'édition et la sous-grille des codes CGR ; les mutations et le
-calcul d'impact sont délégués à l'API `DepartmentsController`.
+formulaire d'édition avec les responsables et codes CGR sélectionnables en
+multiple, ainsi que la sous-grille des codes CGR ; les mutations et le calcul
+d'impact sont délégués à l'API `DepartmentsController`.
 
 ## Redirections post-authentification
 

@@ -6,7 +6,6 @@
     <li><?= h(__('Utilisateurs détachés : {0}', count($report['detached_user_ids'] ?? []))) ?></li>
     <li><?= h(__('Séquences désactivées : {0}', count($report['deactivated_sequence_ids'] ?? []))) ?></li>
     <li><?= h(__('Codes CGR désactivés : {0}', count($report['deactivated_cgr_ids'] ?? []))) ?></li>
-    <li><?= h(__('Références CGR par défaut supprimées : {0}', count($report['cleared_default_department_ids'] ?? []))) ?></li>
 </ul>
 
 <?php if ($fullReport): ?>
