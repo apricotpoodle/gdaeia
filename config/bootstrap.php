@@ -114,7 +114,8 @@ if (Configure::read('debug')) {
 }
 
 /*
- * Set the default server timezone. Using UTC makes time calculations / conversions easier.
+ * Set the default application timezone. Dates are displayed and calculated
+ * in Europe/Paris by default; database connections remain in UTC.
  * Check https://php.net/manual/en/timezones.php for list of valid timezone strings.
  */
 date_default_timezone_set(Configure::read('App.defaultTimezone'));

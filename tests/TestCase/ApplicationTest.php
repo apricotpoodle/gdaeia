@@ -50,6 +50,12 @@ class ApplicationTest extends TestCase
         $this->assertTrue($plugins->has('Migrations'), 'plugins has Migrations?');
     }
 
+    public function testLeFuseauHoraireApplicatifEstEuropeParis(): void
+    {
+        $this->assertSame('Europe/Paris', Configure::read('App.defaultTimezone'));
+        $this->assertSame('Europe/Paris', date_default_timezone_get());
+    }
+
     /**
      * Test bootstrap add DebugKit plugin in debug mode.
      *

@@ -108,6 +108,17 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertStringNotContainsString('name="manager_id"', (string)$this->_response->getBody());
     }
 
+    public function testLaNavigationAfficheLeFuseauHoraireApplicatif(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('id="main-navbar-timezone"');
+        $this->assertResponseContains('Europe/Paris');
+    }
+
     public function testLaFicheAfficheLeChefDeServiceDuDepartement(): void
     {
         ConnectionManager::get('test')->update('departments', ['current_manager_id' => 1], ['id' => 1]);
