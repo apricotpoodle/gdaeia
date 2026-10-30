@@ -7,7 +7,7 @@
  * @var \App\View\AppView $this
  * @var array<int, string> $collaborators
  * @var array<int, string> $assistants
- * @var \App\Model\Entity\User|null $departmentManager
+ * @var list<\App\Model\Entity\User> $departmentManagers
  * @var bool $canEditAdmin
  */
 
@@ -33,14 +33,17 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label"><?= __('Chef de service') ?></label>
-                <?php if ($departmentManager !== null): ?>
+                <label class="form-label"><?= __('Responsables du département') ?></label>
+                <?php if ($departmentManagers !== []): ?>
                     <div class="form-control form-control-sm bg-light">
-                        <?= h($departmentManager->get('display_name')) ?>
+                        <?= h(implode(', ', array_map(
+                            static fn($manager): string => (string)$manager->get('display_name'),
+                            $departmentManagers,
+                        ))) ?>
                     </div>
                 <?php else: ?>
                     <div class="form-control form-control-sm text-danger bg-light">
-                        <?= __('Aucun chef de service associé') ?>
+                        <?= __('Aucun responsable associé') ?>
                     </div>
                 <?php endif; ?>
             </div>

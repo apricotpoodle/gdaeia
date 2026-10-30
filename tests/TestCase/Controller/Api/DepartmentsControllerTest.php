@@ -16,6 +16,8 @@ final class DepartmentsControllerTest extends TestCase
         'app.Users',
         'app.Departments',
         'app.CgrCodes',
+        'app.DepartmentCgrCodes',
+        'app.DepartmentManagers',
         'app.CgrStrategies',
         'app.UserDepartments',
         'app.Applicationforms',
@@ -96,9 +98,12 @@ final class DepartmentsControllerTest extends TestCase
         $this->getTableLocator()->get('Departments')->updateAll([
             'deleted' => null,
         ], ['id IN' => [1, 2]]);
-        $this->getTableLocator()->get('Departments')->updateAll([
-            'current_manager_id' => 2,
-        ], ['id' => 2]);
+        $this->getTableLocator()->get('DepartmentManagers')->deleteAll(['department_id' => 2]);
+        $table = $this->getTableLocator()->get('DepartmentManagers');
+        $table->saveOrFail($table->newEntity([
+            'department_id' => 2,
+            'user_id' => 2,
+        ]));
 
         $this->get('/api/departments/tree.json?' . http_build_query([
             'filters' => [['field' => 'manager', 'type' => 'like', 'value' => 'Utilisateur']],
@@ -211,7 +216,6 @@ final class DepartmentsControllerTest extends TestCase
         ]);
         $connection->insert('cgr_codes', [
             'id' => 2,
-            'department_id' => 2,
             'type' => 'test',
             'code' => 'CGR-API',
             'label' => 'Code API',
@@ -219,6 +223,10 @@ final class DepartmentsControllerTest extends TestCase
             'is_system' => 0,
             'created' => $now,
             'modified' => $now,
+        ]);
+        $connection->insert('department_cgr_codes', [
+            'department_id' => 2,
+            'cgr_code_id' => 2,
         ]);
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
         $this->enableCsrfToken();

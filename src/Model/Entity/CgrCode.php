@@ -9,7 +9,6 @@ use Cake\ORM\Entity;
  * CgrCode Entity
  *
  * @property int $id
- * @property int $department_id
  * @property string $type
  * @property string $code
  * @property string $label
@@ -18,8 +17,7 @@ use Cake\ORM\Entity;
  * @property \Cake\I18n\DateTime $created
  * @property \Cake\I18n\DateTime|null $modified
  *
- * @property \App\Model\Entity\Department $department
- * @property \App\Model\Entity\Department[] $using_departments
+ * @property list<\App\Model\Entity\Department> $departments
  */
 class CgrCode extends Entity
 {
@@ -33,7 +31,6 @@ class CgrCode extends Entity
      * @var array<string, bool>
      */
     protected array $_accessible = [
-        'department_id' => true,
         'type' => true,
         'code' => true,
         'label' => true,
@@ -41,12 +38,10 @@ class CgrCode extends Entity
         'is_system' => true,
         'created' => true,
         'modified' => true,
-        'department' => true,
-        'cgr_codes' => true,
+        'departments' => true,
     ];
 
     public const FIELD_ID = 'id';
-    public const FIELD_DEPARTMENT_ID = 'department_id';
     public const FIELD_TYPE = 'type';
     public const FIELD_CODE = 'code';
     public const FIELD_LABEL = 'label';
@@ -54,6 +49,5 @@ class CgrCode extends Entity
     public const FIELD_IS_SYSTEM = 'is_system';
     public const FIELD_CREATED = 'created';
     public const FIELD_MODIFIED = 'modified';
-    public const FIELD_DEPARTMENT = 'department';
-    public const FIELD_USING_DEPARTMENTS = 'using_departments';
+    public const FIELD_DEPARTMENTS = 'departments';
 }

@@ -156,7 +156,7 @@ class ApplicationformsController extends AppController
             ->find('visibleTo', user: $currentUser)
             ->find('list', keyField: 'id', valueField: 'display_name')->toArray();
         $assistants = $this->ensureUserOption($collaborators, $currentUser->get(User::FIELD_ID));
-        $departmentManager = null;
+        $departmentManagers = [];
 
         $this->set(compact(
             'applicationform',
@@ -170,7 +170,7 @@ class ApplicationformsController extends AppController
             'yesnos',
             'collaborators',
             'assistants',
-            'departmentManager',
+            'departmentManagers',
         ));
 
         return null;
@@ -241,7 +241,7 @@ class ApplicationformsController extends AppController
             $collaborators,
             (int)$applicationform->get(Applicationform::FIELD_ASSISTANT_ID),
         );
-        $departmentManager = $applicationform->get('department')?->get('manager');
+        $departmentManagers = $applicationform->get('department')?->get('managers') ?? [];
 
         $this->set(compact(
             'applicationform',
@@ -256,7 +256,7 @@ class ApplicationformsController extends AppController
             'yesnos',
             'collaborators',
             'assistants',
-            'departmentManager',
+            'departmentManagers',
         ));
 
         return null;

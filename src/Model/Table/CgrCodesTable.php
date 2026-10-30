@@ -11,7 +11,7 @@ use Cake\Validation\Validator;
 /**
  * CgrCodes Model
  *
- * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\DepartmentsTable> $Departments
+ * @property \Cake\ORM\Association\BelongsToMany<\App\Model\Table\DepartmentsTable> $Departments
  * @method \App\Model\Entity\CgrCode newEntity(array<string, mixed> $data, array<string, mixed> $options = [])
  * @method \App\Model\Entity\CgrCode[] newEntities(array<array<string, mixed>> $data, array<string, mixed> $options = [])
  * @method \App\Model\Entity\CgrCode get(mixed $primaryKey, array<string, mixed>|string $finder = 'all', \Psr\SimpleCache\CacheInterface|string|null $cache = null, \Closure|string|null $cacheKey = null, mixed ...$args)
@@ -26,7 +26,7 @@ use Cake\Validation\Validator;
  * @method \Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\CgrCode> deleteManyOrFail(iterable<\App\Model\Entity\CgrCode> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  * @extends \Cake\ORM\Table<array{Timestamp: \Cake\ORM\Behavior\TimestampBehavior}, \App\Model\Entity\CgrCode>
- * @property \Cake\ORM\Association\HasMany<\App\Model\Table\DepartmentsTable> $UsingDepartments
+ * @property \Cake\ORM\Association\BelongsToMany<\App\Model\Table\DepartmentsTable> $Departments
  * @method bool delete(\App\Model\Entity\CgrCode $entity, array<string, mixed> $options = [])
  * @method bool deleteOrFail(\App\Model\Entity\CgrCode $entity, array<string, mixed> $options = [])
  */
@@ -48,13 +48,11 @@ class CgrCodesTable extends Table
 
         $this->addBehavior('Timestamp');
 
-        $this->belongsTo('Departments', [
-            'foreignKey' => CgrCode::FIELD_DEPARTMENT_ID,
-            'joinType' => 'INNER',
-        ]);
-        $this->hasMany('UsingDepartments', [
-            'foreignKey' => 'cgr_code_id',
+        $this->belongsToMany('Departments', [
             'className' => 'Departments',
+            'joinTable' => 'department_cgr_codes',
+            'foreignKey' => 'cgr_code_id',
+            'targetForeignKey' => 'department_id',
         ]);
     }
 
@@ -66,10 +64,6 @@ class CgrCodesTable extends Table
      */
     public function validationDefault(Validator $validator): Validator
     {
-        $validator
-            ->nonNegativeInteger(CgrCode::FIELD_DEPARTMENT_ID)
-            ->notEmptyString(CgrCode::FIELD_DEPARTMENT_ID);
-
         $validator
             ->scalar(CgrCode::FIELD_TYPE)
             ->maxLength(CgrCode::FIELD_TYPE, 32)
@@ -108,12 +102,9 @@ class CgrCodesTable extends Table
      */
     public function buildRules(RulesChecker $rules): RulesChecker
     {
-        $rules->add($rules->isUnique([CgrCode::FIELD_DEPARTMENT_ID, CgrCode::FIELD_TYPE, CgrCode::FIELD_CODE]), [
-            'errorField' => CgrCode::FIELD_DEPARTMENT_ID,
-            'message' => __('Cette combinaison de département, type et code existe déjà.'),
-        ]);
-        $rules->add($rules->existsIn([CgrCode::FIELD_DEPARTMENT_ID], 'Departments'), [
-            'errorField' => CgrCode::FIELD_DEPARTMENT_ID,
+        $rules->add($rules->isUnique([CgrCode::FIELD_TYPE, CgrCode::FIELD_CODE]), [
+            'errorField' => CgrCode::FIELD_CODE,
+            'message' => __('Cette combinaison de type et de code CGR existe déjà.'),
         ]);
 
         return $rules;

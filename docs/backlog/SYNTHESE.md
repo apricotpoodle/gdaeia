@@ -33,7 +33,7 @@ les compléments du 0002.
 | [0021 — Habilitations génériques](0021-implementer-les-habilitations-generiques.md) | Haute | À planifier | Mettre en œuvre les permissions génériques et sécuriser l'accès Web/API à l'administration des départements. | Nouveau ticket créé le 29 octobre ; l'ADR 0069 est encore proposé et le ticket 0007 reste à concrétiser. |
 | [0022 — Référentiel des départements](0022-mettre-a-jour-le-referentiel-des-departements.md) | Moyenne | À planifier | Mettre à jour les départements, principalement les fils de SEM/Rédac, avec import contrôlé et vérification d'intégrité. | Nouveau ticket créé le 29 octobre ; aucune transformation de données engagée. |
 | [0023 — Migration de base](0023-migrer-la-base-de-donnees.md) | Moyenne | À planifier | Préparer une migration MySQL simple par export/restauration, migrations et contrôles de cohérence. | Nouveau ticket créé le 29 octobre ; aucune bascule de base engagée. |
-| [0024 — Associations multiples des départements](0024-generaliser-les-associations-des-departements.md) | **Haute** | En cours | Remplacer les responsables et rattachements CGR directs par des tables de liaison, migrer les données et adapter l’ORM, l’API et les écrans. | Migration, ORM, API et IHM engagés ; validations automatisées vertes. |
+| [0024 — Associations multiples des départements](0024-generaliser-les-associations-des-departements.md) | **Haute** | Terminé | Remplacer les responsables et rattachements CGR directs par des tables de liaison, migrer les données et adapter l’ORM, l’API et les écrans. | Migration, ORM, API, IHM et validations finalisées. |
 
 ## Tickets déjà traités — contrôle de non-réouverture
 

@@ -21,6 +21,11 @@ requête, de droit et de règle métier gardent leurs réponses propres.
 * **ApplicationformsController** : L'endpoint POST `/applicationforms/{id}/validation/remind.json` relance uniquement les validateurs éligibles aux étapes bloquées du cycle, après contrôle de la Policy administrateur.
 * **`DepartmentsController`** : Arbre lazy des départements, fiche, CRUD, calcul d'impact et désactivation logique. Sans filtre, seules les racines sont chargées et les descendants le sont à la demande ; avec filtre, l'arbre complet des branches correspondantes est renvoyé et déployé, avec conservation des ancêtres nécessaires et exclusion des branches sans correspondance. La désactivation accepte un plan de nettoyage explicite réservé au super-administrateur, retourne les opérations effectuées et le bilan des courriels. Les codes CGR sont gérés par des routes imbriquées ; les mutations sont autorisées par `DepartmentPolicy` et `CgrCodePolicy`.
 
+Pour les départements, les payloads utilisent `manager_ids` et `cgr_code_ids`.
+Le catalogue CGR reste global ; ses associations départementales sont gérées
+par les routes imbriquées et les dissociations passent par le service métier
+transactionnel, après contrôle des Policies et des autorisations de champs.
+
 Les mutations de champs reçues par les contrôleurs API passent par
 `AppController::authorizedRequestData()` avant `patchEntity()`. La matrice
 `field_authorizations` est donc appliquée côté serveur en complément des

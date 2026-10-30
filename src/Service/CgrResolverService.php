@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\TableRegistry;
 
 class CgrResolverService
@@ -17,7 +18,6 @@ class CgrResolverService
     {
         $departmentsTable = TableRegistry::getTableLocator()->get('Departments');
         $cgrCodesTable = TableRegistry::getTableLocator()->get('CgrCodes');
-
         /** @var \App\Model\Entity\Department $department */
         $department = $departmentsTable->get($departmentId, contain: ['CgrStrategies']);
 
@@ -48,10 +48,10 @@ class CgrResolverService
         // 2. Récupération des codes avec des clés d'ORM propres (CgrCodes)
         /** @var list<\App\Model\Entity\CgrCode> $codes */
         $codes = $cgrCodesTable->find()
-            ->where([
-                'CgrCodes.department_id' => $departmentId,
-                'CgrCodes.active' => true,
-            ])
+            ->matching('Departments', static function (SelectQuery $query) use ($departmentId): SelectQuery {
+                return $query->where(['Departments.id' => $departmentId]);
+            })
+            ->where(['CgrCodes.active' => true])
             ->orderBy(['CgrCodes.type' => 'ASC', 'CgrCodes.code' => 'ASC'])
             ->all();
 

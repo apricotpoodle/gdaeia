@@ -13,6 +13,8 @@ final class DepartmentManagementServiceIntegrationTest extends TestCase
     protected array $fixtures = [
         'app.Departments',
         'app.CgrCodes',
+        'app.DepartmentCgrCodes',
+        'app.DepartmentManagers',
         'app.CgrStrategies',
         'app.Users',
         'app.UserDepartments',
@@ -30,6 +32,48 @@ final class DepartmentManagementServiceIntegrationTest extends TestCase
         $this->assertArrayHasKey('blockers', $impact);
         $this->assertArrayHasKey('can_deactivate', $impact);
         $this->assertIsBool($impact['can_deactivate']);
+    }
+
+    /** Vérifie le remplacement atomique des deux collections sans supprimer leurs cibles. */
+    public function testLesAssociationsSontRemplaceesSansSupprimerLesEntitesCibles(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        $department = $departments->get(2);
+
+        $result = (new DepartmentManagementService())->save($department, [
+            'code' => $department->code,
+            'name' => $department->name,
+            'department_type_id' => $department->department_type_id,
+            'manager_ids' => [1],
+            'cgr_code_ids' => [1],
+        ]);
+
+        $this->assertSame(2, (int)$result->id);
+        $this->assertSame(1, (int)$this->getTableLocator()->get('Users')->get(1)->id);
+        $this->assertSame(1, (int)$this->getTableLocator()->get('CgrCodes')->get(1)->id);
+        $this->assertSame(1, (int)ConnectionManager::get('test')->execute(
+            'SELECT COUNT(*) FROM department_managers WHERE department_id = 2 AND user_id = 1',
+        )->fetchColumn(0));
+        $this->assertSame(1, (int)ConnectionManager::get('test')->execute(
+            'SELECT COUNT(*) FROM department_cgr_codes WHERE department_id = 2 AND cgr_code_id = 1',
+        )->fetchColumn(0));
+
+        (new DepartmentManagementService())->save($result, [
+            'code' => $result->code,
+            'name' => $result->name,
+            'department_type_id' => $result->department_type_id,
+            'manager_ids' => [],
+            'cgr_code_ids' => [],
+        ]);
+
+        $this->assertSame(0, (int)ConnectionManager::get('test')->execute(
+            'SELECT COUNT(*) FROM department_managers WHERE department_id = 2',
+        )->fetchColumn(0));
+        $this->assertSame(0, (int)ConnectionManager::get('test')->execute(
+            'SELECT COUNT(*) FROM department_cgr_codes WHERE department_id = 2',
+        )->fetchColumn(0));
+        $this->assertNotNull($this->getTableLocator()->get('Users')->find()->where(['id' => 1])->first());
+        $this->assertNotNull($this->getTableLocator()->get('CgrCodes')->find()->where(['id' => 1])->first());
     }
 
     /** Vérifie que le nettoyage sélectionné est atomique et détache sans désactiver les utilisateurs. */
@@ -58,7 +102,6 @@ final class DepartmentManagementServiceIntegrationTest extends TestCase
         ]);
         $connection->insert('cgr_codes', [
             'id' => 2,
-            'department_id' => 2,
             'type' => 'test',
             'code' => 'CGR-TEST',
             'label' => 'Code à nettoyer',
@@ -66,6 +109,10 @@ final class DepartmentManagementServiceIntegrationTest extends TestCase
             'is_system' => 0,
             'created' => $now,
             'modified' => $now,
+        ]);
+        $connection->insert('department_cgr_codes', [
+            'department_id' => 2,
+            'cgr_code_id' => 2,
         ]);
 
         $department = $this->getTableLocator()->get('Departments')->get(2);

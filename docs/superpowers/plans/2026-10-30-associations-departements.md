@@ -26,10 +26,10 @@
 - Create: `app/docs/adr/0072-associations-multiples-departements-cgr.md`
 - Test: tests d'intégration de migration et contrôle SQL MySQL
 
-- [ ] Écrire les tests de structure, de clés composites, d'unicité globale et de reprise des anciennes associations.
-- [ ] Vérifier l'échec attendu sur le schéma historique.
-- [ ] Créer les tables et transférer les données dans une transaction.
-- [ ] Vérifier les contraintes, doublons et colonnes supprimées.
+- [x] Écrire les tests de structure, de clés composites, d'unicité globale et de reprise des anciennes associations.
+- [x] Vérifier l'échec attendu sur le schéma historique.
+- [x] Créer les tables et transférer les données dans une migration MySQL reprenable.
+- [x] Vérifier les contraintes, doublons et colonnes supprimées.
 
 ### Task 2: ORM, entités et résolveur CGR
 
@@ -40,10 +40,10 @@
 - Modify: `app/src/Model/Entity/CgrCode.php`
 - Modify: `app/src/Service/CgrResolverService.php`
 
-- [ ] Tester les collections `Managers` et `CgrCodes` et l'unicité globale.
-- [ ] Remplacer les associations directes par les Many-to-Many et leurs entités de liaison.
-- [ ] Supprimer les constantes, champs accessibles et validations obsolètes.
-- [ ] Résoudre les codes actifs via la liaison département/CGR.
+- [x] Tester les collections `Managers` et `CgrCodes` et l'unicité globale.
+- [x] Remplacer les associations directes par les Many-to-Many et leurs entités de liaison.
+- [x] Supprimer les constantes, champs accessibles et validations obsolètes.
+- [x] Résoudre les codes actifs via la liaison département/CGR.
 
 ### Task 3: Service métier et API
 
@@ -53,10 +53,10 @@
 - Modify: `app/src/Controller/DepartmentsController.php`
 - Test: tests unitaires et fonctionnels des mutations
 
-- [ ] Tester l'enregistrement atomique des deux collections et la dissociation sans suppression d'entité.
-- [ ] Adapter les payloads `manager_ids` et `cgr_code_ids` et les réponses JSON en français.
-- [ ] Séparer les routes du catalogue CGR des routes d'association.
-- [ ] Conserver les autorisations et les réponses 422.
+- [x] Tester l'enregistrement atomique des deux collections et la dissociation sans suppression d'entité.
+- [x] Adapter les payloads `manager_ids` et `cgr_code_ids` et les réponses JSON en français.
+- [x] Séparer les routes du catalogue CGR des routes d'association.
+- [x] Conserver les autorisations et les réponses 422.
 
 ### Task 4: IHM, fixtures et documentation
 
@@ -65,14 +65,14 @@
 - Modify: `app/webroot/js/views/Departments/form.js`
 - Modify: fixtures et README locaux concernés
 
-- [ ] Tester les états vides, doublons et codes inactifs.
-- [ ] Remplacer les champs singuliers par des sélections multiples.
-- [ ] Supprimer les textes et filtres liés au CGR par défaut.
-- [ ] Mettre à jour les fixtures et la documentation.
+- [x] Tester les états vides, doublons et codes inactifs.
+- [x] Remplacer les champs singuliers par des sélections multiples.
+- [x] Supprimer les textes et filtres liés au CGR par défaut.
+- [x] Mettre à jour les fixtures et la documentation.
 
 ### Task 5: Validation finale
 
-- [ ] Exécuter `make test.unit`, `make test.integration`, `make test.api`, `make test.workflow`, `make test.style`, `make cs.check`, `make stan` et `make test.all`.
-- [ ] Vérifier les associations avec le REPL CakePHP selon l'ADR 0010.
-- [ ] Vérifier le diff final et l'absence de secrets ou fichiers générés.
+- [x] Exécuter `make test.unit`, `make test.integration`, `make test.api`, `make test.workflow`, `make test.style`, `make cs.check`, `make stan` et `make test.all`.
+- [x] Vérifier les associations avec le REPL CakePHP selon l'ADR 0010.
+- [x] Vérifier le diff final et l'absence de secrets ou fichiers générés.
 

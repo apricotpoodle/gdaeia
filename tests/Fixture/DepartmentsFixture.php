@@ -21,7 +21,6 @@ class DepartmentsFixture extends TestFixture
             [
                 'id' => 1,
                 'parent_id' => null,
-                'cgr_code_id' => null,
                 'lft' => 1,
                 'rght' => 4,
                 'level' => 1,
@@ -31,8 +30,6 @@ class DepartmentsFixture extends TestFixture
                 'sort' => 'Lorem ipsum dolor sit amet',
                 'department_type_id' => 1,
                 'cgr_strategy_id' => null,
-                'default_cgr' => 'Lorem ipsum dolor sit amet',
-                'current_manager_id' => null,
                 'deleted' => '2026-07-03 09:24:22',
                 'created' => 1783070662,
                 'modified' => 1783070662,
@@ -40,7 +37,6 @@ class DepartmentsFixture extends TestFixture
             [
                 'id' => 2,
                 'parent_id' => 1,
-                'cgr_code_id' => null,
                 'lft' => 2,
                 'rght' => 3,
                 'level' => 2,
@@ -50,8 +46,6 @@ class DepartmentsFixture extends TestFixture
                 'sort' => 'Service de test',
                 'department_type_id' => 1,
                 'cgr_strategy_id' => null,
-                'default_cgr' => null,
-                'current_manager_id' => null,
                 'deleted' => null,
                 'created' => 1783070662,
                 'modified' => 1783070662,

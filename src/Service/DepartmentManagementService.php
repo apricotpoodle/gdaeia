@@ -20,13 +20,12 @@ final class DepartmentManagementService
         'users',
         'validationsequences',
         'cgr_codes',
-        'default_cgr',
     ];
 
     /** @var list<string> */
     private const EDITABLE_FIELDS = [
-        'parent_id', 'cgr_code_id', 'code', 'name', 'sort', 'department_type_id',
-        'cgr_strategy_id', 'current_manager_id', 'base',
+        'parent_id', 'code', 'name', 'sort', 'department_type_id',
+        'cgr_strategy_id', 'base',
     ];
 
     /** @param \App\Model\Table\DepartmentsTable|null $departments Table injectable for tests. */
@@ -78,8 +77,6 @@ final class DepartmentManagementService
                 'count' => $this->countActiveCgrCodes($ids)],
             ['key' => 'cgr_system', 'label' => __('Codes CGR système actifs'),
                 'count' => $this->countActiveSystemCgrCodes($ids)],
-            ['key' => 'default_cgr', 'label' => __('Départements utilisant un CGR par défaut'),
-                'count' => $this->countDefaultCgrs($ids)],
         ];
         $blockers = array_values(array_filter($dependencies, static fn(array $item): bool => $item['count'] > 0));
 
@@ -157,6 +154,12 @@ final class DepartmentManagementService
             }
             $entity->set('parent_id', $parentId);
             $this->table()->save($entity);
+            if (array_key_exists('manager_ids', $data)) {
+                $this->replaceAssociation($entity, 'Managers', $this->associationIds($data['manager_ids']));
+            }
+            if (array_key_exists('cgr_code_ids', $data)) {
+                $this->replaceAssociation($entity, 'CgrCodes', $this->associationIds($data['cgr_code_ids']));
+            }
 
             return $entity;
         });
@@ -187,7 +190,6 @@ final class DepartmentManagementService
      *     detached_user_ids: list<int>,
      *     deactivated_sequence_ids: list<int>,
      *     deactivated_cgr_ids: list<int>,
-     *     cleared_default_department_ids: list<int>
      * }
      */
     public function deactivateWithCleanup(Department $department, array $cleanup): array
@@ -215,7 +217,7 @@ final class DepartmentManagementService
         if (($impactByKey['cgr_system'] ?? 0) > 0) {
             throw new DomainException(__('La désactivation reste bloquée : des codes CGR système actifs existent.'));
         }
-        foreach (['children', 'users', 'validationsequences', 'cgr_codes', 'default_cgr'] as $key) {
+        foreach (['children', 'users', 'validationsequences', 'cgr_codes'] as $key) {
             if (($impactByKey[$key] ?? 0) > 0 && !in_array($key, $cleanup, true)) {
                 throw new DomainException(__(
                     'La désactivation reste bloquée : la dépendance « {0} » doit être confirmée.',
@@ -235,7 +237,6 @@ final class DepartmentManagementService
                 $detachedUserIds = [];
                 $deactivatedSequenceIds = [];
                 $deactivatedCgrIds = [];
-                $clearedDefaultDepartmentIds = [];
 
                 if (in_array('users', $cleanup, true)) {
                     $userDepartments = $this->tableFor('UserDepartments');
@@ -269,42 +270,19 @@ final class DepartmentManagementService
                     $cgrCodes = $this->tableFor('CgrCodes');
                     $deactivatedCgrIds = $cgrCodes->find()
                         ->select(['id'])
+                        ->matching('Departments', static function ($query) use ($departmentIds) {
+                            return $query->where(['Departments.id IN' => $departmentIds]);
+                        })
                         ->where([
-                            'department_id IN' => $departmentIds,
                             'active' => true,
                             'is_system' => false,
                         ])
                         ->all()
                         ->extract('id')
                         ->toList();
-                    $cgrCodes->updateAll(['active' => false], [
-                        'department_id IN' => $departmentIds,
-                        'active' => true,
-                        'is_system' => false,
-                    ]);
-                }
-
-                if (in_array('default_cgr', $cleanup, true)) {
-                    $codes = $this->tableFor('CgrCodes')->find()
-                        ->select(['id'])
-                        ->where(['department_id IN' => $departmentIds])
-                        ->all()
-                        ->extract('id')
-                        ->toList();
-                    if ($codes !== []) {
-                        $departments = $this->table();
-                        $clearedDefaultDepartmentIds = $departments->find()
-                            ->select(['id'])
-                            ->where([
-                                'cgr_code_id IN' => $codes,
-                                'deleted IS' => null,
-                            ])
-                            ->all()
-                            ->extract('id')
-                            ->toList();
-                        $departments->updateAll(['cgr_code_id' => null], [
-                            'cgr_code_id IN' => $codes,
-                            'deleted IS' => null,
+                    if ($deactivatedCgrIds !== []) {
+                        $cgrCodes->updateAll(['active' => false], [
+                            'id IN' => $deactivatedCgrIds,
                         ]);
                     }
                 }
@@ -319,7 +297,6 @@ final class DepartmentManagementService
                     'detached_user_ids' => array_map('intval', $detachedUserIds),
                     'deactivated_sequence_ids' => array_map('intval', $deactivatedSequenceIds),
                     'deactivated_cgr_ids' => array_map('intval', $deactivatedCgrIds),
-                    'cleared_default_department_ids' => array_map('intval', $clearedDefaultDepartmentIds),
                 ];
             },
         );
@@ -330,14 +307,11 @@ final class DepartmentManagementService
     {
         $departmentIds = $this->subtreeIds($department);
         $userIds = [(int)$actor->get('id')];
-        $managerIds = $this->table()->find()
-            ->select(['current_manager_id'])
-            ->where([
-                'id IN' => $departmentIds,
-                'current_manager_id IS NOT' => null,
-            ])
+        $managerIds = $this->tableFor('DepartmentManagers')->find()
+            ->select(['user_id'])
+            ->where(['department_id IN' => $departmentIds])
             ->all()
-            ->extract('current_manager_id')
+            ->extract('user_id')
             ->toList();
         $userIds = array_merge($userIds, array_map('intval', $managerIds));
 
@@ -387,14 +361,11 @@ final class DepartmentManagementService
     public function fullReportRecipientIds(Department $department, User $actor): array
     {
         $departmentIds = $this->subtreeIds($department);
-        $managerIds = $this->table()->find()
-            ->select(['current_manager_id'])
-            ->where([
-                'id IN' => $departmentIds,
-                'current_manager_id IS NOT' => null,
-            ])
+        $managerIds = $this->tableFor('DepartmentManagers')->find()
+            ->select(['user_id'])
+            ->where(['department_id IN' => $departmentIds])
             ->all()
-            ->extract('current_manager_id')
+            ->extract('user_id')
             ->toList();
         $administratorIds = $this->tableFor('Users')->find()
             ->innerJoinWith('UserDepartments', static function ($query) use ($departmentIds) {
@@ -482,8 +453,11 @@ final class DepartmentManagementService
     /** @param list<int> $ids */
     private function countActiveCgrCodes(array $ids): int
     {
-        return $this->tableFor('CgrCodes')->find()->where([
-            'department_id IN' => $ids,
+        return $this->tableFor('CgrCodes')->find()
+            ->matching('Departments', static function ($query) use ($ids) {
+                return $query->where(['Departments.id IN' => $ids]);
+            })
+            ->where([
             'active' => true,
         ])->count();
     }
@@ -491,24 +465,14 @@ final class DepartmentManagementService
     /** @param list<int> $ids */
     private function countActiveSystemCgrCodes(array $ids): int
     {
-        return $this->tableFor('CgrCodes')->find()->where([
-            'department_id IN' => $ids,
-            'active' => true,
-            'is_system' => true,
-        ])->count();
-    }
-
-    /** @param list<int> $ids */
-    private function countDefaultCgrs(array $ids): int
-    {
-        $codes = $this->tableFor('CgrCodes')->find()->select(['id'])->where([
-            'department_id IN' => $ids,
-        ])->all()->extract('id')->toList();
-        if ($codes === []) {
-            return 0;
-        }
-
-        return $this->table()->find()->where(['cgr_code_id IN' => $codes, 'deleted IS' => null])->count();
+        return $this->tableFor('CgrCodes')->find()
+            ->matching('Departments', static function ($query) use ($ids) {
+                return $query->where(['Departments.id IN' => $ids]);
+            })
+            ->where([
+                'active' => true,
+                'is_system' => true,
+            ])->count();
     }
 
     /** Indique si une mutation structurelle toucherait des données opérationnelles. */
@@ -527,5 +491,46 @@ final class DepartmentManagementService
     private function tableFor(string $alias): Table
     {
         return TableRegistry::getTableLocator()->get($alias);
+    }
+
+    /**
+     * Remplace une collection Many-to-Many sans supprimer les entités cibles.
+     *
+     * @param \App\Model\Entity\Department $department Département propriétaire.
+     * @param string $association Alias de l'association.
+     * @param list<int> $ids Identifiants demandés.
+     */
+    private function replaceAssociation(Department $department, string $association, array $ids): void
+    {
+        /** @var \Cake\ORM\Association\BelongsToMany<\Cake\ORM\Table> $relation */
+        $relation = $this->table()->getAssociation($association);
+        $target = $relation->getTarget();
+        $entities = $ids === []
+            ? []
+            : $target->find()->where(['id IN' => $ids])->all()->toList();
+        if (count($entities) !== count($ids)) {
+            throw new DomainException(__('Une association sélectionnée est introuvable.'));
+        }
+        $relation->replaceLinks($department, $entities);
+    }
+
+    /** @return list<int> */
+    private function associationIds(mixed $value): array
+    {
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($value as $item) {
+            if (is_int($item) || (is_string($item) && ctype_digit($item))) {
+                $id = (int)$item;
+                if ($id > 0) {
+                    $ids[$id] = $id;
+                }
+            }
+        }
+
+        return array_values($ids);
     }
 }

@@ -16,6 +16,7 @@ class ApplicationformsControllerTest extends TestCase
     protected array $fixtures = [
         'app.Applicationforms',
         'app.Departments',
+        'app.DepartmentManagers',
         'app.Users',
         'app.Contracttypes',
         'app.Hiringreasons',
@@ -104,7 +105,7 @@ class ApplicationformsControllerTest extends TestCase
         $this->get('/applicationforms/edit/1');
 
         $this->assertResponseOk();
-        $this->assertResponseContains('Aucun chef de service associé');
+        $this->assertResponseContains('Aucun responsable associé');
         $this->assertStringNotContainsString('name="manager_id"', (string)$this->_response->getBody());
     }
 
@@ -121,13 +122,17 @@ class ApplicationformsControllerTest extends TestCase
 
     public function testLaFicheAfficheLeChefDeServiceDuDepartement(): void
     {
-        ConnectionManager::get('test')->update('departments', ['current_manager_id' => 1], ['id' => 1]);
+        $table = $this->getTableLocator()->get('DepartmentManagers');
+        $table->saveOrFail($table->newEntity([
+            'department_id' => 1,
+            'user_id' => 1,
+        ]));
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
 
         $this->get('/applicationforms/edit/1');
 
         $this->assertResponseOk();
-        $this->assertResponseContains('Chef de service');
+        $this->assertResponseContains('Responsables du département');
         $this->assertStringNotContainsString('name="manager_id"', (string)$this->_response->getBody());
     }
 
@@ -137,7 +142,6 @@ class ApplicationformsControllerTest extends TestCase
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
         $this->post('/applicationforms/edit/1', [
             'assistant_id' => '',
-            'manager_id' => '',
             'jobtitle' => 'Poste modifié',
         ]);
 

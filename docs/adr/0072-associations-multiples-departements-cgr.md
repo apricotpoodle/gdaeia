@@ -36,7 +36,9 @@ La migration crée les deux tables de liaison, dédoublonne les couples issus
 des anciennes colonnes, journalise le nombre de valeurs `default_cgr` non
 vides avant leur abandon, puis supprime les colonnes obsolètes. Les clés
 étrangères utilisent `CASCADE` sur les liaisons afin qu'une suppression d'une
-entité ne laisse pas de ligne orpheline.
+entité ne laisse pas de ligne orpheline. Les DDL MySQL étant implicitement
+validés, la migration est rendue reprenable et idempotente ; les transferts
+de données applicatifs restent transactionnels dans le service métier.
 
 ## Conséquences
 

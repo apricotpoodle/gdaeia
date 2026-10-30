@@ -20,7 +20,6 @@ class CgrCodesFixture extends TestFixture
         $this->records = [
             [
                 'id' => 1,
-                'department_id' => 1,
                 'type' => 'Lorem ipsum dolor sit amet',
                 'code' => 'Lorem ipsum do',
                 'label' => 'Lorem ipsum dolor sit amet',
