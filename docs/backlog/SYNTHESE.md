@@ -1,6 +1,6 @@
 # Synthèse du backlog
 
-État vérifié le **13 octobre 2026** à partir des fiches de tickets, du
+État vérifié le **30 octobre 2026** à partir des fiches de tickets, du
 manifeste `validation-applicationform/manifest.json`, du code, des migrations
 et des tests présents dans le dépôt. Les statuts ci-dessous décrivent le
 reste à faire, pas seulement le statut historique écrit dans une fiche.
@@ -12,12 +12,13 @@ nouvel audit global.
 
 | Périmètre | Total | Entièrement traité | Partiellement traité | Reste à faire |
 |---|---:|---:|---:|---:|
-| Backlog technique racine (`0001`–`0023`) | 23 | 13 | 1 | 9 |
+| Backlog technique racine (`0001`–`0023`) | 23 | 14 | 1 | 8 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
-| **Total** | **30** | **26** | **1** | **3** |
+| **Total** | **36** | **27** | **1** | **8** |
 
-Le ticket 0002 est compté comme partiellement traité ; il reste donc trois
-tickets à réaliser complètement, auxquels s’ajoutent les compléments du 0002.
+Le ticket 0002 est compté comme partiellement traité ; les tickets restants
+concernent les sujets 0001, 0007, 0017 et 0019 à 0023, auxquels s'ajoutent
+les compléments du 0002.
 
 ## Tickets restant à effectuer
 
@@ -27,7 +28,6 @@ tickets à réaliser complètement, auxquels s’ajoutent les compléments du 00
 | [0002 — Couverture de tests](0002-etendre-la-couverture-de-tests.md) | Haute | **Partiel** | Mesurer et documenter la couverture cible, décider de l’automatisation des seuils (80 % global, 90 % critique, objectif branches), puis traiter l’écart restant. | Tests HTTP, workflow/vues SQL, PCOV et rapports Clover/HTML existent ; la fiche indique elle-même 61,5 % de lignes et des seuils différés. |
 | [0007 — Accès menus et permissions](0007-separer-acces-menus-et-permissions-administration.md) | Haute | À faire | Introduire `permissions`/`role_permissions` et `manage_menus`, centraliser la résolution des accès, migrer les données et ajouter les tests HTTP, Policy et intégration. La V1 couvre `self`, les départements directement affectés (`assigned`) et `all` ; les descendants et les droits individuels sont différés. | `src/Policy/MenuPolicy.php` autorise encore via `isSuperUser()` ; aucune table `permissions`/`role_permissions` ni permission `manage_menus` n’a été trouvée. Les Policies et custom finders existants constituent le socle de migration ; le ticket écarte provisoirement ARO/ACO. |
 | [0017 — Circuits courts locaux](0017-implementer-les-circuits-courts-locaux.md) | Moyenne | À planifier | Implémenter les exceptions par contrat et département, l'administration locale et les contrôles de lancement de l'ADR 0070. | Nouveau ticket créé après l'audit du 13 octobre ; aucune implémentation engagée. |
-| [0018 — Jours ouvrés des DAE](0018-securiser-la-saisie-des-jours-ouvres-dae.md) | Haute | À planifier | Afficher, calculer et borner le nombre de jours ouvrés dans l'édition des DAE, avec validation côté serveur. | Nouveau ticket créé le 29 octobre ; aucune implémentation engagée. |
 | [0019 — Quatre zones de la vue DAE](0019-reprendre-les-quatre-zones-dans-la-vue-dae.md) | Moyenne | À planifier | Aligner l'onglet « Détails de la demande » sur les quatre zones de l'édition, en lecture seule et avec conservation des droits. | Nouveau ticket créé le 29 octobre ; aucune implémentation engagée. |
 | [0020 — Duplication des DAE](0020-fiabiliser-la-duplication-des-dae.md) | Haute | À planifier | Effacer les champs administratifs lors de la copie et retourner des blocages explicites et actionnables. | Nouveau ticket créé le 29 octobre ; aucune implémentation engagée. |
 | [0021 — Habilitations génériques](0021-implementer-les-habilitations-generiques.md) | Haute | À planifier | Mettre en œuvre les permissions génériques et sécuriser l'accès Web/API à l'administration des départements. | Nouveau ticket créé le 29 octobre ; l'ADR 0069 est encore proposé et le ticket 0007 reste à concrétiser. |
@@ -51,6 +51,7 @@ tickets à réaliser complètement, auxquels s’ajoutent les compléments du 00
 | 0014 — Perte de session | Terminé | Middleware API 401 JSON, journalisation sans secret et tests HTTP présents. |
 | 0015 — Reconnexion après expiration | Terminé | Gestionnaire `fetch` mutualisé, message de connexion et tests JavaScript présents. |
 | 0016 — Parcours de reconnexion | Terminé | Tests API/Web et tests réseau, timeout et non-rejeu présents. |
+| 0018 — Jours ouvrés des DAE | Terminé | Champ regroupé avec la date de fin, calcul automatique des jours ouvrés, plafond serveur sur la durée calendaire et tests unitaires, ORM, API et Web présents. |
 | Workflow 0021 — Concurrence des votes | Terminé | Verrouillage transactionnel de l’étape, contrainte d’unicité, message métier homogène, exposition de l’horodatage du vote et couverture PHPUnit/API/IHM présents. |
 | Workflow 0009 à 0020 | Terminé | Les treize entrées correspondantes du manifeste sont `Terminé` ; les fiches, migrations, services et tests associés sont présents. |
 
@@ -65,13 +66,12 @@ L’ordre recommandé est :
 4. **0001**, qui relève de la gouvernance et de la migration du backlog.
 5. **0017**, lorsque l'évolution de la rédaction SEM sera programmée ; suivre
    l'ADR 0070 sans étendre l'exception aux autres sociétés.
-6. **0018**, pour sécuriser la saisie des jours ouvrés dans l'édition des DAE.
-7. **0019**, pour aligner la consultation d'une DAE sur l'organisation de son édition.
-8. **0020**, pour fiabiliser la copie des DAE et rendre les blocages résolubles.
-9. **0021**, priorité haute, pour mettre en œuvre les habilitations génériques
+6. **0019**, pour aligner la consultation d'une DAE sur l'organisation de son édition.
+7. **0020**, pour fiabiliser la copie des DAE et rendre les blocages résolubles.
+8. **0021**, priorité haute, pour mettre en œuvre les habilitations génériques
    et résoudre l'accès administrateur aux départements.
-10. **0022**, pour mettre à jour le référentiel des départements SEM/Rédac.
-11. **0023**, pour préparer la migration contrôlée de la base MySQL.
+9. **0022**, pour mettre à jour le référentiel des départements SEM/Rédac.
+10. **0023**, pour préparer la migration contrôlée de la base MySQL.
 
 Cette synthèse est un audit statique du dépôt. Elle confirme la présence des
 implémentations et tests versionnés ; elle ne remplace pas l’exécution des

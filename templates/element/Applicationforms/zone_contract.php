@@ -112,6 +112,23 @@ $isEditable = function (string $field) use ($fieldSchema): bool {
                 </div>
             </div>
 
+            <!-- Nombre de jours ouvrés -->
+            <div class="col-md-6 d-none" id="container-working-days">
+                <?= $this->Form->control('working_days', [
+                    'type' => 'number',
+                    'min' => 0,
+                    'step' => 1,
+                    'label' => __('Nombre de jours ouvrés'),
+                    'class' => 'form-control',
+                    'id' => 'working-days',
+                    'disabled' => !$isEditable('working_days'),
+                    'inputmode' => 'numeric',
+                ]) ?>
+                <div id="working-days-help" class="form-text">
+                    <?= __('La valeur est calculée automatiquement et peut être ajustée dans la limite de la période.') ?>
+                </div>
+            </div>
+
         </div>
     </div>
 </div>

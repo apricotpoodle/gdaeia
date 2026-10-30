@@ -18,7 +18,6 @@ dans le code et les tests.
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute ; permissions génériques, Policies CakePHP et périmètres V1 directs, avec la gestion des descendants et des droits individuels différée.
 - [0017 — Implémenter les circuits courts locaux de validation](0017-implementer-les-circuits-courts-locaux.md) — priorité moyenne ; à planifier selon l'ADR 0070.
-- [0018 — Sécuriser la saisie des jours ouvrés d'une DAE](0018-securiser-la-saisie-des-jours-ouvres-dae.md) — priorité haute ; champ calculé et borné dans l'édition des DAE.
 - [0019 — Reprendre les quatre zones dans la vue d'une DAE](0019-reprendre-les-quatre-zones-dans-la-vue-dae.md) — priorité moyenne ; aligner l'onglet « Détails de la demande » sur l'édition en lecture seule.
 - [0020 — Fiabiliser la duplication des DAE](0020-fiabiliser-la-duplication-des-dae.md) — priorité haute ; effacer les champs administratifs et expliciter les blocages.
 - [0021 — Implémenter les habilitations génériques](0021-implementer-les-habilitations-generiques.md) — priorité haute ; remplacer les droits codés en dur et sécuriser l'accès aux départements.
@@ -31,6 +30,7 @@ dans le code et les tests.
 - [0014 — Détecter et tracer la perte de session](0014-detecter-et-tracer-la-perte-de-session.md) — priorité haute.
 - [0015 — Rediriger vers la connexion après expiration de session](0015-rediriger-vers-la-connexion-apres-expiration-de-session.md) — priorité haute.
 - [0016 — Couvrir le parcours de reconnexion](0016-couvrir-le-parcours-de-reconnexion.md) — priorité haute.
+- [0018 — Sécuriser la saisie des jours ouvrés d'une DAE](0018-securiser-la-saisie-des-jours-ouvres-dae.md) — priorité haute.
 
 ## Migration vers un gestionnaire de tickets
 

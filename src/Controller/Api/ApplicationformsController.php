@@ -20,6 +20,7 @@ use App\Service\Workflow\ApplicationformValidationWorkflow;
 use App\Service\Workflow\BlockedValidationCycle;
 use App\Service\Workflow\BlockedValidationStep;
 use App\Service\Workflow\WorkflowStartFailureException;
+use App\Service\WorkingDaysService;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Exception\UnprocessableContentException;
@@ -933,14 +934,7 @@ class ApplicationformsController extends AppController
             return null;
         }
 
-        $workingDays = 0;
-        for ($date = $begin; $date <= $end; $date = $date->modify('+1 day')) {
-            if ((int)$date->format('N') <= 5) {
-                $workingDays++;
-            }
-        }
-
-        return $workingDays;
+        return (new WorkingDaysService())->countWorkingDays($begin, $end);
     }
 
     /** Convertit une date ORM ou textuelle en date civile exploitable. */
