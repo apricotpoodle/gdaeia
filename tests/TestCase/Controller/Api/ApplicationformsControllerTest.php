@@ -138,15 +138,73 @@ class ApplicationformsControllerTest extends TestCase
 
     public function testLApiFiltreEtTrieLesDemandesSurLeStatutDeValidation(): void
     {
-        ConnectionManager::get('test')->update('applicationforms', ['deleted' => null], ['id' => 1]);
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationforms', ['deleted' => null], ['id' => 1]);
+        foreach ([2, 3, 4, 5] as $id) {
+            $connection->insert('applicationforms', [
+                'id' => $id,
+                'department_id' => 1,
+                'user_id' => 1,
+                'cgr' => 'CGR ' . $id,
+                'contracttype_id' => 1,
+                'hiringreason_id' => 1,
+                'reasonforreplacement' => 'Remplacement',
+                'budgetfeature_id' => 1,
+                'jobtitle' => 'Poste ' . $id,
+                'professionalcategory_id' => 1,
+                'worktime_id' => 1,
+                'workingtimedistribution' => 'Temps plein',
+                'grossremuneration' => 1.5,
+                'period_id' => 1,
+                'qualification' => 'Qualification',
+                'begin_at' => '2026-07-03',
+                'end_at' => '2026-07-03',
+                'applicantname' => 'Demandeur ' . $id,
+                'yesno_id' => 1,
+                'deleted' => null,
+                'created' => '2026-07-03 09:00:0' . $id,
+                'modified' => '2026-07-03 09:00:0' . $id,
+            ]);
+        }
+        $states = [2 => 'en_attente', 3 => 'acceptee', 4 => 'refusee', 5 => 'annulee'];
+        foreach ($states as $applicationformId => $state) {
+            $connection->insert('validation_workflow_runs', [
+                'id' => 910_000 + $applicationformId,
+                'applicationform_id' => $applicationformId,
+                'started_by_user_id' => 1,
+                'state' => $state,
+                'started_at' => '2026-10-01 09:00:00',
+                'finished_at' => $state === 'en_attente' ? null : '2026-10-02 09:00:00',
+                'created' => '2026-10-01 09:00:00',
+                'modified' => '2026-10-02 09:00:00',
+            ]);
+        }
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
 
+        $expectedIdsByFilter = [
+            '' => [1, 2, 3, 4, 5],
+            '1' => [1],
+            '2' => [2],
+            '4' => [3],
+            '5' => [4],
+            '6' => [5],
+        ];
+        foreach ($expectedIdsByFilter as $value => $expectedIds) {
+            $query = http_build_query([
+                'filters' => [[
+                    'field' => 'validation_status',
+                    'type' => '=',
+                    'value' => $value,
+                ]],
+            ]);
+            $this->get('/api/applicationforms.json?' . $query);
+
+            $this->assertResponseOk();
+            $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertSame($expectedIds, array_column($body['data'], 'id'), 'Filtre ' . ($value ?: 'Toutes'));
+        }
+
         $query = http_build_query([
-            'filters' => [[
-                'field' => 'validation_status',
-                'type' => '=',
-                'value' => '1',
-            ]],
             'sorters' => [[
                 'field' => 'validation_status',
                 'dir' => 'desc',
@@ -155,19 +213,20 @@ class ApplicationformsControllerTest extends TestCase
         $this->get('/api/applicationforms.json?' . $query);
 
         $this->assertResponseOk();
-        $this->assertResponseContains('"id": 1');
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame([4, 3, 2, 1, 5], array_column($body['data'], 'id'));
 
         $query = http_build_query([
-            'filters' => [[
+            'sorters' => [[
                 'field' => 'validation_status',
-                'type' => '=',
-                'value' => '2',
+                'dir' => 'asc',
             ]],
         ]);
         $this->get('/api/applicationforms.json?' . $query);
 
         $this->assertResponseOk();
-        $this->assertResponseContains('"data": []');
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame([1, 5, 2, 3, 4], array_column($body['data'], 'id'));
     }
 
     public function testLApiRefuseUnePlageDeDatesInverseeAvecUneErreurJson(): void

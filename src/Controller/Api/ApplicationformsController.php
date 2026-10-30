@@ -829,6 +829,14 @@ class ApplicationformsController extends AppController
                 'validation_status' => 'Applicationformstatuses.validationstatus_id',
             ], [
                 'validation_status' => 'validation_sort',
+            ], [
+                'validation_status' => static function (mixed $value, string $type): array {
+                    if ((string)$value === '2') {
+                        return ['Applicationformstatuses.en_cours', 1];
+                    }
+
+                    return ['Applicationformstatuses.validationstatus_id', $value];
+                },
             ]);
         } catch (UnprocessableContentException $exception) {
             return $this->workflowResponse(false, $exception->getMessage(), [], 422);

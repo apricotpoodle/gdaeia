@@ -385,6 +385,13 @@ export class TabulatorBuilder {
         this.config.progressiveLoad = "scroll";
         this.config.progressiveLoadScrollMargin = 150;
         this.config.ajaxLoader = false;
+        const clearProgressiveData = function () {
+            // Les réponses d'un filtre distant ne doivent jamais s'ajouter aux
+            // lignes chargées pour le filtre précédent.
+            this.clearData();
+        };
+        this.config.dataFiltering = clearProgressiveData;
+        this.config.headerFilterChanged = clearProgressiveData;
 
         const targetTable = document.querySelector(this.selector);
         if (targetTable) {
