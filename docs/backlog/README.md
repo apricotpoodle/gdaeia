@@ -14,6 +14,7 @@ dans le code et les tests.
 
 ## Tickets actifs
 
+- [0024 — Généraliser les associations des départements](0024-generaliser-les-associations-des-departements.md) — priorité haute ; chantier prioritaire pour les responsables multiples et le catalogue CGR partagé.
 - [0001 — Mettre en place un gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) — priorité moyenne.
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute ; permissions génériques, Policies CakePHP et périmètres V1 directs, avec la gestion des descendants et des droits individuels différée.

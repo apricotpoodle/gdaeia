@@ -12,12 +12,12 @@ nouvel audit global.
 
 | Périmètre | Total | Entièrement traité | Partiellement traité | Reste à faire |
 |---|---:|---:|---:|---:|
-| Backlog technique racine (`0001`–`0023`) | 23 | 14 | 1 | 8 |
+| Backlog technique racine (`0001`–`0024`) | 24 | 14 | 1 | 9 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
 | **Total** | **36** | **27** | **1** | **8** |
 
 Le ticket 0002 est compté comme partiellement traité ; les tickets restants
-concernent les sujets 0001, 0007, 0017 et 0019 à 0023, auxquels s'ajoutent
+concernent les sujets 0001, 0007, 0017 et 0019 à 0024, auxquels s'ajoutent
 les compléments du 0002.
 
 ## Tickets restant à effectuer
@@ -33,6 +33,7 @@ les compléments du 0002.
 | [0021 — Habilitations génériques](0021-implementer-les-habilitations-generiques.md) | Haute | À planifier | Mettre en œuvre les permissions génériques et sécuriser l'accès Web/API à l'administration des départements. | Nouveau ticket créé le 29 octobre ; l'ADR 0069 est encore proposé et le ticket 0007 reste à concrétiser. |
 | [0022 — Référentiel des départements](0022-mettre-a-jour-le-referentiel-des-departements.md) | Moyenne | À planifier | Mettre à jour les départements, principalement les fils de SEM/Rédac, avec import contrôlé et vérification d'intégrité. | Nouveau ticket créé le 29 octobre ; aucune transformation de données engagée. |
 | [0023 — Migration de base](0023-migrer-la-base-de-donnees.md) | Moyenne | À planifier | Préparer une migration MySQL simple par export/restauration, migrations et contrôles de cohérence. | Nouveau ticket créé le 29 octobre ; aucune bascule de base engagée. |
+| [0024 — Associations multiples des départements](0024-generaliser-les-associations-des-departements.md) | **Haute** | Prêt | Remplacer les responsables et rattachements CGR directs par des tables de liaison, migrer les données et adapter l'ORM, l'API et les écrans. | Nouveau ticket prioritaire ; aucun changement de schéma ni d'IHM engagé. |
 
 ## Tickets déjà traités — contrôle de non-réouverture
 
@@ -72,6 +73,8 @@ L’ordre recommandé est :
    et résoudre l'accès administrateur aux départements.
 9. **0022**, pour mettre à jour le référentiel des départements SEM/Rédac.
 10. **0023**, pour préparer la migration contrôlée de la base MySQL.
+11. **0024**, en priorité, pour normaliser les responsables et les codes CGR
+    avant toute évolution dépendant du référentiel des départements.
 
 Cette synthèse est un audit statique du dépôt. Elle confirme la présence des
 implémentations et tests versionnés ; elle ne remplace pas l’exécution des
