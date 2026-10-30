@@ -17,6 +17,7 @@
 
 /** @var \Authorization\IdentityInterface|null $identity */
 $cakeDescription = 'Gestion des Droits (GDAETF2)';
+$applicationTimezone = (string)\Cake\Core\Configure::read('App.defaultTimezone', 'Europe/Paris');
 ?>
 <!DOCTYPE html>
 <html lang="fr">
@@ -73,6 +74,12 @@ $cakeDescription = 'Gestion des Droits (GDAETF2)';
             <div class="collapse navbar-collapse" id="top-navigation-menu">
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="main-navbar-links">
                 </ul>
+
+                <div class="small text-white-50 me-3" id="main-navbar-timezone"
+                    title="<?= h(__('Fuseau horaire applicatif')) ?>">
+                    <i class="fas fa-clock me-1 text-info" aria-hidden="true"></i>
+                    <span><?= h(__('Fuseau : {0}', $applicationTimezone)) ?></span>
+                </div>
 
                 <div class="d-flex align-items-center text-light" id="main-navbar-user-zone">
                 </div>
