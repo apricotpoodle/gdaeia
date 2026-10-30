@@ -1,6 +1,6 @@
 # 0024 — Généraliser les associations des départements
 
-**Statut :** Prêt
+**Statut :** En cours
 
 **Priorité :** Haute — chantier prioritaire
 

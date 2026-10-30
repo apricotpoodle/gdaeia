@@ -80,6 +80,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0069** | Habilitations par rôles et périmètres | **Proposé** | [`0069-habilitations-par-roles-et-perimetres.md`](./0069-habilitations-par-roles-et-perimetres.md) |
 | **ADR 0070** | Circuits courts locaux selon le type de contrat | **Accepté** | [`0070-circuits-courts-locaux-par-contrat.md`](./0070-circuits-courts-locaux-par-contrat.md) |
 | **ADR 0071** | Fuseau horaire applicatif Europe/Paris et stockage UTC | **Proposé** | [`0071-fuseau-horaire-applicatif-europe-paris.md`](./0071-fuseau-horaire-applicatif-europe-paris.md) |
+| **ADR 0072** | Associations multiples des départements, utilisateurs et codes CGR | **Proposé** | [`0072-associations-multiples-departements-cgr.md`](./0072-associations-multiples-departements-cgr.md) |
 
 ---
 
