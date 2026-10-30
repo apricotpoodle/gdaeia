@@ -1,6 +1,6 @@
 # 0018 — Sécuriser la saisie des jours ouvrés d'une DAE
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Haute
 
@@ -18,24 +18,24 @@ saisie du nombre de jours ouvrés dès que la date de fin est renseignée.
 
 ## Travail attendu
 
-- [ ] Afficher les champs « date de fin » et « nombre de jours ouvrés » immédiatement auprès du
-uniquement s'il peuvent être saisis suivant le type d econtrat.
-- [ ] Afficher le champ « Nombre de jours ouvrés » immédiatement auprès du
+- [x] Afficher les champs « date de fin » et « nombre de jours ouvrés » ensemble
+  lorsque la date de fin est disponible selon le type de contrat.
+- [x] Afficher le champ « Nombre de jours ouvrés » immédiatement auprès du
   champ de date de fin dans le formulaire d'édition d'une DAE.
-- [ ] Calculer automatiquement le nombre de jours ouvrés entre les dates de
+- [x] Calculer automatiquement le nombre de jours ouvrés entre les dates de
   début et de fin, en excluant les samedis et dimanches.
-- [ ] Préremplir le champ avec cette valeur calculée lorsque les deux dates
+- [x] Préremplir le champ avec cette valeur calculée lorsque les deux dates
   sont valides.
-- [ ] Autoriser la modification manuelle de la valeur par l'opérateur.
-- [ ] Limiter la valeur saisie à un entier compris entre zéro et le nombre de
+- [x] Autoriser la modification manuelle de la valeur par l'opérateur.
+- [x] Limiter la valeur saisie à un entier compris entre zéro et le nombre de
   jours calendaires inclus entre les dates de début et de fin.
-- [ ] Recalculer la valeur par défaut et la limite maximale lorsque l'une des
+- [x] Recalculer la valeur par défaut et la limite maximale lorsque l'une des
   dates est modifiée.
-- [ ] Empêcher l'enregistrement d'une valeur hors limites côté serveur, même
+- [x] Empêcher l'enregistrement d'une valeur hors limites côté serveur, même
   si la validation JavaScript est contournée.
-- [ ] Conserver le comportement attendu pour une période journalière et le
+- [x] Conserver le comportement attendu pour une période journalière et le
   calcul de la rémunération de base associé.
-- [ ] Ajouter les tests JavaScript, unitaires, d'intégration ou HTTP adaptés
+- [x] Ajouter les tests unitaires, d'intégration et HTTP adaptés
   au niveau de chaque règle introduite.
 
 ## Critères d'acceptation

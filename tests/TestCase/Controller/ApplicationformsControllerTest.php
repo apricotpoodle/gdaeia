@@ -80,6 +80,23 @@ class ApplicationformsControllerTest extends TestCase
         );
     }
 
+    public function testLEditionAfficheLesJoursOuvresPresDeLaDateDeFin(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $body = (string)$this->_response->getBody();
+        $endAtPosition = strpos($body, 'id="end-at"');
+        $workingDaysPosition = strpos($body, 'id="working-days"');
+
+        $this->assertNotFalse($endAtPosition);
+        $this->assertNotFalse($workingDaysPosition);
+        $this->assertLessThan($workingDaysPosition, $endAtPosition);
+        $this->assertStringContainsString('views/Applicationforms/zone-contract.js', $body);
+    }
+
     public function testLaFicheAfficheLAbsenceDeChefDeServiceSansChampDeSaisie(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);

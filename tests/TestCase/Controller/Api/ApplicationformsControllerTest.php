@@ -342,6 +342,36 @@ class ApplicationformsControllerTest extends TestCase
         ], json_decode((string)$this->_response->getBody(), true));
     }
 
+    public function testLEditionApiRefuseUnNombreDeJoursSuperieurALaPeriode(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/edit/1.json', [
+            'begin_at' => '2026-10-05',
+            'end_at' => '2026-10-07',
+            'working_days' => 4,
+        ]);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"success":false');
+        $this->assertResponseContains('Le nombre de jours travaillés ne peut pas dépasser la durée de la période.');
+    }
+
+    public function testLEditionApiAccepteUnNombreDeJoursDansLaPeriode(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/edit/1.json', [
+            'begin_at' => '2026-10-05',
+            'end_at' => '2026-10-07',
+            'working_days' => 3,
+        ]);
+
+        $this->assertResponseOk();
+    }
+
     public function testUnAdministrateurArchiveUnePigeOuUneFacture(): void
     {
         ConnectionManager::get('test')->update('contracttypes', ['code' => 'PIGE'], ['id' => 1]);

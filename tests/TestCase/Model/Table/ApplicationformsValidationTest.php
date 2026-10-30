@@ -74,6 +74,29 @@ class ApplicationformsValidationTest extends TestCase
         $this->assertArrayHasKey('working_days', $errors);
     }
 
+    public function testLeNombreDeJoursTravaillesNeDepassePasLaDureeCalendaire(): void
+    {
+        $errors = $this->validator()->validate([
+            'begin_at' => '2026-10-05',
+            'end_at' => '2026-10-07',
+            'working_days' => 4,
+        ], true);
+
+        $this->assertArrayHasKey('working_days', $errors);
+        $this->assertArrayHasKey('withinDateRange', $errors['working_days']);
+    }
+
+    public function testLeNombreDeJoursTravaillesValideResteAccepte(): void
+    {
+        $errors = $this->validator()->validate([
+            'begin_at' => '2026-10-05',
+            'end_at' => '2026-10-11',
+            'working_days' => 5,
+        ], true);
+
+        $this->assertArrayNotHasKey('working_days', $errors);
+    }
+
     private function validator(): Validator
     {
         return $this->table->validationDefault(new Validator());

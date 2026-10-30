@@ -8,6 +8,7 @@ use App\Model\Entity\Contracttype;
 use App\Model\Entity\Period;
 use App\Model\Entity\User;
 use App\Service\SalaryCalculationService;
+use App\Service\WorkingDaysService;
 use ArrayObject;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
@@ -16,6 +17,8 @@ use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
+use DateTimeImmutable;
+use DateTimeInterface;
 use InvalidArgumentException;
 use Search\Model\Filter\Callback;
 
@@ -419,6 +422,24 @@ class ApplicationformsTable extends Table
         $validator
             ->integer(Applicationform::FIELD_WORKING_DAYS)
             ->greaterThanOrEqual(Applicationform::FIELD_WORKING_DAYS, 0)
+            ->add(Applicationform::FIELD_WORKING_DAYS, 'withinDateRange', [
+                'rule' => function ($value, array $context): bool|string {
+                    if ($value === null || $value === '') {
+                        return true;
+                    }
+
+                    $begin = $this->validationDate($context['data'][Applicationform::FIELD_BEGIN_AT] ?? null);
+                    $end = $this->validationDate($context['data'][Applicationform::FIELD_END_AT] ?? null);
+                    if ($begin === null || $end === null || $end < $begin) {
+                        return true;
+                    }
+
+                    $maximum = (new WorkingDaysService())->countCalendarDays($begin, $end);
+
+                    return (int)$value <= $maximum
+                        ?: __('Le nombre de jours travaillés ne peut pas dépasser la durée de la période.');
+                },
+            ])
             ->allowEmptyString(Applicationform::FIELD_WORKING_DAYS);
 
         $validator
@@ -452,6 +473,25 @@ class ApplicationformsTable extends Table
             ->allowEmptyDateTime(Applicationform::FIELD_ARCHIVED);
 
         return $validator;
+    }
+
+    /** Convertit une date de validation en date civile exploitable. */
+    private function validationDate(mixed $value): ?DateTimeImmutable
+    {
+        if ($value instanceof DateTimeInterface) {
+            return DateTimeImmutable::createFromInterface($value)->setTime(0, 0);
+        }
+
+        if (is_object($value) && method_exists($value, 'format')) {
+            $value = $value->format('Y-m-d');
+        }
+        if (!is_string($value) || $value === '') {
+            return null;
+        }
+
+        $date = DateTimeImmutable::createFromFormat('!Y-m-d', substr($value, 0, 10));
+
+        return $date !== false && $date->format('Y-m-d') === substr($value, 0, 10) ? $date : null;
     }
 
     /**
