@@ -18,7 +18,9 @@ saisie du nombre de jours ouvrés dès que la date de fin est renseignée.
 
 ## Travail attendu
 
-- [ ] Afficher le champ « Nombre de jours ouvrés » immédiatement après le
+- [ ] Afficher les champs « date de fin » et « nombre de jours ouvrés » immédiatement auprès du
+uniquement s'il peuvent être saisis suivant le type d econtrat.
+- [ ] Afficher le champ « Nombre de jours ouvrés » immédiatement auprès du
   champ de date de fin dans le formulaire d'édition d'une DAE.
 - [ ] Calculer automatiquement le nombre de jours ouvrés entre les dates de
   début et de fin, en excluant les samedis et dimanches.
