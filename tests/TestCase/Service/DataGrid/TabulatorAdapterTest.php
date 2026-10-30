@@ -97,6 +97,37 @@ class TabulatorAdapterTest extends TestCase
         );
     }
 
+    public function testLaRequetePeutResoudreUnFiltreMetierSelonSaValeur(): void
+    {
+        $query = $this->queryForAlias('Applicationforms');
+        $query->expects($this->once())->method('where')
+            ->with(['Applicationformstatuses.en_cours' => 1])
+            ->willReturnSelf();
+        $request = new ServerRequest([
+            'query' => [
+                'filters' => [[
+                    'field' => 'validation_status',
+                    'type' => '=',
+                    'value' => '2',
+                ]],
+            ],
+        ]);
+
+        (new TabulatorAdapter())->adaptRequest(
+            $request,
+            $query,
+            ['validation_status' => 'Applicationformstatuses.validationstatus_id'],
+            [],
+            [
+                'validation_status' => static function (mixed $value): array {
+                    return (string)$value === '2'
+                        ? ['Applicationformstatuses.en_cours', 1]
+                        : ['Applicationformstatuses.validationstatus_id', (int)$value];
+                },
+            ],
+        );
+    }
+
     public function testLaRequeteTraduitUneBorneInferieureDePlageDeDates(): void
     {
         $query = $this->queryForAlias('Users');

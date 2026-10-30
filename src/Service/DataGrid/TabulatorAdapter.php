@@ -30,6 +30,7 @@ class TabulatorAdapter
      * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query La requête ORM initiale.
      * @param array<string, string> $fieldMap Correspondance entre champs JSON et champs ORM.
      * @param array<string, string> $sortFieldMap Correspondance spécifique aux tris.
+     * @param array<string, callable> $filterResolvers Résolution métier optionnelle des filtres.
      * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> La requête ORM modifiée.
      */
     public function adaptRequest(
@@ -37,6 +38,7 @@ class TabulatorAdapter
         SelectQuery $query,
         array $fieldMap = [],
         array $sortFieldMap = [],
+        array $filterResolvers = [],
     ): SelectQuery {
         $queryParams = $request->getQueryParams();
         $mainAlias = $query->getRepository()->getAlias();
@@ -84,15 +86,22 @@ class TabulatorAdapter
                     //
                     // Conserver ce test même si c'est censé être traité dans le front end
                     // Car on peut craindre un petit malin modifiant l'url = en like
+                    $filterValue = $value;
+                    if (isset($filterResolvers[$field])) {
+                        $resolvedFilter = $filterResolvers[$field]($value, $type);
+                        $ormField = $resolvedFilter[0];
+                        $filterValue = $resolvedFilter[1];
+                    }
+
                     if (in_array(strtolower($field), ['id', 'level', 'validation_status'], true)) {
-                        $query->where([$ormField => (int)$value]);
+                        $query->where([$ormField => (int)$filterValue]);
                         continue; // On passe au filtre suivant
                     }
 
                     // Traduction de l'opérateur Tabulator vers la clause ORM
                     switch ($type) {
                         case 'like':
-                            $query->where([$ormField . ' LIKE' => '%' . $value . '%']);
+                            $query->where([$ormField . ' LIKE' => '%' . $filterValue . '%']);
                             break;
                         case '=':
                         case '!=':
@@ -100,10 +109,10 @@ class TabulatorAdapter
                         case '<=':
                         case '>':
                         case '>=':
-                            $query->where([$ormField . ' ' . $type => $value]);
+                            $query->where([$ormField . ' ' . $type => $filterValue]);
                             break;
                         default:
-                            $query->where([$ormField => $value]);
+                            $query->where([$ormField => $filterValue]);
                     }
                 }
             }

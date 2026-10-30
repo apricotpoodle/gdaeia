@@ -3,7 +3,7 @@
 // Rôle : Centralisation de l'instanciation des composants grilles métiers
 // ==============================================================================
 
-import { TabulatorBuilder } from './TabulatorBuilder.js';
+import { TabulatorBuilder } from './TabulatorBuilder.js?v=20261030120000';
 import { ColumnsFactory } from './ColumnsFactory.js'; // inutile à terme car définitions des colonnes déléguée *-columns.js
 import { getApplicationformColumns } from '../../views/Applicationforms/applicationform-columns.js?v=20261029170000';
 import { getMenusColumns } from '../../views/Menus/menus-columns.js';

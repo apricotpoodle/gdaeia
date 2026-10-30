@@ -48,6 +48,29 @@ test('la pagination distante désactive le chargement progressif', () => {
     assert.equal(builder.config.progressiveLoadScrollMargin, undefined);
 });
 
+test('vide les lignes précédentes avant de recharger un filtre distant progressif', () => {
+    const previousDocument = globalThis.document;
+    globalThis.document = { querySelector: () => null };
+    const builder = new TabulatorBuilder('#applicationforms-grid').setContinuousScroll();
+    let cleared = false;
+
+    builder.config.dataFiltering.call({
+        clearData: () => {
+            cleared = true;
+        },
+    }, []);
+
+    assert.equal(cleared, true);
+    assert.equal(typeof builder.config.headerFilterChanged, 'function');
+    builder.config.headerFilterChanged.call({
+        clearData: () => {
+            cleared = true;
+        },
+    }, []);
+    assert.equal(cleared, true);
+    globalThis.document = previousDocument;
+});
+
 test('délègue les actions globales au conteneur de grille en phase de capture', () => {
     const listeners = [];
     const hostElement = {
