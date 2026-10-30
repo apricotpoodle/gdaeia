@@ -127,6 +127,16 @@ class FieldAuthorizationServiceTest extends TestCase
 
     public function testUneRessourceNonConfigureeConserveSesDonneesPourLaTransition(): void
     {
+        $query = $this->createMock(SelectQuery::class);
+        $query->expects($this->once())->method('where')->with([
+            'role_id' => 4,
+            'resource' => 'Departments',
+        ])->willReturnSelf();
+        $query->expects($this->once())->method('all')->willReturn(new ResultSet([]));
+        $authorizations = $this->createMock(FieldAuthorizationsTable::class);
+        $authorizations->expects($this->once())->method('find')->willReturn($query);
+        TableRegistry::getTableLocator()->set('FieldAuthorizations', $authorizations);
+
         $this->assertSame(
             ['jobtitle' => 'Analyste'],
             $this->service->filterAuthorizedRequestData(
