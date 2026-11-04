@@ -148,9 +148,32 @@ export class TabulatorFactory {
                 ColumnsFactory.id({ visible: false }),
                 ColumnsFactory.text('code', 'Code', { width: 160 }),
                 ColumnsFactory.text('name', 'Département'),
-                ColumnsFactory.text('managers', 'Responsables'),
+                ColumnsFactory.text('managers', 'Responsable(s)', {
+                    width: 100,
+                    widthGrow: 0,
+                    widthShrink: 0,
+                    headerWordWrap: true,
+                    formatter: (cell) => `${(cell.getValue() || []).length} responsable(s)`,
+                    tooltip: (_event, cell) => {
+                        const managers = cell.getValue() || [];
+                        return managers.length > 0 ? managers.join('\n') : 'Aucun responsable';
+                    },
+                }),
                 ColumnsFactory.text('cgr_strategy', 'Stratégie CGR'),
-                ColumnsFactory.text('cgr_codes', 'Codes CGR'),
+                ColumnsFactory.text('cgr_codes', 'CGR(s)', {
+                    width: 70,
+                    widthGrow: 0,
+                    widthShrink: 0,
+                    headerWordWrap: true,
+                    formatter: (cell) => `${(cell.getValue() || []).length} CGR`,
+                    tooltip: (_event, cell) => {
+                        const codes = cell.getValue() || [];
+                        const labels = codes
+                            .map((cgr) => cgr.code || '')
+                            .filter(Boolean);
+                        return labels.length > 0 ? labels.join('\n') : 'Aucun CGR';
+                    },
+                }),
             ])
             .setWithActions(['edit', 'deactivate'])
             .build();

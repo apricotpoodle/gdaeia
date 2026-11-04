@@ -6,6 +6,40 @@ import { globalTabulatorObserver } from '../../core/Tabulator/TabulatorObserver.
 const selector = '#departments-table';
 const table = TabulatorFactory.createDepartmentsGrid(selector);
 const client = new TabulatorMutationClient();
+const treeStateKey = 'departments-tree-state-v1';
+const treeState = loadTreeState();
+let clickTimer = null;
+
+function loadTreeState() {
+    try {
+        const value = JSON.parse(window.localStorage.getItem(treeStateKey) || '[]');
+        return new Set(Array.isArray(value) ? value.map(String) : []);
+    } catch (error) {
+        return new Set();
+    }
+}
+
+function saveTreeState() {
+    window.localStorage.setItem(treeStateKey, JSON.stringify([...treeState]));
+}
+
+function rememberExpanded(row) {
+    treeState.add(String(row.getData().id));
+    saveTreeState();
+}
+
+function rememberCollapsed(row) {
+    treeState.delete(String(row.getData().id));
+    saveTreeState();
+}
+
+function restoreTreeState(rows) {
+    rows.forEach((row) => {
+        const rowId = String(row.getData().id);
+        if (treeState.has(rowId)) row.treeExpand();
+        restoreTreeState(row.getTreeChildren());
+    });
+}
 
 function appendQueryParam(query, value, key) {
     if (value === null || value === undefined || value === '') return;
@@ -44,24 +78,23 @@ function expandFilteredTree(row) {
 }
 
 table.on('dataLoaded', () => {
-    if (!hasActiveFilters()) return;
-    setTimeout(() => table.getRows().forEach(expandFilteredTree), 0);
+    if (hasActiveFilters()) setTimeout(() => table.getRows().forEach(expandFilteredTree), 0);
+    setTimeout(() => restoreTreeState(table.getRows()), 0);
 });
 
-table.on('dataTreeRowExpanded', async (row) => {
-    const data = row.getData();
-    if (hasActiveFilters() || data._children_loaded || !data.has_children) return;
-    try {
-        const query = currentFilterQuery();
-        query.set('parent_id', String(data.id));
-        const response = await fetch('/api/departments/tree.json?' + query.toString(), { headers: { Accept: 'application/json' } });
-        const payload = await response.json();
-        if (!response.ok || payload.success !== true) throw new Error(payload.message || 'Impossible de charger les enfants.');
-        await row.update({ children: payload.data, _children_loaded: true });
-    } catch (error) {
-        row.treeCollapse();
-        FlashManager.error(error.message);
-    }
+table.on('dataTreeRowExpanded', rememberExpanded);
+table.on('dataTreeRowCollapsed', rememberCollapsed);
+
+table.on('rowClick', (event, row) => {
+    if (event.target.closest?.('.action-menu-btn, .tabulator-data-tree-control')) return;
+    window.clearTimeout(clickTimer);
+    clickTimer = window.setTimeout(() => row.treeToggle(), 220);
+});
+
+table.on('rowDblClick', (event, row) => {
+    if (event.target.closest?.('.action-menu-btn')) return;
+    window.clearTimeout(clickTimer);
+    globalTabulatorObserver.publish(`${selector}:action:edit`, row.getData());
 });
 
 globalTabulatorObserver.subscribe(`${selector}:action:create`, () => {

@@ -45,22 +45,31 @@ final class DepartmentsController extends AppController
         unset($sortQueryParams['filters']);
         $sortRequest = $this->request->withQueryParams($sortQueryParams);
         $service = new DepartmentManagementService();
-        if ($allowedIds !== null && $parentId === null) {
+        if ($parentId === null) {
             $query = $table->find()
-                ->where($allowedIds === [] ? ['1 = 0'] : ['Departments.id IN' => $allowedIds])
+                ->where($allowedIds === null
+                    ? ['Departments.deleted IS' => null]
+                    : ($allowedIds === [] ? ['1 = 0'] : ['Departments.id IN' => $allowedIds]))
                 ->orderBy(['Departments.lft' => 'ASC'])
-                ->contain(['CgrStrategies', 'Managers']);
-            $query = $adapter->adaptRequest($sortRequest, $query);
+                ->contain(['CgrStrategies', 'Managers', 'CgrCodes']);
+            $query = $this->adaptDepartmentSort($query, $adapter, $sortRequest);
             /** @var list<\App\Model\Entity\Department> $departments */
             $departments = $query->all()->toList();
-            $rows = $this->filteredDepartmentRows($departments, $service, $allowedIds);
+            $rows = $this->filteredDepartmentRows(
+                $departments,
+                $service,
+                $allowedIds ?? array_map(
+                    static fn(Department $department): int => (int)$department->get('id'),
+                    $departments,
+                ),
+            );
         } else {
             $query = $table->find('activeChildren', parentId: $parentId)
-                ->contain(['CgrStrategies', 'Managers']);
+                ->contain(['CgrStrategies', 'Managers', 'CgrCodes']);
             if ($allowedIds !== null) {
                 $query->where($allowedIds === [] ? ['1 = 0'] : ['Departments.id IN' => $allowedIds]);
             }
-            $query = $adapter->adaptRequest($sortRequest, $query);
+            $query = $this->adaptDepartmentSort($query, $adapter, $sortRequest);
             /** @var list<\App\Model\Entity\Department> $departments */
             $departments = $query->all()->toList();
             $rows = array_map(
@@ -68,6 +77,9 @@ final class DepartmentsController extends AppController
                 $departments,
             );
         }
+        /** @var list<array<string, mixed>> $normalizedRows */
+        $normalizedRows = array_values($rows);
+        $rows = $this->sortDepartmentRows($normalizedRows, $sortRequest);
         $this->set(['success' => true, 'data' => $rows]);
         $this->viewBuilder()->setOption('serialize', ['success', 'data']);
     }
@@ -453,10 +465,11 @@ final class DepartmentsController extends AppController
         ServerRequest $request,
     ): SelectQuery {
         $queryParams = $request->getQueryParams();
+        $queryParams['sorters'] = $this->withoutComputedSorters($queryParams['sorters'] ?? []);
         $filters = $queryParams['filters'] ?? [];
         if (!is_array($filters) || $filters === []) {
             /** @var \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Department> $adaptedQuery */
-            $adaptedQuery = $adapter->adaptRequest($request, $query);
+            $adaptedQuery = $adapter->adaptRequest($request->withQueryParams($queryParams), $query);
 
             return $adaptedQuery;
         }
@@ -522,6 +535,128 @@ final class DepartmentsController extends AppController
         $adaptedQuery = $adapter->adaptRequest($request->withQueryParams($queryParams), $query);
 
         return $adaptedQuery;
+    }
+
+    /**
+     * Retire les tris sur les champs calculés avant adaptation ORM.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête des départements.
+     * @return \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Department>
+     */
+    private function adaptDepartmentSort(
+        SelectQuery $query,
+        TabulatorAdapter $adapter,
+        ServerRequest $request,
+    ): SelectQuery {
+        $queryParams = $request->getQueryParams();
+        $sorters = $queryParams['sorters'] ?? [];
+        $hasManagerSort = is_array($sorters) && array_filter(
+            $sorters,
+            static fn($sorter): bool => is_array($sorter)
+                && in_array($sorter['field'] ?? null, ['manager', 'managers', 'cgr_code', 'cgr_codes'], true),
+        ) !== [];
+
+        if (!$hasManagerSort) {
+            /** @var \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Department> $adaptedQuery */
+            $adaptedQuery = $adapter->adaptRequest($request, $query);
+
+            return $adaptedQuery;
+        }
+
+        $queryParams['sorters'] = $this->withoutComputedSorters($sorters);
+
+        /** @var \Cake\ORM\Query\SelectQuery<\App\Model\Entity\Department> $adaptedQuery */
+        $adaptedQuery = $adapter->adaptRequest($request->withQueryParams($queryParams), $query);
+
+        return $adaptedQuery;
+    }
+
+    /**
+     * @param mixed $sorters Paramètres de tri Tabulator.
+     * @return list<array<string, mixed>> Tris SQL conservés.
+     */
+    private function withoutComputedSorters(mixed $sorters): array
+    {
+        if (!is_array($sorters)) {
+            return [];
+        }
+
+        return array_values(array_filter(
+            $sorters,
+            static fn($sorter): bool => is_array($sorter)
+                && !in_array($sorter['field'] ?? null, ['manager', 'managers', 'cgr_code', 'cgr_codes'], true),
+        ));
+    }
+
+    /**
+     * Trie chaque groupe de frères sur la valeur affichée des responsables.
+     *
+     * @param list<array<string, mixed>> $rows Lignes arborescentes.
+     * @return list<array<string, mixed>> Lignes triées récursivement.
+     */
+    private function sortDepartmentRows(array $rows, ServerRequest $request): array
+    {
+        $sorters = $request->getQuery('sorters');
+        if (!is_array($sorters)) {
+            return $rows;
+        }
+
+        $managerSorter = null;
+        foreach ($sorters as $sorter) {
+            if (
+                is_array($sorter)
+                && in_array(
+                    $sorter['field'] ?? null,
+                    ['manager', 'managers', 'cgr_code', 'cgr_codes'],
+                    true,
+                )
+            ) {
+                $managerSorter = $sorter;
+                break;
+            }
+        }
+        if ($managerSorter === null) {
+            return $rows;
+        }
+
+        $direction = strtolower((string)($managerSorter['dir'] ?? 'asc')) === 'desc' ? -1 : 1;
+        $sortField = (string)$managerSorter['field'];
+        usort($rows, static function (array $left, array $right) use ($direction, $sortField): int {
+            $leftValue = $sortField === 'cgr_code' || $sortField === 'cgr_codes'
+                ? self::cgrSortValue($left['cgr_codes'] ?? [])
+                : implode(' ', array_map('strval', $left['managers'] ?? []));
+            $rightValue = $sortField === 'cgr_code' || $sortField === 'cgr_codes'
+                ? self::cgrSortValue($right['cgr_codes'] ?? [])
+                : implode(' ', array_map('strval', $right['managers'] ?? []));
+
+            return $direction * strnatcasecmp($leftValue, $rightValue);
+        });
+
+        foreach ($rows as &$row) {
+            if (is_array($row['children'] ?? null) && $row['children'] !== []) {
+                /** @var list<array<string, mixed>> $children */
+                $children = array_values($row['children']);
+                $row['children'] = $this->sortDepartmentRows($children, $request);
+            }
+        }
+        unset($row);
+
+        return $rows;
+    }
+
+    /** @param mixed $codes @return string */
+    private static function cgrSortValue(mixed $codes): string
+    {
+        if (!is_array($codes)) {
+            return '';
+        }
+
+        return implode(' ', array_map(
+            static fn($code): string => is_array($code)
+                ? (string)($code['code'] ?? $code['label'] ?? '')
+                : (string)$code,
+            $codes,
+        ));
     }
 
     /**

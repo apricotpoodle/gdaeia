@@ -3,7 +3,7 @@
 // Rôle : Définition externalisée des colonnes pour la grille des Menus
 // ==============================================================================
 
-import { ColumnsFactory } from '/js/core/Tabulator/ColumnsFactory.js';
+import { ColumnsFactory } from '../../core/Tabulator/ColumnsFactory.js';
 
 export function getMenusColumns() {
     return [

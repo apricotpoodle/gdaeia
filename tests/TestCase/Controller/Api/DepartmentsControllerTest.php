@@ -52,6 +52,58 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertArrayHasKey('data', $payload);
     }
 
+    public function testLarbreInitialContientTouteLaHierarchieEtLesAssociations(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $departments = $this->getTableLocator()->get('Departments');
+        $departments->updateAll(['deleted' => null], ['id' => 1]);
+        $managers = $this->getTableLocator()->get('DepartmentManagers');
+        $managers->saveOrFail($managers->newEntity(['department_id' => 1, 'user_id' => 2]));
+
+        $this->get('/api/departments/tree.json');
+
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertResponseOk();
+        $this->assertSame([1], array_column($payload['data'], 'id'));
+        $this->assertSame([2], array_column($payload['data'][0]['children'], 'id'));
+        $this->assertFalse($payload['data'][0]['children'][0]['_tree_placeholder'] ?? false);
+        $this->assertSame(['Utilisateur Test'], $payload['data'][0]['managers']);
+        $this->assertSame(['Lorem ipsum do'], array_column($payload['data'][0]['cgr_codes'], 'code'));
+    }
+
+    public function testLeTriSurLesResponsablesEstTraduitEnTriOrm(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+
+        $this->get('/api/departments/tree.json?' . http_build_query([
+            'sorters' => [['field' => 'managers', 'dir' => 'asc']],
+        ]));
+
+        $this->assertResponseOk();
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertTrue($payload['success']);
+        $this->assertSame([1], array_column($payload['data'], 'id'));
+    }
+
+    public function testLeTriSurLesCgrEstTraiteSansErreurSql(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+
+        $this->get('/api/departments/tree.json?' . http_build_query([
+            'sorters' => [['field' => 'cgr_codes', 'dir' => 'asc']],
+        ]));
+
+        $this->assertResponseOk();
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertTrue($payload['success']);
+        $this->assertSame([1], array_column($payload['data'], 'id'));
+    }
+
     public function testLeFiltreDeLarbreInclutLesAncetresEtExclutLesBranchesSansCorrespondance(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
