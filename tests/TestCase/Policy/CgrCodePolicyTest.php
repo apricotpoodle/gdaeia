@@ -45,4 +45,14 @@ final class CgrCodePolicyTest extends TestCase
         $this->assertFalse($policy->canEdit($operator, $code));
         $this->assertFalse($policy->canDeactivate($operator, $code));
     }
+
+    public function testUnAdministrateurPeutAssocierUnCodeActifSansGererLeReferentiel(): void
+    {
+        $policy = new CgrCodePolicy();
+        $code = new CgrCode(['is_system' => false, 'active' => true]);
+        $administrator = new User(['issuperuser' => false, 'role_id' => User::ROLE_ADMIN]);
+
+        $this->assertTrue($policy->canAssociate($administrator, $code));
+        $this->assertFalse($policy->canView($administrator, $code));
+    }
 }

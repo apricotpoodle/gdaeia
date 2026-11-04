@@ -76,4 +76,12 @@ class UserPolicyTest extends TestCase
         $this->assertTrue($this->policy->canView($operator, $target));
         $this->assertTrue($this->policy->canDelete($operator, $target));
     }
+
+    public function testUnAdministrateurPeutAssocierUnResponsableActif(): void
+    {
+        $administrator = new User(['id' => 1, 'role_id' => User::ROLE_ADMIN]);
+        $target = new User(['deleted' => null]);
+
+        $this->assertTrue($this->policy->canAssociate($administrator, $target));
+    }
 }

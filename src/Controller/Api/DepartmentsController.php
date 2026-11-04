@@ -7,9 +7,13 @@ use App\Controller\AppController;
 use App\Mailer\DepartmentDeactivationMailer;
 use App\Model\Entity\Department;
 use App\Model\Table\DepartmentsTable;
+use App\Service\CgrResolverService;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\DepartmentManagementService;
+use Cake\Database\Expression\FunctionExpression;
 use Cake\Database\Expression\QueryExpression;
+use Cake\Http\Exception\BadRequestException;
+use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Response;
 use Cake\Http\ServerRequest;
 use Cake\ORM\Query\SelectQuery;
@@ -32,6 +36,8 @@ final class DepartmentsController extends AppController
         /** @var \App\Model\Table\DepartmentsTable $table */
         $table = $this->fetchTable('Departments');
         $this->Authorization->authorize($table->newEmptyEntity(), 'index');
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
         $parentId = $this->request->getQuery('parent_id');
         $parentId = $parentId === null || $parentId === '' ? null : (int)$parentId;
         $queryParams = $this->request->getQueryParams();
@@ -46,9 +52,9 @@ final class DepartmentsController extends AppController
         $sortRequest = $this->request->withQueryParams($sortQueryParams);
         $service = new DepartmentManagementService();
         if ($parentId === null) {
-            $query = $table->find()
+            $query = $table->find('visibleTo', user: $currentUser)
                 ->where($allowedIds === null
-                    ? ['Departments.deleted IS' => null]
+                    ? []
                     : ($allowedIds === [] ? ['1 = 0'] : ['Departments.id IN' => $allowedIds]))
                 ->orderBy(['Departments.lft' => 'ASC'])
                 ->contain(['CgrStrategies', 'Managers', 'CgrCodes']);
@@ -64,7 +70,8 @@ final class DepartmentsController extends AppController
                 ),
             );
         } else {
-            $query = $table->find('activeChildren', parentId: $parentId)
+            $query = $table->find('visibleTo', user: $currentUser)
+                ->find('activeChildren', parentId: $parentId)
                 ->contain(['CgrStrategies', 'Managers', 'CgrCodes']);
             if ($allowedIds !== null) {
                 $query->where($allowedIds === [] ? ['1 = 0'] : ['Departments.id IN' => $allowedIds]);
@@ -226,6 +233,107 @@ final class DepartmentsController extends AppController
         $this->viewBuilder()->setOption('serialize', array_keys($output));
     }
 
+    /** Retourne les responsables visibles et non associés au département. */
+    public function managersAvailable(string $departmentId): void
+    {
+        $this->renderAssociationGrid($departmentId, 'managers', false);
+    }
+
+    /** Retourne les responsables visibles et associés au département. */
+    public function managersAssociated(string $departmentId): void
+    {
+        $this->renderAssociationGrid($departmentId, 'managers', true);
+    }
+
+    /** Retourne les CGR actifs et non associés au département. */
+    public function cgrsAvailable(string $departmentId): void
+    {
+        $this->renderAssociationGrid($departmentId, 'cgrs', false);
+    }
+
+    /** Retourne les CGR actifs et associés au département. */
+    public function cgrsAssociated(string $departmentId): void
+    {
+        $this->renderAssociationGrid($departmentId, 'cgrs', true);
+    }
+
+    /** Associe immédiatement un responsable au département. */
+    public function addManager(string $departmentId, string $userId): Response
+    {
+        $department = $this->activeDepartmentForAssociation($departmentId);
+        $id = $this->positiveAssociationId($userId);
+        $operator = $this->request->getAttribute('identity')->getOriginalData();
+        $manager = $this->fetchTable('Users')->find('visibleTo', user: $operator)
+            ->where(['Users.id' => $id, 'Users.deleted IS' => null])
+            ->firstOrFail();
+        $this->Authorization->authorize($manager, 'associate');
+        (new DepartmentManagementService())->associateManager($department, $id);
+
+        return $this->jsonSuccess(message: __('Le responsable a été associé.'));
+    }
+
+    /** Dissocie immédiatement un responsable du département. */
+    public function removeManager(string $departmentId, string $userId): Response
+    {
+        $department = $this->activeDepartmentForAssociation($departmentId);
+        $id = $this->positiveAssociationId($userId);
+        $operator = $this->request->getAttribute('identity')->getOriginalData();
+        $users = $this->fetchTable('Users');
+        $manager = $users->find()
+            ->where(['Users.id' => $id, 'Users.deleted IS' => null])
+            ->firstOrFail();
+        $visible = $users->find('visibleTo', user: $operator)
+            ->where(['Users.id' => $id, 'Users.deleted IS' => null])
+            ->count() > 0;
+        if (!$visible) {
+            throw new ForbiddenException(
+                __('Vous ne pouvez pas dissocier un responsable hors de votre périmètre.'),
+            );
+        }
+        $this->Authorization->authorize($manager, 'associate');
+        (new DepartmentManagementService())->dissociateManager($department, $id);
+
+        return $this->jsonSuccess(message: __('Le responsable a été dissocié.'));
+    }
+
+    /** Associe immédiatement un code CGR au département. */
+    public function addCgr(string $departmentId, string $cgrCodeId): Response
+    {
+        $department = $this->activeDepartmentForAssociation($departmentId);
+        $id = $this->positiveAssociationId($cgrCodeId);
+        $code = $this->fetchTable('CgrCodes')->find()->where([
+            'CgrCodes.id' => $id,
+            'CgrCodes.active' => true,
+        ])->firstOrFail();
+        $this->Authorization->authorize($code, 'associate');
+        try {
+            (new DepartmentManagementService())->associateCgrCode($department, $id);
+        } catch (DomainException $exception) {
+            return $this->domainError($exception);
+        }
+
+        return $this->jsonSuccess(message: __('Le code CGR a été associé.'));
+    }
+
+    /** Dissocie immédiatement un code CGR du département. */
+    public function removeCgr(string $departmentId, string $cgrCodeId): Response
+    {
+        $department = $this->activeDepartmentForAssociation($departmentId);
+        $id = $this->positiveAssociationId($cgrCodeId);
+        $code = $this->fetchTable('CgrCodes')->find()->where([
+            'CgrCodes.id' => $id,
+            'CgrCodes.active' => true,
+        ])->firstOrFail();
+        $this->Authorization->authorize($code, 'associate');
+        try {
+            (new DepartmentManagementService())->dissociateCgrCode($department, $id);
+        } catch (DomainException $exception) {
+            return $this->domainError($exception);
+        }
+
+        return $this->jsonSuccess(message: __('Le code CGR a été dissocié.'));
+    }
+
     /** Ajoute un code CGR. */
     public function addCgrCode(string $departmentId): Response
     {
@@ -300,6 +408,113 @@ final class DepartmentsController extends AppController
             ->firstOrFail();
 
         return $department;
+    }
+
+    /**
+     * Rend une grille distante d’association.
+     *
+     * @param 'managers'|'cgrs' $association Type d’association.
+     */
+    private function renderAssociationGrid(string $departmentId, string $association, bool $associated): void
+    {
+        $department = $this->activeDepartment($departmentId);
+        $this->Authorization->authorize($department, 'view');
+        $identity = $this->request->getAttribute('identity');
+        /** @var \App\Model\Entity\User $operator */
+        $operator = $identity->getOriginalData();
+        $table = $this->fetchTable($association === 'managers' ? 'Users' : 'CgrCodes');
+
+        if ($association === 'managers') {
+            $query = ($associated ? $table->find() : $table->find('visibleTo', user: $operator))
+                ->where(['Users.deleted IS' => null]);
+            $query->leftJoin(
+                ['DepartmentManagers' => 'department_managers'],
+                [
+                    'DepartmentManagers.user_id = Users.id',
+                    'DepartmentManagers.department_id' => $department->get('id'),
+                ],
+            );
+            $query->where($associated
+                ? ['DepartmentManagers.user_id IS NOT' => null]
+                : ['DepartmentManagers.user_id IS' => null]);
+            $sortableFields = ['id', 'firstname', 'lastname', 'email', 'username'];
+        } else {
+            $query = $table->find()->where(['CgrCodes.active' => true]);
+            $allowedTypes = (new CgrResolverService())->getAllowedTypesForDepartment((int)$department->get('id'));
+            if ($allowedTypes === []) {
+                $query->where(['1 = 0']);
+            } else {
+                $query->where(function (QueryExpression $expression) use ($allowedTypes): QueryExpression {
+                    $trimmedType = new FunctionExpression(
+                        'TRIM',
+                        ['CgrCodes.type' => 'literal'],
+                    );
+                    $normalizedType = new FunctionExpression('UPPER', [$trimmedType]);
+
+                    return $expression->in($normalizedType, $allowedTypes);
+                });
+            }
+            $query->leftJoin(
+                ['DepartmentCgrCodes' => 'department_cgr_codes'],
+                [
+                    'DepartmentCgrCodes.cgr_code_id = CgrCodes.id',
+                    'DepartmentCgrCodes.department_id' => $department->get('id'),
+                ],
+            );
+            $query->where($associated
+                ? ['DepartmentCgrCodes.cgr_code_id IS NOT' => null]
+                : ['DepartmentCgrCodes.cgr_code_id IS' => null]);
+            $sortableFields = ['id', 'type', 'code', 'label'];
+        }
+
+        $adapter = new TabulatorAdapter();
+        $query = $adapter->adaptRequest($this->request, $query);
+        $data = $this->paginate($query, [
+            'limit' => (int)($this->request->getQuery('size') ?? 20),
+            'page' => (int)($this->request->getQuery('page') ?? 1),
+            'sortableFields' => $sortableFields,
+        ]);
+        if ($association === 'managers' && $associated) {
+            $visibleManagerIds = $table->find('visibleTo', user: $operator)
+                ->where(['Users.deleted IS' => null])
+                ->select(['id' => 'Users.id'])
+                ->all()
+                ->extract('id')
+                ->map(static fn(mixed $id): int => (int)$id)
+                ->toList();
+            foreach ($data->items() as $manager) {
+                $isVisible = in_array((int)$manager->get('id'), $visibleManagerIds, true);
+                $manager->set('can_dissociate', $isVisible);
+                $manager->set(
+                    'association_read_only_message',
+                    $isVisible
+                        ? null
+                        : __('Responsable associé hors de votre périmètre : dissociation non autorisée.'),
+                );
+            }
+        }
+        $output = $adapter->adaptResponse($data);
+        $this->set($output);
+        $this->viewBuilder()->setOption('serialize', array_keys($output));
+    }
+
+    /** Charge un département actif et vérifie le droit de modification. */
+    private function activeDepartmentForAssociation(string $id): Department
+    {
+        $department = $this->activeDepartment($id);
+        $this->Authorization->authorize($department, 'edit');
+
+        return $department;
+    }
+
+    /** @throws \Cake\Http\Exception\BadRequestException */
+    private function positiveAssociationId(string $id): int
+    {
+        if (!ctype_digit($id) || (int)$id < 1) {
+            throw new BadRequestException(__('L’identifiant de l’association est invalide.'));
+        }
+
+        return (int)$id;
     }
 
     /** @return list<string> */
@@ -386,24 +601,33 @@ final class DepartmentsController extends AppController
         array $allowedIds,
     ): array {
         $childrenByParent = [];
+        $visibleIds = [];
         foreach ($departments as $department) {
+            $visibleIds[(int)$department->get('id')] = true;
             $parentId = $department->get('parent_id');
             $key = $parentId === null ? 'root' : (string)$parentId;
             $childrenByParent[$key][] = $department;
         }
 
-        $buildRows = function (?int $parentId) use (&$buildRows, $childrenByParent, $service, $allowedIds): array {
-            $key = $parentId === null ? 'root' : (string)$parentId;
+        $rootDepartments = array_values(array_filter(
+            $departments,
+            static function (Department $department) use ($visibleIds): bool {
+                $parentId = $department->get('parent_id');
+
+                return $parentId === null || !isset($visibleIds[(int)$parentId]);
+            },
+        ));
+        $buildRows = function (array $parents) use (&$buildRows, $childrenByParent, $service, $allowedIds): array {
             $rows = [];
-            foreach ($childrenByParent[$key] ?? [] as $department) {
-                $children = $buildRows((int)$department->get('id'));
+            foreach ($parents as $department) {
+                $children = $buildRows($childrenByParent[(string)$department->get('id')] ?? []);
                 $rows[] = $this->departmentRow($department, $service, $allowedIds, $children);
             }
 
             return $rows;
         };
 
-        return $buildRows(null);
+        return $buildRows($rootDepartments);
     }
 
     /**
@@ -413,7 +637,9 @@ final class DepartmentsController extends AppController
      */
     private function filteredDepartmentIds(DepartmentsTable $table, TabulatorAdapter $adapter): array
     {
-        $matchingQuery = $table->find()->where(['Departments.deleted IS' => null]);
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $matchingQuery = $table->find('visibleTo', user: $currentUser);
         $matchingQuery = $this->adaptDepartmentFilters($matchingQuery, $adapter, $this->request);
         /** @var list<\App\Model\Entity\Department> $matchingDepartments */
         $matchingDepartments = $matchingQuery
@@ -426,9 +652,8 @@ final class DepartmentsController extends AppController
         }
 
         /** @var list<\App\Model\Entity\Department> $activeDepartments */
-        $activeDepartments = $table->find()
+        $activeDepartments = $table->find('visibleTo', user: $currentUser)
             ->select(['id', 'lft', 'rght'])
-            ->where(['Departments.deleted IS' => null])
             ->all()
             ->toList();
         $allowedIds = [];

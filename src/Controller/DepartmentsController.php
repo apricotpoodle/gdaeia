@@ -74,6 +74,20 @@ final class DepartmentsController extends AppController
     /** @param \App\Model\Entity\Department $department */
     private function setFormData(Department $department, string $mode): void
     {
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $parentsQuery = $this->fetchTable('Departments')->find('visibleTo', user: $currentUser)
+            ->where(['Departments.deleted IS' => null]);
+        if (!$department->isNew()) {
+            $parentsQuery->where([
+                'Departments.id !=' => $department->get('id'),
+                'OR' => [
+                    'Departments.lft <' => $department->get('lft'),
+                    'Departments.rght >' => $department->get('rght'),
+                ],
+            ]);
+        }
+
         $this->set([
             'department' => $department,
             'mode' => $mode,
@@ -86,9 +100,10 @@ final class DepartmentsController extends AppController
                 ->where(['active' => true])
                 ->orderBy(['type' => 'ASC', 'code' => 'ASC'])
                 ->toArray(),
-            'parents' => $this->fetchTable('Departments')->find('list', keyField: 'id', valueField: 'name')
-                ->where(['deleted IS' => null])
-                ->orderBy(['lft' => 'ASC'])
+            'parents' => $parentsQuery->orderBy(['Departments.lft' => 'ASC'])
+                ->select(['id', 'name'])
+                ->all()
+                ->combine('id', 'name')
                 ->toArray(),
         ]);
     }

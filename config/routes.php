@@ -133,7 +133,16 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/departments/{departmentId}/cgr-codes/add', ['controller' => 'Departments', 'action' => 'addCgrCode', '_ext' => 'json'], ['pass' => ['departmentId']]);
         $builder->connect('/departments/{departmentId}/cgr-codes/{id}', ['controller' => 'Departments', 'action' => 'editCgrCode', '_ext' => 'json'], ['pass' => ['departmentId', 'id']]);
         $builder->connect('/departments/{departmentId}/cgr-codes/{id}/deactivate', ['controller' => 'Departments', 'action' => 'deactivateCgrCode', '_ext' => 'json'], ['pass' => ['departmentId', 'id']]);
+        $builder->connect('/departments/{departmentId}/managers/available', ['controller' => 'Departments', 'action' => 'managersAvailable', '_ext' => 'json'], ['pass' => ['departmentId']]);
+        $builder->connect('/departments/{departmentId}/managers/associated', ['controller' => 'Departments', 'action' => 'managersAssociated', '_ext' => 'json'], ['pass' => ['departmentId']]);
+        $builder->connect('/departments/{departmentId}/managers/{userId}/add', ['controller' => 'Departments', 'action' => 'addManager', '_ext' => 'json'], ['pass' => ['departmentId', 'userId']]);
+        $builder->connect('/departments/{departmentId}/managers/{userId}/remove', ['controller' => 'Departments', 'action' => 'removeManager', '_ext' => 'json'], ['pass' => ['departmentId', 'userId']]);
+        $builder->connect('/departments/{departmentId}/cgrs/available', ['controller' => 'Departments', 'action' => 'cgrsAvailable', '_ext' => 'json'], ['pass' => ['departmentId']]);
+        $builder->connect('/departments/{departmentId}/cgrs/associated', ['controller' => 'Departments', 'action' => 'cgrsAssociated', '_ext' => 'json'], ['pass' => ['departmentId']]);
+        $builder->connect('/departments/{departmentId}/cgrs/{cgrCodeId}/add', ['controller' => 'Departments', 'action' => 'addCgr', '_ext' => 'json'], ['pass' => ['departmentId', 'cgrCodeId']]);
+        $builder->connect('/departments/{departmentId}/cgrs/{cgrCodeId}/remove', ['controller' => 'Departments', 'action' => 'removeCgr', '_ext' => 'json'], ['pass' => ['departmentId', 'cgrCodeId']]);
         $builder->connect('/departments/{id}/deactivate', ['controller' => 'Departments', 'action' => 'deactivate', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/departments/{id}/view', ['controller' => 'Departments', 'action' => 'view', '_ext' => 'json'], ['pass' => ['id'], 'methods' => ['GET']]);
         $builder->connect('/departments/{id}', ['controller' => 'Departments', 'action' => 'edit', '_ext' => 'json'], ['pass' => ['id'], 'methods' => ['POST']]);
         $builder->connect('/applicationforms/{id}/validation/start', ['controller' => 'Applicationforms', 'action' => 'startValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/vote', ['controller' => 'Applicationforms', 'action' => 'voteValidation', '_ext' => 'json'], ['pass' => ['id']]);
