@@ -100,13 +100,7 @@ class DepartmentsTable extends AppTable
         $userDepartmentsTable = TableRegistry::getTableLocator()->get('UserDepartments');
         $myDepartmentIds = $userDepartmentsTable->find('departmentsOf', user: $user);
 
-        // Fallback : Si l'utilisateur n'a aucun département rattaché, on lui laisse voir la racine pour éviter de bloquer l'IHM
-        return $query->where([
-            'OR' => [
-                'Departments.id IN' => $myDepartmentIds,
-                'Departments.parent_id IS' => null,
-            ],
-        ]);
+        return $query->where(['Departments.id IN' => $myDepartmentIds]);
     }
 
     /**

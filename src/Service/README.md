@@ -20,6 +20,9 @@ impacts, blocage des déplacements ou changements de stratégie incompatibles et
 désactivation logique transactionnelle. Le service force les nouveaux
 départements administrés à ne pas être des lignes socle.
 
+Il centralise également l'association idempotente et la dissociation immédiate
+des responsables et des codes CGR dans les tables de liaison normalisées.
+
 `deactivateWithCleanup()` produit un plan vérifiable avant exécution : les
 formulaires actifs et les codes CGR système restent bloquants ; les autres
 catégories doivent être confirmées explicitement par le super-administrateur.

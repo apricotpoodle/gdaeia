@@ -27,6 +27,12 @@ final class CgrCodePolicy extends AppPolicy
         return $this->canManageCodes($identity) && $code->get('active') === true;
     }
 
+    /** Autorise l’association ou la dissociation d’un code CGR actif. */
+    public function canAssociate(IdentityInterface $identity, EntityInterface $code): bool
+    {
+        return $this->isSuperUserOrAdmin($identity) && $code->get('active') === true;
+    }
+
     /** Alias de suppression conservé pour le contrat CRUD standard. */
     public function canDelete(IdentityInterface $identity, EntityInterface $code): bool
     {

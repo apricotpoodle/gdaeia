@@ -9,6 +9,23 @@ use Cake\ORM\TableRegistry;
 class CgrResolverService
 {
     /**
+     * Retourne les types de CGR autorisés par la stratégie du département.
+     *
+     * @return list<string> Types normalisés, ou une liste vide sans stratégie.
+     */
+    public function getAllowedTypesForDepartment(int $departmentId): array
+    {
+        $departmentsTable = TableRegistry::getTableLocator()->get('Departments');
+        /** @var \App\Model\Entity\Department $department */
+        $department = $departmentsTable->get($departmentId, contain: ['CgrStrategies']);
+
+        /** @var list<string> $types */
+        $types = $this->extractStrategyTypes($department->cgr_strategy?->definition_json);
+
+        return $types;
+    }
+
+    /**
      * Retourne la structure et les choix CGR pour un département donné.
      *
      * @param int $departmentId
@@ -30,20 +47,7 @@ class CgrResolverService
         }
 
         // 1. Extraction et nettoyage du schéma de la stratégie
-        $definition = $department->cgr_strategy->definition_json;
-        $rawDefinition = is_string($definition)
-            ? json_decode($definition, true) ?? []
-            : $definition;
-
-        $schema = [];
-        foreach ($rawDefinition as $item) {
-            $rawType = is_array($item) ? ($item['type'] ?? $item['code'] ?? '') : $item;
-            $type = is_string($rawType) ? $rawType : '';
-            $cleanType = strtoupper(trim($type));
-            if ($cleanType !== '') {
-                $schema[] = $cleanType;
-            }
-        }
+        $schema = $this->extractStrategyTypes($department->cgr_strategy->definition_json);
 
         // 2. Récupération des codes avec des clés d'ORM propres (CgrCodes)
         /** @var list<\App\Model\Entity\CgrCode> $codes */
@@ -74,5 +78,30 @@ class CgrResolverService
             'schema' => $schema,
             'options' => $options,
         ];
+    }
+
+    /**
+     * @param mixed $definition Définition JSON de la stratégie.
+     * @return list<string>
+     */
+    private function extractStrategyTypes(mixed $definition): array
+    {
+        $rawDefinition = is_string($definition)
+            ? json_decode($definition, true) ?? []
+            : $definition;
+        if (!is_array($rawDefinition)) {
+            return [];
+        }
+
+        $types = [];
+        foreach ($rawDefinition as $item) {
+            $rawType = is_array($item) ? ($item['type'] ?? $item['code'] ?? '') : $item;
+            $type = is_string($rawType) ? strtoupper(trim($rawType)) : '';
+            if ($type !== '' && !in_array($type, $types, true)) {
+                $types[] = $type;
+            }
+        }
+
+        return $types;
     }
 }

@@ -63,7 +63,7 @@ class CgrResolverServiceTest extends TestCase
         ]);
         $query = $this->createMock(SelectQuery::class);
         $query->expects($this->once())->method('matching')
-            ->with('Departments', $this->isType('callable'))
+            ->with('Departments', $this->isCallable())
             ->willReturnSelf();
         $query->expects($this->once())->method('where')->with([
             'CgrCodes.active' => true,

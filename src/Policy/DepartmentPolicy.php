@@ -50,6 +50,6 @@ final class DepartmentPolicy extends AppPolicy
     /** Point d’extension pour élargir ultérieurement le périmètre des opérateurs. */
     protected function canManageDepartments(IdentityInterface $identity): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->isSuperUserOrAdmin($identity);
     }
 }

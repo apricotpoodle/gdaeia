@@ -39,6 +39,11 @@ final class DepartmentManagementServiceIntegrationTest extends TestCase
     {
         $departments = $this->getTableLocator()->get('Departments');
         $department = $departments->get(2);
+        $this->getTableLocator()->get('CgrStrategies')->updateAll([
+            'definition_json' => json_encode([['type' => 'AXE']], JSON_THROW_ON_ERROR),
+        ], ['id' => 1]);
+        $departments->updateAll(['cgr_strategy_id' => 1], ['id' => 2]);
+        $this->getTableLocator()->get('CgrCodes')->updateAll(['type' => 'axe'], ['id' => 1]);
 
         $result = (new DepartmentManagementService())->save($department, [
             'code' => $department->code,
@@ -74,6 +79,25 @@ final class DepartmentManagementServiceIntegrationTest extends TestCase
         )->fetchColumn(0));
         $this->assertNotNull($this->getTableLocator()->get('Users')->find()->where(['id' => 1])->first());
         $this->assertNotNull($this->getTableLocator()->get('CgrCodes')->find()->where(['id' => 1])->first());
+    }
+
+    public function testLaSauvegardeRefuseUnCgrHorsStrategie(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        $department = $departments->get(2);
+        $this->getTableLocator()->get('CgrStrategies')->updateAll([
+            'definition_json' => json_encode([['type' => 'AXE']], JSON_THROW_ON_ERROR),
+        ], ['id' => 1]);
+        $departments->updateAll(['cgr_strategy_id' => 1], ['id' => 2]);
+        $this->getTableLocator()->get('CgrCodes')->updateAll(['type' => 'NIVEAU'], ['id' => 1]);
+
+        $this->expectException(DomainException::class);
+        (new DepartmentManagementService())->save($department, [
+            'code' => $department->code,
+            'name' => $department->name,
+            'department_type_id' => $department->department_type_id,
+            'cgr_code_ids' => [1],
+        ]);
     }
 
     /** Vérifie que le nettoyage sélectionné est atomique et détache sans désactiver les utilisateurs. */

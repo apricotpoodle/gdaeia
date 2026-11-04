@@ -19,12 +19,13 @@ requête, de droit et de règle métier gardent leurs réponses propres.
 * **`ValidationsequencesController`** : Administration réservée aux Super Admins des séquences par département.
 * **`WorkflowSettingsController`** : Paramétrage global du workflow via `/default-due-hours.json` et `/comment-requirements.json`, ainsi que catalogue paginé des commentaires prédéfinis. Les modèles servent à préremplir le champ de vote ; seul le texte final est conservé dans `validations.obs`.
 * **ApplicationformsController** : L'endpoint POST `/applicationforms/{id}/validation/remind.json` relance uniquement les validateurs éligibles aux étapes bloquées du cycle, après contrôle de la Policy administrateur.
-* **`DepartmentsController`** : Arbre lazy des départements, fiche, CRUD, calcul d'impact et désactivation logique. Sans filtre, seules les racines sont chargées et les descendants le sont à la demande ; avec filtre, l'arbre complet des branches correspondantes est renvoyé et déployé, avec conservation des ancêtres nécessaires et exclusion des branches sans correspondance. La désactivation accepte un plan de nettoyage explicite réservé au super-administrateur, retourne les opérations effectuées et le bilan des courriels. Les codes CGR sont gérés par des routes imbriquées ; les mutations sont autorisées par `DepartmentPolicy` et `CgrCodePolicy`.
+* **`DepartmentsController`** : Arbre lazy des départements, fiche, CRUD, calcul d'impact et désactivation logique. Sans filtre, seules les racines sont chargées et les descendants le sont à la demande ; avec filtre, l'arbre complet des branches correspondantes est renvoyé et déployé, avec conservation des ancêtres nécessaires et exclusion des branches sans correspondance. La désactivation accepte un plan de nettoyage explicite réservé au super-administrateur, retourne les opérations effectuées et le bilan des courriels. Les codes CGR sont gérés par des routes imbriquées ; les mutations sont autorisées par `DepartmentPolicy` et `CgrCodePolicy`. La fiche expose aussi les grilles distantes disponibles/associées des responsables et des CGR, avec association ou dissociation immédiate.
 
 Pour les départements, les payloads utilisent `manager_ids` et `cgr_code_ids`.
 Le catalogue CGR reste global ; ses associations départementales sont gérées
-par les routes imbriquées et les dissociations passent par le service métier
-transactionnel, après contrôle des Policies et des autorisations de champs.
+par les routes imbriquées (`available`, `associated`, `add` et `remove`) et les
+mutations passent par `DepartmentManagementService`, après contrôle des
+Policies et du périmètre visible des éléments.
 
 Les mutations de champs reçues par les contrôleurs API passent par
 `AppController::authorizedRequestData()` avant `patchEntity()`. La matrice

@@ -26,10 +26,15 @@ final class DepartmentsControllerTest extends TestCase
 
     public function testUnOperateurNePeutPasAccederAAdministrationDesDepartements(): void
     {
-        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 1])]);
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_DEMANDEUR,
+        ])]);
 
         $this->get('/departments');
         $this->assertResponseCode(403);
+        $this->assertHeaderContains('Content-Type', 'text/html');
 
         $this->get('/api/departments/tree.json');
         $this->assertResponseCode(403);
@@ -50,6 +55,32 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertIsArray($payload);
         $this->assertTrue($payload['success']);
         $this->assertArrayHasKey('data', $payload);
+    }
+
+    public function testUnAdministrateurSimpleNeVoitQueSesDepartementsDansLarbre(): void
+    {
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $departments = $this->getTableLocator()->get('Departments');
+        $departments->updateAll(['deleted' => null], ['id IN' => [1, 2]]);
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 2,
+            'department_id' => 2,
+        ]));
+
+        $this->get('/departments');
+        $this->assertResponseOk();
+
+        $this->get('/api/departments/tree.json');
+        $this->assertResponseOk();
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+
+        $this->assertSame([2], array_column($payload['data'], 'id'));
     }
 
     public function testLarbreInitialContientTouteLaHierarchieEtLesAssociations(): void
@@ -205,12 +236,12 @@ final class DepartmentsControllerTest extends TestCase
             'code' => 'NEW-DEPT',
             'name' => 'Nouveau département',
             'sort' => 'Nouveau département',
-            'department_type_id' => 1,
         ]);
         $this->assertResponseCode(200);
         $payload = (array)json_decode((string)$this->_response->getBody(), true);
         $id = (int)($payload['id'] ?? 0);
         $this->assertGreaterThan(0, $id);
+        $this->assertSame(1, (int)$this->getTableLocator()->get('Departments')->get($id)->get('department_type_id'));
 
         $this->post('/api/departments/' . $id . '.json', ['name' => 'Département modifié']);
         $this->assertResponseOk();
@@ -308,6 +339,276 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertResponseContains('Lorem ipsum do');
     }
 
+    public function testLesListesDesResponsablesDisponiblesEtAssociesSontExposees(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+
+        $this->get('/api/departments/1/managers/available.json');
+        $available = (array)json_decode((string)$this->_response->getBody(), true);
+
+        $this->assertResponseOk();
+        $this->assertSame([2], array_column($available['data'], 'id'));
+
+        $this->get('/api/departments/1/managers/associated.json');
+        $associated = (array)json_decode((string)$this->_response->getBody(), true);
+
+        $this->assertResponseOk();
+        $this->assertSame([], $associated['data']);
+    }
+
+    public function testLeResumeDUnDepartementEstAccessibleParUneRouteGetExplicite(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 2]);
+
+        $this->get('/api/departments/2/view.json');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertTrue($payload['success']);
+        $this->assertArrayHasKey('managers', $payload['data']);
+        $this->assertArrayHasKey('cgr_codes', $payload['data']);
+    }
+
+    public function testUnResponsableEstAssocieEtDissocieImmediatement(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+
+        $this->post('/api/departments/1/managers/2/add.json');
+
+        $this->assertResponseOk();
+        $this->assertSame(1, $this->getTableLocator()->get('DepartmentManagers')->find()
+            ->where(['department_id' => 1, 'user_id' => 2])->count());
+
+        $this->post('/api/departments/1/managers/2/remove.json');
+
+        $this->assertResponseOk();
+        $this->assertSame(0, $this->getTableLocator()->get('DepartmentManagers')->find()
+            ->where(['department_id' => 1, 'user_id' => 2])->count());
+    }
+
+    public function testLesResponsablesAssociesHorsPerimetreSontVisiblesEnLectureSeule(): void
+    {
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 2]);
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 2,
+            'department_id' => 2,
+        ]));
+        ConnectionManager::get('test')->insert('users', [
+            'id' => 3,
+            'username' => 'responsable-hors-perimetre',
+            'email' => 'responsable-hors-perimetre@example.test',
+            'password' => 'password',
+            'firstname' => 'Responsable',
+            'lastname' => 'Hors périmètre',
+            'issuperuser' => 0,
+            'role_id' => User::ROLE_ADMIN,
+            'deleted' => null,
+            'created' => '2026-11-04 10:00:00',
+            'modified' => '2026-11-04 10:00:00',
+        ]);
+        $managers = $this->getTableLocator()->get('DepartmentManagers');
+        $managers->saveOrFail($managers->newEntity([
+            'department_id' => 2,
+            'user_id' => 3,
+        ]));
+
+        $this->get('/api/departments/2/managers/available.json');
+        $available = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertResponseOk();
+        $this->assertNotContains(3, array_column($available['data'], 'id'));
+
+        $this->get('/api/departments/2/managers/associated.json');
+        $associated = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertResponseOk();
+        $row = array_values(array_filter(
+            $associated['data'],
+            static fn(array $item): bool => (int)$item['id'] === 3,
+        ))[0] ?? null;
+        $this->assertNotNull($row);
+        $this->assertFalse($row['can_dissociate']);
+        $this->assertSame(
+            'Responsable associé hors de votre périmètre : dissociation non autorisée.',
+            $row['association_read_only_message'],
+        );
+    }
+
+    public function testUnAdministrateurNePeutPasDissocierUnResponsableHorsDeSonPerimetre(): void
+    {
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 2]);
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 2,
+            'department_id' => 2,
+        ]));
+        ConnectionManager::get('test')->insert('users', [
+            'id' => 3,
+            'username' => 'responsable-hors-perimetre',
+            'email' => 'responsable-hors-perimetre@example.test',
+            'password' => 'password',
+            'firstname' => 'Responsable',
+            'lastname' => 'Hors périmètre',
+            'issuperuser' => 0,
+            'role_id' => User::ROLE_ADMIN,
+            'deleted' => null,
+            'created' => '2026-11-04 10:00:00',
+            'modified' => '2026-11-04 10:00:00',
+        ]);
+
+        $managers = $this->getTableLocator()->get('DepartmentManagers');
+        $managers->saveOrFail($managers->newEntity([
+            'department_id' => 2,
+            'user_id' => 3,
+        ]));
+
+        $this->post('/api/departments/2/managers/3/remove.json');
+
+        $this->assertResponseCode(403);
+        $this->assertHeaderContains('Content-Type', 'application/json');
+        $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertFalse($payload['success']);
+        $this->assertSame(
+            'Vous ne pouvez pas dissocier un responsable hors de votre périmètre.',
+            $payload['message'],
+        );
+        $this->assertSame(1, $this->getTableLocator()->get('DepartmentManagers')->find()
+            ->where([
+                'department_id' => 2,
+                'user_id' => 3,
+            ])->count());
+    }
+
+    public function testLesListesDesCgrActifsDisponiblesEtAssociesSontExposees(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 2]);
+        $this->getTableLocator()->get('CgrStrategies')->updateAll([
+            'definition_json' => json_encode([['type' => ' axe ']], JSON_THROW_ON_ERROR),
+        ], ['id' => 1]);
+        $this->getTableLocator()->get('Departments')->updateAll(['cgr_strategy_id' => 1], ['id' => 2]);
+        $cgrCodes = $this->getTableLocator()->get('CgrCodes');
+        $cgrCodes->updateAll(['type' => ' axe '], ['id' => 1]);
+        $forbidden = $cgrCodes->newEntity([
+            'type' => 'NIVEAU',
+            'code' => 'CGR-NIVEAU',
+            'label' => 'CGR niveau',
+            'active' => true,
+            'is_system' => false,
+        ]);
+        $cgrCodes->saveOrFail($forbidden);
+
+        $this->get('/api/departments/2/cgrs/available.json');
+        $available = (array)json_decode((string)$this->_response->getBody(), true);
+
+        $this->assertResponseOk();
+        $this->assertSame([1], array_column($available['data'], 'id'));
+
+        $links = $this->getTableLocator()->get('DepartmentCgrCodes');
+        $links->saveOrFail($links->newEntity([
+            'department_id' => 2,
+            'cgr_code_id' => $forbidden->get('id'),
+        ]));
+
+        $this->get('/api/departments/2/cgrs/associated.json');
+        $associated = (array)json_decode((string)$this->_response->getBody(), true);
+
+        $this->assertResponseOk();
+        $this->assertSame([], $associated['data']);
+
+        $this->getTableLocator()->get('Departments')->updateAll(['cgr_strategy_id' => null], ['id' => 2]);
+        $this->get('/api/departments/2/cgrs/available.json');
+        $withoutStrategy = (array)json_decode((string)$this->_response->getBody(), true);
+
+        $this->assertResponseOk();
+        $this->assertSame([], $withoutStrategy['data']);
+    }
+
+    public function testUnCgrEstAssocieEtDissocieImmediatement(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('CgrStrategies')->updateAll([
+            'definition_json' => json_encode([['type' => 'AXE']], JSON_THROW_ON_ERROR),
+        ], ['id' => 1]);
+        $this->getTableLocator()->get('Departments')->updateAll(['cgr_strategy_id' => 1], ['id' => 1]);
+        $this->getTableLocator()->get('CgrCodes')->updateAll(['type' => 'NIVEAU'], ['id' => 1]);
+        $this->getTableLocator()->get('DepartmentCgrCodes')->deleteAll([
+            'department_id' => 1,
+            'cgr_code_id' => 1,
+        ]);
+
+        $this->post('/api/departments/1/cgrs/1/add.json');
+
+        $this->assertResponseCode(409);
+        $this->assertSame(0, $this->getTableLocator()->get('DepartmentCgrCodes')->find()
+            ->where(['department_id' => 1, 'cgr_code_id' => 1])->count());
+
+        $this->getTableLocator()->get('CgrCodes')->updateAll(['type' => ' axe '], ['id' => 1]);
+        $this->post('/api/departments/1/cgrs/1/add.json');
+
+        $this->assertResponseOk();
+        $this->assertSame(1, $this->getTableLocator()->get('DepartmentCgrCodes')->find()
+            ->where(['department_id' => 1, 'cgr_code_id' => 1])->count());
+
+        $this->post('/api/departments/1/cgrs/1/remove.json');
+
+        $this->assertResponseOk();
+        $this->assertSame(0, $this->getTableLocator()->get('DepartmentCgrCodes')->find()
+            ->where(['department_id' => 1, 'cgr_code_id' => 1])->count());
+    }
+
+    public function testUnAdministrateurPeutAssocierUnCgrVisibleDansLaGrille(): void
+    {
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll([
+            'deleted' => null,
+            'cgr_strategy_id' => 1,
+        ], ['id' => 2]);
+        $this->getTableLocator()->get('CgrStrategies')->updateAll([
+            'definition_json' => json_encode([['type' => 'AXE']], JSON_THROW_ON_ERROR),
+        ], ['id' => 1]);
+        $this->getTableLocator()->get('CgrCodes')->updateAll(['type' => ' axe '], ['id' => 1]);
+        $this->getTableLocator()->get('DepartmentCgrCodes')->deleteAll([
+            'department_id' => 2,
+            'cgr_code_id' => 1,
+        ]);
+
+        $this->post('/api/departments/2/cgrs/1/add.json');
+
+        $this->assertResponseOk();
+        $this->assertSame(1, $this->getTableLocator()->get('DepartmentCgrCodes')->find()
+            ->where(['department_id' => 2, 'cgr_code_id' => 1])->count());
+    }
+
     public function testLeFormulaireWebDeModificationUtiliseLeTemplatePartage(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
@@ -316,7 +617,13 @@ final class DepartmentsControllerTest extends TestCase
         $this->get('/departments/edit/1');
 
         $this->assertResponseOk();
-        $this->assertResponseContains('department-cgr-codes-table');
+        $this->assertResponseContains('department-cgrs-available-table');
+        $this->assertResponseContains('department-cgrs-associated-table');
+        $this->assertResponseContains('department-managers-available-table');
+        $this->assertResponseContains('department-managers-associated-table');
+        $this->assertResponseContains('department-tabs');
+        $this->assertResponseNotContains('department-cgr-codes-table');
+        $this->assertResponseNotContains('Type de département');
         $this->assertResponseContains('Modifier le département');
         $this->assertResponseContains('Département socle');
     }

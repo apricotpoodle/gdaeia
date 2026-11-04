@@ -197,6 +197,49 @@ export class TabulatorFactory {
     }
 
     /**
+     * Fabrique une grille distante de double liste d’associations départementales.
+     *
+     * @param {string} selector Sélecteur CSS cible.
+     * @param {number|string} departmentId Identifiant du département.
+     * @param {'managers'|'cgrs'} association Type d’association.
+     * @param {boolean} associated Affiche les éléments déjà associés.
+     * @returns {Tabulator} Instance Tabulator configurée.
+     */
+    static createDepartmentAssociationGrid(selector, departmentId, association, associated) {
+        const suffix = associated ? 'associated' : 'available';
+        const columns = association === 'managers'
+            ? [
+                ColumnsFactory.text('lastname', 'Nom'),
+                ColumnsFactory.text('firstname', 'Prénom'),
+                ColumnsFactory.text('email', 'Adresse courriel'),
+            ]
+            : [
+                ColumnsFactory.text('type', 'Type'),
+                ColumnsFactory.text('code', 'Code'),
+                ColumnsFactory.text('label', 'Libellé'),
+            ];
+
+        return this._createBaseGrid(selector)
+            .setAjaxSource(`/api/departments/${departmentId}/${association}/${suffix}.json`)
+            .setController('departments')
+            .setHeight('320px')
+            .addOptions({ persistence: false })
+            .addOptions({
+                rowFormatter: (row) => {
+                    const data = row.getData();
+                    const readOnlyMessage = data.association_read_only_message;
+                    row.getElement().title = readOnlyMessage
+                        || 'Double-cliquez pour transférer cette ligne.';
+                    if (data.can_dissociate === false) {
+                        row.getElement().classList.add('association-row-readonly');
+                    }
+                },
+            })
+            .setColumns(columns)
+            .build();
+    }
+
+    /**
      * Fabrique de la grille distante des utilisateurs à ajouter à un périmètre.
      * Les filtres d'en-tête sont traduits par l'API Tabulator existante.
      *

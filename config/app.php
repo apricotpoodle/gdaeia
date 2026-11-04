@@ -1,5 +1,6 @@
 <?php
 
+use App\Error\ApiAwareExceptionRenderer;
 use Cake\Cache\Engine\FileEngine;
 use Cake\Database\Connection;
 use Cake\Database\Driver\Mysql;
@@ -176,6 +177,7 @@ return [
      */
     'Error' => [
         'errorLevel' => E_ALL,
+        'exceptionRenderer' => ApiAwareExceptionRenderer::class,
         'skipLog' => [],
         'log' => true,
         'trace' => true,

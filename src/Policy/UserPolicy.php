@@ -127,6 +127,18 @@ class UserPolicy extends AppPolicy
         return $user->isSuperUser() || $user->id == $target->id || $user->hasRole($user::ALLOWED_ROLES_FOR_VIEW);
     }
 
+    /** Autorise l’association d’un responsable actif à un département autorisé. */
+    public function canAssociate(IdentityInterface $identity, User $target): bool
+    {
+        $user = $this->getValidUser($identity);
+        if (!$user) {
+            return false;
+        }
+
+        return ($user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN))
+            && $target->get(User::FIELD_DELETED) === null;
+    }
+
     /**
      * Check if a user (even unauthenticated) can access the forgot password pipeline.
      *

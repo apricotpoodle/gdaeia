@@ -5,6 +5,9 @@ declare(strict_types=1);
 /** @var \App\Model\Entity\Department $department */
 /** @var \Authorization\IdentityInterface|null $identity */
 /** @var array<string, string> $fieldSchema */
+/** @var array<int, string> $parents */
+/** @var array<int, string> $strategies */
+
 use App\View\Action\DepartmentsActions;
 
 $isEdit = $mode === 'edit';
@@ -12,7 +15,26 @@ $currentUser = $identity?->getOriginalData();
 $isSuperUser = $currentUser instanceof \App\Model\Entity\User
     && (bool)$currentUser->get(\App\Model\Entity\User::FIELD_ISSUPERUSER);
 $canEditBase = $isSuperUser || (($fieldSchema['base'] ?? 'NONE') === 'EDIT');
+$managerNames = array_values(array_filter(array_map(
+    static function ($manager): string {
+        $displayName = (string)$manager->get('display_name');
+        if ($displayName !== '') {
+            return $displayName;
+        }
+
+        return trim((string)$manager->get('firstname') . ' ' . (string)$manager->get('lastname'));
+    },
+    $department->get('managers') ?: [],
+)));
+$cgrCodes = array_values(array_filter(array_map(
+    static fn($code): string => (string)$code->get('code'),
+    $department->get('cgr_codes') ?: [],
+)));
+$parentValue = $department->get('parent_id');
+
 $this->assign('title', $isEdit ? __('Modifier un département') : __('Nouveau département'));
+$this->Html->css('/assets/treeselectjs/treeselectjs.css', ['block' => true]);
+$this->Html->script('/assets/treeselectjs/treeselectjs.umd.js', ['block' => 'scriptBottom']);
 $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>
 <div class="content">
@@ -21,64 +43,114 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
         <?= $this->Action->render(DepartmentsActions::index()) ?>
     </div>
 
-    <?= $this->Form->create($department) ?>
-    <div class="card mb-4">
-        <div class="card-body row g-3">
-            <div class="col-md-4">
-                <?= $this->Form->control('code', ['label' => __('Code'), 'required' => true]) ?>
-            </div>
-            <div class="col-md-4">
-                <?= $this->Form->control('name', ['label' => __('Nom'), 'required' => true]) ?>
-            </div>
-            <div class="col-md-4">
-                <?= $this->Form->control('sort', ['label' => __('Clé de tri')]) ?>
-            </div>
-            <div class="col-md-4">
-                <?= $this->Form->control('parent_id', ['label' => __('Département parent'), 'empty' => __('Racine'), 'options' => $parents]) ?>
-            </div>
-            <div class="col-md-4">
-                <?= $this->Form->control('department_type_id', ['label' => __('Type de département'), 'type' => 'number', 'min' => 1, 'required' => true]) ?>
-            </div>
-            <div class="col-md-4">
-                <?= $this->Form->control('manager_ids', ['label' => __('Responsables'), 'multiple' => true, 'options' => $managers, 'value' => array_map(static fn($manager): int => (int)$manager->get('id'), $department->get('managers') ?: [])]) ?>
-            </div>
-            <div class="col-md-6">
-                <?= $this->Form->control('cgr_strategy_id', ['label' => __('Stratégie CGR'), 'empty' => __('Aucune'), 'options' => $strategies]) ?>
-            </div>
-            <div class="col-md-6">
-                <?= $this->Form->control('cgr_code_ids', ['label' => __('Codes CGR associés'), 'multiple' => true, 'options' => $cgrCodes, 'value' => array_map(static fn($code): int => (int)$code->get('id'), $department->get('cgr_codes') ?: [])]) ?>
-            </div>
-            <?php if ($canEditBase): ?>
-                <div class="col-md-4">
-                    <?= $this->Form->control('base', ['label' => __('Département socle'), 'type' => 'checkbox']) ?>
+    <?= $this->Form->create($department, ['id' => 'department-form']) ?>
+    <?php if ($isEdit): ?>
+        <ul class="nav nav-tabs mb-3" id="department-tabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="department-tab" data-bs-toggle="tab" data-bs-target="#department-panel" type="button" role="tab" aria-controls="department-panel" aria-selected="true">
+                    <?= __('Département') ?>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cgrs-tab" data-bs-toggle="tab" data-bs-target="#cgrs-panel" type="button" role="tab" aria-controls="cgrs-panel" aria-selected="false">
+                    <?= __('Cgrs') ?>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="managers-tab" data-bs-toggle="tab" data-bs-target="#managers-panel" type="button" role="tab" aria-controls="managers-panel" aria-selected="false">
+                    <?= __('Responsables') ?>
+                </button>
+            </li>
+        </ul>
+    <?php endif; ?>
+
+    <div class="tab-content" id="department-tab-content">
+        <div class="tab-pane fade show active" id="department-panel" role="tabpanel" aria-labelledby="department-tab">
+            <div class="card mb-4">
+                <div class="card-body row g-3">
+                    <div class="col-md-4">
+                        <?= $this->Form->control('code', ['label' => __('Code'), 'required' => true]) ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= $this->Form->control('name', ['label' => __('Nom'), 'required' => true]) ?>
+                    </div>
+                    <div class="col-md-4">
+                        <?= $this->Form->control('sort', ['label' => __('Tri')]) ?>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="department-parent-tree"><?= __('Département parent') ?></label>
+                        <div id="department-parent-tree" class="treeselect-target"></div>
+                        <?= $this->Form->hidden('parent_id', ['id' => 'department-parent-id', 'value' => $parentValue]) ?>
+                        <script id="department-parent-options" type="application/json">
+                            <?= json_encode(
+                                [
+                                    'options' => array_map(
+                                        static fn(int|string $id, string $name): array => ['value' => (int)$id, 'name' => $name],
+                                        array_keys($parents),
+                                        array_values($parents),
+                                    ),
+                                    'value' => $parentValue === null ? [] : [(int)$parentValue],
+                                ],
+                                JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP,
+                            ) ?>
+                        </script>
+                    </div>
+                    <div class="col-md-6">
+                        <?= $this->Form->control('cgr_strategy_id', ['label' => __('Stratégie CGR'), 'empty' => __('Aucune'), 'options' => $strategies]) ?>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><?= __('Responsables') ?></label>
+                        <div id="department-managers-summary" class="form-control bg-light" aria-readonly="true">
+                            <?= h($managerNames === [] ? __('Aucun responsable') : implode(', ', $managerNames)) ?>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label"><?= __('CGR associés') ?></label>
+                        <div id="department-cgrs-summary" class="form-control bg-light" aria-readonly="true">
+                            <?= h($cgrCodes === [] ? __('Aucun CGR') : implode(', ', $cgrCodes)) ?>
+                        </div>
+                    </div>
+                    <?= $this->Form->hidden('department_type_id', ['value' => $department->get('department_type_id') ?: 1]) ?>
+                    <?php if ($canEditBase): ?>
+                        <div class="col-md-4">
+                            <?= $this->Form->control('base', ['label' => __('Département socle'), 'type' => 'checkbox']) ?>
+                        </div>
+                    <?php endif; ?>
                 </div>
-            <?php endif; ?>
+            </div>
+            <div class="d-flex gap-2 mb-4">
+                <?= $this->Form->button(__('Enregistrer'), ['class' => 'btn btn-primary']) ?>
+                <?= $this->Action->render(DepartmentsActions::index()) ?>
+            </div>
         </div>
-    </div>
-    <div class="d-flex gap-2 mb-4">
-        <?= $this->Form->button(__('Enregistrer'), ['class' => 'btn btn-primary']) ?>
-        <?= $this->Action->render(DepartmentsActions::index()) ?>
+
+        <?php if ($isEdit): ?>
+            <div class="tab-pane fade" id="cgrs-panel" role="tabpanel" aria-labelledby="cgrs-tab">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <h4 class="h6"><?= __('CGR disponibles') ?></h4>
+                        <?= $this->Tabulator->renderGrid('#department-cgrs-available-table', 'CgrCodes') ?>
+                    </div>
+                    <div class="col-lg-6">
+                        <h4 class="h6"><?= __('CGR associés au département') ?></h4>
+                        <?= $this->Tabulator->renderGrid('#department-cgrs-associated-table', 'CgrCodes') ?>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="managers-panel" role="tabpanel" aria-labelledby="managers-tab">
+                <div class="row g-4">
+                    <div class="col-lg-6">
+                        <h4 class="h6"><?= __('Responsables disponibles') ?></h4>
+                        <?= $this->Tabulator->renderGrid('#department-managers-available-table', 'Users') ?>
+                    </div>
+                    <div class="col-lg-6">
+                        <h4 class="h6"><?= __('Responsables associés au département') ?></h4>
+                        <?= $this->Tabulator->renderGrid('#department-managers-associated-table', 'Users') ?>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" id="department-id" value="<?= (int)$department->get('id') ?>">
+        <?php endif; ?>
     </div>
     <?= $this->Form->end() ?>
-
-    <?php if ($isEdit): ?>
-        <section class="card">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="h6 mb-0"><?= __('Codes CGR associés') ?></h4>
-                    <button id="add-cgr-code" class="btn btn-sm btn-primary" type="button"><?= __('Ajouter un code') ?></button>
-                </div>
-                <?= $this->Tabulator->renderGrid('department-cgr-codes-table', 'CgrCodes') ?>
-                <input type="hidden" id="department-id" value="<?= (int)$department->get('id') ?>">
-                <form id="cgr-code-form" class="row g-2 mt-3 d-none">
-                    <input type="hidden" name="id">
-                    <div class="col-md-2"><input class="form-control" name="type" maxlength="32" required placeholder="<?= __('Type') ?>" aria-label="<?= __('Type') ?>"></div>
-                    <div class="col-md-3"><input class="form-control" name="code" maxlength="16" required placeholder="<?= __('Code') ?>" aria-label="<?= __('Code') ?>"></div>
-                    <div class="col-md-5"><input class="form-control" name="label" maxlength="255" required placeholder="<?= __('Libellé') ?>" aria-label="<?= __('Libellé') ?>"></div>
-                    <div class="col-md-1 form-check d-flex align-items-center"><input class="form-check-input" name="active" type="checkbox" checked><label class="form-check-label ms-1"><?= __('Actif') ?></label></div>
-                    <div class="col-md-1 d-flex gap-1"><button class="btn btn-primary" type="submit" aria-label="<?= __('Enregistrer') ?>">✓</button><button id="cancel-cgr-code" class="btn btn-link" type="button" aria-label="<?= __('Annuler') ?>">×</button></div>
-                </form>
-            </div>
-        </section>
-    <?php endif; ?>
 </div>

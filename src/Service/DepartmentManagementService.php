@@ -145,6 +145,9 @@ final class DepartmentManagementService
             }
 
             $filtered = array_intersect_key($data, array_flip(self::EDITABLE_FIELDS));
+            if ($department->isNew() && !array_key_exists('department_type_id', $filtered)) {
+                $filtered['department_type_id'] = 1;
+            }
             if ($department->isNew()) {
                 $department->set('base', false);
             }
@@ -158,11 +161,85 @@ final class DepartmentManagementService
                 $this->replaceAssociation($entity, 'Managers', $this->associationIds($data['manager_ids']));
             }
             if (array_key_exists('cgr_code_ids', $data)) {
-                $this->replaceAssociation($entity, 'CgrCodes', $this->associationIds($data['cgr_code_ids']));
+                $this->replaceAssociation(
+                    $entity,
+                    'CgrCodes',
+                    $this->associationIds($data['cgr_code_ids']),
+                    (new CgrResolverService())->getAllowedTypesForDepartment((int)$entity->get('id')),
+                );
             }
 
             return $entity;
         });
+    }
+
+    /** Associe un responsable au département, de façon idempotente. */
+    public function associateManager(Department $department, int $userId): void
+    {
+        $users = $this->tableFor('Users');
+        $user = $users->find()->where(['Users.id' => $userId, 'Users.deleted IS' => null])->first();
+        if ($user === null) {
+            throw new DomainException(__('Le responsable sélectionné est introuvable.'));
+        }
+
+        $links = $this->tableFor('DepartmentManagers');
+        if (
+            $links->find()->where([
+                'department_id' => (int)$department->get('id'),
+                'user_id' => $userId,
+            ])->count() === 0
+        ) {
+            $links->saveOrFail($links->newEntity([
+                'department_id' => (int)$department->get('id'),
+                'user_id' => $userId,
+            ]));
+        }
+    }
+
+    /** Dissocie un responsable du département. */
+    public function dissociateManager(Department $department, int $userId): void
+    {
+        $this->tableFor('DepartmentManagers')->deleteAll([
+            'department_id' => (int)$department->get('id'),
+            'user_id' => $userId,
+        ]);
+    }
+
+    /** Associe un code CGR au département, de façon idempotente. */
+    public function associateCgrCode(Department $department, int $cgrCodeId): void
+    {
+        $codes = $this->tableFor('CgrCodes');
+        $code = $codes->find()->where(['CgrCodes.id' => $cgrCodeId, 'CgrCodes.active' => true])->first();
+        if ($code === null) {
+            throw new DomainException(__('Le code CGR sélectionné est introuvable ou inactif.'));
+        }
+        $allowedTypes = (new CgrResolverService())->getAllowedTypesForDepartment((int)$department->get('id'));
+        $normalizedType = strtoupper(trim((string)$code->get('type')));
+        if (!in_array($normalizedType, $allowedTypes, true)) {
+            throw new DomainException(__('Le type du code CGR sélectionné n’est pas autorisé par la stratégie.'));
+        }
+
+        $links = $this->tableFor('DepartmentCgrCodes');
+        if (
+            $links->find()->where([
+                'department_id' => (int)$department->get('id'),
+                'cgr_code_id' => $cgrCodeId,
+            ])->count() === 0
+        ) {
+            $links->saveOrFail($links->newEntity([
+                'department_id' => (int)$department->get('id'),
+                'cgr_code_id' => $cgrCodeId,
+            ]));
+        }
+    }
+
+    /** Dissocie un code CGR du département. */
+    public function dissociateCgrCode(Department $department, int $cgrCodeId): void
+    {
+        $this->tableFor('DepartmentCgrCodes')->deleteAll([
+            'department_id' => (int)$department->get('id'),
+            'cgr_code_id' => $cgrCodeId,
+        ]);
     }
 
     /** Désactive un département sans le supprimer physiquement. */
@@ -499,9 +576,14 @@ final class DepartmentManagementService
      * @param \App\Model\Entity\Department $department Département propriétaire.
      * @param string $association Alias de l'association.
      * @param list<int> $ids Identifiants demandés.
+     * @param list<string>|null $allowedCgrTypes Types CGR autorisés par la stratégie.
      */
-    private function replaceAssociation(Department $department, string $association, array $ids): void
-    {
+    private function replaceAssociation(
+        Department $department,
+        string $association,
+        array $ids,
+        ?array $allowedCgrTypes = null,
+    ): void {
         /** @var \Cake\ORM\Association\BelongsToMany<\Cake\ORM\Table> $relation */
         $relation = $this->table()->getAssociation($association);
         $target = $relation->getTarget();
@@ -510,6 +592,15 @@ final class DepartmentManagementService
             : $target->find()->where(['id IN' => $ids])->all()->toList();
         if (count($entities) !== count($ids)) {
             throw new DomainException(__('Une association sélectionnée est introuvable.'));
+        }
+        if ($association === 'CgrCodes' && $allowedCgrTypes !== null) {
+            foreach ($entities as $entity) {
+                if (!in_array(strtoupper(trim((string)$entity->get('type'))), $allowedCgrTypes, true)) {
+                    throw new DomainException(__(
+                        'Le type d’un code CGR sélectionné n’est pas autorisé par la stratégie.',
+                    ));
+                }
+            }
         }
         $relation->replaceLinks($department, $entities);
     }

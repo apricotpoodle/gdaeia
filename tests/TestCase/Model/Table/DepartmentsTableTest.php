@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Entity\Department;
 use App\Model\Entity\User;
 use App\Model\Table\DepartmentsTable;
 use Cake\TestSuite\TestCase;
@@ -26,6 +27,8 @@ class DepartmentsTableTest extends TestCase
      */
     protected array $fixtures = [
         'app.Departments',
+        'app.Users',
+        'app.UserDepartments',
         'app.CgrCodes',
         'app.CgrStrategies',
         'app.Applicationforms',
@@ -83,5 +86,41 @@ class DepartmentsTableTest extends TestCase
             $query,
             $this->Departments->findVisibleTo($query, new User(['issuperuser' => true])),
         );
+    }
+
+    public function testLeFinderVisibleToLimiteUnAdministrateurASesAssociationsExplicites(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        $departments->updateAll(['deleted' => null], ['id IN' => [1, 2]]);
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 2,
+            'department_id' => 2,
+        ]));
+
+        $visible = $departments->find('visibleTo', user: new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ]))->all()->toList();
+
+        $this->assertSame([2], array_map(
+            static fn(Department $department): int => (int)$department->get('id'),
+            $visible,
+        ));
+    }
+
+    public function testLeFinderVisibleToNeRetourneAucuneRacineSansAssociation(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        $departments->updateAll(['deleted' => null], ['id IN' => [1, 2]]);
+
+        $visible = $departments->find('visibleTo', user: new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ]))->all()->toList();
+
+        $this->assertSame([], $visible);
     }
 }
