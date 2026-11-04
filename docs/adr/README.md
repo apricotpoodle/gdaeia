@@ -5,7 +5,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 
 ---
 
-## Index Général des Décisions d'Architecture (ADR 0001 à 0070)
+## Index Général des Décisions d'Architecture (ADR 0001 à 0073)
 
 | Référence | Sujet Technique / Décision | Statut | Fichier Source |
 | :--- | :--- | :---: | :--- |
@@ -81,6 +81,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0070** | Circuits courts locaux selon le type de contrat | **Accepté** | [`0070-circuits-courts-locaux-par-contrat.md`](./0070-circuits-courts-locaux-par-contrat.md) |
 | **ADR 0071** | Fuseau horaire applicatif Europe/Paris et stockage UTC | **Proposé** | [`0071-fuseau-horaire-applicatif-europe-paris.md`](./0071-fuseau-horaire-applicatif-europe-paris.md) |
 | **ADR 0072** | Associations multiples des départements, utilisateurs et codes CGR | **Proposé** | [`0072-associations-multiples-departements-cgr.md`](./0072-associations-multiples-departements-cgr.md) |
+| **ADR 0073** | Distinction entre visibilité et gérabilité des utilisateurs | **Proposé** | [`0073-visibilite-et-manageabilite-des-utilisateurs.md`](./0073-visibilite-et-manageabilite-des-utilisateurs.md) |
 
 ---
 

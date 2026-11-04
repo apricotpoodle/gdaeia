@@ -6,18 +6,19 @@ et des tests présents dans le dépôt. Les statuts ci-dessous décrivent le
 reste à faire, pas seulement le statut historique écrit dans une fiche.
 
 Les tickets 0017 à 0023 ont été ajoutés les **23 et 29 octobre 2026** sans
-nouvel audit global.
+nouvel audit global. Le ticket 0025 a été ajouté le **4 novembre 2026** avec
+son ADR proposé ; son état reste donc « À planifier ».
 
 ## Vue d’ensemble
 
 | Périmètre | Total | Entièrement traité | Partiellement traité | Reste à faire |
 |---|---:|---:|---:|---:|
-| Backlog technique racine (`0001`–`0024`) | 24 | 14 | 1 | 9 |
+| Backlog technique racine (`0001`–`0025`) | 25 | 14 | 1 | 10 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
-| **Total** | **36** | **27** | **1** | **8** |
+| **Total** | **37** | **27** | **1** | **9** |
 
 Le ticket 0002 est compté comme partiellement traité ; les tickets restants
-concernent les sujets 0001, 0007, 0017 et 0019 à 0024, auxquels s'ajoutent
+concernent les sujets 0001, 0007, 0017 et 0019 à 0025, auxquels s'ajoutent
 les compléments du 0002.
 
 ## Tickets restant à effectuer
@@ -34,6 +35,7 @@ les compléments du 0002.
 | [0022 — Référentiel des départements](0022-mettre-a-jour-le-referentiel-des-departements.md) | Moyenne | À planifier | Mettre à jour les départements, principalement les fils de SEM/Rédac, avec import contrôlé et vérification d'intégrité. | Nouveau ticket créé le 29 octobre ; aucune transformation de données engagée. |
 | [0023 — Migration de base](0023-migrer-la-base-de-donnees.md) | Moyenne | À planifier | Préparer une migration MySQL simple par export/restauration, migrations et contrôles de cohérence. | Nouveau ticket créé le 29 octobre ; aucune bascule de base engagée. |
 | [0024 — Associations multiples des départements](0024-generaliser-les-associations-des-departements.md) | **Haute** | Terminé | Remplacer les responsables et rattachements CGR directs par des tables de liaison, migrer les données et adapter l’ORM, l’API et les écrans. | Migration, ORM, API, IHM et validations finalisées. |
+| [0025 — Visibilité et gérabilité des utilisateurs](0025-separer-visibilite-et-manageabilite-utilisateurs.md) | **Haute** | À planifier | Ticket parent du sous-workflow `visibilite-manageabilite/` : distinguer les utilisateurs visibles et gérables, sécuriser les mutations Web/API et réserver `ADMIN` aux superusers. | Nouveau sous-workflow ; l'ADR 0073 est proposé et les incompatibilités actuelles sont documentées. |
 
 ## Tickets déjà traités — contrôle de non-réouverture
 
@@ -75,6 +77,8 @@ L’ordre recommandé est :
 10. **0023**, pour préparer la migration contrôlée de la base MySQL.
 11. **0024**, en priorité, pour normaliser les responsables et les codes CGR
     avant toute évolution dépendant du référentiel des départements.
+12. **0025**, en priorité, pour séparer visibilité et gérabilité des
+    utilisateurs et sécuriser les mutations selon les périmètres.
 
 Cette synthèse est un audit statique du dépôt. Elle confirme la présence des
 implémentations et tests versionnés ; elle ne remplace pas l’exécution des
