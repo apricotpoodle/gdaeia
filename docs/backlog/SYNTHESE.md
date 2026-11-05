@@ -16,13 +16,13 @@ depuis le démarrage de son étape 1.
 
 | Périmètre | Total | Entièrement traité | Partiellement traité | Reste à faire |
 |---|---:|---:|---:|---:|
-| Backlog technique racine (`0001`–`0026`) | 26 | 15 | 1 | 10 |
+| Backlog technique racine (`0001`–`0026`) | 26 | 16 | 1 | 9 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
 | Workflow `visibilite-manageabilite` (`0001`–`0009`) | 9 | 9 | 0 | 0 |
-| **Total** | **48** | **37** | **1** | **10** |
+| **Total** | **48** | **38** | **1** | **9** |
 
 Le ticket 0002 est compté comme partiellement traité ; les tickets restants
-concernent les sujets 0001, 0007, 0017, 0019 à 0023, 0025 et 0026, auxquels s'ajoutent
+concernent les sujets 0001, 0007, 0017, 0019, 0021 à 0023, 0025 et 0026, auxquels s'ajoutent
 les compléments du 0002.
 
 ## Tickets restant à effectuer
@@ -34,7 +34,7 @@ les compléments du 0002.
 | [0007 — Accès menus et permissions](0007-separer-acces-menus-et-permissions-administration.md) | Haute | À faire | Introduire `permissions`/`role_permissions` et `manage_menus`, centraliser la résolution des accès, migrer les données et ajouter les tests HTTP, Policy et intégration. La V1 couvre `self`, les départements directement affectés (`assigned`) et `all` ; les descendants et les droits individuels sont différés. | `src/Policy/MenuPolicy.php` autorise encore via `isSuperUser()` ; aucune table `permissions`/`role_permissions` ni permission `manage_menus` n’a été trouvée. Les Policies et custom finders existants constituent le socle de migration ; le ticket écarte provisoirement ARO/ACO. |
 | [0017 — Circuits courts locaux](0017-implementer-les-circuits-courts-locaux.md) | Moyenne | À planifier | Implémenter les exceptions par contrat et département, l'administration locale et les contrôles de lancement de l'ADR 0070. | Nouveau ticket créé après l'audit du 13 octobre ; aucune implémentation engagée. |
 | [0019 — Quatre zones de la vue DAE](0019-reprendre-les-quatre-zones-dans-la-vue-dae.md) | Moyenne | À planifier | Aligner l'onglet « Détails de la demande » sur les quatre zones de l'édition, en lecture seule et avec conservation des droits. | Nouveau ticket créé le 29 octobre ; aucune implémentation engagée. |
-| [0020 — Duplication des DAE](0020-fiabiliser-la-duplication-des-dae.md) | Haute | À planifier | Effacer les champs administratifs lors de la copie et retourner des blocages explicites et actionnables. | Nouveau ticket créé le 29 octobre ; aucune implémentation engagée. |
+| [0020 — Duplication des DAE](0020-fiabiliser-la-duplication-des-dae.md) | Haute | **Terminé** | — | Duplication typée, champs administratifs réinitialisés, brouillons sans budget/inscription budgétaire et erreurs API par catégorie vérifiés. |
 | [0021 — Habilitations génériques](0021-implementer-les-habilitations-generiques.md) | Haute | À planifier | Implémenter le premier vertical du socle 0007 : permissions génériques et sécurisation Web/API de l'administration des départements. | L'ADR 0069 est accepté ; le ticket 0007 définit le socle générique et 0021 en constitue l'implémentation spécialisée. |
 | [0022 — Référentiel des départements](0022-mettre-a-jour-le-referentiel-des-departements.md) | Moyenne | À planifier | Mettre à jour les départements, principalement les fils de SEM/Rédac, avec import contrôlé et vérification d'intégrité. | Nouveau ticket créé le 29 octobre ; aucune transformation de données engagée. |
 | [0023 — Migration de base](0023-migrer-la-base-de-donnees.md) | Moyenne | À planifier | Préparer une migration MySQL simple par export/restauration, migrations et contrôles de cohérence. | Nouveau ticket créé le 29 octobre ; aucune bascule de base engagée. |
@@ -75,13 +75,12 @@ L’ordre recommandé est :
 5. **0017**, lorsque l'évolution de la rédaction SEM sera programmée ; suivre
    l'ADR 0070 sans étendre l'exception aux autres sociétés.
 6. **0019**, pour aligner la consultation d'une DAE sur l'organisation de son édition.
-7. **0020**, pour fiabiliser la copie des DAE et rendre les blocages résolubles.
-8. **0021**, priorité haute, pour mettre en œuvre les habilitations génériques
+7. **0021**, priorité haute, pour mettre en œuvre les habilitations génériques
    et résoudre l'accès administrateur aux départements.
-9. **0022**, pour mettre à jour le référentiel des départements SEM/Rédac.
-10. **0023**, pour préparer la migration contrôlée de la base MySQL.
-11. Poursuivre l'étape 6 du ticket **0026** avec les évolutions métier
-    prioritaires.
+8. **0022**, pour mettre à jour le référentiel des départements SEM/Rédac.
+9. **0023**, pour préparer la migration contrôlée de la base MySQL.
+10. Poursuivre l'étape 6 du ticket **0026** avec le ticket **0019**, puis
+    le ticket **0017**.
 
 Le ticket **0024** est terminé et ne fait plus partie des prochaines étapes.
 

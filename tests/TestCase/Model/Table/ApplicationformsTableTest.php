@@ -5,10 +5,14 @@ namespace App\Test\TestCase\Model\Table;
 
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\Period;
+use App\Model\Entity\User;
 use App\Model\Table\ApplicationformsTable;
+use App\Service\ApplicationformDuplicationResult;
+use Cake\Datasource\EntityInterface;
 use Cake\TestSuite\Fixture\FixtureStrategyInterface;
 use Cake\TestSuite\Fixture\TruncateStrategy;
 use Cake\TestSuite\TestCase;
+use RuntimeException;
 
 /**
  * App\Model\Table\ApplicationformsTable Test Case
@@ -50,6 +54,7 @@ class ApplicationformsTableTest extends TestCase
         'app.Yesnos',
         'app.Applicationvalidationsteps',
         'app.Validations',
+        'app.WorkflowSettings',
     ];
 
     /**
@@ -215,6 +220,101 @@ class ApplicationformsTableTest extends TestCase
         $this->Applicationforms->saveOrFail($applicationform);
 
         $this->assertSame('4.0000', $applicationform->salary_base);
+    }
+
+    public function testLaDuplicationEffaceLesChampsAdministratifsEtRattacheLaCopie(): void
+    {
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Contracttypes')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Professionalcategories')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Periods')->updateAll(['deleted' => null], ['id' => 1]);
+        $source = $this->Applicationforms->get(1);
+        $source->patch([
+            Applicationform::FIELD_USER_ID => 1,
+            Applicationform::FIELD_ASSISTANT_ID => 2,
+            Applicationform::FIELD_MANAGER_ID => 2,
+            Applicationform::FIELD_APPLICANTNAME => 'Candidat source',
+            Applicationform::FIELD_SALARY_BASE => '1250.00',
+            Applicationform::FIELD_HR_DESCRIPTION => 'Note RH',
+            Applicationform::FIELD_CONTROL_MANAGEMENT_VALIDATION => 'Visa contrôle',
+            Applicationform::FIELD_FINAL_ARGUMENT => 'Argumentaire',
+            Applicationform::FIELD_BUDGETFEATURE_ID => 1,
+            Applicationform::FIELD_YESNO_ID => 1,
+            Applicationform::FIELD_QUALIFICATION => 'Qualification source',
+        ]);
+
+        $result = $this->Applicationforms->duplicateFor($source, new User(['id' => 2]));
+
+        $this->assertInstanceOf(ApplicationformDuplicationResult::class, $result);
+        $this->assertTrue($result->isSuccess());
+        $this->assertNotNull($result->applicationform);
+        $this->assertSame(2, $result->applicationform->get(Applicationform::FIELD_USER_ID));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_ASSISTANT_ID));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_MANAGER_ID));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_APPLICANTNAME));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_SALARY_BASE));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_HR_DESCRIPTION));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_CONTROL_MANAGEMENT_VALIDATION));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_FINAL_ARGUMENT));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_BUDGETFEATURE_ID));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_YESNO_ID));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_QUALIFICATION));
+    }
+
+    public function testUnBrouillonPeutEtreEnregistreSansChampsReserves(): void
+    {
+        $applicationform = $this->Applicationforms->newEntity($this->validData([
+            Applicationform::FIELD_BUDGETFEATURE_ID => null,
+            Applicationform::FIELD_YESNO_ID => null,
+        ]));
+
+        $this->assertNotFalse(
+            $this->Applicationforms->save($applicationform),
+            json_encode($applicationform->getErrors(), JSON_THROW_ON_ERROR),
+        );
+        $this->assertNull($applicationform->get(Applicationform::FIELD_BUDGETFEATURE_ID));
+        $this->assertNull($applicationform->get(Applicationform::FIELD_YESNO_ID));
+    }
+
+    public function testLaDuplicationRefuseUneReferenceSupprimee(): void
+    {
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Professionalcategories')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Periods')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Contracttypes')->updateAll(
+            ['deleted' => '2026-11-05 12:00:00'],
+            ['id' => 1],
+        );
+        $source = $this->Applicationforms->get(1);
+
+        $result = $this->Applicationforms->duplicateFor($source, new User(['id' => 2]));
+
+        $this->assertFalse($result->isSuccess());
+        $this->assertSame(ApplicationformDuplicationResult::CATEGORY_REFERENCE, $result->category);
+        $this->assertSame('contracttype_id', $result->errors[0]['field']);
+        $this->assertStringContainsString('supprimée', $result->message);
+    }
+
+    public function testUneErreurDePersistanceNeExposePasLeDetailTechnique(): void
+    {
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Contracttypes')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Professionalcategories')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Periods')->updateAll(['deleted' => null], ['id' => 1]);
+        $source = $this->Applicationforms->get(1);
+        $table = new class extends ApplicationformsTable {
+            public function save(EntityInterface $entity, array $options = []): EntityInterface|false
+            {
+                throw new RuntimeException('détail SQL sensible');
+            }
+        };
+
+        $result = $table->duplicateFor($source, new User(['id' => 2]));
+
+        $this->assertFalse($result->isSuccess());
+        $this->assertSame(ApplicationformDuplicationResult::CATEGORY_PERSISTENCE, $result->category);
+        $this->assertSame([], $result->errors);
+        $this->assertStringNotContainsString('détail SQL sensible', $result->message);
     }
 
     /**

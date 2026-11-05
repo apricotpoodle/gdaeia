@@ -7,11 +7,14 @@ use App\Model\Entity\Applicationform;
 use App\Model\Entity\Contracttype;
 use App\Model\Entity\Period;
 use App\Model\Entity\User;
+use App\Service\ApplicationformDuplicationResult;
 use App\Service\SalaryCalculationService;
+use App\Service\ValidationErrorPresenter;
 use App\Service\WorkingDaysService;
 use ArrayObject;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
+use Cake\Log\Log;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -21,6 +24,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use InvalidArgumentException;
 use Search\Model\Filter\Callback;
+use Throwable;
 
 /**
  * Applicationforms Model
@@ -63,6 +67,69 @@ use Search\Model\Filter\Callback;
  */
 class ApplicationformsTable extends Table
 {
+    /** Champs administratifs toujours effacés lors d'une duplication. */
+    public const DUPLICATION_RESET_FIELDS = [
+        Applicationform::FIELD_USER_ID,
+        Applicationform::FIELD_ASSISTANT_ID,
+        Applicationform::FIELD_MANAGER_ID,
+        Applicationform::FIELD_APPLICANTNAME,
+        Applicationform::FIELD_APPLICANT_FIRST_NAME,
+        Applicationform::FIELD_APPLICANT_LAST_NAME,
+        Applicationform::FIELD_COLLABORATOR_ID,
+        Applicationform::FIELD_SALARY_BASE,
+        Applicationform::FIELD_HR_DESCRIPTION,
+        Applicationform::FIELD_CONTROL_MANAGEMENT_VALIDATION,
+        Applicationform::FIELD_FINAL_ARGUMENT,
+        Applicationform::FIELD_BUDGETFEATURE_ID,
+        Applicationform::FIELD_YESNO_ID,
+        Applicationform::FIELD_QUALIFICATION,
+        Applicationform::FIELD_ARCHIVED,
+        Applicationform::FIELD_DELETED,
+    ];
+
+    /** Champs scalaires pouvant provenir de la DAE source avant réinitialisation. */
+    private const DUPLICATION_SOURCE_FIELDS = [
+        Applicationform::FIELD_DEPARTMENT_ID,
+        Applicationform::FIELD_ASSISTANT_ID,
+        Applicationform::FIELD_MANAGER_ID,
+        Applicationform::FIELD_CGR,
+        Applicationform::FIELD_CONTRACTTYPE_ID,
+        Applicationform::FIELD_HIRINGREASON_ID,
+        Applicationform::FIELD_REASONFORREPLACEMENT,
+        Applicationform::FIELD_BUDGETFEATURE_ID,
+        Applicationform::FIELD_JOBTITLE,
+        Applicationform::FIELD_PROFESSIONALCATEGORY_ID,
+        Applicationform::FIELD_WORKTIME_ID,
+        Applicationform::FIELD_WORKINGTIMEDISTRIBUTION,
+        Applicationform::FIELD_GROSSREMUNERATION,
+        Applicationform::FIELD_PERIOD_ID,
+        Applicationform::FIELD_QUALIFICATION,
+        Applicationform::FIELD_BEGIN_AT,
+        Applicationform::FIELD_END_AT,
+        Applicationform::FIELD_APPLICANTNAME,
+        Applicationform::FIELD_APPLICANT_FIRST_NAME,
+        Applicationform::FIELD_APPLICANT_LAST_NAME,
+        Applicationform::FIELD_WORKING_DAYS,
+        Applicationform::FIELD_SALARY_BASE,
+        Applicationform::FIELD_HR_DESCRIPTION,
+        Applicationform::FIELD_CONTROL_MANAGEMENT_VALIDATION,
+        Applicationform::FIELD_FINAL_ARGUMENT,
+        Applicationform::FIELD_YESNO_ID,
+        Applicationform::FIELD_COLLABORATOR_ID,
+        Applicationform::FIELD_ARCHIVED,
+        Applicationform::FIELD_DELETED,
+    ];
+
+    /** Références à contrôler contre les référentiels actifs. */
+    private const DUPLICATION_REFERENCES = [
+        Applicationform::FIELD_DEPARTMENT_ID => ['Departments', 'Département'],
+        Applicationform::FIELD_CONTRACTTYPE_ID => ['Contracttypes', 'Type de contrat'],
+        Applicationform::FIELD_HIRINGREASON_ID => ['Hiringreasons', 'Motif de recrutement'],
+        Applicationform::FIELD_PROFESSIONALCATEGORY_ID => ['Professionalcategories', 'Catégorie professionnelle'],
+        Applicationform::FIELD_WORKTIME_ID => ['Worktimes', 'Temps de travail'],
+        Applicationform::FIELD_PERIOD_ID => ['Periods', 'Période'],
+    ];
+
     /**
      * Normalise les saisies décimales avant le marshalling CakePHP.
      *
@@ -321,7 +388,7 @@ class ApplicationformsTable extends Table
 
         $validator
             ->integer(Applicationform::FIELD_BUDGETFEATURE_ID)
-            ->notEmptyString(Applicationform::FIELD_BUDGETFEATURE_ID);
+            ->allowEmptyString(Applicationform::FIELD_BUDGETFEATURE_ID);
 
         $validator
             ->scalar(Applicationform::FIELD_JOBTITLE)
@@ -458,7 +525,7 @@ class ApplicationformsTable extends Table
 
         $validator
             ->integer(Applicationform::FIELD_YESNO_ID)
-            ->notEmptyString(Applicationform::FIELD_YESNO_ID);
+            ->allowEmptyString(Applicationform::FIELD_YESNO_ID);
 
         $validator
             ->dateTime(Applicationform::FIELD_DELETED)
@@ -584,54 +651,90 @@ class ApplicationformsTable extends Table
      *
      * @param \App\Model\Entity\Applicationform $source DAE à recopier.
      * @param \App\Model\Entity\User $actor Utilisateur qui déclenche la copie.
-     * @return \App\Model\Entity\Applicationform|false Nouvelle DAE ou échec de validation/persistance.
+     * @return \App\Service\ApplicationformDuplicationResult Résultat de la duplication.
      */
-    public function duplicateFor(Applicationform $source, User $actor): Applicationform|false
+    public function duplicateFor(Applicationform $source, User $actor): ApplicationformDuplicationResult
     {
-        $fields = [
-            Applicationform::FIELD_DEPARTMENT_ID,
-            Applicationform::FIELD_CGR,
-            Applicationform::FIELD_CONTRACTTYPE_ID,
-            Applicationform::FIELD_HIRINGREASON_ID,
-            Applicationform::FIELD_REASONFORREPLACEMENT,
-            Applicationform::FIELD_BUDGETFEATURE_ID,
-            Applicationform::FIELD_JOBTITLE,
-            Applicationform::FIELD_PROFESSIONALCATEGORY_ID,
-            Applicationform::FIELD_WORKTIME_ID,
-            Applicationform::FIELD_WORKINGTIMEDISTRIBUTION,
-            Applicationform::FIELD_GROSSREMUNERATION,
-            Applicationform::FIELD_PERIOD_ID,
-            Applicationform::FIELD_QUALIFICATION,
-            Applicationform::FIELD_BEGIN_AT,
-            Applicationform::FIELD_END_AT,
-            Applicationform::FIELD_APPLICANTNAME,
-            Applicationform::FIELD_YESNO_ID,
-            Applicationform::FIELD_COLLABORATOR_ID,
-        ];
+        $fields = array_values(array_diff(self::DUPLICATION_SOURCE_FIELDS, self::DUPLICATION_RESET_FIELDS));
         $data = $source->extract($fields);
-        $resetSetting = TableRegistry::getTableLocator()->get('WorkflowSettings')->find()
-            ->where(['name' => 'applicationform.duplicate_reset_fields'])->first();
-        $resetFields = array_values(array_filter(array_map(
-            'trim',
-            explode(',', (string)$resetSetting?->get('value')),
-        )));
-        $fieldsToReset = array_unique(array_merge(
-            $resetFields,
-            [
-                Applicationform::FIELD_USER_ID,
-                Applicationform::FIELD_APPLICANTNAME,
-                Applicationform::FIELD_SALARY_BASE,
-                Applicationform::FIELD_CONTROL_MANAGEMENT_VALIDATION,
-                Applicationform::FIELD_FINAL_ARGUMENT,
-            ],
-        ));
-        foreach ($fieldsToReset as $field) {
-            unset($data[$field]);
+        $referenceFailure = $this->duplicateReferenceFailure($data);
+        if ($referenceFailure !== null) {
+            return $referenceFailure;
         }
         $data[Applicationform::FIELD_USER_ID] = $actor->get(User::FIELD_ID);
 
         $duplicate = $this->newEntity($data);
+        try {
+            if ($this->save($duplicate)) {
+                return ApplicationformDuplicationResult::success($duplicate);
+            }
+        } catch (Throwable $exception) {
+            Log::error('Échec technique lors de la duplication d’une DAE.', [
+                'exception' => $exception,
+                'source_id' => $source->get(Applicationform::FIELD_ID),
+            ]);
 
-        return $this->save($duplicate) ? $duplicate : false;
+            return ApplicationformDuplicationResult::failure(
+                ApplicationformDuplicationResult::CATEGORY_PERSISTENCE,
+                __('La duplication est impossible à enregistrer. Vérifiez les données puis réessayez.'),
+            );
+        }
+
+        if ($duplicate->getErrors() !== []) {
+            $presentation = (new ValidationErrorPresenter())->present($duplicate, 'Applicationforms');
+
+            return ApplicationformDuplicationResult::failure(
+                ApplicationformDuplicationResult::CATEGORY_VALIDATION,
+                __('La duplication est bloquée. Corrigez les champs signalés puis recommencez.'),
+                $presentation['errors'],
+            );
+        }
+
+        return ApplicationformDuplicationResult::failure(
+            ApplicationformDuplicationResult::CATEGORY_PERSISTENCE,
+            __('La duplication est impossible à enregistrer. Vérifiez les données puis réessayez.'),
+        );
+    }
+
+    /**
+     * Vérifie que les références de la copie pointent vers des référentiels actifs.
+     *
+     * @param array<string, mixed> $data Données métier extraites de la source.
+     * @return \App\Service\ApplicationformDuplicationResult|null Échec ou null si toutes les références sont valides.
+     */
+    private function duplicateReferenceFailure(array $data): ?ApplicationformDuplicationResult
+    {
+        foreach (self::DUPLICATION_REFERENCES as $field => [$tableName, $label]) {
+            $value = $data[$field] ?? null;
+            if ($value === null || $value === '') {
+                continue;
+            }
+
+            $table = TableRegistry::getTableLocator()->get($tableName);
+            $query = $table->find()->where(['id' => (int)$value]);
+            if ($table->getSchema()->hasColumn('deleted')) {
+                $query->where(['deleted IS' => null]);
+            }
+            if ($query->first() !== null) {
+                continue;
+            }
+
+            $message = __(
+                'La référence « {0} » est invalide ou supprimée. Sélectionnez de nouveau une valeur active.',
+                $label,
+            );
+
+            return ApplicationformDuplicationResult::failure(
+                ApplicationformDuplicationResult::CATEGORY_REFERENCE,
+                $message,
+                [[
+                    'field' => $field,
+                    'label' => $label,
+                    'reason' => __('Sélectionnez de nouveau une valeur active.'),
+                ]],
+            );
+        }
+
+        return null;
     }
 }

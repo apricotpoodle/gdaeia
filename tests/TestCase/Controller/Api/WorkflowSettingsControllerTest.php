@@ -148,4 +148,21 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->assertResponseContains('"message":"Champ « Libellé » :');
         $this->assertResponseContains('"field":"label","label":"Libellé","reason":');
     }
+
+    public function testLaListeDesChampsDeDuplicationEstVersionneeEtNonModifiable(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->get('/api/workflow-settings/duplicate-reset-fields.json');
+        $this->assertResponseOk();
+        $this->assertResponseContains('"hr_description"');
+        $this->assertResponseContains('"deprecated":true');
+
+        $this->post('/api/workflow-settings/duplicate-reset-fields.json', ['fields' => ['jobtitle']]);
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"success":false');
+        $this->assertResponseContains('liste est désormais versionnée');
+    }
 }

@@ -22,7 +22,6 @@ opérationnelle.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute ; permissions génériques, Policies CakePHP et périmètres V1 directs, avec la gestion des descendants et des droits individuels différée.
 - [0017 — Implémenter les circuits courts locaux de validation](0017-implementer-les-circuits-courts-locaux.md) — priorité moyenne ; à planifier selon l'ADR 0070.
 - [0019 — Reprendre les quatre zones dans la vue d'une DAE](0019-reprendre-les-quatre-zones-dans-la-vue-dae.md) — priorité moyenne ; aligner l'onglet « Détails de la demande » sur l'édition en lecture seule.
-- [0020 — Fiabiliser la duplication des DAE](0020-fiabiliser-la-duplication-des-dae.md) — priorité haute ; effacer les champs administratifs et expliciter les blocages.
 - [0021 — Implémenter les habilitations génériques](0021-implementer-les-habilitations-generiques.md) — priorité haute ; remplacer les droits codés en dur et sécuriser l'accès aux départements.
 - [0022 — Mettre à jour le référentiel des départements](0022-mettre-a-jour-le-referentiel-des-departements.md) — priorité moyenne ; actualiser principalement les fils de SEM/Rédac avec une procédure contrôlée.
 - [0023 — Migrer la base de données vers une nouvelle instance](0023-migrer-la-base-de-donnees.md) — priorité moyenne ; documenter une exportation/restauration reproductible et vérifiable.
@@ -36,6 +35,7 @@ opérationnelle.
 - [0016 — Couvrir le parcours de reconnexion](0016-couvrir-le-parcours-de-reconnexion.md) — priorité haute.
 - [0018 — Sécuriser la saisie des jours ouvrés d'une DAE](0018-securiser-la-saisie-des-jours-ouvres-dae.md) — priorité haute.
 - [0025 — Séparer la visibilité et la gérabilité des utilisateurs](0025-separer-visibilite-et-manageabilite-utilisateurs.md) — priorité haute.
+- [0020 — Fiabiliser la duplication des DAE](0020-fiabiliser-la-duplication-des-dae.md) — priorité haute.
 
 ## Migration vers un gestionnaire de tickets
 
