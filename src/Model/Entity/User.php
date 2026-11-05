@@ -46,6 +46,14 @@ class User extends AppEntity implements AuthenticationIdentity, AuthorizationIde
     public const ALLOWED_ROLES_FOR_EDIT = [self::ROLE_ADMIN];
     public const ALLOWED_ROLES_FOR_VIEW = [self::ROLE_ADMIN];
     public const ALLOWED_ROLES_FOR_DELETE = [self::ROLE_ADMIN];
+    public const FUNCTIONAL_ROLE_IDS = [
+        self::ROLE_DEMANDEUR,
+        self::ROLE_1_VALIDEUR_POLE,
+        self::ROLE_2_VALIDEUR_RRH,
+        self::ROLE_3_VALIDEUR_DRH,
+        self::ROLE_4_VALIDEUR_CG,
+        self::ROLE_5_VALIDEUR_DIR,
+    ];
 
     protected array $_accessible = [
         '*' => true,

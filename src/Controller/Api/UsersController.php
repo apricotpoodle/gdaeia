@@ -8,6 +8,7 @@ use App\Model\Entity\User;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
 use App\Service\UserDepartmentAuthorizationService;
+use App\Service\UserRoleAuthorizationService;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
@@ -28,6 +29,7 @@ use Cake\ORM\TableRegistry;
 class UsersController extends AppController
 {
     private UserDepartmentAuthorizationService $userDepartmentAuthorization;
+    private UserRoleAuthorizationService $userRoleAuthorization;
 
     /**
      * @return void
@@ -37,6 +39,7 @@ class UsersController extends AppController
         parent::initialize();
         $this->viewBuilder()->setClassName('Json');
         $this->userDepartmentAuthorization = new UserDepartmentAuthorizationService();
+        $this->userRoleAuthorization = new UserRoleAuthorizationService();
     }
 
     /** @inheritDoc */
@@ -70,6 +73,13 @@ class UsersController extends AppController
         $roles = $rolesTable->find('list', keyField: 'id', valueField: 'name')
             ->orderBy(['Roles.name' => 'ASC'])
             ->toArray();
+        $allowedRoleIds = $this->userRoleAuthorization->allowedRoleIds($currentUser);
+        if ($allowedRoleIds !== null) {
+            $roles = $rolesTable->find('list', keyField: 'id', valueField: 'name')
+                ->where(['Roles.id IN' => $allowedRoleIds])
+                ->orderBy(['Roles.name' => 'ASC'])
+                ->toArray();
+        }
 
         // Arborescence filtrée par périmètre opérateur
         /** @var \App\Model\Table\DepartmentsTable $departmentsTable */
@@ -108,6 +118,12 @@ class UsersController extends AppController
 
         $operator = $this->request->getAttribute('identity')->getOriginalData();
         $this->userDepartmentAuthorization->assertMutationAllowed($operator, $this->Users->newEmptyEntity(), $user);
+        $this->userRoleAuthorization->assertMutationAllowed(
+            $operator,
+            $this->Users->newEmptyEntity(),
+            $user,
+        );
+        $this->Authorization->authorize($user, 'changeRole');
 
         if ($this->Users->save($user)) {
             return $this->response->withType('application/json')
@@ -159,6 +175,14 @@ class UsersController extends AppController
 
         $operator = $this->request->getAttribute('identity')->getOriginalData();
         $this->userDepartmentAuthorization->assertMutationAllowed($operator, $before, $user);
+        $this->userRoleAuthorization->assertMutationAllowed($operator, $before, $user);
+        if (
+            $before->get(User::FIELD_ROLE_ID) !== $user->get(User::FIELD_ROLE_ID)
+            || (bool)$before->get(User::FIELD_ISSUPERUSER)
+                !== (bool)$user->get(User::FIELD_ISSUPERUSER)
+        ) {
+            $this->Authorization->authorize($user, 'changeRole');
+        }
 
         // if ($this->Users->save($user)) {
         //     return $this->response->withType('application/json')

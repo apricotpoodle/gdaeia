@@ -85,4 +85,33 @@ class UserPolicyTest extends TestCase
 
         $this->assertTrue($this->policy->canAssociate($administrator, $target));
     }
+
+    public function testLeRoleFonctionnelEstAttribuableSurUneCreationLocale(): void
+    {
+        $administrator = new User(['role_id' => User::ROLE_ADMIN, 'issuperuser' => false]);
+        $target = new User([
+            'role_id' => User::ROLE_DEMANDEUR,
+            'issuperuser' => false,
+        ]);
+
+        $this->assertTrue($this->policy->canChangeRole($administrator, $target));
+    }
+
+    public function testLeRoleAdminEtLeStatutSuperuserSontReservesAuSuperuser(): void
+    {
+        $administrator = new User(['role_id' => User::ROLE_ADMIN, 'issuperuser' => false]);
+
+        $this->assertFalse($this->policy->canChangeRole($administrator, new User([
+            'role_id' => User::ROLE_ADMIN,
+            'issuperuser' => false,
+        ])));
+        $this->assertFalse($this->policy->canChangeRole($administrator, new User([
+            'role_id' => User::ROLE_DEMANDEUR,
+            'issuperuser' => true,
+        ])));
+        $this->assertTrue($this->policy->canChangeRole(
+            new User(['issuperuser' => true]),
+            new User(['role_id' => User::ROLE_ADMIN, 'issuperuser' => true]),
+        ));
+    }
 }

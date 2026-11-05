@@ -147,6 +147,34 @@ class UserPolicy extends AppPolicy
     }
 
     /**
+     * Autorise une attribution de rôle après hydratation de la cible.
+     *
+     * @param \Authorization\IdentityInterface $identity Opérateur courant.
+     * @param \App\Model\Entity\User $target État final de la cible.
+     * @return bool Vrai si la transition est autorisée.
+     */
+    public function canChangeRole(IdentityInterface $identity, User $target): bool
+    {
+        $user = $this->getValidUser($identity);
+        if (!$user) {
+            return false;
+        }
+
+        if ($user->isSuperUser()) {
+            return true;
+        }
+
+        if ($target->isNew()) {
+            return !$target->isSuperUser()
+                && in_array((int)$target->get(User::FIELD_ROLE_ID), User::FUNCTIONAL_ROLE_IDS, true);
+        }
+
+        return $this->isManageable($user, $target)
+            && !$target->isSuperUser()
+            && in_array((int)$target->get(User::FIELD_ROLE_ID), User::FUNCTIONAL_ROLE_IDS, true);
+    }
+
+    /**
      * Vérifie que la cible appartient au périmètre de gérabilité de l'opérateur.
      *
      * @param \App\Model\Entity\User $operator Opérateur courant.

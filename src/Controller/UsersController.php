@@ -9,6 +9,7 @@ use App\Model\Entity\User;
 use App\Model\Entity\UserDepartment;
 use App\Service\Security\FieldAuthorizationService;
 use App\Service\UserDepartmentAuthorizationService;
+use App\Service\UserRoleAuthorizationService;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\Log\Log;
@@ -29,12 +30,14 @@ class UsersController extends AppController
     use EmailLoggerTrait;
 
     private UserDepartmentAuthorizationService $userDepartmentAuthorization;
+    private UserRoleAuthorizationService $userRoleAuthorization;
 
     /** @inheritDoc */
     public function initialize(): void
     {
         parent::initialize();
         $this->userDepartmentAuthorization = new UserDepartmentAuthorizationService();
+        $this->userRoleAuthorization = new UserRoleAuthorizationService();
     }
 
     /** @inheritDoc */
@@ -208,6 +211,12 @@ class UsersController extends AppController
                 $this->Users->newEmptyEntity(),
                 $user,
             );
+            $this->userRoleAuthorization->assertMutationAllowed(
+                $operator,
+                $this->Users->newEmptyEntity(),
+                $user,
+            );
+            $this->Authorization->authorize($user, 'changeRole');
 
             if ($this->Users->save($user)) {
                 $this->Flash->success(__('L\'utilisateur a été créé avec succès.'));
@@ -227,6 +236,13 @@ class UsersController extends AppController
         $roles = $this->Users->Roles->find('list', keyField: 'id', valueField: 'name')
             ->orderBy(['Roles.name' => 'ASC'])
             ->toArray();
+        $allowedRoleIds = $this->userRoleAuthorization->allowedRoleIds($currentUser);
+        if ($allowedRoleIds !== null) {
+            $roles = $this->Users->Roles->find('list', keyField: 'id', valueField: 'name')
+                ->where(['Roles.id IN' => $allowedRoleIds])
+                ->orderBy(['Roles.name' => 'ASC'])
+                ->toArray();
+        }
 
         // Récupération de l'arborescence des départements autorisés
         /** @var \App\Model\Table\DepartmentsTable $departmentsTable */
@@ -275,6 +291,14 @@ class UsersController extends AppController
 
             $operator = $this->request->getAttribute('identity')->getOriginalData();
             $this->userDepartmentAuthorization->assertMutationAllowed($operator, $before, $user);
+            $this->userRoleAuthorization->assertMutationAllowed($operator, $before, $user);
+            if (
+                $before->get(User::FIELD_ROLE_ID) !== $user->get(User::FIELD_ROLE_ID)
+                || (bool)$before->get(User::FIELD_ISSUPERUSER)
+                    !== (bool)$user->get(User::FIELD_ISSUPERUSER)
+            ) {
+                $this->Authorization->authorize($user, 'changeRole');
+            }
 
             Log::debug(
                 "2. [ORM PATCH] Entité après hydratation (Que contient-elle ?) : \n"
@@ -314,6 +338,13 @@ class UsersController extends AppController
         $roles = $this->Users->Roles->find('list', keyField: 'id', valueField: 'name')
             ->orderBy(['Roles.name' => 'ASC'])
             ->toArray();
+        $allowedRoleIds = $this->userRoleAuthorization->allowedRoleIds($currentUser);
+        if ($allowedRoleIds !== null) {
+            $roles = $this->Users->Roles->find('list', keyField: 'id', valueField: 'name')
+                ->where(['Roles.id IN' => $allowedRoleIds])
+                ->orderBy(['Roles.name' => 'ASC'])
+                ->toArray();
+        }
 
         // Arborescence complète disponible pour l'opérateur
         /** @var \App\Model\Table\DepartmentsTable $departmentsTable */
