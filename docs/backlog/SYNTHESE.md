@@ -8,17 +8,19 @@ reste à faire, pas seulement le statut historique écrit dans une fiche.
 Les tickets 0017 à 0023 ont été ajoutés les **23 et 29 octobre 2026** sans
 nouvel audit global. Le ticket 0025 a été ajouté le **4 novembre 2026** avec
 son ADR proposé ; son état reste donc « À planifier ».
+Le ticket 0026 formalise le plan transverse en huit étapes et reste à
+planifier tant que son exécution n'a pas commencé.
 
 ## Vue d’ensemble
 
 | Périmètre | Total | Entièrement traité | Partiellement traité | Reste à faire |
 |---|---:|---:|---:|---:|
-| Backlog technique racine (`0001`–`0025`) | 25 | 14 | 1 | 10 |
+| Backlog technique racine (`0001`–`0026`) | 26 | 14 | 1 | 11 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
-| **Total** | **37** | **27** | **1** | **9** |
+| **Total** | **39** | **27** | **1** | **11** |
 
 Le ticket 0002 est compté comme partiellement traité ; les tickets restants
-concernent les sujets 0001, 0007, 0017 et 0019 à 0025, auxquels s'ajoutent
+concernent les sujets 0001, 0007, 0017 et 0019 à 0026, auxquels s'ajoutent
 les compléments du 0002.
 
 ## Tickets restant à effectuer
@@ -36,6 +38,7 @@ les compléments du 0002.
 | [0023 — Migration de base](0023-migrer-la-base-de-donnees.md) | Moyenne | À planifier | Préparer une migration MySQL simple par export/restauration, migrations et contrôles de cohérence. | Nouveau ticket créé le 29 octobre ; aucune bascule de base engagée. |
 | [0024 — Associations multiples des départements](0024-generaliser-les-associations-des-departements.md) | **Haute** | Terminé | Remplacer les responsables et rattachements CGR directs par des tables de liaison, migrer les données et adapter l’ORM, l’API et les écrans. | Migration, ORM, API, IHM et validations finalisées. |
 | [0025 — Visibilité et gérabilité des utilisateurs](0025-separer-visibilite-et-manageabilite-utilisateurs.md) | **Haute** | À planifier | Ticket parent du sous-workflow `visibilite-manageabilite/` : distinguer les utilisateurs visibles et gérables, sécuriser les mutations Web/API et réserver `ADMIN` aux superusers. | Nouveau sous-workflow ; l'ADR 0073 est proposé et les incompatibilités actuelles sont documentées. |
+| [0026 — Plan d'architecture et de backlog en huit étapes](0026-executer-le-plan-architecture-et-backlog.md) | **Haute** | À planifier | Coordonner l'assainissement documentaire, l'acceptation des ADR, les habilitations, la visibilité/gérabilité, les évolutions métier, la qualité, la migration et la gouvernance. | Nouveau ticket parent ; exécution prévue sur plusieurs sessions avec critères de reprise. |
 
 ## Tickets déjà traités — contrôle de non-réouverture
 
@@ -62,10 +65,10 @@ les compléments du 0002.
 
 L’ordre recommandé est :
 
-1. **0014 → 0015 → 0016**, dans cet ordre, car les deux derniers dépendent du
-   contrat de perte de session ;
-2. **0007**, après validation de l’ADR et du modèle de permissions ;
-3. **0002**, pour décider des seuils et résorber l’écart de couverture ;
+1. **0026**, pour piloter les huit étapes et corriger d'abord les index du
+   backlog, notamment la divergence du ticket 0024 ;
+2. **0007**, après validation de l'ADR et du modèle de permissions ;
+3. **0002**, pour décider des seuils et résorber l'écart de couverture ;
 4. **0001**, qui relève de la gouvernance et de la migration du backlog.
 5. **0017**, lorsque l'évolution de la rédaction SEM sera programmée ; suivre
    l'ADR 0070 sans étendre l'exception aux autres sociétés.

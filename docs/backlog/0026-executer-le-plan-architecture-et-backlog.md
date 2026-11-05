@@ -1,0 +1,190 @@
+# 0026 — Exécuter le plan d'architecture et de backlog en huit étapes
+
+**Statut :** À planifier  
+**Priorité :** Haute — pilotage transverse
+
+## Nature du ticket
+
+Ce ticket parent transforme le point d'avancement des ADR et du backlog en un
+parcours exécutable sur plusieurs sessions. Chaque étape doit produire un état
+intermédiaire vérifiable et laisser le dépôt dans un état compréhensible par
+la session suivante.
+
+Le ticket ne remplace pas les tickets métier référencés. Il coordonne leur
+ordre, leurs dépendances, leurs validations et la mise à jour de leurs
+statuts.
+
+## Règles de reprise entre sessions
+
+Avant chaque session :
+
+1. lire `AGENTS.md`, ce ticket et les tickets de l'étape en cours ;
+2. exécuter `rtk git status --short --branch` dans `app/` ;
+3. vérifier les ADR dépendants et les modifications déjà présentes ;
+4. ne traiter que l'étape active et ses dépendances terminées ;
+5. consigner les vérifications effectuées et les points bloquants dans le
+   ticket ou le ticket spécialisé concerné.
+
+À la fin de chaque session, l'agent doit laisser :
+
+- les cases réalisées cochées ;
+- les tests exécutés et leur résultat ;
+- les décisions restant à prendre ;
+- une indication explicite de la prochaine étape réalisable.
+
+Une étape ne peut passer à `Terminé` que lorsque ses critères d'acceptation
+sont vérifiés. Les validations humaines des ADR et les décisions
+d'architecture ne doivent pas être déduites d'une simple implémentation.
+
+## Étapes
+
+### Étape 1 — Assainir les index et le suivi du backlog
+
+**Dépendances :** aucune  
+**Sessions conseillées :** 1
+
+- [ ] Retirer le ticket 0024 de la section « Tickets actifs » de
+  `docs/backlog/README.md` et le placer dans les tickets terminés.
+- [ ] Vérifier la cohérence entre les statuts des fiches, `README.md`,
+  `SYNTHESE.md` et les manifestes des sous-workflows.
+- [ ] Ajouter le présent ticket aux index et corriger les compteurs concernés.
+- [ ] Documenter les éventuelles divergences restantes au lieu de les
+  corriger silencieusement.
+
+**Critère de sortie :** un nouvel agent peut identifier la source de vérité,
+les tickets actifs et la prochaine étape sans interprétation contradictoire.
+
+### Étape 2 — Finaliser les ADR déjà concrétisés
+
+**Dépendances :** étape 1  
+**ADR concernés :** 0071 et 0072  
+**Tickets associés :** 0024
+
+- [ ] Vérifier l'implémentation et les tests de l'ADR 0071 sur le fuseau
+  Europe/Paris et le stockage UTC.
+- [ ] Vérifier la migration, l'ORM, les API, les écrans et les tests issus de
+  l'ADR 0072.
+- [ ] Contrôler les migrations et les vues SQL selon les ADR 0005 et 0006.
+- [ ] Soumettre les deux ADR à revue humaine et passer leur statut à
+  `Accepté` uniquement après validation.
+
+**Critère de sortie :** les décisions 0071 et 0072 sont acceptées ou disposent
+d'une liste documentée de corrections bloquantes.
+
+### Étape 3 — Arbitrer le modèle générique d'habilitations
+
+**Dépendances :** étape 2  
+**ADR concerné :** 0069  
+**Tickets associés :** 0007 et 0021
+
+- [ ] Relire les permissions, les périmètres `self`, `assigned`, `all` et
+  `unscoped`, ainsi que le rôle des Policies.
+- [ ] Décider si les tickets 0007 et 0021 restent séparés ou si 0021 devient
+  l'implémentation spécialisée du socle défini par 0007.
+- [ ] Vérifier le comportement attendu du super-administrateur et de
+  l'usurpation d'identité.
+- [ ] Accepter l'ADR 0069 ou le modifier par un nouvel ADR d'amendement.
+
+**Critère de sortie :** le modèle de permissions et les frontières de la V1
+sont approuvés avant toute migration de schéma.
+
+### Étape 4 — Implémenter les permissions et habilitations
+
+**Dépendances :** étape 3  
+**Tickets associés :** 0007 et 0021
+
+- [ ] Créer les tables et associations prévues par l'ADR accepté, avec
+  contraintes, refus par défaut et migration explicite des droits existants.
+- [ ] Implémenter la résolution des permissions et des périmètres côté
+  Models/Services.
+- [ ] Aligner menus, URLs Web, endpoints API et `DepartmentPolicy`.
+- [ ] Ajouter les tests unitaires, ORM, Web et API prévus par les tickets.
+- [ ] Exécuter les contrôles adaptés : `make test.unit`, `make cs.check`,
+  `make stan`, `make test.integration`, `make test.api` et, si nécessaire,
+  `make test.workflow`.
+
+**Critère de sortie :** les accès autorisés, les refus hors périmètre et les
+accès directs sont testés et cohérents.
+
+### Étape 5 — Séparer visibilité et gérabilité
+
+**Dépendances :** étapes 2, 3 et 4  
+**ADR concerné :** 0073  
+**Ticket parent :** 0025  
+**Sous-workflow :** `docs/backlog/visibilite-manageabilite/`
+
+- [ ] Valider le contrat des racines explicites et des périmètres
+  multi-branches.
+- [ ] Passer l'ADR 0073 à `Accepté` après validation du contrat.
+- [ ] Exécuter les sous-tickets 0001 à 0009 dans l'ordre du manifeste.
+- [ ] Sécuriser les mutations Web/API, les affectations, les rôles et les
+  associations de responsables côté serveur.
+- [ ] Effectuer la recette transversale et documenter les cas non gérables en
+  lecture seule.
+
+**Critère de sortie :** visibilité et gérabilité sont des décisions distinctes
+dans les finders, Policies, services, contrôleurs, API et interfaces.
+
+### Étape 6 — Réaliser les évolutions métier prioritaires
+
+**Dépendances :** étapes 4 et 5 pour les sujets d'habilitations concernés
+
+- [ ] Implémenter 0020 : duplication fiable des DAE et réinitialisation des
+  champs administratifs.
+- [ ] Implémenter 0019 : consultation organisée selon les quatre zones de
+  l'édition, en lecture seule.
+- [ ] Implémenter 0017 selon l'ADR 0070 : règles locales, administration,
+  lancement, contrôles d'éligibilité et conservation des cycles.
+- [ ] Ajouter les tests au niveau pertinent et mettre à jour la documentation
+  métier locale.
+
+**Critère de sortie :** chaque ticket est livré séparément, avec ses critères
+d'acceptation et ses vérifications propres satisfaits.
+
+### Étape 7 — Couverture, référentiel et migration opérationnelle
+
+**Dépendances :** étapes 2 à 6 selon le périmètre touché
+
+- [ ] Compléter 0002 : mesurer la couverture, fixer les seuils et traiter les
+  écarts prioritaires.
+- [ ] Réaliser 0022 avec une procédure contrôlée de mise à jour de l'arbre des
+  départements et des références associées.
+- [ ] Préparer 0023 : export, restauration, contrôle d'intégrité, répétabilité
+  et plan de retour arrière, sans exposer de secrets.
+- [ ] Vérifier explicitement `DATABASE_TEST_URL` pour les tests MySQL.
+
+**Critère de sortie :** la qualité, le référentiel et la procédure de migration
+sont mesurables, reproductibles et documentés.
+
+### Étape 8 — Mettre en place la gouvernance durable et clôturer le plan
+
+**Dépendances :** étapes 1 à 7
+
+- [ ] Réaliser 0001 : choisir et mettre en service le gestionnaire de tickets.
+- [ ] Migrer les tickets actifs en conservant leurs références et décisions.
+- [ ] Définir le processus de création, revue, acceptation, clôture et
+  archivage des tickets et ADR.
+- [ ] Refaire un audit global des statuts, ADR, manifestes, tests et
+  documentations.
+- [ ] Mettre à jour ce ticket en `Terminé` uniquement lorsque toutes les
+  étapes sont elles-mêmes terminées.
+
+**Critère de sortie :** le suivi opérationnel ne dépend plus du backlog
+transitoire seul et l'état final du dépôt est auditable.
+
+## Vérifications communes
+
+Toute modification applicative doit exécuter `make test.unit`. Selon le
+périmètre, ajouter `make cs.check`, `make stan`, `make test.style`,
+`make test.integration`, `make test.api`, `make test.workflow` ou
+`make test.all`. Les résultats et les non-exécutions justifiées doivent être
+consignés dans le ticket concerné.
+
+## Références
+
+- [Synthèse du backlog](SYNTHESE.md)
+- [Index des ADR](../adr/README.md)
+- [ADR 0069 — Habilitations par rôles et périmètres](../adr/0069-habilitations-par-roles-et-perimetres.md)
+- [ADR 0071 — Fuseau horaire applicatif](../adr/0071-fuseau-horaire-applicatif-europe-paris.md)
+- [ADR 0072 — Associations multiples](../adr/0072-associations-multiples-departements-cgr.md)
+- [ADR 0073 — Visibilité et gérabilité](../adr/0073-visibilite-et-manageabilite-des-utilisateurs.md)
