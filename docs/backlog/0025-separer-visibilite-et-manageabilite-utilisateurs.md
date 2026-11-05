@@ -1,6 +1,6 @@
 # 0025 — Séparer la visibilité et la gérabilité des utilisateurs
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Haute — sécurité des mutations et habilitations
 

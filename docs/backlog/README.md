@@ -17,7 +17,6 @@ opérationnelle.
 ## Tickets actifs
 
 - [0026 — Exécuter le plan d'architecture et de backlog en huit étapes](0026-executer-le-plan-architecture-et-backlog.md) — priorité haute ; ticket parent reprenable sur plusieurs sessions.
-- [0025 — Séparer la visibilité et la gérabilité des utilisateurs](0025-separer-visibilite-et-manageabilite-utilisateurs.md) — priorité haute ; ticket parent du sous-workflow `visibilite-manageabilite/`, sécuriser les mutations selon les périmètres et réserver le rôle `ADMIN` aux superusers.
 - [0001 — Mettre en place un gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) — priorité moyenne.
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute ; permissions génériques, Policies CakePHP et périmètres V1 directs, avec la gestion des descendants et des droits individuels différée.
@@ -36,6 +35,7 @@ opérationnelle.
 - [0015 — Rediriger vers la connexion après expiration de session](0015-rediriger-vers-la-connexion-apres-expiration-de-session.md) — priorité haute.
 - [0016 — Couvrir le parcours de reconnexion](0016-couvrir-le-parcours-de-reconnexion.md) — priorité haute.
 - [0018 — Sécuriser la saisie des jours ouvrés d'une DAE](0018-securiser-la-saisie-des-jours-ouvres-dae.md) — priorité haute.
+- [0025 — Séparer la visibilité et la gérabilité des utilisateurs](0025-separer-visibilite-et-manageabilite-utilisateurs.md) — priorité haute.
 
 ## Migration vers un gestionnaire de tickets
 

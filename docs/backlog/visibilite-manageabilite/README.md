@@ -1,5 +1,11 @@
 # Sous-workflow — Visibilité et gérabilité des utilisateurs
 
+**Statut :** Terminé — recette transversale 0009 validée le 5 novembre 2026.
+
+Les neuf sous-tickets du manifeste sont `Terminé`. Les règles de visibilité et
+de gérabilité sont appliquées côté serveur et vérifiées par les suites unitaires,
+ORM, HTTP/API, qualité et la recette ORM prévue par l'ADR 0010.
+
 Le manifeste [`manifest.json`](manifest.json) est la source de vérité de ce
 sous-workflow. Les sous-tickets sont exécutés dans l'ordre de leurs
 dépendances ; aucun ticket ne doit être traité avant que ses prérequis soient

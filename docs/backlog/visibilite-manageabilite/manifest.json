@@ -10,6 +10,6 @@
     {"id":"0006","path":"0006-roles-utilisateur.md","status":"Terminé","dependsOn":["0003","0004"]},
     {"id":"0007","path":"0007-associations-responsables.md","status":"Terminé","dependsOn":["0003","0004"]},
     {"id":"0008","path":"0008-interface-lecture-seule.md","status":"Terminé","dependsOn":["0005","0006","0007"]},
-    {"id":"0009","path":"0009-recette-transversale.md","status":"À planifier","dependsOn":["0008"]}
+    {"id":"0009","path":"0009-recette-transversale.md","status":"Terminé","dependsOn":["0008"]}
   ]
 }

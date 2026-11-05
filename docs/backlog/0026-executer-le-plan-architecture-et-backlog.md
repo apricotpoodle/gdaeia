@@ -188,11 +188,11 @@ accès directs sont testés et cohérents.
 
 - [x] Valider le contrat des racines explicites et des périmètres
   multi-branches.
-- [ ] Passer l'ADR 0073 à `Accepté` après validation du contrat.
-- [ ] Exécuter les sous-tickets 0001 à 0009 dans l'ordre du manifeste.
-- [ ] Sécuriser les mutations Web/API, les affectations, les rôles et les
+- [x] Passer l'ADR 0073 à `Accepté` après validation du contrat.
+- [x] Exécuter les sous-tickets 0001 à 0009 dans l'ordre du manifeste.
+- [x] Sécuriser les mutations Web/API, les affectations, les rôles et les
   associations de responsables côté serveur.
-- [ ] Effectuer la recette transversale et documenter les cas non gérables en
+- [x] Effectuer la recette transversale et documenter les cas non gérables en
   lecture seule.
 
 **Critère de sortie :** visibilité et gérabilité sont des décisions distinctes
@@ -297,6 +297,24 @@ acceptation après validation humaine du contrat.
   et les cases globales de l'étape 5 restent donc ouvertes.
 
 La prochaine étape réalisable est le sous-ticket 0009.
+
+### Suivi de la sous-étape 5.9
+
+- [x] Exécuter le sous-ticket 0009 : recette transversale et clôture.
+- Les scénarios superuser, administrateur local, périmètres simples et
+  multi-branches, changements de rôle et accès directs Web/API ont été
+  vérifiés.
+- Vérifications exécutées : `make test.unit` (103 tests),
+  `make test.integration` (121 tests ORM), `make test.api` (177 tests),
+  `make test.style`, `make cs.check`, `make stan` et `make test.all`
+  (477 tests).
+- La vérification ORM selon l'ADR 0010 a compilé sans exception les
+  associations des tables utilisateurs, départements, affectations,
+  responsables et rôles.
+- Le manifeste marque les neuf sous-tickets `Terminé`, le ticket parent 0025
+  est clôturé et l'ADR 0073 est déjà `Accepté`.
+
+La prochaine étape réalisable est l'étape 6.
 
 ### Suivi de la sous-étape 5.8
 
