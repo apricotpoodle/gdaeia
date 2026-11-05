@@ -67,9 +67,8 @@ les tickets actifs et la prochaine étape sans interprétation contradictoire.
   `validation-applicationform` le sont.
 - La branche de travail est `docs/backlog-0026-etape-1`.
 
-Lors de cette session, la prochaine étape réalisable était l’étape 2, après
-revue humaine des ADR 0071 et 0072 ; leur statut restait volontairement
-`Proposé`.
+La prochaine étape réalisable est l'étape 2, après revue humaine des ADR 0071
+et 0072 ; leur statut reste volontairement `Proposé`.
 
 ### Étape 2 — Finaliser les ADR déjà concrétisés
 
