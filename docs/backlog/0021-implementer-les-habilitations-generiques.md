@@ -9,13 +9,14 @@
 L'accès à `/departments` est actuellement réservé au super-administrateur
 par `DepartmentPolicy`, même lorsqu'un utilisateur possède le rôle
 administrateur. Plusieurs Policies utilisent encore des rôles ou des
-conditions codées en dur. L'ADR 0069 propose de centraliser ces capacités
+conditions codées en dur. L'ADR 0069 accepté centralise ces capacités
 dans un catalogue de permissions et des associations de permissions aux
 rôles.
 
 Ce ticket met en œuvre cette évolution, en commençant par le besoin bloquant
-d'administration des départements. Il complète et concrétise le périmètre du
-ticket 0007, sans accorder de droit implicite à un rôle.
+d'administration des départements. Il est la première implémentation
+spécialisée du socle défini par le ticket 0007, sans accorder de droit
+implicite à un rôle.
 
 ## Objectif
 
@@ -26,7 +27,7 @@ les départements sans le transformer automatiquement en super-administrateur.
 
 ## Travail attendu
 
-- [ ] Faire accepter ou amender l'ADR 0069 avant la migration du modèle de
+- [x] Faire accepter ou amender l'ADR 0069 avant la migration du modèle de
   données.
 - [ ] Créer les tables génériques `permissions`, `permission_scopes` et
   `role_permissions`, avec contraintes d'unicité et clés étrangères.
@@ -74,4 +75,6 @@ les départements sans le transformer automatiquement en super-administrateur.
 - [ADR 0069 — Habilitations par rôles et périmètres](../adr/0069-habilitations-par-roles-et-perimetres.md)
 - [Ticket 0007 — Accès aux menus et permissions](0007-separer-acces-menus-et-permissions-administration.md)
 - [ADR 0064 — Administration de l'arbre des départements](../adr/0064-administration-arbre-departements.md)
+- Le ticket 0007 fournit le socle générique ; ce ticket en implémente le
+  premier vertical sur les départements.
 - `src/Policy/DepartmentPolicy.php`

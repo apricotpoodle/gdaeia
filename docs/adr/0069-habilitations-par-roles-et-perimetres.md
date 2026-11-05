@@ -1,7 +1,7 @@
 # ADR 0069 — Habilitations par rôles et périmètres
 
 **Date :** 22 octobre 2026
-**Statut :** Proposé
+**Statut :** Accepté
 **Dépendances :** [ADR 0005](./0005-modele-de-donnees.md), [ADR 0028](./0028-authentification-evolutive-et-impersonate.md), [ADR 0041](./0041-segregation-donnees-model-custom-finders.md), [ADR 0042](./0042-acl-granulaire-niveau-champ-formulaire.md), [ADR 0050](./0050-semantique-perimetres-hierarchiques-utilisateur.md), [ADR 0054](./0054-commandes-ui-autorisees-par-domaine.md), [ADR 0055](./0055-workflow-validation-applicationforms.md), [ADR 0063](./0063-outrepassement-validations-workflow.md) et [ADR 0065](./0065-acl-automatique-des-mutations-web-api.md)
 
 ## Contexte
@@ -30,6 +30,29 @@ Policy reste l'arbitre de l'autorisation et consulte les règles métier pour
 prendre sa décision.
 
 ## Décision
+
+### Arbitrages de l'étape 3 du ticket 0026
+
+Le ticket 0007 définit le socle générique des habilitations : le catalogue
+`permissions`, les périmètres admissibles, les attributions aux rôles et la
+séparation entre visibilité des menus et autorisation d'une action. Le ticket
+0021 en est la première implémentation spécialisée, limitée dans sa première
+livraison à l'administration des départements. Les deux tickets ne portent
+donc pas deux modèles concurrents.
+
+Le super-administrateur dispose d'un contournement explicite des permissions
+et des périmètres organisationnels. Ce contournement ne s'étend ni aux
+invariants métier, ni aux états du workflow, ni aux protections contre
+l'auto-usurpation ou l'usurpation en cascade.
+
+Pendant une session d'usurpation, seule l'identité effective usurpée est
+évaluée. Les rôles, permissions, affectations départementales et périmètres
+de l'administrateur d'origine ne sont jamais ajoutés à ceux de la cible.
+
+Le modèle canonique est celui de cet ADR : `permission_scopes` décrit les
+périmètres admissibles et `role_permissions` attribue ces périmètres aux
+rôles. Une colonne `scope_type` portée directement par `role_permissions`
+n'est pas une variante indépendante du modèle.
 
 ### Catalogue des permissions
 

@@ -117,13 +117,30 @@ d'une liste documentée de corrections bloquantes.
 **ADR concerné :** 0069  
 **Tickets associés :** 0007 et 0021
 
-- [ ] Relire les permissions, les périmètres `self`, `assigned`, `all` et
+- [x] Relire les permissions, les périmètres `self`, `assigned`, `all` et
   `unscoped`, ainsi que le rôle des Policies.
-- [ ] Décider si les tickets 0007 et 0021 restent séparés ou si 0021 devient
+- [x] Décider si les tickets 0007 et 0021 restent séparés ou si 0021 devient
   l'implémentation spécialisée du socle défini par 0007.
-- [ ] Vérifier le comportement attendu du super-administrateur et de
+- [x] Vérifier le comportement attendu du super-administrateur et de
   l'usurpation d'identité.
-- [ ] Accepter l'ADR 0069 ou le modifier par un nouvel ADR d'amendement.
+- [x] Accepter l'ADR 0069 ou le modifier par un nouvel ADR d'amendement.
+
+### Suivi de la session du 5 novembre 2026 — étape 3
+
+- Le ticket 0007 constitue le socle générique ; le ticket 0021 est sa première
+  implémentation spécialisée pour l'administration des départements.
+- Le modèle canonique est `permissions`, `permission_scopes` et
+  `role_permissions`, avec refus par défaut et attribution explicite des
+  périmètres.
+- Le super-administrateur contourne explicitement les permissions et
+  périmètres organisationnels, sans contourner les invariants métier ou le
+  workflow.
+- L'usurpation évalue uniquement l'identité effective usurpée ; les droits de
+  l'administrateur d'origine ne sont pas hérités.
+- L'ADR 0069 est accepté. Aucune migration de schéma ni implémentation n'est
+  incluse dans cette étape.
+- La prochaine étape réalisable est l'étape 4 : implémenter les permissions et
+  habilitations, en commençant par le vertical des départements.
 
 **Critère de sortie :** le modèle de permissions et les frontières de la V1
 sont approuvés avant toute migration de schéma.
