@@ -338,7 +338,7 @@ La prochaine étape réalisable est l'étape 6.
 
 - [x] Implémenter 0020 : duplication fiable des DAE et réinitialisation des
   champs administratifs.
-- [ ] Implémenter 0019 : consultation organisée selon les quatre zones de
+- [x] Implémenter 0019 : consultation organisée selon les quatre zones de
   l'édition, en lecture seule.
 - [ ] Implémenter 0017 selon l'ADR 0070 : règles locales, administration,
   lancement, contrôles d'éligibilité et conservation des cycles.
@@ -351,6 +351,15 @@ La prochaine étape réalisable est l'étape 6.
   sa documentation sont présents.
 - Les tickets 0019 et 0017 restent à planifier et ne sont pas inclus dans
   cette livraison.
+
+#### Suivi de l'étape 6 — ticket 0019
+
+- La consultation des DAE reprend les quatre zones de l'édition dans des
+  éléments dédiés en lecture seule.
+- Les tests fonctionnels vérifient l'organisation, le formatage, l'absence de
+  champs éditables et la visibilité de la zone réservée.
+- Les vérifications `make test.unit`, `make test.api`, `make test.style`,
+  `make cs.check` et `make stan` réussissent.
 
 **Critère de sortie :** chaque ticket est livré séparément, avec ses critères
 d'acceptation et ses vérifications propres satisfaits.

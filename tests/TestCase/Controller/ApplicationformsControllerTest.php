@@ -33,6 +33,49 @@ class ApplicationformsControllerTest extends TestCase
         'app.Validationstatuses',
     ];
 
+    public function testLaConsultationOrganiseLesDetailsEnQuatreZonesEnLectureSeule(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/view/1');
+
+        $this->assertResponseOk();
+        $body = (string)$this->_response->getBody();
+        $labels = [
+            'Zone 1 : Administration & Candidat',
+            '2. Caractéristiques du Contrat',
+            '3. Temps de travail & Rémunération',
+            '4. Champs Réservés Administration/RH',
+        ];
+
+        $positions = [];
+        foreach ($labels as $label) {
+            $this->assertStringContainsString($label, $body);
+            $positions[] = strpos($body, $label);
+        }
+
+        $this->assertSame($positions, array_values(array_filter($positions, static fn($position): bool => $position !== false)));
+        $this->assertStringNotContainsString('name="jobtitle"', $body);
+        $this->assertStringNotContainsString('name="contracttype_id"', $body);
+        $this->assertStringNotContainsString('name="grossremuneration"', $body);
+        $this->assertStringNotContainsString('name="hr_description"', $body);
+        $this->assertStringContainsString('03/07/2026', $body);
+    }
+
+    public function testLaZoneReserveeNestPasExposeeSansDroitDeConsultation(): void
+    {
+        $this->session(['Auth' => new User([
+            'id' => 1,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_DEMANDEUR,
+        ])]);
+
+        $this->get('/applicationforms/view/1');
+
+        $this->assertResponseOk();
+        $this->assertStringNotContainsString('4. Champs Réservés Administration/RH', (string)$this->_response->getBody());
+    }
+
     public function testLePdfEstRetournePourUnOperateurAutorise(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);

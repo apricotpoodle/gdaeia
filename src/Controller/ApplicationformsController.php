@@ -52,6 +52,7 @@ class ApplicationformsController extends AppController
                 'Managers', // 👈 Pour le chef de service
             ],
             'Users',
+            'Assistants',
             'Contracttypes',
             'Hiringreasons',
             'Budgetfeatures',

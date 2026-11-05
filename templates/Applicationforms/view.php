@@ -13,9 +13,6 @@
  * @var \App\Model\Entity\Department $department
  */
 
-use App\Model\Entity\Period;
-use Cake\I18n\Number;
-
 $this->assign('title', __('Demande n°{0}', $applicationform->id));
 
 // Inclusion du script JS pour la gestion dynamique des commentaires
@@ -179,66 +176,38 @@ $this->Html->css('applicationforms', ['block' => true]);
 
         <!-- ONGLET 1 : DÉTAILS DE LA DEMANDE -->
         <div class="tab-pane fade show active" id="details-pane" role="tabpanel" aria-labelledby="details-tab" tabindex="0">
+            <div class="row g-4">
+                <?php if ($identity?->can('viewZoneAdmin', $applicationform)): ?>
+                    <div class="col-12 col-lg-6">
+                        <?= $this->element('Applicationforms/zone_admin_readonly', [
+                            'applicationform' => $applicationform,
+                        ]) ?>
+                    </div>
+                <?php endif; ?>
 
-            <!-- Section A : Informations sur le Poste -->
-            <h6 class="text-primary border-bottom pb-1 mb-2 fs-7 text-uppercase fw-bold">
-                <i class="fa-solid fa-briefcase me-1"></i><?= __('Informations sur le poste') ?>
-            </h6>
-            <div class="row row-cols-1 row-cols-md-4 g-2 mb-3">
-                <div class="col">
-                    <span class="text-muted fs-8 d-block"><?= __('Intitulé / Candidat') ?></span>
-                    <span class="fw-semibold text-dark fs-7">
-                        <?= h($applicationform->candidate_name) ?>
-                    </span>
-                </div>
-                <div class="col">
-                    <span class="text-muted fs-8 d-block"><?= __('Motif de recrutement') ?></span>
-                    <span class="fw-medium text-dark fs-7"><?= h($applicationform->hiringreason->name ?? $applicationform->hiringreason->label ?? '-') ?></span>
-                </div>
-                <div class="col">
-                    <span class="text-muted fs-8 d-block"><?= __('Type de contrat') ?></span>
-                    <span class="badge bg-info-subtle text-info-emphasis border border-info-subtle fs-8"><?= h($applicationform->contracttype->name ?? $applicationform->contracttype->code ?? '-') ?></span>
-                </div>
-                <div class="col">
-                    <span class="text-muted fs-8 d-block"><?= __('Catégorie pro.') ?></span>
-                    <span class="fw-medium text-dark fs-7"><?= h($applicationform->professionalcategory->name ?? $applicationform->professionalcategory->label ?? '-') ?></span>
-                </div>
-                <div class="col">
-                    <span class="text-muted fs-8 d-block"><?= __('Temps de travail') ?></span>
-                    <span class="fw-medium text-dark fs-7"><?= h($applicationform->worktime->name ?? $applicationform->worktime->label ?? '-') ?></span>
-                </div>
-            </div>
+                <?php if ($identity?->can('viewZoneContrat', $applicationform)): ?>
+                    <div class="col-12 col-lg-6">
+                        <?= $this->element('Applicationforms/zone_contract_readonly', [
+                            'applicationform' => $applicationform,
+                        ]) ?>
+                    </div>
+                <?php endif; ?>
 
-            <!-- Section B : Conditions Financières & Temporelles -->
-            <h6 class="text-primary border-bottom pb-1 mb-2 fs-7 text-uppercase fw-bold">
-                <i class="fa-solid fa-euro-sign me-1"></i><?= __('Conditions financières & Calendrier') ?>
-            </h6>
-            <div class="row row-cols-1 row-cols-md-4 g-2">
-                <div class="col">
-                    <span class="text-muted fs-8 d-block"><?= __('Code CGR') ?></span>
-                    <span class="fw-medium font-monospace text-dark fs-7"><?= h($applicationform->cgr ?: '-') ?></span>
-                </div>
-                <div class="col">
-                    <span class="text-muted fs-8 d-block"><?= __('Caractéristique budgétaire') ?></span>
-                    <span class="fw-medium text-dark fs-7"><?= h($applicationform->budgetfeature->name ?? $applicationform->budgetfeature->label ?? '-') ?></span>
-                </div>
-                <div class="col">
-                    <span class="text-muted fs-8 d-block"><?= __('Rémunération Brute') ?></span>
-                    <span class="fw-bold text-dark fs-7">
-                        <?= $applicationform->grossremuneration !== null
-                            ? Number::currency($applicationform->grossremuneration, 'EUR', ['locale' => 'fr_FR'])
-                            : '-' ?>
-                        <small class="text-muted font-normal fs-8">(<?= h($applicationform->period?->get(Period::FIELD_NAME) ?? '-') ?>)</small>
-                    </span>
-                </div>
-                <div class="col">
-                    <span class="text-muted fs-8 d-block"><?= __('Période d\'activité') ?></span>
-                    <span class="fw-medium text-dark fs-7">
-                        <i class="fa-regular fa-calendar-check text-success me-1"></i><?= $applicationform->begin_at ? h($applicationform->begin_at->format('d/m/Y')) : '-' ?>
-                        <span class="text-muted mx-1">→</span>
-                        <i class="fa-regular fa-calendar-xmark text-danger me-1"></i><?= $applicationform->end_at ? h($applicationform->end_at->format('d/m/Y')) : '-' ?>
-                    </span>
-                </div>
+                <?php if ($identity?->can('viewZoneRemuneration', $applicationform)): ?>
+                    <div class="col-12 col-lg-6">
+                        <?= $this->element('Applicationforms/zone_remuneration_readonly', [
+                            'applicationform' => $applicationform,
+                        ]) ?>
+                    </div>
+                <?php endif; ?>
+
+                <?php if ($identity?->can('viewZoneReserves', $applicationform)): ?>
+                    <div class="col-12 col-lg-6">
+                        <?= $this->element('Applicationforms/zone_reserves_readonly', [
+                            'applicationform' => $applicationform,
+                        ]) ?>
+                    </div>
+                <?php endif; ?>
             </div>
 
         </div>

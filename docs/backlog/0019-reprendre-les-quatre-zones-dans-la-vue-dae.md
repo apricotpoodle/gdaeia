@@ -19,25 +19,34 @@ tout en conservant un affichage strictement en lecture seule.
 
 ## Travail attendu
 
-- [ ] Réorganiser l'onglet « Détails de la demande » en quatre zones,
+- [x] Réorganiser l'onglet « Détails de la demande » en quatre zones,
   correspondant à l'interface d'édition :
   - Zone 1 — Administration & candidat ;
   - Zone 2 — Caractéristiques du contrat ;
   - Zone 3 — Rémunération & temps de travail ;
   - Zone 4 — Champs réservés RH / administration.
-- [ ] Reprendre les titres, l'ordre, la hiérarchie visuelle et les regroupements
+- [x] Reprendre les titres, l'ordre, la hiérarchie visuelle et les regroupements
   de champs des éléments utilisés par l'édition.
-- [ ] Remplacer les champs de saisie par des valeurs affichées en lecture
+- [x] Remplacer les champs de saisie par des valeurs affichées en lecture
   seule, sans modifier les droits ni les règles d'autorisation existants.
-- [ ] Afficher les valeurs absentes avec une présentation homogène et
+- [x] Afficher les valeurs absentes avec une présentation homogène et
   explicite, sans générer d'erreur PHP ou JavaScript.
-- [ ] Préserver les onglets Validation et Commentaires ainsi que leurs
+- [x] Préserver les onglets Validation et Commentaires ainsi que leurs
   comportements actuels.
-- [ ] Conserver les actions disponibles dans l'en-tête selon les Policies et
+- [x] Conserver les actions disponibles dans l'en-tête selon les Policies et
   les droits de l'utilisateur.
-- [ ] Vérifier la lisibilité responsive des quatre zones sur écran large et
+- [x] Vérifier la lisibilité responsive des quatre zones sur écran large et
   écran réduit.
-- [ ] Ajouter ou adapter les tests fonctionnels et JavaScript nécessaires.
+- [x] Ajouter ou adapter les tests fonctionnels et JavaScript nécessaires.
+
+## Réalisation
+
+- Les quatre zones de consultation utilisent des éléments dédiés en lecture
+  seule ; les éléments d'édition restent réservés aux formulaires.
+- L'affichage des libellés, valeurs absentes et valeurs échappées est
+  mutualisé par `display_field.php`.
+- Les tests fonctionnels vérifient l'ordre des zones, l'absence de contrôles
+  de saisie et le respect de la visibilité de la zone réservée.
 
 ## Critères d'acceptation
 
