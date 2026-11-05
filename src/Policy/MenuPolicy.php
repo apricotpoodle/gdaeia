@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Policy;
 
 use App\Model\Entity\Menu;
+use App\Service\Security\PermissionResolver;
 use Authorization\IdentityInterface;
 
 /**
@@ -13,6 +14,11 @@ use Authorization\IdentityInterface;
  */
 class MenuPolicy extends AppPolicy
 {
+    /** Construit la policy avec son résolveur de permissions. */
+    public function __construct(private readonly PermissionResolver $permissions = new PermissionResolver())
+    {
+    }
+
     /**
      * Autorisation pour la liste (index)
      *
@@ -21,7 +27,7 @@ class MenuPolicy extends AppPolicy
      */
     public function canIndex(IdentityInterface $identity): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->canManageMenus($identity);
     }
 
     /**
@@ -32,7 +38,7 @@ class MenuPolicy extends AppPolicy
      */
     public function canRoleAccess(IdentityInterface $identity): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->canManageMenus($identity);
     }
 
     /**
@@ -44,7 +50,7 @@ class MenuPolicy extends AppPolicy
      */
     public function canView(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->canManageMenus($identity);
     }
 
     /**
@@ -56,7 +62,7 @@ class MenuPolicy extends AppPolicy
      */
     public function canAdd(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->canManageMenus($identity);
     }
 
     /**
@@ -68,7 +74,7 @@ class MenuPolicy extends AppPolicy
      */
     public function canEdit(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->canManageMenus($identity);
     }
 
     /**
@@ -80,7 +86,7 @@ class MenuPolicy extends AppPolicy
      */
     public function canDelete(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->canManageMenus($identity);
     }
 
     /**
@@ -92,7 +98,7 @@ class MenuPolicy extends AppPolicy
      */
     public function canMoveUp(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->canManageMenus($identity);
     }
 
     /**
@@ -104,6 +110,14 @@ class MenuPolicy extends AppPolicy
      */
     public function canMoveDown(IdentityInterface $identity, Menu $menu): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->canManageMenus($identity);
+    }
+
+    /** Vérifie la capacité transversale d’administration des menus. */
+    private function canManageMenus(IdentityInterface $identity): bool
+    {
+        $user = $this->getValidUser($identity);
+
+        return $user !== null && $this->permissions->allows($user, 'menus.manage', PermissionResolver::SCOPE_UNSCOPED);
     }
 }

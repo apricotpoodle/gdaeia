@@ -8,6 +8,7 @@ use App\Model\Entity\Menu;
 use App\Model\Entity\User;
 use App\Policy\FieldAuthorizationPolicy;
 use App\Policy\MenuPolicy;
+use App\Service\Security\PermissionResolver;
 use Cake\TestSuite\TestCase;
 
 class AdministrationPoliciesTest extends TestCase
@@ -24,7 +25,7 @@ class AdministrationPoliciesTest extends TestCase
 
     public function testLesMenusSontReservesAuxSuperAdministrateurs(): void
     {
-        $policy = new MenuPolicy();
+        $policy = new MenuPolicy(new PermissionResolver([]));
         $menu = new Menu();
 
         $this->assertFalse($policy->canEdit(new User(['role_id' => User::ROLE_DEMANDEUR]), $menu));
@@ -36,5 +37,17 @@ class AdministrationPoliciesTest extends TestCase
         $this->assertFalse($policy->canMoveDown(new User(['role_id' => User::ROLE_ADMIN]), $menu));
         $this->assertFalse($policy->canDelete(new User(['role_id' => User::ROLE_ADMIN]), $menu));
         $this->assertTrue($policy->canDelete(new User(['issuperuser' => true]), $menu));
+    }
+
+    public function testLaPermissionDesMenusAutoriseLAdministration(): void
+    {
+        $policy = new MenuPolicy(new PermissionResolver([
+            'menus.manage' => [PermissionResolver::SCOPE_UNSCOPED],
+        ]));
+        $menu = new Menu();
+        $administrator = new User(['issuperuser' => false]);
+
+        self::assertTrue($policy->canIndex($administrator));
+        self::assertTrue($policy->canEdit($administrator, $menu));
     }
 }
