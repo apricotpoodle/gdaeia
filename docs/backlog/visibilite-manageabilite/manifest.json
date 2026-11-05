@@ -2,7 +2,7 @@
   "workflow": "visibilite-manageabilite",
   "parent": "0025",
   "tickets": [
-    {"id":"0001","path":"0001-contrat-et-racines.md","status":"À planifier","dependsOn":[]},
+    {"id":"0001","path":"0001-contrat-et-racines.md","status":"Terminé","dependsOn":[]},
     {"id":"0002","path":"0002-resolution-perimetres.md","status":"À planifier","dependsOn":["0001"]},
     {"id":"0003","path":"0003-finder-manageable.md","status":"À planifier","dependsOn":["0002"]},
     {"id":"0004","path":"0004-mutations-utilisateurs.md","status":"À planifier","dependsOn":["0003"]},

@@ -200,6 +200,8 @@ dans les finders, Policies, services, contrôleurs, API et interfaces.
 
 ### Suivi de la sous-étape 5.1
 
+- [x] Exécuter le sous-ticket 0001 : contrat des racines explicites et des
+  périmètres multi-branches validé.
 - Le contrat du sous-ticket 0001 fixe une représentation canonique par liste
   dédoublonnée d'identifiants issus de `user_departments`.
 - Les comparaisons utilisent les bornes `lft`/`rght` des associations
