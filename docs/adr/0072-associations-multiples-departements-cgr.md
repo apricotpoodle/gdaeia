@@ -1,7 +1,7 @@
 # ADR 0072 : Associations multiples des départements, utilisateurs et codes CGR
 
 - Date : 2026-10-30
-- Statut : Proposé
+- Statut : Accepté
 - Dépendances : ADR 0005, ADR 0006, ADR 0010, ADR 0012, ADR 0041 et ADR 0064
 
 ## Contexte
