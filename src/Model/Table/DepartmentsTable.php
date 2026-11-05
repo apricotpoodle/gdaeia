@@ -106,6 +106,35 @@ class DepartmentsTable extends AppTable
     }
 
     /**
+     * Retourne les départements actifs qui sont des ancêtres stricts d'une racine.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query
+     * @param list<array{lft: int, rght: int}> $roots Bornes des racines explicites.
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
+     */
+    public function findStrictAncestorsOf(SelectQuery $query, array $roots): SelectQuery
+    {
+        if ($roots === []) {
+            return $query->where(['Departments.id IS' => null]);
+        }
+
+        $ancestorConditions = [];
+        foreach ($roots as $root) {
+            $ancestorConditions[] = [
+                'Departments.' . Department::FIELD_LFT . ' <' => $root['lft'],
+                'Departments.' . Department::FIELD_RGHT . ' >' => $root['rght'],
+            ];
+        }
+
+        return $query
+            ->where([
+                'Departments.' . Department::FIELD_DELETED . ' IS' => null,
+                'OR' => $ancestorConditions,
+            ])
+            ->orderBy(['Departments.' . Department::FIELD_LFT => 'ASC']);
+    }
+
+    /**
      * Custom finder : Récupère la structure hiérarchique imbriquée
      *
      * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query

@@ -215,6 +215,18 @@ dans les finders, Policies, services, contrôleurs, API et interfaces.
 La prochaine étape réalisable est l'étape 5.2 : soumettre l'ADR 0073 à
 acceptation après validation humaine du contrat.
 
+### Suivi de la sous-étape 5.2
+
+- [x] Exécuter le sous-ticket 0002 : résolution ORM des périmètres explicites.
+- Les associations explicites sont dédoublonnées par
+  `UserDepartmentsTable::findDepartmentsOf()`.
+- Le finder `DepartmentsTable::findStrictAncestorsOf()` compare les bornes
+  `lft`/`rght` strictement, sur plusieurs racines, et exclut les départements
+  inactifs.
+- Vérification exécutée : `make test.integration` (118 tests ORM réussis).
+- Le sous-ticket 0003 est désormais le prochain ticket exécutable du
+  manifeste.
+
 ### Étape 6 — Réaliser les évolutions métier prioritaires
 
 **Dépendances :** étapes 4 et 5 pour les sujets d'habilitations concernés
