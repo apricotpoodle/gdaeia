@@ -392,6 +392,7 @@ class ApplicationformsControllerTest extends TestCase
     /** Vérifie qu'une duplication crée une DAE brouillon sans réutiliser la source. */
     public function testLaDuplicationCreeUneNouvelleDaePourLeDemandeurCourant(): void
     {
+        $this->activateDuplicationReferences();
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
         $this->enableCsrfToken();
 
@@ -422,6 +423,29 @@ class ApplicationformsControllerTest extends TestCase
         $this->post('/api/applicationforms/1/duplicate.json');
 
         $this->assertResponseCode(403);
+    }
+
+    public function testLaDuplicationRetourneLesChampsACorriger(): void
+    {
+        $this->activateDuplicationReferences();
+        ConnectionManager::get('test')->update('applicationforms', ['jobtitle' => ''], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/1/duplicate.json');
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"success":false');
+        $this->assertResponseContains('"field":"jobtitle"');
+        $this->assertResponseContains('La duplication est bloqu\u00e9e');
+    }
+
+    private function activateDuplicationReferences(): void
+    {
+        $connection = ConnectionManager::get('test');
+        foreach (['departments', 'contracttypes', 'professionalcategories', 'periods'] as $table) {
+            $connection->update($table, ['deleted' => null], ['id' => 1]);
+        }
     }
 
     /** Vérifie que le créateur peut lancer un cycle configuré. */

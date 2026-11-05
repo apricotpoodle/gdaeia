@@ -24,15 +24,15 @@ class ApplicationformsValidationTest extends TestCase
     {
         $errors = $this->validator()->validate(array_fill_keys([
             'department_id', 'user_id', 'contracttype_id', 'hiringreason_id',
-            'budgetfeature_id', 'jobtitle', 'professionalcategory_id', 'worktime_id',
-            'grossremuneration', 'period_id', 'yesno_id',
+            'jobtitle', 'professionalcategory_id', 'worktime_id',
+            'grossremuneration', 'period_id',
         ], null), true);
 
         foreach (
             [
                 'department_id', 'user_id', 'contracttype_id', 'hiringreason_id',
-                'budgetfeature_id', 'jobtitle', 'professionalcategory_id', 'worktime_id',
-                'grossremuneration', 'period_id', 'yesno_id',
+                'jobtitle', 'professionalcategory_id', 'worktime_id',
+                'grossremuneration', 'period_id',
             ] as $field
         ) {
             $this->assertArrayHasKey($field, $errors);

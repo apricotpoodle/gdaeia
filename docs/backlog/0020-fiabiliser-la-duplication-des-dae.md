@@ -1,6 +1,6 @@
 # 0020 — Fiabiliser la duplication des DAE
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Haute
 
@@ -25,29 +25,48 @@ actionnable.
 
 ## Travail attendu
 
-- [ ] Inventorier les champs de la zone « Champs Réservés
+- [x] Inventorier les champs de la zone « Champs Réservés
   Administration/RH » : `hr_description`,
   `control_management_validation`, `final_argument`, `budgetfeature_id`,
   `yesno_id` et `qualification`.
-- [ ] Comparer cet inventaire avec les champs déjà réinitialisés lors d'une
+- [x] Comparer cet inventaire avec les champs déjà réinitialisés lors d'une
   duplication, notamment `user_id`, `applicantname` et `salary_base`, puis
   définir une source de vérité unique documentée.
-- [ ] Effacer dans la copie tous les champs réservés identifiés, ainsi que
+- [x] Effacer dans la copie tous les champs réservés identifiés, ainsi que
   les identifiants, commentaires, visas et éléments de workflow qui ne
   doivent pas être hérités d'une DAE source.
-- [ ] Conserver les données métier réutilisables et affecter la nouvelle DAE
+- [x] Conserver les données métier réutilisables et affecter la nouvelle DAE
   à l'opérateur courant selon les règles existantes.
-- [ ] Vérifier que la copie repart dans l'état attendu et ne reprend pas un
+- [x] Vérifier que la copie repart dans l'état attendu et ne reprend pas un
   cycle de validation ou une décision administrative de la source.
-- [ ] Remplacer le message d'échec générique par un message indiquant la
+- [x] Remplacer le message d'échec générique par un message indiquant la
   cause précise du blocage et l'action corrective attendue.
-- [ ] Retourner les erreurs de validation par champ lorsque l'échec vient de
+- [x] Retourner les erreurs de validation par champ lorsque l'échec vient de
   données obligatoires ou de références invalides.
-- [ ] Distinguer les cas suivants dans les messages : DAE non visible ou
+- [x] Distinguer les cas suivants dans les messages : DAE non visible ou
   non autorisée, référence supprimée/invalide, champ obligatoire manquant,
   dates incohérentes, duplication impossible à persister et autre règle
   métier bloquante.
-- [ ] Couvrir le comportement par des tests unitaires, d'intégration et API.
+- [x] Couvrir le comportement par des tests unitaires, d'intégration et API.
+
+## Suivi de réalisation — 5 novembre 2026
+
+- La liste canonique des champs réinitialisés est versionnée dans
+  `ApplicationformsTable::DUPLICATION_RESET_FIELDS`; le paramètre
+  `applicationform.duplicate_reset_fields` n'est plus lu par la duplication.
+- Les champs `budgetfeature_id` et `yesno_id` sont désormais nullable afin
+  qu'une copie puisse rester un brouillon sans données réservées. La
+  migration `AllowEmptyAdministrativeApplicationformFields` ne modifie
+  aucune vue SQL.
+- La duplication retourne un résultat typé et l'API distingue les erreurs de
+  validation (`422` avec erreurs par champ) des échecs de persistance (`500`)
+  sans exposer de détail technique. L'accès hors périmètre reste refusé par
+  la Policy (`403`).
+- L'ancien endpoint de paramétrage reste disponible en lecture avec un flag de
+  dépréciation; ses écritures sont refusées (`422`).
+- Vérifications réussies : `make test.unit` (106 tests),
+  `make test.integration` (125 tests ORM), `make test.api` (179 tests HTTP),
+  `make test.style`, `make cs.check` et `make stan`.
 
 ## Critères d'acceptation
 

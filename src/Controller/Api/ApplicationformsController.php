@@ -12,6 +12,7 @@ use App\Model\Entity\Role;
 use App\Model\Entity\User;
 use App\Model\Entity\ValidationCommentTemplate;
 use App\Model\Entity\ValidationWorkflowRun;
+use App\Service\ApplicationformDuplicationResult;
 use App\Service\CgrResolverService;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\SalaryCalculationService;
@@ -653,20 +654,20 @@ class ApplicationformsController extends AppController
 
         /** @var \App\Model\Entity\User $actor */
         $actor = $this->request->getAttribute('identity')->getOriginalData();
-        $duplicate = $this->Applicationforms->duplicateFor($source, $actor);
-        if ($duplicate === false) {
+        $result = $this->Applicationforms->duplicateFor($source, $actor);
+        if (!$result->isSuccess()) {
             return $this->workflowResponse(
                 false,
-                __('La demande ne peut pas être dupliquée. Vérifiez les champs obligatoires.'),
-                [],
-                422,
+                $result->message,
+                $result->errors,
+                $result->category === ApplicationformDuplicationResult::CATEGORY_PERSISTENCE ? 500 : 422,
             );
         }
 
         return $this->workflowResponse(
             true,
             __('La demande a été dupliquée en brouillon.'),
-            ['id' => $duplicate->get(Applicationform::FIELD_ID)],
+            ['id' => $result->applicationform?->get(Applicationform::FIELD_ID)],
         );
     }
 

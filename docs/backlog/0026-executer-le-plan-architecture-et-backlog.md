@@ -336,7 +336,7 @@ La prochaine étape réalisable est l'étape 6.
 
 **Dépendances :** étapes 4 et 5 pour les sujets d'habilitations concernés
 
-- [ ] Implémenter 0020 : duplication fiable des DAE et réinitialisation des
+- [x] Implémenter 0020 : duplication fiable des DAE et réinitialisation des
   champs administratifs.
 - [ ] Implémenter 0019 : consultation organisée selon les quatre zones de
   l'édition, en lecture seule.
@@ -344,6 +344,13 @@ La prochaine étape réalisable est l'étape 6.
   lancement, contrôles d'éligibilité et conservation des cycles.
 - [ ] Ajouter les tests au niveau pertinent et mettre à jour la documentation
   métier locale.
+
+#### Suivi de l'étape 6 — ticket 0020
+
+- Le ticket 0020 est terminé séparément; sa migration, ses tests ORM/API et
+  sa documentation sont présents.
+- Les tickets 0019 et 0017 restent à planifier et ne sont pas inclus dans
+  cette livraison.
 
 **Critère de sortie :** chaque ticket est livré séparément, avec ses critères
 d'acceptation et ses vérifications propres satisfaits.

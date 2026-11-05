@@ -6,6 +6,7 @@ namespace App\Controller\Api;
 use App\Controller\AppController;
 use App\Model\Entity\ValidationCommentTemplate;
 use App\Model\Entity\WorkflowSetting;
+use App\Model\Table\ApplicationformsTable;
 use App\Model\Table\ValidationCommentTemplatesTable;
 use App\Service\DataGrid\TabulatorAdapter;
 use Cake\Http\Exception\BadRequestException;
@@ -148,38 +149,24 @@ class WorkflowSettingsController extends AppController
         return $this->jsonSuccess(['k_coefficient' => (float)$value]);
     }
 
-    /** Lit ou met à jour la liste des champs réinitialisés lors d'une duplication. */
+    /** Lit l'ancienne liste de duplication, désormais versionnée dans le code. */
     public function duplicateResetFields(): ?Response
     {
         $this->request->allowMethod(['get', 'post']);
         $settings = $this->fetchTable('WorkflowSettings');
         $this->Authorization->authorize($settings->newEmptyEntity(), 'manage');
-        $name = 'applicationform.duplicate_reset_fields';
-        $setting = $settings->find()->where(['name' => $name])->first();
-        $fields = array_values(array_filter(array_map(
-            'trim',
-            explode(',', (string)($setting?->get(WorkflowSetting::FIELD_VALUE) ?? '')),
-        )));
         if ($this->request->is('get')) {
-            return $this->jsonSuccess(['fields' => $fields]);
+            return $this->jsonSuccess([
+                'fields' => ApplicationformsTable::DUPLICATION_RESET_FIELDS,
+                'deprecated' => true,
+            ]);
         }
 
-        $reserved = ['user_id', 'applicantname', 'salary_base', 'control_management_validation', 'final_argument'];
-        $received = $this->request->getData('fields', []);
-        if (!is_array($received)) {
-            return $this->jsonError(__('La liste des champs à réinitialiser est invalide.'), [], 422);
-        }
-        $fields = array_values(array_unique(array_merge(
-            $reserved,
-            array_filter($received, static fn(mixed $field): bool => is_string($field) && trim($field) !== ''),
-        )));
-        $setting ??= $settings->newEntity(['name' => $name]);
-        $setting->set('value', implode(',', $fields));
-        if (!$settings->save($setting)) {
-            return $this->validationErrorResponse($setting, 'WorkflowSettings');
-        }
-
-        return $this->jsonSuccess(['fields' => $fields]);
+        return $this->jsonError(
+            __('La liste est désormais versionnée dans le code et ne peut plus être modifiée.'),
+            [],
+            422,
+        );
     }
 
     /** Retourne le catalogue de commentaires sous le contrat distant Tabulator. */

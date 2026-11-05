@@ -15,7 +15,7 @@ namespace App\Model\Entity;
  * @property int $contracttype_id
  * @property int $hiringreason_id
  * @property string|null $reasonforreplacement
- * @property int $budgetfeature_id
+ * @property int|null $budgetfeature_id
  * @property string $jobtitle
  * @property int $professionalcategory_id
  * @property int $worktime_id
@@ -33,7 +33,7 @@ namespace App\Model\Entity;
  * @property string|null $hr_description
  * @property string|null $control_management_validation
  * @property string|null $final_argument
- * @property int $yesno_id
+ * @property int|null $yesno_id
  * @property int|null $collaborator_id
  * @property \Cake\I18n\DateTime|null $archived
  * @property \Cake\I18n\DateTime|null $deleted
