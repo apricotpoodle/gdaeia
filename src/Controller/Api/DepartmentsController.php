@@ -263,9 +263,17 @@ final class DepartmentsController extends AppController
         $department = $this->activeDepartmentForAssociation($departmentId);
         $id = $this->positiveAssociationId($userId);
         $operator = $this->request->getAttribute('identity')->getOriginalData();
-        $manager = $this->fetchTable('Users')->find('visibleTo', user: $operator)
+        $users = $this->fetchTable('Users');
+        $manager = $users->find('visibleTo', user: $operator)
             ->where(['Users.id' => $id, 'Users.deleted IS' => null])
             ->firstOrFail();
+        if (
+            $users->find('manageableTo', user: $operator)
+            ->where(['Users.id' => $id])
+            ->count() === 0
+        ) {
+            throw new ForbiddenException(__('Vous ne pouvez pas associer un responsable hors de votre périmètre.'));
+        }
         $this->Authorization->authorize($manager, 'associate');
         (new DepartmentManagementService())->associateManager($department, $id);
 
@@ -282,10 +290,10 @@ final class DepartmentsController extends AppController
         $manager = $users->find()
             ->where(['Users.id' => $id, 'Users.deleted IS' => null])
             ->firstOrFail();
-        $visible = $users->find('visibleTo', user: $operator)
+        $manageable = $users->find('manageableTo', user: $operator)
             ->where(['Users.id' => $id, 'Users.deleted IS' => null])
             ->count() > 0;
-        if (!$visible) {
+        if (!$manageable) {
             throw new ForbiddenException(
                 __('Vous ne pouvez pas dissocier un responsable hors de votre périmètre.'),
             );
@@ -425,7 +433,7 @@ final class DepartmentsController extends AppController
         $table = $this->fetchTable($association === 'managers' ? 'Users' : 'CgrCodes');
 
         if ($association === 'managers') {
-            $query = ($associated ? $table->find() : $table->find('visibleTo', user: $operator))
+            $query = ($associated ? $table->find() : $table->find('manageableTo', user: $operator))
                 ->where(['Users.deleted IS' => null]);
             $query->leftJoin(
                 ['DepartmentManagers' => 'department_managers'],
@@ -475,7 +483,7 @@ final class DepartmentsController extends AppController
             'sortableFields' => $sortableFields,
         ]);
         if ($association === 'managers' && $associated) {
-            $visibleManagerIds = $table->find('visibleTo', user: $operator)
+            $manageableManagerIds = $table->find('manageableTo', user: $operator)
                 ->where(['Users.deleted IS' => null])
                 ->select(['id' => 'Users.id'])
                 ->all()
@@ -483,11 +491,11 @@ final class DepartmentsController extends AppController
                 ->map(static fn(mixed $id): int => (int)$id)
                 ->toList();
             foreach ($data->items() as $manager) {
-                $isVisible = in_array((int)$manager->get('id'), $visibleManagerIds, true);
-                $manager->set('can_dissociate', $isVisible);
+                $isManageable = in_array((int)$manager->get('id'), $manageableManagerIds, true);
+                $manager->set('can_dissociate', $isManageable);
                 $manager->set(
                     'association_read_only_message',
-                    $isVisible
+                    $isManageable
                         ? null
                         : __('Responsable associé hors de votre périmètre : dissociation non autorisée.'),
                 );
