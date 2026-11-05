@@ -1,15 +1,16 @@
 # Synthèse du backlog
 
-État vérifié le **30 octobre 2026** à partir des fiches de tickets, du
-manifeste `validation-applicationform/manifest.json`, du code, des migrations
-et des tests présents dans le dépôt. Les statuts ci-dessous décrivent le
-reste à faire, pas seulement le statut historique écrit dans une fiche.
+État vérifié le **5 novembre 2026** à partir des fiches de tickets, des
+manifestes `validation-applicationform/manifest.json` et
+`visibilite-manageabilite/manifest.json`, du code, des migrations et des tests
+présents dans le dépôt. Les statuts ci-dessous décrivent le reste à faire, pas
+seulement le statut historique écrit dans une fiche.
 
 Les tickets 0017 à 0023 ont été ajoutés les **23 et 29 octobre 2026** sans
 nouvel audit global. Le ticket 0025 a été ajouté le **4 novembre 2026** avec
 son ADR proposé ; son état reste donc « À planifier ».
-Le ticket 0026 formalise le plan transverse en huit étapes et reste à
-planifier tant que son exécution n'a pas commencé.
+Le ticket 0026 formalise le plan transverse en huit étapes et est en cours
+depuis le démarrage de son étape 1.
 
 ## Vue d’ensemble
 
@@ -17,10 +18,11 @@ planifier tant que son exécution n'a pas commencé.
 |---|---:|---:|---:|---:|
 | Backlog technique racine (`0001`–`0026`) | 26 | 14 | 1 | 11 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
-| **Total** | **39** | **27** | **1** | **11** |
+| Workflow `visibilite-manageabilite` (`0001`–`0009`) | 9 | 0 | 0 | 9 |
+| **Total** | **48** | **27** | **1** | **20** |
 
 Le ticket 0002 est compté comme partiellement traité ; les tickets restants
-concernent les sujets 0001, 0007, 0017 et 0019 à 0026, auxquels s'ajoutent
+concernent les sujets 0001, 0007, 0017, 0019 à 0023, 0025 et 0026, auxquels s'ajoutent
 les compléments du 0002.
 
 ## Tickets restant à effectuer
@@ -38,7 +40,7 @@ les compléments du 0002.
 | [0023 — Migration de base](0023-migrer-la-base-de-donnees.md) | Moyenne | À planifier | Préparer une migration MySQL simple par export/restauration, migrations et contrôles de cohérence. | Nouveau ticket créé le 29 octobre ; aucune bascule de base engagée. |
 | [0024 — Associations multiples des départements](0024-generaliser-les-associations-des-departements.md) | **Haute** | Terminé | Remplacer les responsables et rattachements CGR directs par des tables de liaison, migrer les données et adapter l’ORM, l’API et les écrans. | Migration, ORM, API, IHM et validations finalisées. |
 | [0025 — Visibilité et gérabilité des utilisateurs](0025-separer-visibilite-et-manageabilite-utilisateurs.md) | **Haute** | À planifier | Ticket parent du sous-workflow `visibilite-manageabilite/` : distinguer les utilisateurs visibles et gérables, sécuriser les mutations Web/API et réserver `ADMIN` aux superusers. | Nouveau sous-workflow ; l'ADR 0073 est proposé et les incompatibilités actuelles sont documentées. |
-| [0026 — Plan d'architecture et de backlog en huit étapes](0026-executer-le-plan-architecture-et-backlog.md) | **Haute** | À planifier | Coordonner l'assainissement documentaire, l'acceptation des ADR, les habilitations, la visibilité/gérabilité, les évolutions métier, la qualité, la migration et la gouvernance. | Nouveau ticket parent ; exécution prévue sur plusieurs sessions avec critères de reprise. |
+| [0026 — Plan d'architecture et de backlog en huit étapes](0026-executer-le-plan-architecture-et-backlog.md) | **Haute** | **En cours** | Coordonner l'assainissement documentaire, l'acceptation des ADR, les habilitations, la visibilité/gérabilité, les évolutions métier, la qualité, la migration et la gouvernance. | Étape 1 réalisée ; l'étape 2 reste conditionnée à la revue humaine des ADR 0071 et 0072. |
 
 ## Tickets déjà traités — contrôle de non-réouverture
 
@@ -78,10 +80,10 @@ L’ordre recommandé est :
    et résoudre l'accès administrateur aux départements.
 9. **0022**, pour mettre à jour le référentiel des départements SEM/Rédac.
 10. **0023**, pour préparer la migration contrôlée de la base MySQL.
-11. **0024**, en priorité, pour normaliser les responsables et les codes CGR
-    avant toute évolution dépendant du référentiel des départements.
-12. **0025**, en priorité, pour séparer visibilité et gérabilité des
+11. **0025**, en priorité, pour séparer visibilité et gérabilité des
     utilisateurs et sécuriser les mutations selon les périmètres.
+
+Le ticket **0024** est terminé et ne fait plus partie des prochaines étapes.
 
 Cette synthèse est un audit statique du dépôt. Elle confirme la présence des
 implémentations et tests versionnés ; elle ne remplace pas l’exécution des

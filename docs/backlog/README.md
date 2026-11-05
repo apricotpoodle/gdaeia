@@ -9,13 +9,14 @@ Chaque fiche porte un numéro stable et un intitulé explicite. Elle précise le
 Les statuts utilisés sont : `À planifier`, `Prêt`, `En cours`, `Bloqué` et `Terminé`.
 
 La [synthèse exhaustive du backlog](SYNTHESE.md) recense les tickets racine et
-le sous-workflow `validation-applicationform`, avec vérification de leur état
-dans le code et les tests.
+les sous-workflows `validation-applicationform` et
+`visibilite-manageabilite`, avec vérification de leur état dans le code et les
+tests. Les manifestes des sous-workflows sont leur source de vérité
+opérationnelle.
 
 ## Tickets actifs
 
 - [0026 — Exécuter le plan d'architecture et de backlog en huit étapes](0026-executer-le-plan-architecture-et-backlog.md) — priorité haute ; ticket parent reprenable sur plusieurs sessions.
-- [0024 — Généraliser les associations des départements](0024-generaliser-les-associations-des-departements.md) — priorité haute ; chantier prioritaire pour les responsables multiples et le catalogue CGR partagé.
 - [0025 — Séparer la visibilité et la gérabilité des utilisateurs](0025-separer-visibilite-et-manageabilite-utilisateurs.md) — priorité haute ; ticket parent du sous-workflow `visibilite-manageabilite/`, sécuriser les mutations selon les périmètres et réserver le rôle `ADMIN` aux superusers.
 - [0001 — Mettre en place un gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) — priorité moyenne.
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
@@ -29,6 +30,7 @@ dans le code et les tests.
 
 ## Tickets terminés
 
+- [0024 — Généraliser les associations des départements](0024-generaliser-les-associations-des-departements.md) — priorité haute.
 - [0013 — Mutualiser la présentation des erreurs de validation](0013-mutualiser-la-presentation-des-erreurs-validation.md) — priorité moyenne.
 - [0014 — Détecter et tracer la perte de session](0014-detecter-et-tracer-la-perte-de-session.md) — priorité haute.
 - [0015 — Rediriger vers la connexion après expiration de session](0015-rediriger-vers-la-connexion-apres-expiration-de-session.md) — priorité haute.
