@@ -264,8 +264,24 @@ acceptation après validation humaine du contrat.
 - Vérifications exécutées : `make test.unit` (97 tests),
   `make test.integration` (121 tests), `make test.api` (170 tests),
   `make test.style`, `make cs.check` et `make stan`.
-- Le sous-ticket 0006 est désormais le prochain ticket exécutable du
-  manifeste.
+- Le sous-ticket 0006 est désormais réalisé ; le sous-ticket 0007 est le
+  prochain ticket exécutable du manifeste.
+
+### Suivi de la sous-étape 5.6
+
+- [x] Exécuter le sous-ticket 0006 : sécuriser les changements de rôle.
+- Les administrateurs locaux peuvent attribuer les rôles fonctionnels 2 à 7
+  aux utilisateurs gérables.
+- L'attribution du rôle `ADMIN` et la modification de `issuperuser` sont
+  réservées aux superusers et contrôlées côté serveur dans les flux Web et
+  API.
+- Les rôles proposés par les formulaires sont filtrés selon l'identité de
+  l'opérateur, sans remplacer la Policy ni le contrôle métier.
+- Vérifications exécutées : `make test.unit` (103 tests) et `make test.api`
+  (174 tests).
+- La prochaine étape réalisable est le sous-ticket 0007 ; les cases globales
+  de l'étape 5 restent ouvertes tant que les sous-tickets 0007 à 0009 et la
+  recette transversale ne sont pas terminés.
 
 ### Étape 6 — Réaliser les évolutions métier prioritaires
 

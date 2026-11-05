@@ -158,4 +158,72 @@ final class UserMutationAuthorizationTest extends TestCase
                 ->toList(),
         );
     }
+
+    public function testLaMutationApiAutoriseUnRoleFonctionnelPourUnAdministrateurLocal(): void
+    {
+        $this->getTableLocator()->get('Roles')->getConnection()->insert('roles', [
+            'id' => User::ROLE_1_VALIDEUR_POLE,
+            'base' => 1,
+            'code' => 'ROLE_POLE',
+            'name' => 'Valideur pôle',
+            'sort' => '3',
+            'created' => '2026-07-03 09:01:32',
+            'modified' => '2026-07-03 09:01:32',
+        ]);
+        $this->session(['Auth' => new User(['id' => 2, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/users/edit/2.json', ['role_id' => User::ROLE_1_VALIDEUR_POLE]);
+
+        $this->assertResponseOk();
+        $this->assertSame(
+            User::ROLE_1_VALIDEUR_POLE,
+            $this->getTableLocator()->get('Users')->get(2)->get(User::FIELD_ROLE_ID),
+        );
+    }
+
+    public function testLaMutationApiRefuseLeRoleAdminPourUnAdministrateurLocal(): void
+    {
+        $this->getTableLocator()->get('Users')->getConnection()->update(
+            'users',
+            ['role_id' => User::ROLE_DEMANDEUR],
+            ['id' => 2],
+        );
+        $this->session(['Auth' => new User(['id' => 2, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/users/edit/2.json', ['role_id' => User::ROLE_ADMIN]);
+
+        $this->assertResponseCode(403);
+    }
+
+    public function testLaMutationApiRefuseLActivationSuperuserPourUnAdministrateurLocal(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/users/edit/2.json', ['issuperuser' => true]);
+
+        $this->assertResponseCode(403);
+    }
+
+    public function testLaMutationApiAutoriseLeRoleAdminPourUnSuperuser(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/users/edit/2.json', [
+            'role_id' => User::ROLE_ADMIN,
+            'issuperuser' => true,
+        ]);
+
+        $this->assertResponseOk();
+        $user = $this->getTableLocator()->get('Users')->get(2);
+        $this->assertSame(User::ROLE_ADMIN, $user->get(User::FIELD_ROLE_ID));
+        $this->assertTrue((bool)$user->get(User::FIELD_ISSUPERUSER));
+    }
 }
