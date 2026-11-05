@@ -1,6 +1,6 @@
 # 0003 — Ajouter `findManageableTo()`
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Dépendance :** 0002
 
@@ -27,4 +27,16 @@ contient aucun département ancêtre strict d'une racine de l'opérateur.
 
 - Tests d'intégration de `UsersTable`.
 - Tests des périmètres multi-branches.
+
+## Réalisation
+
+- [x] Ajouter `UsersTable::findManageableTo()` en s'appuyant sur
+  `findVisibleTo()`.
+- [x] Résoudre les racines explicites et exclure les utilisateurs associés à
+  un ancêtre strict d'une racine.
+- [x] Préserver le périmètre global du superuser, le dédoublonnage et la
+  pagination distante.
+- [x] Couvrir les utilisateurs locaux, les ancêtres, les branches
+  indépendantes, les périmètres vides et les superusers.
+- [x] Exécuter `make test.integration` sur `daetf2_test` : 121 tests réussis.
 

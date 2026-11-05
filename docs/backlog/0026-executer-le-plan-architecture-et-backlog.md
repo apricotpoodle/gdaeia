@@ -227,6 +227,17 @@ acceptation après validation humaine du contrat.
 - Le sous-ticket 0003 est désormais le prochain ticket exécutable du
   manifeste.
 
+### Suivi de la sous-étape 5.3
+
+- [x] Exécuter le sous-ticket 0003 : ajouter le finder
+  `UsersTable::findManageableTo()`.
+- Le finder distingue les utilisateurs visibles et gérables en excluant les
+  associations explicites situées sur un ancêtre strict d'une racine de
+  l'opérateur.
+- Les périmètres multi-branches, les branches indépendantes, le périmètre
+  vide et le superuser sont couverts par les tests d'intégration ORM.
+- Vérification exécutée : `make test.integration` (121 tests ORM réussis).
+
 ### Étape 6 — Réaliser les évolutions métier prioritaires
 
 **Dépendances :** étapes 4 et 5 pour les sujets d'habilitations concernés

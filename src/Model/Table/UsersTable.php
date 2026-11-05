@@ -7,6 +7,7 @@ use App\Model\Entity\User;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 /**
@@ -151,6 +152,49 @@ class UsersTable extends Table
         return $query->innerJoinWith('UserDepartments', function ($q) use ($myDepartmentIds) {
             return $q->where(['UserDepartments.department_id IN' => $myDepartmentIds]);
         })->distinct(['Users.id']);
+    }
+
+    /**
+     * Restreint la liste des utilisateurs visibles à ceux gérables par l'opérateur.
+     *
+     * Un utilisateur associé à un ancêtre strict d'une racine explicite de
+     * l'opérateur reste visible, mais ne peut pas être géré par celui-ci.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query
+     * @param \App\Model\Entity\User $user
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
+     */
+    public function findManageableTo(SelectQuery $query, User $user): SelectQuery
+    {
+        if ($user->get(User::FIELD_ISSUPERUSER)) {
+            return $query;
+        }
+
+        $query = $this->findVisibleTo($query, $user);
+        $departments = TableRegistry::getTableLocator()->get('Departments');
+        $departmentIds = $this->UserDepartments->find('departmentsOf', user: $user);
+        $roots = $departments->find()
+            ->select(['lft', 'rght'])
+            ->where(['Departments.id IN' => $departmentIds])
+            ->all()
+            ->map(static fn($department): array => [
+                'lft' => (int)$department->get('lft'),
+                'rght' => (int)$department->get('rght'),
+            ])
+            ->toList();
+
+        if ($roots === []) {
+            return $query->where(['Users.id IS' => null]);
+        }
+
+        $ancestorIds = $departments->find('strictAncestorsOf', roots: $roots)
+            ->select(['Departments.id']);
+
+        return $query->where([
+            'Users.id NOT IN' => $this->UserDepartments->find()
+                ->select(['UserDepartments.user_id'])
+                ->where(['UserDepartments.department_id IN' => $ancestorIds]),
+        ]);
     }
 
     /**

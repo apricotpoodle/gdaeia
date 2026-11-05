@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Entity\User;
 use App\Model\Table\UsersTable;
 use Cake\TestSuite\TestCase;
 
@@ -28,6 +29,7 @@ class UsersTableTest extends TestCase
         'app.Roles',
         'app.Applicationforms',
         'app.UserDepartments',
+        'app.Departments',
         'app.Validations',
     ];
 
@@ -94,5 +96,96 @@ class UsersTableTest extends TestCase
 
         $this->assertFalse($this->Users->save($user));
         $this->assertArrayHasKey('username', $user->getErrors());
+    }
+
+    public function testLeFinderManageableToRetourneLesUtilisateursLocauxEtExclutLesAncetres(): void
+    {
+        $connection = $this->Users->getConnection();
+        $departments = $this->getTableLocator()->get('Departments');
+        $departments->updateAll(['deleted' => null], ['id IN' => [1, 2]]);
+        $connection->insert('departments', [
+            'id' => 3,
+            'parent_id' => null,
+            'lft' => 5,
+            'rght' => 6,
+            'level' => 1,
+            'base' => 1,
+            'code' => 'BRANCHE-INDEPENDANTE',
+            'name' => 'Branche indépendante',
+            'sort' => 'Branche indépendante',
+            'department_type_id' => 1,
+            'deleted' => null,
+        ]);
+        $connection->insert('departments', [
+            'id' => 4,
+            'parent_id' => null,
+            'lft' => 7,
+            'rght' => 8,
+            'level' => 1,
+            'base' => 1,
+            'code' => 'BRANCHE-SECONDE',
+            'name' => 'Branche seconde',
+            'sort' => 'Branche seconde',
+            'department_type_id' => 1,
+            'deleted' => null,
+        ]);
+        foreach ([3, 4, 5] as $id) {
+            $connection->insert('users', [
+                'id' => $id,
+                'username' => 'utilisateur-' . $id,
+                'email' => 'utilisateur-' . $id . '@example.test',
+                'password' => 'mot-de-passe',
+                'firstname' => 'Utilisateur',
+                'lastname' => (string)$id,
+                'issuperuser' => 0,
+                'role_id' => 1,
+                'deleted' => null,
+                'created' => '2026-07-03 09:01:33',
+                'modified' => '2026-07-03 09:01:33',
+            ]);
+        }
+
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveManyOrFail($userDepartments->newEntities([
+            ['user_id' => 2, 'department_id' => 2],
+            ['user_id' => 2, 'department_id' => 4],
+            ['user_id' => 3, 'department_id' => 2],
+            ['user_id' => 3, 'department_id' => 4],
+            ['user_id' => 4, 'department_id' => 1],
+            ['user_id' => 4, 'department_id' => 2],
+            ['user_id' => 5, 'department_id' => 3],
+        ]));
+
+        $manageable = $this->Users->find('manageableTo', user: new User([
+            'id' => 2,
+            'issuperuser' => false,
+        ]))->all()->toList();
+
+        $this->assertSame([2, 3], array_map(
+            static fn(User $user): int => (int)$user->get('id'),
+            $manageable,
+        ));
+    }
+
+    public function testLeFinderManageableToNeRetourneRienSansPerimetre(): void
+    {
+        $manageable = $this->Users->find('manageableTo', user: new User([
+            'id' => 2,
+            'issuperuser' => false,
+        ]))->all()->toList();
+
+        $this->assertSame([], $manageable);
+    }
+
+    public function testLeFinderManageableToConserveLePerimetreGlobalDuSuperuser(): void
+    {
+        $query = $this->Users->find();
+        $this->assertSame(
+            $query,
+            $this->Users->findManageableTo($query, new User([
+                'id' => 1,
+                'issuperuser' => true,
+            ])),
+        );
     }
 }
