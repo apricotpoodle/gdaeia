@@ -67,8 +67,9 @@ les tickets actifs et la prochaine étape sans interprétation contradictoire.
   `validation-applicationform` le sont.
 - La branche de travail est `docs/backlog-0026-etape-1`.
 
-La prochaine étape réalisable est l'étape 2, après revue humaine des ADR 0071
-et 0072 ; leur statut reste volontairement `Proposé`.
+Lors de cette session, la prochaine étape réalisable était l’étape 2, après
+revue humaine des ADR 0071 et 0072 ; leur statut restait volontairement
+`Proposé`.
 
 ### Étape 2 — Finaliser les ADR déjà concrétisés
 
@@ -76,13 +77,37 @@ et 0072 ; leur statut reste volontairement `Proposé`.
 **ADR concernés :** 0071 et 0072  
 **Tickets associés :** 0024
 
-- [ ] Vérifier l'implémentation et les tests de l'ADR 0071 sur le fuseau
+- [x] Vérifier l’implémentation et les tests de l’ADR 0071 sur le fuseau
   Europe/Paris et le stockage UTC.
-- [ ] Vérifier la migration, l'ORM, les API, les écrans et les tests issus de
+- [x] Vérifier la migration, l’ORM, les API, les écrans et les tests issus de
   l'ADR 0072.
-- [ ] Contrôler les migrations et les vues SQL selon les ADR 0005 et 0006.
-- [ ] Soumettre les deux ADR à revue humaine et passer leur statut à
+- [x] Contrôler les migrations et les vues SQL selon les ADR 0005 et 0006.
+- [x] Soumettre les deux ADR à revue humaine et passer leur statut à
   `Accepté` uniquement après validation.
+
+### Suivi de la session du 5 novembre 2026
+
+- L’ADR 0071 a été vérifié : `APP_DEFAULT_TIMEZONE` et le repli
+  `Europe/Paris` sont appliqués par PHP et CakePHP ; les connexions MySQL
+  restent en UTC ; le fuseau est affiché dans la navigation ; les tests de
+  configuration et d’interface sont présents.
+- L’ADR 0072 a été vérifié : la migration crée les tables de liaison
+  `department_managers` et `department_cgr_codes` avec clés primaires
+  composites et clés étrangères en cascade ; elle reprend les associations
+  historiques, déduplique le catalogue CGR et supprime les colonnes obsolètes.
+  Les associations ORM, le service transactionnel, les API, les écrans et
+  les tests correspondants sont présents.
+- La migration ne crée ni ne modifie de vue SQL ; le contrôle a été effectué
+  conformément aux ADR 0005 et 0006.
+- Les deux ADR ont reçu la validation humaine et leur statut est désormais
+  `Accepté`.
+- Vérifications exécutées : `make test.unit` (92 tests), `make cs.check`,
+  `make stan` (aucune erreur), `make test.integration` (114 tests ORM) et
+  `make test.api` (160 tests HTTP/API). Les tests MySQL ont confirmé la base
+  dédiée `daetf2_test`.
+
+La prochaine étape réalisable est l’étape 3 : arbitrer le modèle générique
+d’habilitations de l’ADR 0069.
 
 **Critère de sortie :** les décisions 0071 et 0072 sont acceptées ou disposent
 d'une liste documentée de corrections bloquantes.

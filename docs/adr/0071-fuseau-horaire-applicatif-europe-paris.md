@@ -2,7 +2,7 @@
 
 **Date :** 30 octobre 2026
 
-**Statut :** Proposé
+**Statut :** Accepté
 
 **Dépendances :**
 
