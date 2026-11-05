@@ -108,12 +108,13 @@ final class NormalizeDepartmentAssociations extends BaseMigration
         if ($this->hasIndex('cgr_codes', 'idx_cgr_codes_unique_definition')) {
             $cgrCodes->removeIndexByName('idx_cgr_codes_unique_definition');
         }
-        if (!$this->hasIndex('cgr_codes', 'idx_cgr_codes_unique_definition')) {
-            $cgrCodes->addIndex(['type', 'code'], [
-                'name' => 'idx_cgr_codes_unique_definition',
-                'unique' => true,
-            ]);
-        }
+        // Le retrait est différé jusqu'à update() : l'ancien index est donc
+        // encore visible par SHOW INDEX à ce stade. Ajouter systématiquement
+        // l'index cible évite de perdre la contrainte lors de la migration.
+        $cgrCodes->addIndex(['type', 'code'], [
+            'name' => 'idx_cgr_codes_unique_definition',
+            'unique' => true,
+        ]);
         $cgrCodes->update();
 
         $departments = $this->table('departments');
