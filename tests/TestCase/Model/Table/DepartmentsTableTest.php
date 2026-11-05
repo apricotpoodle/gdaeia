@@ -27,11 +27,15 @@ class DepartmentsTableTest extends TestCase
      */
     protected array $fixtures = [
         'app.Departments',
+        'app.Roles',
         'app.Users',
         'app.UserDepartments',
         'app.CgrCodes',
         'app.CgrStrategies',
         'app.Applicationforms',
+        'app.Permissions',
+        'app.PermissionScopes',
+        'app.RolePermissions',
     ];
 
     /**

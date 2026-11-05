@@ -22,6 +22,9 @@ final class DepartmentsControllerTest extends TestCase
         'app.UserDepartments',
         'app.Applicationforms',
         'app.Validationsequences',
+        'app.Permissions',
+        'app.PermissionScopes',
+        'app.RolePermissions',
     ];
 
     public function testUnOperateurNePeutPasAccederAAdministrationDesDepartements(): void
@@ -214,6 +217,12 @@ final class DepartmentsControllerTest extends TestCase
             'deleted' => null,
             'cgr_strategy_id' => 1,
         ], ['id' => 2]);
+        $this->getTableLocator()->get('UserDepartments')->saveOrFail(
+            $this->getTableLocator()->get('UserDepartments')->newEntity([
+                'user_id' => 2,
+                'department_id' => 2,
+            ]),
+        );
         $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
 
         $this->get('/api/departments/tree.json?' . http_build_query([
@@ -589,6 +598,11 @@ final class DepartmentsControllerTest extends TestCase
         ])]);
         $this->enableCsrfToken();
         $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 2,
+            'department_id' => 2,
+        ]));
         $this->getTableLocator()->get('Departments')->updateAll([
             'deleted' => null,
             'cgr_strategy_id' => 1,

@@ -1,6 +1,6 @@
 # 0021 — Implémenter les habilitations génériques
 
-**Statut :** À planifier
+**Statut :** En cours — vertical départements implémenté
 
 **Priorité :** Haute
 
@@ -29,22 +29,30 @@ les départements sans le transformer automatiquement en super-administrateur.
 
 - [x] Faire accepter ou amender l'ADR 0069 avant la migration du modèle de
   données.
-- [ ] Créer les tables génériques `permissions`, `permission_scopes` et
+- [x] Créer les tables génériques `permissions`, `permission_scopes` et
   `role_permissions`, avec contraintes d'unicité et clés étrangères.
-- [ ] Définir les permissions de l'administration des départements, au
+- [x] Définir les permissions de l'administration des départements, au
   minimum la consultation et la gestion, avec une nomenclature stable.
-- [ ] Implémenter la résolution des permissions et des périmètres `self`,
+- [x] Implémenter la résolution des permissions et des périmètres `self`,
   `assigned` et `all`, avec refus par défaut.
-- [ ] Faire dépendre `DepartmentPolicy` de la permission dédiée et non plus
+- [x] Faire dépendre `DepartmentPolicy` de la permission dédiée et non plus
   uniquement de `issuperuser`.
-- [ ] Vérifier séparément l'accès au menu, l'accès direct à l'URL Web et
+- [x] Vérifier séparément l'accès au menu, l'accès direct à l'URL Web et
   l'accès aux endpoints API des départements.
-- [ ] Préparer une reprise explicite des droits existants, notamment pour le
+- [x] Préparer une reprise explicite des droits existants, notamment pour le
   super-administrateur, sans attribuer de droits implicites au rôle 1.
-- [ ] Ajouter l'interface d'administration nécessaire au catalogue et aux
+- [x] Ajouter l'interface d'administration nécessaire au catalogue et aux
   associations, en respectant les Policies et le principe du moindre
   privilège.
-- [ ] Ajouter les tests unitaires, ORM, HTTP et API nécessaires.
+- [x] Ajouter les tests unitaires, ORM, HTTP et API nécessaires.
+
+La V1 attribue explicitement les permissions `departments.read` et
+`departments.manage` au rôle administrateur sur le périmètre `assigned`.
+Les périmètres `all` restent admissibles dans le catalogue mais ne sont pas
+accordés par la reprise automatique. Le super-administrateur conserve son
+contournement documenté. Le catalogue est consultable et administrable par
+API et dispose d'un écran Web d'audit ; les attributions sont protégées par
+`menus.manage`.
 
 ## Critères d'acceptation
 

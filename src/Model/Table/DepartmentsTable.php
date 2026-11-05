@@ -5,6 +5,7 @@ namespace App\Model\Table;
 
 use App\Model\Entity\Department;
 use App\Model\Entity\User;
+use App\Service\Security\PermissionResolver;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\TableRegistry;
@@ -93,7 +94,8 @@ class DepartmentsTable extends AppTable
     public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
         $query = parent::findVisibleTo($query, $user);
-        if ($user->get(User::FIELD_ISSUPERUSER)) {
+        $permissions = new PermissionResolver();
+        if ($permissions->allows($user, 'departments.read', PermissionResolver::SCOPE_ALL)) {
             return $query;
         }
 

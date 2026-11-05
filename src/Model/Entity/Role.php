@@ -20,6 +20,7 @@ use Cake\ORM\Entity;
  * @property \App\Model\Entity\Applicationvalidationstep[] $applicationvalidationsteps
  * @property \App\Model\Entity\FieldAuthorization[] $field_authorizations
  * @property \App\Model\Entity\RoleMenu[] $role_menus
+ * @property \App\Model\Entity\RolePermission[] $role_permissions
  * @property \App\Model\Entity\Urd[] $urds
  * @property \App\Model\Entity\User[] $users
  * @property \App\Model\Entity\ValidationVisa[] $validation_visas
@@ -48,6 +49,7 @@ class Role extends Entity
         'applicationvalidationsteps' => true,
         'field_authorizations' => true,
         'role_menus' => true,
+        'role_permissions' => true,
         'urds' => true,
         'users' => true,
         'validation_visas' => true,
@@ -66,6 +68,7 @@ class Role extends Entity
     public const FIELD_APPLICATIONVALIDATIONSTEPS = 'applicationvalidationsteps';
     public const FIELD_FIELD_AUTHORIZATIONS = 'field_authorizations';
     public const FIELD_ROLE_MENUS = 'role_menus';
+    public const FIELD_ROLE_PERMISSIONS = 'role_permissions';
     public const FIELD_URDS = 'urds';
     public const FIELD_USERS = 'users';
     public const FIELD_VALIDATION_VISAS = 'validation_visas';

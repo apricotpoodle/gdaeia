@@ -16,6 +16,7 @@ use Cake\Validation\Validator;
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ApplicationvalidationstepsTable> $Applicationvalidationsteps
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\FieldAuthorizationsTable> $FieldAuthorizations
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\RoleMenusTable> $RoleMenus
+ * @property \Cake\ORM\Association\HasMany<\App\Model\Table\RolePermissionsTable> $RolePermissions
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\UrdsTable> $Urds
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\UsersTable> $Users
  * @property \Cake\ORM\Association\HasMany<\App\Model\Table\ValidationVisasTable> $ValidationVisas
@@ -59,6 +60,9 @@ class RolesTable extends AppTable
             'foreignKey' => 'role_id',
         ]);
         $this->hasMany('RoleMenus', [
+            'foreignKey' => 'role_id',
+        ]);
+        $this->hasMany('RolePermissions', [
             'foreignKey' => 'role_id',
         ]);
         $this->hasMany('Urds', [

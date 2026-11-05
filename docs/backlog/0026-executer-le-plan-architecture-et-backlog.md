@@ -150,15 +150,31 @@ sont approuvés avant toute migration de schéma.
 **Dépendances :** étape 3  
 **Tickets associés :** 0007 et 0021
 
-- [ ] Créer les tables et associations prévues par l'ADR accepté, avec
+- [x] Créer les tables et associations prévues par l'ADR accepté, avec
   contraintes, refus par défaut et migration explicite des droits existants.
-- [ ] Implémenter la résolution des permissions et des périmètres côté
+- [x] Implémenter la résolution des permissions et des périmètres côté
   Models/Services.
-- [ ] Aligner menus, URLs Web, endpoints API et `DepartmentPolicy`.
-- [ ] Ajouter les tests unitaires, ORM, Web et API prévus par les tickets.
-- [ ] Exécuter les contrôles adaptés : `make test.unit`, `make cs.check`,
+- [x] Aligner menus, URLs Web, endpoints API et `DepartmentPolicy`.
+- [x] Ajouter les tests unitaires, ORM, Web et API prévus par les tickets.
+- [x] Exécuter les contrôles adaptés : `make test.unit`, `make cs.check`,
   `make stan`, `make test.integration`, `make test.api` et, si nécessaire,
   `make test.workflow`.
+
+### Suivi de la session d'implémentation
+
+- Les permissions `departments.read`, `departments.manage` et `menus.manage`
+  sont cataloguées ; les périmètres sont déclarés séparément des attributions.
+- La reprise automatique conserve l'accès historique de l'administrateur sur
+  ses départements explicitement affectés, sans déduire un droit du seul rôle.
+- Les Policies, le finder des départements, les routes Web/API et l'écran du
+  catalogue appliquent désormais les capacités centralisées.
+- Vérifications ciblées réussies : `make test.unit` (97 tests),
+  `make test.integration` (114 tests), `make test.api` (164 tests),
+  `make test.style`, `make test.workflow`, `make cs.check` et `make stan`.
+- `make test.all` a été exécuté deux fois : 451 tests, avec un seul échec
+  préexistant dans `NormalizeDepartmentAssociationsTest`, qui ne retrouve pas
+  l'index `idx_cgr_codes_unique_definition` de la migration 0024. Les suites
+  unitaires, ORM, HTTP, style et workflow ciblées restent vertes.
 
 **Critère de sortie :** les accès autorisés, les refus hors périmètre et les
 accès directs sont testés et cohérents.
