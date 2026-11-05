@@ -42,6 +42,12 @@ leurs propres listes blanches.
 
 Voir l’[ADR 0065](../docs/adr/0065-acl-automatique-des-mutations-web-api.md).
 
+`UserDepartmentAuthorizationService` contrôle les associations explicites
+`user_departments` avant les écritures Web et API. Il compare les états avant
+et après hydratation pour couvrir les ajouts comme les retraits et refuse les
+départements hors du périmètre de l'opérateur, y compris dans les mutations de
+masse.
+
 ## Production PDF des DAE
 
 `Pdf/ApplicationformPdfService` génère le document PDF d'une DAE avec mPDF.

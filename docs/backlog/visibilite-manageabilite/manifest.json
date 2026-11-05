@@ -6,7 +6,7 @@
     {"id":"0002","path":"0002-resolution-perimetres.md","status":"Terminé","dependsOn":["0001"]},
     {"id":"0003","path":"0003-finder-manageable.md","status":"Terminé","dependsOn":["0002"]},
     {"id":"0004","path":"0004-mutations-utilisateurs.md","status":"Terminé","dependsOn":["0003"]},
-    {"id":"0005","path":"0005-affectations-user-departments.md","status":"À planifier","dependsOn":["0003","0004"]},
+    {"id":"0005","path":"0005-affectations-user-departments.md","status":"Terminé","dependsOn":["0003","0004"]},
     {"id":"0006","path":"0006-roles-utilisateur.md","status":"À planifier","dependsOn":["0003","0004"]},
     {"id":"0007","path":"0007-associations-responsables.md","status":"À planifier","dependsOn":["0003","0004"]},
     {"id":"0008","path":"0008-interface-lecture-seule.md","status":"À planifier","dependsOn":["0005","0006","0007"]},

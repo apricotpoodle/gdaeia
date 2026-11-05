@@ -7,6 +7,7 @@ use App\Controller\AppController;
 use App\Model\Entity\User;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\FieldAuthorizationService;
+use App\Service\UserDepartmentAuthorizationService;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
@@ -26,6 +27,8 @@ use Cake\ORM\TableRegistry;
  */
 class UsersController extends AppController
 {
+    private UserDepartmentAuthorizationService $userDepartmentAuthorization;
+
     /**
      * @return void
      */
@@ -33,6 +36,7 @@ class UsersController extends AppController
     {
         parent::initialize();
         $this->viewBuilder()->setClassName('Json');
+        $this->userDepartmentAuthorization = new UserDepartmentAuthorizationService();
     }
 
     /** @inheritDoc */
@@ -102,6 +106,9 @@ class UsersController extends AppController
         ]);
         /** @var \App\Model\Entity\User $user */
 
+        $operator = $this->request->getAttribute('identity')->getOriginalData();
+        $this->userDepartmentAuthorization->assertMutationAllowed($operator, $this->Users->newEmptyEntity(), $user);
+
         if ($this->Users->save($user)) {
             return $this->response->withType('application/json')
                 ->withStringBody((string)json_encode(['success' => true, 'id' => $user->id]));
@@ -122,6 +129,7 @@ class UsersController extends AppController
 
         $user = $this->Users->get($id, contain: ['UserDepartments']);
         $this->Authorization->authorize($user, 'edit');
+        $before = clone $user;
 
         $rawParams = $this->request->getData();
         // ==============================================================
@@ -148,6 +156,9 @@ class UsersController extends AppController
             'associated' => ['UserDepartments'],
         ]);
         /** @var \App\Model\Entity\User $user */
+
+        $operator = $this->request->getAttribute('identity')->getOriginalData();
+        $this->userDepartmentAuthorization->assertMutationAllowed($operator, $before, $user);
 
         // if ($this->Users->save($user)) {
         //     return $this->response->withType('application/json')
@@ -232,14 +243,7 @@ class UsersController extends AppController
             $this->Authorization->authorize($targetUser, 'edit');
         }
 
-        /** @var \App\Model\Table\DepartmentsTable $departmentsTable */
-        $departmentsTable = $this->fetchTable('Departments');
-        $authorizedDepartmentIds = $this->flattenTreeSelectValues(
-            $departmentsTable->findTreeSelectFormat($currentUser),
-        );
-        if (array_diff($departmentIds, $authorizedDepartmentIds) !== []) {
-            throw new ForbiddenException(__('Au moins un département ciblé est hors de votre périmètre.'));
-        }
+        $this->userDepartmentAuthorization->assertDepartmentIdsAllowed($currentUser, $departmentIds);
 
         /** @var \App\Model\Table\UserDepartmentsTable $userDepartments */
         $userDepartments = $this->fetchTable('UserDepartments');
@@ -539,26 +543,5 @@ class UsersController extends AppController
         }
 
         return array_values(array_unique($departmentIds));
-    }
-
-    /**
-     * Extrait récursivement les valeurs autorisées d'un arbre TreeselectJS.
-     *
-     * @param array<int, array<string, mixed>> $nodes Arbre formaté pour TreeselectJS.
-     * @return list<int>
-     */
-    private function flattenTreeSelectValues(array $nodes): array
-    {
-        $values = [];
-        foreach ($nodes as $node) {
-            if (isset($node['value'])) {
-                $values[] = (int)$node['value'];
-            }
-            if (isset($node['children']) && is_array($node['children'])) {
-                array_push($values, ...$this->flattenTreeSelectValues($node['children']));
-            }
-        }
-
-        return array_values(array_unique($values));
     }
 }

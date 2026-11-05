@@ -248,8 +248,24 @@ acceptation après validation humaine du contrat.
 - Vérifications exécutées : `make test.unit` (97 tests), `make test.api`
   (168 tests), `make test.integration` (121 tests ORM), `make cs.check`,
   `make stan`, `make test.style` et `make test.all` (462 tests).
-- Les sous-tickets 0005 à 0009 restent à planifier ; la prochaine étape
-  réalisable est le sous-ticket 0005.
+- Le sous-ticket 0005 est désormais réalisé ; les sous-tickets 0006 à 0009
+  restent à planifier.
+
+### Suivi de la sous-étape 5.5
+
+- [x] Exécuter le sous-ticket 0005 : sécuriser les affectations
+  `user_departments`.
+- Les associations ajoutées et retirées sont contrôlées côté serveur par
+  rapport au périmètre de l'opérateur.
+- Les créations et éditions Web/API, ainsi que les mutations de masse,
+  refusent les départements hors périmètre avant toute écriture.
+- Les tests API couvrent les refus unitaires et de masse et vérifient la
+  conservation des associations existantes.
+- Vérifications exécutées : `make test.unit` (97 tests),
+  `make test.integration` (121 tests), `make test.api` (170 tests),
+  `make test.style`, `make cs.check` et `make stan`.
+- Le sous-ticket 0006 est désormais le prochain ticket exécutable du
+  manifeste.
 
 ### Étape 6 — Réaliser les évolutions métier prioritaires
 

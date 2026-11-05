@@ -8,6 +8,7 @@ use App\Mailer\UserMailer;
 use App\Model\Entity\User;
 use App\Model\Entity\UserDepartment;
 use App\Service\Security\FieldAuthorizationService;
+use App\Service\UserDepartmentAuthorizationService;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Cake\Log\Log;
@@ -26,6 +27,15 @@ use Exception;
 class UsersController extends AppController
 {
     use EmailLoggerTrait;
+
+    private UserDepartmentAuthorizationService $userDepartmentAuthorization;
+
+    /** @inheritDoc */
+    public function initialize(): void
+    {
+        parent::initialize();
+        $this->userDepartmentAuthorization = new UserDepartmentAuthorizationService();
+    }
 
     /** @inheritDoc */
     public function beforeFilter(EventInterface $event): void
@@ -191,7 +201,13 @@ class UsersController extends AppController
                 'associated' => ['UserDepartments'],
             ]);
             /** @var \App\Model\Entity\User $user */
-            /** @var \App\Model\Entity\User $user */
+
+            $operator = $this->request->getAttribute('identity')->getOriginalData();
+            $this->userDepartmentAuthorization->assertMutationAllowed(
+                $operator,
+                $this->Users->newEmptyEntity(),
+                $user,
+            );
 
             if ($this->Users->save($user)) {
                 $this->Flash->success(__('L\'utilisateur a été créé avec succès.'));
@@ -234,6 +250,7 @@ class UsersController extends AppController
     {
         $user = $this->Users->get($id, contain: ['UserDepartments']);
         $this->Authorization->authorize($user, 'edit');
+        $before = clone $user;
 
         if ($this->request->is(['post', 'put', 'patch'])) {
             $rawParams = $this->request->getData();
@@ -255,6 +272,9 @@ class UsersController extends AppController
                 'associated' => ['UserDepartments'],
             ]);
             /** @var \App\Model\Entity\User $user */
+
+            $operator = $this->request->getAttribute('identity')->getOriginalData();
+            $this->userDepartmentAuthorization->assertMutationAllowed($operator, $before, $user);
 
             Log::debug(
                 "2. [ORM PATCH] Entité après hydratation (Que contient-elle ?) : \n"

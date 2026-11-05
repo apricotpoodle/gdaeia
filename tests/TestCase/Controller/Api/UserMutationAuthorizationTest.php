@@ -106,4 +106,56 @@ final class UserMutationAuthorizationTest extends TestCase
 
         $this->assertResponseCode(403);
     }
+
+    public function testLEditionApiRefuseUneAffectationDepartementaleHorsPerimetre(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/users/edit/2.json', [
+            'user_departments' => [
+                ['department_id' => 1],
+            ],
+        ]);
+
+        $this->assertResponseCode(403);
+        $this->assertSame(
+            [2],
+            $this->getTableLocator()->get('UserDepartments')->find()
+                ->select(['department_id'])
+                ->where(['user_id' => 2])
+                ->orderBy(['department_id' => 'ASC'])
+                ->all()
+                ->extract('department_id')
+                ->map(static fn(mixed $id): int => (int)$id)
+                ->toList(),
+        );
+    }
+
+    public function testLaMutationApiDeMasseRefuseUnDepartementHorsPerimetreSansSupprimerLesAssociations(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/users/bulk-departments.json', [
+            'user_ids' => [2],
+            'department_ids' => [1],
+            'association_mode' => 'replace',
+        ]);
+
+        $this->assertResponseCode(403);
+        $this->assertSame(
+            [2],
+            $this->getTableLocator()->get('UserDepartments')->find()
+                ->select(['department_id'])
+                ->where(['user_id' => 2])
+                ->orderBy(['department_id' => 'ASC'])
+                ->all()
+                ->extract('department_id')
+                ->map(static fn(mixed $id): int => (int)$id)
+                ->toList(),
+        );
+    }
 }
