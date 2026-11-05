@@ -10,6 +10,10 @@ Les Policies de menus déterminent aujourd'hui plusieurs autorisations au moyen 
 
 La table `role_menus` permet déjà d'associer un rôle à une option de menu, avec un éventuel périmètre départemental. Elle est donc le bon support de données pour définir qui peut utiliser un écran métier. En revanche, utiliser cette association pour décider qui peut modifier les menus et les droits créerait une dépendance circulaire : il faut contrôler l'administration du référentiel avant de pouvoir modifier les données qui définissent les accès.
 
+Le ticket 0007 définit le socle générique des habilitations. Le ticket 0021
+en constitue la première implémentation spécialisée pour l'administration des
+départements ; il ne doit pas introduire un modèle de permissions concurrent.
+
 ## Illustration
 
 Pour les rôles suivants :
@@ -82,10 +86,19 @@ permissions
 -----------
 id, code, resource, action
 
+permission_scopes
+-----------------
+permission_id, scope_type
+
 role_permissions
 ----------------
 id, role_id, permission_id, scope_type
 ```
+
+La table `permission_scopes` définit les périmètres admissibles ;
+`role_permissions` attribue l'un de ces périmètres à un rôle. Cette
+distinction suit l'ADR 0069 et permet de refuser une combinaison non déclarée
+avant toute attribution.
 
 Les permissions suivent une nomenclature stable telle que :
 
@@ -169,7 +182,7 @@ génériques, sans table spécifique aux DAE.
 
 ## Décisions à préparer
 
-- Rédiger et faire accepter un ADR avant la migration, couvrant le modèle de données, les règles de priorité et le cycle d'administration des permissions.
+- Appliquer l'ADR 0069 accepté avant la migration, en conservant le modèle de données, les règles de priorité et le cycle d'administration des permissions qu'il définit.
 - Définir les tables génériques `permissions` et `role_permissions`, avec une permission normalisée et une affectation unique par rôle, permission et périmètre.
 - Documenter les valeurs `self`, `assigned` et `all`, ainsi que la règle de refus par défaut.
 - Documenter explicitement que `assigned` couvre uniquement les départements directs en V1 ; le calcul des descendants et les droits spécifiques à un utilisateur sont différés.

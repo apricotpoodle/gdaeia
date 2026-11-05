@@ -77,7 +77,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0066** | Nettoyage gradué lors de la désactivation des départements | **Accepté** | [`0066-nettoyage-gradue-desactivation-departements.md`](./0066-nettoyage-gradue-desactivation-departements.md) |
 | **ADR 0067** | Intégrité des références de séquences du workflow | **Accepté** | [`0067-integrite-references-sequences-workflow.md`](./0067-integrite-references-sequences-workflow.md) |
 | **ADR 0068** | Audit global d'intégrité en lecture seule | **Accepté** | [`0068-audit-global-integrite-lecture-seule.md`](./0068-audit-global-integrite-lecture-seule.md) |
-| **ADR 0069** | Habilitations par rôles et périmètres | **Proposé** | [`0069-habilitations-par-roles-et-perimetres.md`](./0069-habilitations-par-roles-et-perimetres.md) |
+| **ADR 0069** | Habilitations par rôles et périmètres | **Accepté** | [`0069-habilitations-par-roles-et-perimetres.md`](./0069-habilitations-par-roles-et-perimetres.md) |
 | **ADR 0070** | Circuits courts locaux selon le type de contrat | **Accepté** | [`0070-circuits-courts-locaux-par-contrat.md`](./0070-circuits-courts-locaux-par-contrat.md) |
 | **ADR 0071** | Fuseau horaire applicatif Europe/Paris et stockage UTC | **Accepté** | [`0071-fuseau-horaire-applicatif-europe-paris.md`](./0071-fuseau-horaire-applicatif-europe-paris.md) |
 | **ADR 0072** | Associations multiples des départements, utilisateurs et codes CGR | **Accepté** | [`0072-associations-multiples-departements-cgr.md`](./0072-associations-multiples-departements-cgr.md) |
