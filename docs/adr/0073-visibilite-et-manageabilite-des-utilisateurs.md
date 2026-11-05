@@ -1,7 +1,7 @@
 # ADR 0073 : Distinction entre visibilité et gérabilité des utilisateurs
 
 - Date : 2026-11-04
-- Statut : Proposé
+- Statut : Accepté
 - Dépendances : ADR 0041, ADR 0050, ADR 0065, ADR 0069 et ADR 0072
 
 ## Contexte
