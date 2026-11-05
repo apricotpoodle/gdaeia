@@ -186,7 +186,7 @@ accès directs sont testés et cohérents.
 **Ticket parent :** 0025  
 **Sous-workflow :** `docs/backlog/visibilite-manageabilite/`
 
-- [ ] Valider le contrat des racines explicites et des périmètres
+- [x] Valider le contrat des racines explicites et des périmètres
   multi-branches.
 - [ ] Passer l'ADR 0073 à `Accepté` après validation du contrat.
 - [ ] Exécuter les sous-tickets 0001 à 0009 dans l'ordre du manifeste.
@@ -197,6 +197,21 @@ accès directs sont testés et cohérents.
 
 **Critère de sortie :** visibilité et gérabilité sont des décisions distinctes
 dans les finders, Policies, services, contrôleurs, API et interfaces.
+
+### Suivi de la sous-étape 5.1
+
+- Le contrat du sous-ticket 0001 fixe une représentation canonique par liste
+  dédoublonnée d'identifiants issus de `user_departments`.
+- Les comparaisons utilisent les bornes `lft`/`rght` des associations
+  explicites et évaluent chaque racine d'un périmètre multi-branches.
+- Un périmètre non-superuser vide ne donne aucun résultat ; le superuser
+  conserve le court-circuit global.
+- Les cas contractuels et les scénarios de tests ORM sont documentés dans le
+  sous-ticket 0001.
+- L'ADR 0073 reste `Proposé` jusqu'à la validation de l'étape 5.2.
+
+La prochaine étape réalisable est l'étape 5.2 : soumettre l'ADR 0073 à
+acceptation après validation humaine du contrat.
 
 ### Étape 6 — Réaliser les évolutions métier prioritaires
 
