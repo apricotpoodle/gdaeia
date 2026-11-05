@@ -14,6 +14,7 @@ dans le code et les tests.
 
 ## Tickets actifs
 
+- [0026 — Exécuter le plan d'architecture et de backlog en huit étapes](0026-executer-le-plan-architecture-et-backlog.md) — priorité haute ; ticket parent reprenable sur plusieurs sessions.
 - [0024 — Généraliser les associations des départements](0024-generaliser-les-associations-des-departements.md) — priorité haute ; chantier prioritaire pour les responsables multiples et le catalogue CGR partagé.
 - [0025 — Séparer la visibilité et la gérabilité des utilisateurs](0025-separer-visibilite-et-manageabilite-utilisateurs.md) — priorité haute ; ticket parent du sous-workflow `visibilite-manageabilite/`, sécuriser les mutations selon les périmètres et réserver le rôle `ADMIN` aux superusers.
 - [0001 — Mettre en place un gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) — priorité moyenne.
