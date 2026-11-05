@@ -166,6 +166,7 @@ class UsersController extends AppController
             );
         }
 
+        $this->Authorization->authorize($user, 'edit');
         if ($this->Users->save($user)) {
             Log::debug('4. [ORM SAVE] Sauvegarde réussie en Base de données !');
             Log::debug("=========================================\n");
@@ -219,7 +220,7 @@ class UsersController extends AppController
             ));
         }
 
-        $targetUsers = $this->Users->find('visibleTo', user: $currentUser)
+        $targetUsers = $this->Users->find('manageableTo', user: $currentUser)
             ->where(['Users.id IN' => $userIds])
             ->all()
             ->toList();
@@ -424,7 +425,9 @@ class UsersController extends AppController
         );
         $departmentIds = $this->resolveSelectedDepartmentAndDescendantIds($selectedDepartmentIds, $currentUser);
         $userId = $this->normalizePositiveIntegerList([$this->request->getData('user_id')], 'user_id')[0];
-        $targetUser = $this->Users->find('visibleTo', user: $currentUser)->where(['Users.id' => $userId])->first();
+        $targetUser = $this->Users->find('manageableTo', user: $currentUser)
+            ->where(['Users.id' => $userId])
+            ->first();
         if ($targetUser === null) {
             throw new ForbiddenException(__('L’utilisateur ciblé est hors de votre périmètre.'));
         }

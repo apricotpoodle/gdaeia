@@ -9,6 +9,7 @@ namespace App\Policy;
 
 use App\Model\Entity\User;
 use Authorization\IdentityInterface;
+use Cake\ORM\TableRegistry;
 
 /**
  * Users policy
@@ -90,7 +91,9 @@ class UserPolicy extends AppPolicy
             return false; // Par sécurité, on bloque si ce n'est pas un User valide
         }
 
-        return $user->isSuperUser() || $user->id === $target->id || $user->hasRole($user::ALLOWED_ROLES_FOR_EDIT);
+        return $user->isSuperUser()
+            || $user->id === $target->id
+            || ($user->hasRole($user::ALLOWED_ROLES_FOR_EDIT) && $this->isManageable($user, $target));
     }
 
     /**
@@ -135,8 +138,33 @@ class UserPolicy extends AppPolicy
             return false;
         }
 
-        return ($user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN))
-            && $target->get(User::FIELD_DELETED) === null;
+        if ($target->get(User::FIELD_DELETED) !== null) {
+            return false;
+        }
+
+        return $user->isSuperUser()
+            || ($user->hasRole(User::ROLE_ADMIN) && $this->isManageable($user, $target));
+    }
+
+    /**
+     * Vérifie que la cible appartient au périmètre de gérabilité de l'opérateur.
+     *
+     * @param \App\Model\Entity\User $operator Opérateur courant.
+     * @param \App\Model\Entity\User $target Utilisateur ciblé.
+     * @return bool Vrai si la cible est gérable.
+     */
+    private function isManageable(User $operator, User $target): bool
+    {
+        $targetId = $target->get(User::FIELD_ID);
+        if ($targetId === null) {
+            return false;
+        }
+
+        $users = TableRegistry::getTableLocator()->get('Users');
+
+        return $users->find('manageableTo', user: $operator)
+            ->where(['Users.' . User::FIELD_ID => $targetId])
+            ->count() > 0;
     }
 
     /**

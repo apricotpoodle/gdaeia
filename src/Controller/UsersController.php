@@ -267,6 +267,7 @@ class UsersController extends AppController
                     . print_r($user->getErrors(), true),
                 );
             }
+            $this->Authorization->authorize($user, 'edit');
             if ($this->Users->save($user)) {
                 Log::debug('3. [ORM SAVE] Sauvegarde réussie en Base de données !');
                 Log::debug("=========================================\n");

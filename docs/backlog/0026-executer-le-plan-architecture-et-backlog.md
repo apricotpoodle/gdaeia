@@ -238,6 +238,19 @@ acceptation après validation humaine du contrat.
   vide et le superuser sont couverts par les tests d'intégration ORM.
 - Vérification exécutée : `make test.integration` (121 tests ORM réussis).
 
+### Suivi de la sous-étape 5.4
+
+- [x] Exécuter le sous-ticket 0004 : protéger les mutations des utilisateurs.
+- `UserPolicy` impose désormais la gérabilité aux mutations locales et les
+  contrôleurs Web/API revérifient la cible juste avant l'écriture.
+- Les utilisateurs visibles mais non gérables restent consultables ; les
+  éditions directes et mutations API de masse sont refusées.
+- Vérifications exécutées : `make test.unit` (97 tests), `make test.api`
+  (168 tests), `make test.integration` (121 tests ORM), `make cs.check`,
+  `make stan`, `make test.style` et `make test.all` (462 tests).
+- Les sous-tickets 0005 à 0009 restent à planifier ; la prochaine étape
+  réalisable est le sous-ticket 0005.
+
 ### Étape 6 — Réaliser les évolutions métier prioritaires
 
 **Dépendances :** étapes 4 et 5 pour les sujets d'habilitations concernés

@@ -43,7 +43,7 @@ class UserPolicyTest extends TestCase
     public function testLAdministrateurPeutCreerEtModifierLesUtilisateurs(): void
     {
         $administrator = new User(['id' => 1, 'role_id' => User::ROLE_ADMIN]);
-        $target = new User(['id' => 2]);
+        $target = new User(['id' => 1]);
 
         $this->assertTrue($this->policy->canAdd($administrator));
         $this->assertTrue($this->policy->canEdit($administrator, $target));
@@ -69,18 +69,19 @@ class UserPolicyTest extends TestCase
     {
         $operator = new User(['id' => 1, 'role_id' => User::ROLE_ADMIN]);
         $target = new User(['id' => 2]);
+        $editTarget = new User(['id' => 1]);
 
         $this->assertTrue($this->policy->canIndex($operator));
         $this->assertTrue($this->policy->canAdd($operator));
-        $this->assertTrue($this->policy->canEdit($operator, $target));
+        $this->assertTrue($this->policy->canEdit($operator, $editTarget));
         $this->assertTrue($this->policy->canView($operator, $target));
         $this->assertTrue($this->policy->canDelete($operator, $target));
     }
 
-    public function testUnAdministrateurPeutAssocierUnResponsableActif(): void
+    public function testLeSuperAdministrateurPeutAssocierUnResponsableActif(): void
     {
-        $administrator = new User(['id' => 1, 'role_id' => User::ROLE_ADMIN]);
-        $target = new User(['deleted' => null]);
+        $administrator = new User(['id' => 1, 'issuperuser' => true]);
+        $target = new User(['id' => 2, 'deleted' => null]);
 
         $this->assertTrue($this->policy->canAssociate($administrator, $target));
     }
