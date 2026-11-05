@@ -5,6 +5,9 @@
 
 import { FlashManager } from '../../core/FlashManager.js';
 import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js';
+import { isManageableUser } from './user-readonly.js';
+
+export { isManageableUser };
 
 const departmentsTableElement = document.querySelector('#bulk-departments-table');
 const availableUsersTableElement = document.querySelector('#bulk-available-users-table');
@@ -76,6 +79,20 @@ if (departmentsTableElement && availableUsersTableElement && selectedUsersTableE
     }
 
     departmentsTable.on('rowSelectionChanged', refreshAssignedUsers);
-    availableUsersTable.on('rowDblClick', (event, row) => updateDepartmentAccess('assign-bulk-departments', row.getData()));
-    selectedUsersTable.on('rowDblClick', (event, row) => updateDepartmentAccess('unassign-bulk-departments', row.getData()));
+    availableUsersTable.on('rowDblClick', (event, row) => {
+        const user = row.getData();
+        if (isManageableUser(user)) {
+            updateDepartmentAccess('assign-bulk-departments', user);
+        } else {
+            FlashManager.warning(user.read_only_message || 'Association non autorisée.');
+        }
+    });
+    selectedUsersTable.on('rowDblClick', (event, row) => {
+        const user = row.getData();
+        if (isManageableUser(user)) {
+            updateDepartmentAccess('unassign-bulk-departments', user);
+        } else {
+            FlashManager.warning(user.read_only_message || 'Dissociation non autorisée.');
+        }
+    });
 }

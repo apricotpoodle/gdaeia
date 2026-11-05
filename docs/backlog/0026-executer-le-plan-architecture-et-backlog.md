@@ -296,7 +296,23 @@ acceptation après validation humaine du contrat.
 - Les sous-tickets 0008 et 0009 restent à planifier ; la recette transversale
   et les cases globales de l'étape 5 restent donc ouvertes.
 
-La prochaine étape réalisable est le sous-ticket 0008.
+La prochaine étape réalisable est le sous-ticket 0009.
+
+### Suivi de la sous-étape 5.8
+
+- [x] Exécuter le sous-ticket 0008 : adapter l'interface aux utilisateurs non
+  gérables.
+- Les grilles exposent et affichent le statut de lecture seule sans déplacer
+  l'autorisation hors du serveur.
+- Les actions d'édition, d'association et de dissociation sont désactivées
+  pour les lignes non gérables ; les associations existantes restent visibles.
+- Vérifications exécutées : tests JavaScript (8 fichiers, 8 réussis), syntaxe
+  PHP et `git diff --check`.
+- Vérifications exécutées : `make test.unit` (103 tests), `make test.api`
+  (177 tests, 623 assertions), `make test.style`, `make cs.check` et
+  `make stan` (aucune erreur).
+- Le sous-ticket 0009 est désormais le prochain ticket exécutable du
+  manifeste ; les cases globales de l'étape 5 restent ouvertes.
 
 ### Étape 6 — Réaliser les évolutions métier prioritaires
 

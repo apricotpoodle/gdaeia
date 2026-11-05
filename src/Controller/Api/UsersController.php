@@ -327,7 +327,7 @@ class UsersController extends AppController
             : $this->Users->find('visibleTo', user: $currentUser);
         $this->renderBulkDepartmentUsers($users
             ->contain(['Roles'])
-            ->orderBy(['Users.lastname' => 'ASC', 'Users.firstname' => 'ASC']));
+            ->orderBy(['Users.lastname' => 'ASC', 'Users.firstname' => 'ASC']), $currentUser);
     }
 
     /** Retourne les utilisateurs associés à tous les départements sélectionnés. */
@@ -348,7 +348,7 @@ class UsersController extends AppController
             : $this->Users->find('visibleTo', user: $currentUser)->where(['Users.id IS' => null]);
         $this->renderBulkDepartmentUsers($users
             ->contain(['Roles'])
-            ->orderBy(['Users.lastname' => 'ASC', 'Users.firstname' => 'ASC']));
+            ->orderBy(['Users.lastname' => 'ASC', 'Users.firstname' => 'ASC']), $currentUser);
     }
 
     /** Associe un utilisateur à tous les départements sélectionnés. */
@@ -401,7 +401,26 @@ class UsersController extends AppController
         if (!$this->Authentication->isImpersonating()) {
             $extraActions[] = 'impersonate';
         }
-        $rightsFormatter = $this->createGridRightsFormatter($extraActions);
+        $manageableIds = $this->manageableUserIds($currentUser);
+        $baseRightsFormatter = $this->createGridRightsFormatter($extraActions);
+        $rightsFormatter = static function (User $user) use ($baseRightsFormatter, $manageableIds): array {
+            $manageable = in_array((int)$user->get(User::FIELD_ID), $manageableIds, true);
+            $user->set('is_manageable', $manageable);
+            $user->set(
+                'read_only_message',
+                $manageable
+                    ? null
+                    : __('Utilisateur visible mais non gérable : consultation uniquement.'),
+            );
+            /** @var array{actions: array<string, bool>, columns: array<string, bool>} $rights */
+            $rights = $baseRightsFormatter($user);
+            if (!$manageable) {
+                $rights['actions']['edit'] = false;
+                $rights['actions']['delete'] = false;
+            }
+
+            return $rights;
+        };
         $output = $adapter->adaptResponse($paginatedData, $rightsFormatter);
 
         $this->set($output);
@@ -486,7 +505,7 @@ class UsersController extends AppController
      * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Utilisateurs déjà filtrés par le finder métier.
      * @return void
      */
-    private function renderBulkDepartmentUsers(SelectQuery $query): void
+    private function renderBulkDepartmentUsers(SelectQuery $query, User $operator): void
     {
         $adapter = new TabulatorAdapter();
         $query = $adapter->adaptRequest($this->request, $query);
@@ -505,9 +524,39 @@ class UsersController extends AppController
             ]);
         }
 
-        $output = $adapter->adaptResponse($users);
+        $manageableIds = $this->manageableUserIds($operator);
+        $rightsFormatter = static function (User $user) use ($manageableIds): array {
+            $manageable = in_array((int)$user->get(User::FIELD_ID), $manageableIds, true);
+            $user->set('is_manageable', $manageable);
+            $user->set(
+                'read_only_message',
+                $manageable
+                    ? null
+                    : __('Utilisateur visible mais non gérable : consultation uniquement.'),
+            );
+
+            return [];
+        };
+        $output = $adapter->adaptResponse($users, $rightsFormatter);
         $this->set($output);
         $this->viewBuilder()->setOption('serialize', array_keys($output));
+    }
+
+    /**
+     * Ajoute aux lignes de grille le statut de gérabilité de l'opérateur.
+     *
+     * @param \App\Model\Entity\User $operator Opérateur courant.
+     * @return list<int> Identifiants des utilisateurs gérables.
+     */
+    private function manageableUserIds(User $operator): array
+    {
+        $ids = $this->Users->find('manageableTo', user: $operator)
+            ->select(['Users.id'])
+            ->all()
+            ->extract('id')
+            ->toList();
+
+        return array_values(array_map(static fn(mixed $id): int => (int)$id, $ids));
     }
 
     /**

@@ -7,6 +7,7 @@ import { TabulatorBuilder } from './TabulatorBuilder.js?v=20261030120000';
 import { ColumnsFactory } from './ColumnsFactory.js'; // inutile à terme car définitions des colonnes déléguée *-columns.js
 import { getApplicationformColumns } from '../../views/Applicationforms/applicationform-columns.js?v=20261029170000';
 import { getMenusColumns } from '../../views/Menus/menus-columns.js';
+import { formatUserReadOnlyRow } from '../../views/Users/user-readonly.js';
 
 /**
  * @class TabulatorFactory
@@ -91,6 +92,7 @@ export class TabulatorFactory {
             // 💡 LA FENÊTRE : Il FAUT une hauteur absolue pour forcer l'ascenseur INTERNE.
             // Si Flexbox bugue, utilise un calc strict pour garantir l'apparition de l'ascenseur.
             .setHeight("calc(100vh - 180px)") // <--- AJOUT : Bloque la grille avant le bas de l'écran
+            .addOptions({ rowFormatter: formatUserReadOnlyRow })
             // .setHeight("calc(100vh - 220px)")
             // .setHeight("calc(100vh)")
             .setColumns([
@@ -267,7 +269,7 @@ export class TabulatorFactory {
     static createBulkAvailableUsersGrid(selector = '#bulk-available-users-table') {
         return this._createBaseGrid(selector)
             .setAjaxSource('/api/users/bulk-departments-users.json')
-            .addOptions({ persistence: false, layout: 'fitColumns' })
+            .addOptions({ persistence: false, layout: 'fitColumns', rowFormatter: formatUserReadOnlyRow })
             .setColumns(this.getBulkUsersColumns())
             .build();
     }
@@ -281,7 +283,7 @@ export class TabulatorFactory {
     static createBulkSelectedUsersGrid(selector = '#bulk-selected-users-table') {
         return this._createBaseGrid(selector)
             .setAjaxSource('/api/users/bulk-departments-assigned-users.json')
-            .addOptions({ persistence: false, layout: 'fitColumns' })
+            .addOptions({ persistence: false, layout: 'fitColumns', rowFormatter: formatUserReadOnlyRow })
             .setColumns(this.getBulkUsersColumns())
             .build();
     }

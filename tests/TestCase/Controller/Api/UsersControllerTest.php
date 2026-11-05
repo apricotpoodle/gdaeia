@@ -41,6 +41,18 @@ class UsersControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertHeaderContains('Content-Type', 'application/json');
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertTrue($body['data'][0]['is_manageable']);
+    }
+
+    public function testLesListesMassivesExposentLeStatutDeLectureSeule(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->get('/api/users/bulk-departments-users.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertTrue($body['data'][0]['is_manageable']);
     }
 
     public function testLApiRetourneLesUtilisateursDisponiblesPourLAssociationDeDepartements(): void
