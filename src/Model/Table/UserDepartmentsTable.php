@@ -114,7 +114,8 @@ class UserDepartmentsTable extends Table
     public function findDepartmentsOf(SelectQuery $query, User $user): SelectQuery
     {
         return $query->select(['UserDepartments.department_id'])
-            ->where(['UserDepartments.user_id' => $user->id]);
+            ->where(['UserDepartments.user_id' => $user->id])
+            ->distinct(['UserDepartments.department_id']);
     }
 
     /**

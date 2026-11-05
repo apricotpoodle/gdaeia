@@ -127,4 +127,66 @@ class DepartmentsTableTest extends TestCase
 
         $this->assertSame([], $visible);
     }
+
+    public function testLeFinderDesAncetresStrictsIgnoreLesDepartementsInactifs(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        $connection = $departments->getConnection();
+        $connection->insert('departments', [
+            'id' => 3,
+            'parent_id' => null,
+            'lft' => 5,
+            'rght' => 8,
+            'level' => 1,
+            'base' => 1,
+            'code' => 'BRANCHE-TEST',
+            'name' => 'Branche de test',
+            'sort' => 'Branche de test',
+            'department_type_id' => 1,
+            'deleted' => null,
+        ]);
+        $connection->insert('departments', [
+            'id' => 4,
+            'parent_id' => 3,
+            'lft' => 6,
+            'rght' => 7,
+            'level' => 2,
+            'base' => 1,
+            'code' => 'SERVICE-BRANCHE-TEST',
+            'name' => 'Service de branche de test',
+            'sort' => 'Service de branche de test',
+            'department_type_id' => 1,
+            'deleted' => null,
+        ]);
+        $departments->updateAll(['deleted' => null], ['id IN' => [2, 3, 4]]);
+
+        $ancestors = $departments->find('strictAncestorsOf', roots: [
+            ['lft' => 2, 'rght' => 3],
+            ['lft' => 6, 'rght' => 7],
+        ])->all()->toList();
+
+        $this->assertSame([3], array_map(
+            static fn(Department $department): int => (int)$department->get('id'),
+            $ancestors,
+        ));
+    }
+
+    public function testLeFinderDesAncetresStrictsNInclutPasLaRacineElleMeme(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        $departments->updateAll(['deleted' => null], ['id IN' => [1, 2, 3, 4]]);
+
+        $ancestors = $departments->find('strictAncestorsOf', roots: [
+            ['lft' => 1, 'rght' => 4],
+        ])->all()->toList();
+
+        $this->assertSame([], $ancestors);
+    }
+
+    public function testLeFinderDesAncetresStrictsRetourneUnResultatVideSansRacine(): void
+    {
+        $ancestors = $this->Departments->find('strictAncestorsOf', roots: [])->all()->toList();
+
+        $this->assertSame([], $ancestors);
+    }
 }

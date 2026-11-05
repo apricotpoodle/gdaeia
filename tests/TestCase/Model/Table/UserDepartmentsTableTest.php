@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Model\Table;
 
+use App\Model\Entity\User;
 use App\Model\Table\UserDepartmentsTable;
 use Cake\TestSuite\TestCase;
 
@@ -125,5 +126,21 @@ class UserDepartmentsTableTest extends TestCase
         $this->assertSame(2, $createdCount);
         $this->assertSame(0, $this->UserDepartments->find()->where(['department_id' => 1])->count());
         $this->assertSame(2, $this->UserDepartments->find()->where(['department_id' => 2])->count());
+    }
+
+    public function testLeFinderDesDepartementsRetourneUniquementLesAssociationsExplicites(): void
+    {
+        $this->UserDepartments->saveOrFail($this->UserDepartments->newEntity([
+            'user_id' => 1,
+            'department_id' => 2,
+        ]));
+
+        $departmentIds = $this->UserDepartments->find('departmentsOf', user: new User(['id' => 1]))
+            ->all()
+            ->extract('department_id')
+            ->map(static fn(mixed $id): int => (int)$id)
+            ->toList();
+
+        $this->assertSame([1, 2], $departmentIds);
     }
 }
