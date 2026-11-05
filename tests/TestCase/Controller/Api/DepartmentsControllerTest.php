@@ -367,6 +367,105 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertSame([], $associated['data']);
     }
 
+    public function testLesResponsablesVisiblesMaisNonGerablesNeSontPasDisponibles(): void
+    {
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id IN' => [1, 2]]);
+
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 2,
+            'department_id' => 2,
+        ]));
+        ConnectionManager::get('test')->insert('users', [
+            'id' => 3,
+            'username' => 'responsable-visible-non-gerable',
+            'email' => 'responsable-visible-non-gerable@example.test',
+            'password' => 'password',
+            'firstname' => 'Responsable',
+            'lastname' => 'Non gérable',
+            'issuperuser' => 0,
+            'role_id' => User::ROLE_ADMIN,
+            'deleted' => null,
+            'created' => '2026-11-04 10:00:00',
+            'modified' => '2026-11-04 10:00:00',
+        ]);
+        foreach ([1, 2] as $departmentId) {
+            $userDepartments->saveOrFail($userDepartments->newEntity([
+                'user_id' => 3,
+                'department_id' => $departmentId,
+            ]));
+        }
+
+        $this->get('/api/departments/2/managers/available.json');
+        $available = (array)json_decode((string)$this->_response->getBody(), true);
+
+        $this->assertResponseOk();
+        $this->assertNotContains(3, array_column($available['data'], 'id'));
+    }
+
+    public function testLesMutationsDeResponsableRefusentUneCibleVisibleMaisNonGerable(): void
+    {
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id IN' => [1, 2]]);
+
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 2,
+            'department_id' => 2,
+        ]));
+        ConnectionManager::get('test')->insert('users', [
+            'id' => 3,
+            'username' => 'responsable-visible-non-gerable',
+            'email' => 'responsable-visible-non-gerable@example.test',
+            'password' => 'password',
+            'firstname' => 'Responsable',
+            'lastname' => 'Non gérable',
+            'issuperuser' => 0,
+            'role_id' => User::ROLE_ADMIN,
+            'deleted' => null,
+            'created' => '2026-11-04 10:00:00',
+            'modified' => '2026-11-04 10:00:00',
+        ]);
+        foreach ([1, 2] as $departmentId) {
+            $userDepartments->saveOrFail($userDepartments->newEntity([
+                'user_id' => 3,
+                'department_id' => $departmentId,
+            ]));
+        }
+        $managers = $this->getTableLocator()->get('DepartmentManagers');
+
+        $this->post('/api/departments/2/managers/3/add.json');
+        $this->assertResponseCode(403);
+        $this->assertSame(0, $managers->find()->where([
+            'department_id' => 2,
+            'user_id' => 3,
+        ])->count());
+
+        $managers->saveOrFail($managers->newEntity([
+            'department_id' => 2,
+            'user_id' => 3,
+        ]));
+        $this->post('/api/departments/2/managers/3/remove.json');
+
+        $this->assertResponseCode(403);
+        $this->assertSame(1, $managers->find()->where([
+            'department_id' => 2,
+            'user_id' => 3,
+        ])->count());
+    }
+
     public function testLeResumeDUnDepartementEstAccessibleParUneRouteGetExplicite(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);

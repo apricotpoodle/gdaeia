@@ -283,6 +283,21 @@ acceptation après validation humaine du contrat.
   de l'étape 5 restent ouvertes tant que les sous-tickets 0007 à 0009 et la
   recette transversale ne sont pas terminés.
 
+### Suivi de la sous-étape 5.7
+
+- [x] Exécuter le sous-ticket 0007 : sécuriser les associations de
+  responsables.
+- Les responsables disponibles sont filtrés par `findManageableTo()`.
+- Les routes d'ajout et de dissociation revérifient la gérabilité côté
+  serveur ; les responsables associés hors périmètre restent en lecture seule.
+- `can_dissociate` et le message associé utilisent la même règle que les
+  mutations.
+- Vérification exécutée : `make test.api` (176 tests, 620 assertions).
+- Les sous-tickets 0008 et 0009 restent à planifier ; la recette transversale
+  et les cases globales de l'étape 5 restent donc ouvertes.
+
+La prochaine étape réalisable est le sous-ticket 0008.
+
 ### Étape 6 — Réaliser les évolutions métier prioritaires
 
 **Dépendances :** étapes 4 et 5 pour les sujets d'habilitations concernés
