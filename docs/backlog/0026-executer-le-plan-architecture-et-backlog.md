@@ -1,6 +1,6 @@
 # 0026 — Exécuter le plan d'architecture et de backlog en huit étapes
 
-**Statut :** À planifier  
+**Statut :** En cours  
 **Priorité :** Haute — pilotage transverse
 
 ## Nature du ticket
@@ -43,16 +43,32 @@ d'architecture ne doivent pas être déduites d'une simple implémentation.
 **Dépendances :** aucune  
 **Sessions conseillées :** 1
 
-- [ ] Retirer le ticket 0024 de la section « Tickets actifs » de
+- [x] Retirer le ticket 0024 de la section « Tickets actifs » de
   `docs/backlog/README.md` et le placer dans les tickets terminés.
-- [ ] Vérifier la cohérence entre les statuts des fiches, `README.md`,
+- [x] Vérifier la cohérence entre les statuts des fiches, `README.md`,
   `SYNTHESE.md` et les manifestes des sous-workflows.
-- [ ] Ajouter le présent ticket aux index et corriger les compteurs concernés.
-- [ ] Documenter les éventuelles divergences restantes au lieu de les
+- [x] Ajouter le présent ticket aux index et corriger les compteurs concernés.
+- [x] Documenter les éventuelles divergences restantes au lieu de les
   corriger silencieusement.
 
 **Critère de sortie :** un nouvel agent peut identifier la source de vérité,
 les tickets actifs et la prochaine étape sans interprétation contradictoire.
+
+### Suivi de la session du 5 novembre 2026
+
+- La fiche 0024 était déjà `Terminé`, mais restait présente dans les tickets
+  actifs de `README.md` ; elle a été déplacée dans les tickets terminés.
+- La synthèse ne reflétait pas le démarrage du ticket 0026 et recommandait à
+  tort de traiter à nouveau le ticket 0024 ; son état et l'ordre opérationnel
+  ont été corrigés.
+- Les deux sous-workflows disposent de manifestes cohérents avec leurs fiches.
+  Aucun ticket de ces manifestes n'est actuellement `Terminé` dans
+  `visibilite-manageabilite`, tandis que tous ceux de
+  `validation-applicationform` le sont.
+- La branche de travail est `docs/backlog-0026-etape-1`.
+
+La prochaine étape réalisable est l'étape 2, après revue humaine des ADR 0071
+et 0072 ; leur statut reste volontairement `Proposé`.
 
 ### Étape 2 — Finaliser les ADR déjà concrétisés
 
