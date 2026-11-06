@@ -26,6 +26,44 @@ final class FieldMetadataService implements FieldMetadataProviderInterface
         return $this->definition($resource, $field)['description'] ?? null;
     }
 
+    /** Retourne le libellé d'une cible de champ ou de zone. */
+    public function targetLabel(string $resource, string $type, string $target): string
+    {
+        if ($type !== 'section') {
+            $definition = $this->definition($resource, $target);
+            if ($definition !== null) {
+                return $definition['label'];
+            }
+
+            $historical = TableRegistry::getTableLocator()->get('FieldDefinitions')->find()
+                ->where(['resource' => $resource, 'field' => $target])->first();
+
+            return $historical !== null ? (string)$historical->get(FieldDefinition::FIELD_LABEL) : $target;
+        }
+
+        return $this->sectionDefinition($resource, $target)['label'] ?? $target;
+    }
+
+    /** Retourne la description d'une cible de champ ou de zone. */
+    public function targetDescription(string $resource, string $type, string $target): ?string
+    {
+        if ($type !== 'section') {
+            $definition = $this->definition($resource, $target);
+            if ($definition !== null) {
+                return $definition['description'];
+            }
+
+            $historical = TableRegistry::getTableLocator()->get('FieldDefinitions')->find()
+                ->where(['resource' => $resource, 'field' => $target])->first();
+
+            return $historical?->get(FieldDefinition::FIELD_DESCRIPTION) !== null
+                ? (string)$historical->get(FieldDefinition::FIELD_DESCRIPTION)
+                : null;
+        }
+
+        return $this->sectionDefinition($resource, $target)['description'] ?? null;
+    }
+
     /** @return array<string, array{label: string, description: ?string}> */
     public function all(string $resource): array
     {
@@ -62,6 +100,27 @@ final class FieldMetadataService implements FieldMetadataProviderInterface
     /** @return array{label: string, description: ?string}|null */
     private function definition(string $resource, string $field): ?array
     {
-        return $this->all($resource)[$field] ?? null;
+        $definition = $this->all($resource)[$field] ?? null;
+        if ($definition !== null) {
+            return $definition;
+        }
+
+        return null;
+    }
+
+    /** @return array{label: string, description: ?string}|null */
+    private function sectionDefinition(string $resource, string $target): ?array
+    {
+        $definition = TableRegistry::getTableLocator()->get('AuthorizationTargets')->find()
+            ->where(['resource' => $resource, 'target_type' => 'section', 'target' => $target])
+            ->first();
+        if ($definition === null) {
+            return null;
+        }
+
+        return [
+            'label' => (string)$definition->get('label'),
+            'description' => $definition->get('description') !== null ? (string)$definition->get('description') : null,
+        ];
     }
 }

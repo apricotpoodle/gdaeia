@@ -3,11 +3,14 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\AuthorizationTarget;
 use App\Model\Entity\FieldAuthorization;
 use ArrayObject;
+use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
+use Cake\ORM\TableRegistry;
 use Cake\Validation\Validator;
 
 /**
@@ -65,6 +68,12 @@ class FieldAuthorizationsTable extends Table
      */
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options): void
     {
+        if (!isset($data[FieldAuthorization::FIELD_TARGET]) && isset($data['field'])) {
+            $data[FieldAuthorization::FIELD_TARGET] = $data['field'];
+        }
+        if (!isset($data[FieldAuthorization::FIELD_TARGET_TYPE])) {
+            $data[FieldAuthorization::FIELD_TARGET_TYPE] = FieldAuthorization::TARGET_TYPE_FIELD;
+        }
         $value = $data[FieldAuthorization::FIELD_ACCESS_LEVEL] ?? null;
         if (!is_string($value)) {
             return;
@@ -92,10 +101,16 @@ class FieldAuthorizationsTable extends Table
             ->notEmptyString(FieldAuthorization::FIELD_RESOURCE);
 
         $validator
-            ->scalar(FieldAuthorization::FIELD_FIELD)
-            ->maxLength(FieldAuthorization::FIELD_FIELD, 50)
-            ->requirePresence(FieldAuthorization::FIELD_FIELD, 'create')
-            ->notEmptyString(FieldAuthorization::FIELD_FIELD);
+            ->scalar(FieldAuthorization::FIELD_TARGET_TYPE)
+            ->inList(FieldAuthorization::FIELD_TARGET_TYPE, FieldAuthorization::TARGET_TYPES)
+            ->requirePresence(FieldAuthorization::FIELD_TARGET_TYPE, 'create')
+            ->notEmptyString(FieldAuthorization::FIELD_TARGET_TYPE);
+
+        $validator
+            ->scalar(FieldAuthorization::FIELD_TARGET)
+            ->maxLength(FieldAuthorization::FIELD_TARGET, 80)
+            ->requirePresence(FieldAuthorization::FIELD_TARGET, 'create')
+            ->notEmptyString(FieldAuthorization::FIELD_TARGET);
 
         $validator
             ->scalar(FieldAuthorization::FIELD_ACCESS_LEVEL)
@@ -122,13 +137,35 @@ class FieldAuthorizationsTable extends Table
         $rules->add($rules->isUnique([
             FieldAuthorization::FIELD_ROLE_ID,
             FieldAuthorization::FIELD_RESOURCE,
-            FieldAuthorization::FIELD_FIELD,
+            FieldAuthorization::FIELD_TARGET_TYPE,
+            FieldAuthorization::FIELD_TARGET,
         ]), [
             'errorField' => FieldAuthorization::FIELD_ROLE_ID,
-            'message' => __('Une autorisation existe déjà pour ce rôle, cette ressource et ce champ.'),
+            'message' => __('Une autorisation existe déjà pour ce rôle, cette ressource et cette cible.'),
         ]);
         $rules->add($rules->existsIn([FieldAuthorization::FIELD_ROLE_ID], 'Roles'), [
             'errorField' => FieldAuthorization::FIELD_ROLE_ID,
+        ]);
+        $rules->add(function (EntityInterface $entity): bool {
+            $resource = (string)$entity->get(FieldAuthorization::FIELD_RESOURCE);
+            $type = (string)$entity->get(FieldAuthorization::FIELD_TARGET_TYPE);
+            $target = (string)$entity->get(FieldAuthorization::FIELD_TARGET);
+            $table = $type === AuthorizationTarget::TYPE_SECTION
+                ? TableRegistry::getTableLocator()->get('AuthorizationTargets')
+                : TableRegistry::getTableLocator()->get('FieldDefinitions');
+            $conditions = $type === AuthorizationTarget::TYPE_SECTION
+                ? ['resource' => $resource, 'target_type' => $type, 'target' => $target]
+                : ['resource' => $resource, 'field' => $target];
+            $definition = $table->find()->where($conditions)->first();
+
+            if ($definition === null) {
+                return false;
+            }
+
+            return (bool)$definition->get('active') || !$entity->isNew();
+        }, [
+            'errorField' => FieldAuthorization::FIELD_TARGET,
+            'message' => __('La cible sélectionnée est inconnue ou inactive.'),
         ]);
 
         return $rules;

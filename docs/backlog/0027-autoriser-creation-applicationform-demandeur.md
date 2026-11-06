@@ -1,6 +1,6 @@
 # 0027 — Autoriser la création d'une Applicationform par un demandeur
 
-**Statut :** À planifier
+**Statut :** Terminé — implémenté sur `feature/tickets-0028-0027`
 
 **Priorité :** Haute — création et habilitations des demandes
 
@@ -77,6 +77,11 @@ Exécuter les commandes adaptées via le Makefile racine :
 - `make cs.check` et `make stan` si du PHP est modifié.
 
 ## Références
+
+La Policy distingue désormais l’entité nouvelle d’une demande persistée. Un
+demandeur peut saisir les zones métier nécessaires à la création ; les champs
+RH et administration réservés sont retirés côté serveur avant l’hydratation
+ORM, et l’identifiant du demandeur reste attribué par le contrôleur.
 
 - `src/Policy/ApplicationformPolicy.php`
 - `src/Controller/ApplicationformsController.php`

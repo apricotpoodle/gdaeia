@@ -40,16 +40,39 @@ class FieldAuthorizationService
             ->where([
                 FieldAuthorization::FIELD_ROLE_ID => $roleId,
                 FieldAuthorization::FIELD_RESOURCE => $resource,
+                FieldAuthorization::FIELD_TARGET_TYPE => FieldAuthorization::TARGET_TYPE_FIELD,
             ])
             ->all()
             ->toArray();
 
         $schema = [];
         foreach ($records as $record) {
-            $schema[$record->field] = FieldAuthorization::normalizeAccessLevel($record->access_level);
+            $target = $record->get(FieldAuthorization::FIELD_TARGET) ?? $record->get('field');
+            $schema[(string)$target] = FieldAuthorization::normalizeAccessLevel(
+                (string)$record->get(FieldAuthorization::FIELD_ACCESS_LEVEL),
+            );
         }
 
         return $schema;
+    }
+
+    /** Vérifie une autorisation de zone fonctionnelle pour une entité donnée. */
+    public function canEditSection(IdentityInterface $identity, string $resource, string $section): bool
+    {
+        /** @var \App\Model\Entity\User $user */
+        $user = $identity->getOriginalData();
+        if ($user->get(User::FIELD_ISSUPERUSER)) {
+            return true;
+        }
+
+        return TableRegistry::getTableLocator()->get('FieldAuthorizations')->find()
+            ->where([
+                FieldAuthorization::FIELD_ROLE_ID => $user->get(User::FIELD_ROLE_ID),
+                FieldAuthorization::FIELD_RESOURCE => $resource,
+                FieldAuthorization::FIELD_TARGET_TYPE => FieldAuthorization::TARGET_TYPE_SECTION,
+                FieldAuthorization::FIELD_TARGET => $section,
+                FieldAuthorization::FIELD_ACCESS_LEVEL => FieldAuthorization::ACCESS_LEVEL_EDIT,
+            ])->count() > 0;
     }
 
     /**

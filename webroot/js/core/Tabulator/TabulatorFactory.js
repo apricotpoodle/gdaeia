@@ -314,13 +314,14 @@ export class TabulatorFactory {
                     formatter: (cell) => cell.getRow().getData().role?.name || 'N/A',
                 }),
                 ColumnsFactory.text('resource', 'Ressource'),
-                ColumnsFactory.text('field', 'Champ', {
-                    formatter: (cell) => cell.getRow().getData().field_label || cell.getValue(),
+                ColumnsFactory.text('target', 'Cible', {
+                    formatter: (cell) => cell.getRow().getData().target_label || cell.getRow().getData().field_label || cell.getValue(),
                     tooltip: (cell) => {
                         const data = cell.getRow().getData();
-                        return data.field_description
-                            ? `${data.field_description} (${data.resource}.${data.field})`
-                            : `${data.resource}.${data.field}`;
+                        const target = data.target || data.field;
+                        return data.target_description || data.field_description
+                            ? `${data.target_description || data.field_description} (${data.resource}.${target})`
+                            : `${data.resource}.${target}`;
                     },
                 }),
                 ColumnsFactory.select('access_level', 'Niveau d\'accès', {

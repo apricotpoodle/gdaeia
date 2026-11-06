@@ -15,15 +15,17 @@ $this->assign('title', __('Ajouter une règle d’autorisation'));
                 <?= $this->Action->render(\App\View\Action\FieldAuthorizationsActions::index()) ?>
             </div>
             <div class="card-body">
-                <?= $this->Form->create($fieldAuthorization, ['id' => 'field-authorization-form', 'novalidate' => true]) ?>
+                <?= $this->Form->create($fieldAuthorization, ['id' => 'field-authorization-form', 'novalidate' => true, 'data-schema-url' => '/api/field-authorizations/get-form-schema.json']) ?>
                 <?= $this->Form->control('role_id', [
                     'label' => __('Rôle applicatif'),
                     'options' => $roles,
                     'empty' => __('-- Sélectionner un rôle --'),
                     'class' => 'form-select mb-3',
                 ]) ?>
-                <?= $this->Form->control('resource', ['label' => __('Ressource'), 'class' => 'form-control mb-3', 'maxlength' => 50]) ?>
-                <?= $this->Form->control('field', ['label' => __('Champ'), 'class' => 'form-control mb-3', 'maxlength' => 50]) ?>
+                <?= $this->Form->control('target_type', ['label' => __('Type de cible'), 'options' => ['field' => __('Champ ORM'), 'section' => __('Zone fonctionnelle')], 'empty' => __('-- Sélectionner un type --'), 'class' => 'form-select mb-3']) ?>
+                <?= $this->Form->control('resource', ['label' => __('Ressource'), 'options' => [], 'empty' => __('Chargement…'), 'class' => 'form-select mb-3', 'data-target-resource' => true]) ?>
+                <?= $this->Form->control('target', ['label' => __('Cible'), 'options' => [], 'empty' => __('Sélectionnez d’abord le type et la ressource'), 'class' => 'form-select mb-3', 'data-target-select' => true]) ?>
+                <p class="form-text" data-target-description></p>
                 <?= $this->Form->control('access_level', [
                     'label' => __('Niveau d’accès'),
                     'options' => ['EDIT' => __('Modification'), 'VIEW' => __('Lecture seule'), 'NONE' => __('Aucun accès')],

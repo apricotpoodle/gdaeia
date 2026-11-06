@@ -15,7 +15,7 @@ class FieldAuthorizationsControllerTest extends TestCase
 {
     use IntegrationTestTrait;
 
-    protected array $fixtures = ['app.Roles', 'app.FieldAuthorizations', 'app.FieldDefinitions'];
+    protected array $fixtures = ['app.Roles', 'app.FieldAuthorizations', 'app.FieldDefinitions', 'app.AuthorizationTargets'];
 
     public function testLaModificationRetourneLaLigneActualiseePourTabulator(): void
     {
@@ -81,7 +81,7 @@ class FieldAuthorizationsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertHeaderContains('Content-Type', 'application/json');
         $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-        $this->assertSame('Intitulé du poste', $payload['data'][0]['field_label']);
+        $this->assertSame('Intitulé du poste', $payload['data'][0]['target_label']);
     }
 
     public function testLApiDesAutorisationsRefuseUnOperateurNonSuperAdmin(): void
@@ -148,7 +148,7 @@ class FieldAuthorizationsControllerTest extends TestCase
         $this->assertResponseContains('"message":"La règle d’autorisation a été créée');
 
         $table = $this->getTableLocator()->get('FieldAuthorizations');
-        $record = $table->find()->where(['resource' => 'Users', 'field' => 'email'])->firstOrFail();
+        $record = $table->find()->where(['resource' => 'Users', 'target' => 'email'])->firstOrFail();
 
         $this->put('/api/field-authorizations/edit/' . $record->id . '.json', [
             'access_level' => 'EDIT',

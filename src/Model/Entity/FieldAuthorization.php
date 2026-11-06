@@ -11,7 +11,8 @@ use Cake\ORM\Entity;
  * @property int $id
  * @property int $role_id
  * @property string $resource
- * @property string $field
+ * @property string $target_type
+ * @property string $target
  * @property string $access_level
  * @property \Cake\I18n\DateTime $created
  * @property \Cake\I18n\DateTime|null $modified
@@ -23,6 +24,9 @@ class FieldAuthorization extends Entity
     public const ACCESS_LEVEL_EDIT = 'EDIT';
     public const ACCESS_LEVEL_VIEW = 'VIEW';
     public const ACCESS_LEVEL_NONE = 'NONE';
+    public const TARGET_TYPE_FIELD = 'field';
+    public const TARGET_TYPE_SECTION = 'section';
+    public const TARGET_TYPES = [self::TARGET_TYPE_FIELD, self::TARGET_TYPE_SECTION];
 
     /** @var list<string> Valeurs techniques persistées par l'ACL des champs. */
     public const ACCESS_LEVELS = [
@@ -43,7 +47,8 @@ class FieldAuthorization extends Entity
     protected array $_accessible = [
         'role_id' => true,
         'resource' => true,
-        'field' => true,
+        'target_type' => true,
+        'target' => true,
         'access_level' => true,
         'created' => true,
         'modified' => true,
@@ -53,7 +58,10 @@ class FieldAuthorization extends Entity
     public const FIELD_ID = 'id';
     public const FIELD_ROLE_ID = 'role_id';
     public const FIELD_RESOURCE = 'resource';
-    public const FIELD_FIELD = 'field';
+    public const FIELD_TARGET_TYPE = 'target_type';
+    public const FIELD_TARGET = 'target';
+    /** @deprecated Utiliser FIELD_TARGET. */
+    public const FIELD_FIELD = self::FIELD_TARGET;
     public const FIELD_ACCESS_LEVEL = 'access_level';
     public const FIELD_CREATED = 'created';
     public const FIELD_MODIFIED = 'modified';

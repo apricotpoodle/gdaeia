@@ -27,6 +27,8 @@ class FieldAuthorizationsTableTest extends TestCase
     protected array $fixtures = [
         'app.FieldAuthorizations',
         'app.Roles',
+        'app.FieldDefinitions',
+        'app.AuthorizationTargets',
     ];
 
     /**
@@ -64,13 +66,14 @@ class FieldAuthorizationsTableTest extends TestCase
         $authorization = $this->FieldAuthorizations->newEntity([
             'role_id' => -1,
             'resource' => '',
-            'field' => str_repeat('a', 51),
+            'target_type' => 'field',
+            'target' => str_repeat('a', 81),
             'access_level' => '',
         ]);
 
         $this->assertArrayHasKey('role_id', $authorization->getErrors());
         $this->assertArrayHasKey('resource', $authorization->getErrors());
-        $this->assertArrayHasKey('field', $authorization->getErrors());
+        $this->assertArrayHasKey('target', $authorization->getErrors());
         $this->assertArrayHasKey('access_level', $authorization->getErrors());
     }
 
@@ -79,7 +82,8 @@ class FieldAuthorizationsTableTest extends TestCase
         $authorization = $this->FieldAuthorizations->newEntity([
             'role_id' => 1,
             'resource' => 'Applicationforms',
-            'field' => 'email',
+            'target_type' => 'field',
+            'target' => 'email',
             'access_level' => 'view',
         ]);
 
@@ -98,7 +102,8 @@ class FieldAuthorizationsTableTest extends TestCase
         $authorization = $this->FieldAuthorizations->newEntity([
             'role_id' => 99999,
             'resource' => 'Applicationforms',
-            'field' => 'jobtitle',
+            'target_type' => 'field',
+            'target' => 'jobtitle',
             'access_level' => 'EDIT',
         ]);
 
@@ -111,14 +116,29 @@ class FieldAuthorizationsTableTest extends TestCase
         $authorization = $this->FieldAuthorizations->newEntity([
             'role_id' => 1,
             'resource' => 'Applicationforms',
-            'field' => 'jobtitle',
+            'target_type' => 'field',
+            'target' => 'jobtitle',
             'access_level' => 'EDIT',
         ]);
 
         $this->assertFalse($this->FieldAuthorizations->save($authorization));
         $this->assertContains(
-            'Une autorisation existe déjà pour ce rôle, cette ressource et ce champ.',
+            'Une autorisation existe déjà pour ce rôle, cette ressource et cette cible.',
             $authorization->getError('role_id'),
         );
+    }
+
+    public function testUneCibleInconnueEstRefusee(): void
+    {
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => 1,
+            'resource' => 'Applicationforms',
+            'target_type' => 'field',
+            'target' => 'inconnu',
+            'access_level' => 'EDIT',
+        ]);
+
+        $this->assertFalse($this->FieldAuthorizations->save($authorization));
+        $this->assertArrayHasKey('target', $authorization->getErrors());
     }
 }

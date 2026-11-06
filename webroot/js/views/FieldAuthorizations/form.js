@@ -8,6 +8,64 @@ export function initializeFieldAuthorizationForm(endpoint) {
     const form = document.getElementById('field-authorization-form');
     if (!form) return;
 
+    const typeSelect = form.querySelector('[name="target_type"]');
+    const resourceSelect = form.querySelector('[data-target-resource]');
+    const targetSelect = form.querySelector('[data-target-select]');
+    const description = form.querySelector('[data-target-description]');
+    let targets = [];
+
+    const refreshTargets = () => {
+        const type = typeSelect?.value || '';
+        const resource = resourceSelect?.value || '';
+        const selected = form.dataset.currentTarget || '';
+        if (!targetSelect) return;
+        targetSelect.replaceChildren(new Option(
+            type && resource ? '— Sélectionner une cible —' : 'Sélectionnez d’abord le type et la ressource',
+            '', true, false,
+        ));
+        targets.filter(item => item.target_type === type && item.resource === resource).forEach(item => {
+            targetSelect.add(new Option(`${item.label} — ${item.target}`, item.target, false, item.target === selected));
+        });
+        const item = targets.find(candidate => candidate.target === targetSelect.value
+            && candidate.target_type === type && candidate.resource === resource);
+        if (description) description.textContent = item?.description || '';
+        form.dataset.currentTarget = '';
+    };
+
+    typeSelect?.addEventListener('change', () => {
+        if (resourceSelect) resourceSelect.value = '';
+        refreshTargets();
+    });
+    resourceSelect?.addEventListener('change', refreshTargets);
+    targetSelect?.addEventListener('change', () => {
+        const item = targets.find(candidate => candidate.target === targetSelect.value
+            && candidate.target_type === typeSelect?.value && candidate.resource === resourceSelect?.value);
+        if (description) description.textContent = item?.description || '';
+    });
+
+    const schemaUrl = new URL(form.dataset.schemaUrl || '/api/field-authorizations/get-form-schema.json', window.location.origin);
+    ['current_type', 'current_resource', 'current_target'].forEach((key) => {
+        const value = form.dataset[{ current_type: 'currentType', current_resource: 'currentResource', current_target: 'currentTarget' }[key]];
+        if (value) schemaUrl.searchParams.set(key, value);
+    });
+    fetch(schemaUrl, { headers: { Accept: 'application/json' } })
+        .then(response => response.json())
+        .then(payload => {
+            targets = payload.targets || [];
+            if (typeSelect && form.dataset.currentType) typeSelect.value = form.dataset.currentType;
+            if (resourceSelect) {
+                const resources = [...new Set(targets.filter(item => item.target_type === typeSelect?.value).map(item => item.resource))];
+                resourceSelect.replaceChildren(new Option('— Sélectionner une ressource —', '', true, false));
+                resources.forEach(resource => resourceSelect.add(new Option(resource, resource, false, resource === form.dataset.currentResource)));
+            }
+            refreshTargets();
+        })
+        .catch(() => {
+            if (resourceSelect) resourceSelect.replaceChildren(new Option('Référentiel indisponible', ''));
+            if (targetSelect) targetSelect.replaceChildren(new Option('Référentiel indisponible', ''));
+            if (description) description.textContent = 'Le référentiel des cibles est momentanément indisponible.';
+        });
+
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');

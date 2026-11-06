@@ -132,6 +132,19 @@ class ApplicationformPolicyTest extends TestCase
         $this->assertTrue($this->policy->canEditZoneContrat($this->identity($user), $applicationform));
     }
 
+    public function testUnDemandeurPeutModifierLesZonesMetierDUneNouvelleDemande(): void
+    {
+        $applicationform = new Applicationform();
+        $requester = $this->identity(new User(['id' => 10, 'role_id' => User::ROLE_DEMANDEUR]));
+
+        $this->assertTrue($this->policy->canAdd($requester, $applicationform));
+        $this->assertTrue($this->policy->canEdit($requester, $applicationform));
+        $this->assertTrue($this->policy->canEditZoneAdmin($requester, $applicationform));
+        $this->assertTrue($this->policy->canEditZoneContrat($requester, $applicationform));
+        $this->assertTrue($this->policy->canEditZoneRemuneration($requester, $applicationform));
+        $this->assertFalse($this->policy->canViewZoneReserves($requester, $applicationform));
+    }
+
     public function testLesZonesEtLaSuppressionRespectentLeProprietaireEtLeSuperUtilisateur(): void
     {
         $applicationform = new Applicationform(['user_id' => 10]);
