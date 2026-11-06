@@ -22,3 +22,16 @@ Les Tables restent la source des règles de validation et d'intégrité. Leurs m
 ## ADRs Associés
 * [ADR 0044 : Recherche FULLTEXT MySQL via Callback avec Search](../../docs/adr/0044-filtre-recherche-fulltext-search-plugin.md)
 * [ADR 0052 : Présentation unifiée des erreurs de validation Web et API](../../docs/adr/0052-presentation-unifiee-erreurs-validation-web-api.md)
+
+## Habilitations locales et conservation des cycles
+
+`Departments::findCircuitManageableTo()` exige pour un non-super-administrateur
+un rôle actif habilité dans `validation_circuit_managers` et un rattachement
+explicite dans `user_departments`. Aucun descendant ni privilège Admin implicite
+n'est déduit. `ValidationCircuitRules::findVisibleTo()` réutilise ce périmètre.
+Les désignations et les règles possèdent leurs contraintes d'unicité et de
+références ; la validité opérationnelle est contrôlée par le service partagé.
+
+`Applicationforms::isCircuitLocked()` et le contrôle `beforeSave` interdisent
+un changement de département ou de contrat dès qu'un cycle existe, quel que
+soit son état. Seule sa remise à zéro autorisée lève ce verrou.

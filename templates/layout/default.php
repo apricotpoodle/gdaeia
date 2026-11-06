@@ -75,6 +75,12 @@ $applicationTimezone = (string)\Cake\Core\Configure::read('App.defaultTimezone',
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0" id="main-navbar-links">
                 </ul>
 
+                <ul class="navbar-nav mb-2 mb-lg-0 me-3">
+                    <li class="nav-item">
+                        <?= $this->Action->render(\App\View\Action\ValidationCircuitRulesActions::navigation()) ?>
+                    </li>
+                </ul>
+
                 <div class="small text-white-50 me-3" id="main-navbar-timezone"
                     title="<?= h(__('Fuseau horaire applicatif')) ?>">
                     <i class="fas fa-clock me-1 text-info" aria-hidden="true"></i>

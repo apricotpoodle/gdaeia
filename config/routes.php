@@ -115,6 +115,12 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/validationsequences/update-delay', ['controller' => 'Validationsequences', 'action' => 'updateDelay', '_ext' => 'json']);
         $builder->connect('/validation-circuit-rules', ['controller' => 'ValidationCircuitRules', 'action' => 'index', '_ext' => 'json']);
         $builder->connect('/validation-circuit-rules/add', ['controller' => 'ValidationCircuitRules', 'action' => 'add', '_ext' => 'json']);
+        $builder->connect('/validation-circuit-rules/departments-tree', ['controller' => 'ValidationCircuitRules', 'action' => 'departmentsTree', '_ext' => 'json']);
+        $builder->connect('/validation-circuit-rules/options', ['controller' => 'ValidationCircuitRules', 'action' => 'options', '_ext' => 'json']);
+        $builder->connect('/validation-circuit-rules/preview', ['controller' => 'ValidationCircuitRules', 'action' => 'preview', '_ext' => 'json']);
+        $builder->connect('/validation-circuit-rules/managers', ['controller' => 'ValidationCircuitRules', 'action' => 'managers', '_ext' => 'json']);
+        $builder->connect('/validation-circuit-rules/managers/assign', ['controller' => 'ValidationCircuitRules', 'action' => 'assignManager', '_ext' => 'json']);
+        $builder->connect('/validation-circuit-rules/managers/{id}/revoke', ['controller' => 'ValidationCircuitRules', 'action' => 'revokeManager', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/validation-circuit-rules/{id}', ['controller' => 'ValidationCircuitRules', 'action' => 'edit', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/validation-circuit-rules/{id}/delete', ['controller' => 'ValidationCircuitRules', 'action' => 'delete', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/workflow-settings/default-due-hours', ['controller' => 'WorkflowSettings', 'action' => 'defaultDueHours', '_ext' => 'json']);

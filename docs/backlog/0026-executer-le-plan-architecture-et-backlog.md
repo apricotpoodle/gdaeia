@@ -340,7 +340,7 @@ La prochaine étape réalisable est l'étape 6.
   champs administratifs.
 - [x] Implémenter 0019 : consultation organisée selon les quatre zones de
   l'édition, en lecture seule.
-- [ ] Implémenter 0017 selon l'ADR 0070 : règles locales, administration,
+- [x] Implémenter 0017 selon l'ADR 0070 : règles locales, administration,
   lancement, contrôles d'éligibilité et conservation des cycles.
 - [ ] Ajouter les tests au niveau pertinent et mettre à jour la documentation
   métier locale.
@@ -360,6 +360,23 @@ La prochaine étape réalisable est l'étape 6.
   champs éditables et la visibilité de la zone réservée.
 - Les vérifications `make test.unit`, `make test.api`, `make test.style`,
   `make cs.check` et `make stan` réussissent.
+
+#### Suivi de l’étape 6 — ticket 0017
+
+- Règles par couple exact département–contrat, habilitations locales distinctes
+  du rôle final et rattachements explicites, sans reprise de droits implicites.
+- Administration Web/API avec sélection groupée atomique, aperçu et diagnostics ;
+  édition/retrait unitaires. Le résolveur est partagé avec le lancement.
+- Tous les rôles parallèles retenus sont conservés ; les rôles inactifs ou sans
+  validateur bloquent sans cycle partiel. Les cycles existants restent immuables
+  et verrouillent contrat/département jusqu’à leur remise à zéro autorisée.
+- La migration ajoute une table vide. Les habilitations et les règles réelles
+  SEM restent à saisir par l’opérateur selon le [guide](../validation-circuit-rules.md).
+- Vérifications réussies : unités (111), ORM (155), HTTP/API (195), workflow
+  (9), suite complète (537 tests, 1 828 assertions), 10 fichiers JavaScript,
+  style PHP/tests et PHPStan. Base MySQL exclusivement `daetf2_test`.
+- L’ADR 0074 reste `Proposé`. Les autres points du plan ne sont pas étendus
+  dans cette livraison ; la case générale tests/documentation reste ouverte.
 
 **Critère de sortie :** chaque ticket est livré séparément, avec ses critères
 d'acceptation et ses vérifications propres satisfaits.

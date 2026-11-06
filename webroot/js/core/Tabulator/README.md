@@ -239,3 +239,12 @@ Pour empêcher le navigateur de scroller (et perdre la barre de navigation), uti
 
 ### Défilement Infini (Progressive Loading)
 Pour abandonner la barre de pagination classique au profit d'un défilement ininterrompu, utilisez la méthode `.setContinuousScroll(tailleDuLot)` dans le Builder. L'API CakePHP continuera à recevoir des paramètres de page (`page=1`, `page=2`), mais Tabulator concaténera les lignes de manière invisible pour l'utilisateur (ADR 0039).
+
+## Grilles des circuits locaux
+
+Les fabriques des règles et des gestionnaires conservent pagination, tri et
+filtres distants. La colonne `configuration_issues` affiche les diagnostics
+comme texte DOM, sans interpréter de HTML ni proposer de tri/filtre calculé.
+Les modules de page dans `views/ValidationCircuitRules/` réutilisent le client
+de mutation, les métadonnées d'actions et deux sélections explicites distinctes
+pour les règles et les habilitations. Aucun descendant futur n'est implicite.

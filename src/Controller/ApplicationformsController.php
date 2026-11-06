@@ -220,6 +220,11 @@ class ApplicationformsController extends AppController
 
         // 4. Chargement des listes pour le rendu du formulaire
         $fieldSchema = $this->fieldAuthorizationSchema('Applicationforms');
+        $circuitLocked = $this->Applicationforms->isCircuitLocked($applicationform);
+        if ($circuitLocked) {
+            $fieldSchema[Applicationform::FIELD_CONTRACTTYPE_ID] = 'VIEW';
+            $fieldSchema[Applicationform::FIELD_DEPARTMENT_ID] = 'VIEW';
+        }
         // Récupération des départements autorisés sous forme d'arbre
         // $departments = $this->Applicationforms->Departments
         //     ->find('treeVisibleTo', user: $currentUser)
@@ -258,6 +263,7 @@ class ApplicationformsController extends AppController
             'collaborators',
             'assistants',
             'departmentManagers',
+            'circuitLocked',
         ));
 
         return null;

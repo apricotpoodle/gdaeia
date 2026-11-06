@@ -106,6 +106,33 @@ class DepartmentsTable extends AppTable
     }
 
     /**
+     * Limite la gestion des circuits aux habilitations et rattachements explicites.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
+     */
+    public function findCircuitManageableTo(SelectQuery $query, User $user): SelectQuery
+    {
+        $query->where(['Departments.deleted IS' => null]);
+        if ($user->isSuperUser()) {
+            return $query;
+        }
+        $locator = TableRegistry::getTableLocator();
+        $assignments = $locator->get('UserDepartments')->find()
+            ->select(['department_id'])->where(['user_id' => (int)$user->get('id')]);
+        $grants = $locator->get('ValidationCircuitManagers')->find()
+            ->select(['ValidationCircuitManagers.department_id'])
+            ->innerJoinWith('Roles')
+            ->where([
+                'ValidationCircuitManagers.role_id' => (int)$user->get('role_id'),
+                'Roles.deleted IS' => null,
+                'ValidationCircuitManagers.department_id IN' => $assignments,
+            ]);
+
+        return $query->where(['Departments.id IN' => $grants]);
+    }
+
+    /**
      * Retourne les départements actifs qui sont des ancêtres stricts d'une racine.
      *
      * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query

@@ -691,7 +691,29 @@ class ApplicationformsControllerTest extends TestCase
         $this->put('/api/applicationforms/1.json', ['department_id' => 2]);
 
         $this->assertResponseCode(422);
-        $this->assertResponseContains('"errors":["Le d');
+        $this->assertResponseContains('"field":"department_id"');
+        $this->assertResponseContains('verrouillés');
+    }
+
+    public function testLeSuperAdministrateurNeChangePasLeContratApresUnCycleTermine(): void
+    {
+        $this->configureActiveWorkflowForEdit();
+        ConnectionManager::get('test')->insert('contracttypes', [
+            'id' => 2, 'base' => 1, 'code' => 'AUTRE', 'name' => 'Autre contrat', 'sort' => 'Autre contrat',
+            'created' => '2026-11-06 10:00:00', 'modified' => '2026-11-06 10:00:00',
+        ]);
+        ConnectionManager::get('test')->update('validation_workflow_runs', ['state' => 'acceptee'], ['applicationform_id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->put('/api/applicationforms/1.json', ['contracttype_id' => 2]);
+
+        $this->assertResponseCode(422);
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertFalse($body['success']);
+        $this->assertNotEmpty($body['message']);
+        $this->assertNotEmpty($body['errors']);
+        $this->assertSame(1, (int)$this->getTableLocator()->get('Applicationforms')->get(1)->contracttype_id);
     }
 
     /** Vérifie que le demandeur reste verrouillé dès la création du cycle. */

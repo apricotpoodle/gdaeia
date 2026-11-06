@@ -177,6 +177,13 @@ class ApplicationformsTable extends Table
             return;
         }
 
+        if ($this->preventCircuitChange($entity)) {
+            $event->stopPropagation();
+            $event->setResult(false);
+
+            return;
+        }
+
         $entity->synchronizeApplicantName();
         $periodId = $entity->get(Applicationform::FIELD_PERIOD_ID);
         if ($periodId === null || $entity->get(Applicationform::FIELD_GROSSREMUNERATION) === null) {
@@ -209,6 +216,42 @@ class ApplicationformsTable extends Table
 
             return;
         }
+    }
+
+    /** Détermine si l'instantané d'un cycle verrouille le contrat et le département. */
+    public function isCircuitLocked(Applicationform $applicationform): bool
+    {
+        return !$applicationform->isNew() && $this->ValidationWorkflowRuns->exists([
+            'applicationform_id' => $applicationform->id,
+        ]);
+    }
+
+    /** Empêche tout changement du circuit, y compris lorsque checkRules est désactivé. */
+    private function preventCircuitChange(Applicationform $applicationform): bool
+    {
+        $fields = [Applicationform::FIELD_DEPARTMENT_ID, Applicationform::FIELD_CONTRACTTYPE_ID];
+        if (
+            (!$applicationform->isDirty($fields[0]) && !$applicationform->isDirty($fields[1]))
+            || !$this->isCircuitLocked($applicationform)
+        ) {
+            return false;
+        }
+
+        $persisted = $this->find()->select($fields)
+            ->where(['Applicationforms.id' => $applicationform->id])->firstOrFail();
+        $blocked = false;
+        foreach ($fields as $field) {
+            if ((int)$applicationform->get($field) !== (int)$persisted->get($field)) {
+                $applicationform->setError($field, [
+                    'circuitLocked' => __(
+                        'Le contrat et le département sont verrouillés tant qu’un cycle de validation existe.',
+                    ),
+                ]);
+                $blocked = true;
+            }
+        }
+
+        return $blocked;
     }
 
     /** Retourne le coefficient k administré dans les réglages du workflow. */

@@ -707,21 +707,6 @@ class ApplicationformsController extends AppController
                 ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID),
                 'state' => 'en_attente',
             ])->first();
-        if (
-            $activeRun !== null
-            && isset($filteredData['department_id'])
-            && (int)$filteredData[Applicationform::FIELD_DEPARTMENT_ID] !== (int)$applicationform->get(
-                Applicationform::FIELD_DEPARTMENT_ID,
-            )
-        ) {
-            return $this->workflowResponse(
-                false,
-                __('Le département ne peut pas être modifié pendant un cycle de validation.'),
-                [],
-                422,
-            );
-        }
-
         $applicationform = $this->Applicationforms->patchEntity($applicationform, $filteredData);
         $hasChanges = $applicationform->isDirty();
 

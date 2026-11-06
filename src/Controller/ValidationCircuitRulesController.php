@@ -10,5 +10,9 @@ final class ValidationCircuitRulesController extends AppController
     public function index(): void
     {
         $this->Authorization->authorize($this->fetchTable('ValidationCircuitRules')->newEmptyEntity(), 'index');
+        $this->set('canManageGrants', $this->Authorization->can(
+            $this->fetchTable('ValidationCircuitRules')->newEmptyEntity(),
+            'manageGrants',
+        ));
     }
 }

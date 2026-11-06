@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Policy;
 
-use App\Model\Entity\User;
 use App\Model\Entity\ValidationCircuitRule;
 use Authorization\IdentityInterface;
 use Cake\ORM\TableRegistry;
@@ -21,22 +20,52 @@ final class ValidationCircuitRulePolicy extends AppPolicy
     public function canManage(IdentityInterface $identity, ValidationCircuitRule $rule): bool
     {
         $user = $this->getValidUser($identity);
-        if ($user === null || $user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN)) {
-            return $user !== null && ($user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN));
-        }
-        if (!in_array((int)$user->role_id, [User::ROLE_4_VALIDEUR_CG, User::ROLE_5_VALIDEUR_DIR], true)) {
+        if ($user === null) {
             return false;
         }
-        if ($rule->get(ValidationCircuitRule::FIELD_DEPARTMENT_ID) === null) {
-            return TableRegistry::getTableLocator()->get('UserDepartments')->find()
-                ->where(['user_id' => $user->id])->count() > 0;
+        if ($user->isSuperUser()) {
+            return true;
+        }
+        if ((int)$user->get('id') < 1 || (int)$user->get('role_id') < 1) {
+            return false;
+        }
+        $query = TableRegistry::getTableLocator()->get('Departments')
+            ->find('circuitManageableTo', user: $user);
+        $departmentId = $rule->get(ValidationCircuitRule::FIELD_DEPARTMENT_ID);
+        if ($departmentId !== null) {
+            $query->where(['Departments.id' => $departmentId]);
         }
 
-        return TableRegistry::getTableLocator()->get('UserDepartments')->find()
-            ->where([
-                'user_id' => $user->id,
-                'department_id' => $rule->get(ValidationCircuitRule::FIELD_DEPARTMENT_ID),
-            ])
-            ->count() > 0;
+        return $query->count() > 0;
+    }
+
+    /** Autorise la création sur le même périmètre que la gestion. */
+    public function canAdd(IdentityInterface $identity, ValidationCircuitRule $rule): bool
+    {
+        return $this->canManage($identity, $rule);
+    }
+
+    /** Autorise la lecture d'une règle affichée par la grille. */
+    public function canView(IdentityInterface $identity, ValidationCircuitRule $rule): bool
+    {
+        return $this->canManage($identity, $rule);
+    }
+
+    /** Autorise l'édition sur le même périmètre que la gestion. */
+    public function canEdit(IdentityInterface $identity, ValidationCircuitRule $rule): bool
+    {
+        return $this->canManage($identity, $rule);
+    }
+
+    /** Autorise le retrait sur le même périmètre que la gestion. */
+    public function canDelete(IdentityInterface $identity, ValidationCircuitRule $rule): bool
+    {
+        return $this->canManage($identity, $rule);
+    }
+
+    /** Réserve la désignation des gestionnaires aux super-administrateurs. */
+    public function canManageGrants(IdentityInterface $identity, ValidationCircuitRule $rule): bool
+    {
+        return $this->isSuperUser($identity);
     }
 }

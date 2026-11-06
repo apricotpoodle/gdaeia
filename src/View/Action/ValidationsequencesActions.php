@@ -6,6 +6,12 @@ namespace App\View\Action;
 /** Fabrique des commandes d’interface de configuration des séquences. */
 final class ValidationsequencesActions
 {
+    /** Accède aux règles locales sans étendre l’accès aux séquences globales. */
+    public static function circuitRules(): UiAction
+    {
+        return ValidationCircuitRulesActions::index();
+    }
+
     /** Accède au paramétrage global du workflow. */
     public static function workflowSettings(): UiAction
     {

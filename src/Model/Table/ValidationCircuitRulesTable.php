@@ -3,7 +3,9 @@ declare(strict_types=1);
 
 namespace App\Model\Table;
 
+use App\Model\Entity\User;
 use App\Model\Entity\ValidationCircuitRule;
+use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
@@ -27,9 +29,13 @@ class ValidationCircuitRulesTable extends Table
     public function validationDefault(Validator $validator): Validator
     {
         return $validator
-            ->nonNegativeInteger('department_id')->notEmptyString('department_id')
-            ->nonNegativeInteger('contracttype_id')->notEmptyString('contracttype_id')
-            ->nonNegativeInteger('final_role_id')->notEmptyString('final_role_id');
+            ->integer('department_id')->greaterThan('department_id', 0)->requirePresence('department_id', 'create')
+            ->notEmptyString('department_id')
+            ->integer('contracttype_id')->greaterThan('contracttype_id', 0)
+            ->requirePresence('contracttype_id', 'create')
+            ->notEmptyString('contracttype_id')
+            ->integer('final_role_id')->greaterThan('final_role_id', 0)
+            ->requirePresence('final_role_id', 'create')->notEmptyString('final_role_id');
     }
 
     /** Vérifie les références et l'unicité du couple métier. */
@@ -44,5 +50,19 @@ class ValidationCircuitRulesTable extends Table
         $rules->add($rules->existsIn(['final_role_id'], 'FinalRoles'));
 
         return $rules;
+    }
+
+    /**
+     * Applique le périmètre local aux règles, y compris celles devenues incohérentes.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
+     */
+    public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
+    {
+        $departments = $this->getAssociation('Departments')->getTarget()
+            ->find('circuitManageableTo', user: $user)->select(['Departments.id']);
+
+        return $query->where(['ValidationCircuitRules.department_id IN' => $departments]);
     }
 }

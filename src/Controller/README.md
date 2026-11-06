@@ -48,3 +48,13 @@ absent après la connexion.
 * [ADR 0060 : Un message Flash par champ invalide](../../docs/adr/0060-un-flash-par-champ-invalide-web.md)
 * [ADR 0064 : Administration de l'arbre des départements](../../docs/adr/0064-administration-arbre-departements.md)
 * [ADR 0065 : ACL automatique des mutations Web et API](../../docs/adr/0065-acl-automatique-des-mutations-web-api.md)
+
+## Règles locales de circuit
+
+La page `/validation-circuit-rules` est autorisée par
+`ValidationCircuitRulePolicy`, également utilisée pour sa navigation. Elle
+délègue les données et mutations au contrôleur API et au service métier.
+La section des habilitations est rendue uniquement pour un super-administrateur.
+Les actions métier proviennent de `ValidationCircuitRulesActions` et passent
+par `ActionHelper`. Le [guide opérateur](../../docs/validation-circuit-rules.md)
+décrit les accès et la configuration manuelle.

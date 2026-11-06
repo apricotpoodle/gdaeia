@@ -38,3 +38,16 @@ Policies et des options `accessibleFields` CakePHP.
 * [ADR 0058 : Séparation du paramétrage global du workflow](../../docs/adr/0058-separation-parametrage-global-workflow.md)
 * [ADR 0064 : Administration de l'arbre des départements](../../docs/adr/0064-administration-arbre-departements.md)
 * [ADR 0065 : ACL automatique des mutations Web et API](../../docs/adr/0065-acl-automatique-des-mutations-web-api.md)
+
+## Administration des circuits locaux
+
+`ValidationCircuitRulesController` expose les règles paginées, leurs diagnostics
+`configuration_issues`, l'arbre autorisé, les référentiels actifs et l'aperçu.
+Les ajouts groupés, éditions et retraits passent par le service métier et les
+Policies serveur. Les habilitations rôle–département sont réservées aux
+super-administrateurs ; seule l'identité effective est évaluée sous usurpation.
+Les champs de tri/filtre sont limités aux colonnes SQL connues. Les diagnostics
+sont calculés sur la page retournée et ne sont ni triables ni filtrables.
+Une configuration invalide renvoie HTTP 422 avec `{success,message,errors}`.
+
+Voir le [guide opérateur](../../../docs/validation-circuit-rules.md).

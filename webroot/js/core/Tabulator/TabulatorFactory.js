@@ -536,6 +536,58 @@ export class TabulatorFactory {
             .build();
     }
 
+    /**
+     * Fabrique la grille des règles locales avec traitement distant complet.
+     * @param {string} selector Sélecteur du conteneur.
+     * @returns {Tabulator} Grille protégée par les droits fournis par l’API.
+     */
+    static createValidationCircuitRulesGrid(selector = '#validation-circuit-rules-grid') {
+        return this._createActionGrid(selector)
+            .setAjaxSource('/api/validation-circuit-rules.json')
+            .setController('validation-circuit-rules')
+            .setRemotePagination()
+            .setHeight('360px')
+            .addOptions({ persistence: false })
+            .setColumns([
+                ColumnsFactory.text('department.name', 'Département', { formatter: 'plaintext' }),
+                ColumnsFactory.text('contracttype.name', 'Type de contrat', { formatter: 'plaintext' }),
+                ColumnsFactory.text('final_role.name', 'Rôle final', { formatter: 'plaintext' }),
+                ColumnsFactory.text('configuration_issues', 'Configuration', {
+                    headerSort: false,
+                    headerFilter: false,
+                    formatter: (cell) => {
+                        const issues = cell.getValue() || [];
+                        const status = cell.getElement().ownerDocument.createElement('span');
+                        status.textContent = issues.length > 0 ? issues.join(' ') : 'Circuit utilisable.';
+                        status.className = issues.length > 0 ? 'text-warning' : 'text-success';
+                        return status;
+                    },
+                }),
+            ])
+            .setWithActions(['edit', 'delete'])
+            .build();
+    }
+
+    /**
+     * Fabrique la grille distante des habilitations réservée aux super-administrateurs.
+     * @param {string} selector Sélecteur du conteneur.
+     * @returns {Tabulator} Grille des habilitations révocables individuellement.
+     */
+    static createValidationCircuitManagersGrid(selector = '#validation-circuit-managers-grid') {
+        return this._createActionGrid(selector)
+            .setAjaxSource('/api/validation-circuit-rules/managers.json')
+            .setController('validation-circuit-rules')
+            .setRemotePagination()
+            .setHeight('300px')
+            .addOptions({ persistence: false })
+            .setColumns([
+                ColumnsFactory.text('department.name', 'Département', { formatter: 'plaintext' }),
+                ColumnsFactory.text('role.name', 'Rôle gestionnaire', { formatter: 'plaintext' }),
+            ])
+            .setWithActions(['delete'])
+            .build();
+    }
+
     static createWorkflowCommentTemplatesGrid(selector = '#validation-comment-templates-grid') {
         return this._createActionGrid(selector)
             .setAjaxSource('/api/workflow-settings/comment-templates.json')

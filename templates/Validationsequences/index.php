@@ -18,7 +18,10 @@ $this->Html->script('views/Validationsequences/index.js', ['type' => 'module', '
             <h3 class="mb-1"><?= __('Séquences de validation par département') ?></h3>
             <p class="text-muted mb-0"><?= __('Sélectionnez une unique racine de sous-arbre de départements, puis double-cliquez un rôle pour l’ajouter. Le numéro de séquence est modifiable manuellement dans la dernière table.') ?></p>
         </div>
-        <?= $this->Action->render(ValidationsequencesActions::workflowSettings()) ?>
+        <div class="d-flex gap-2 flex-wrap">
+            <?= $this->Action->render(ValidationsequencesActions::circuitRules()) ?>
+            <?= $this->Action->render(ValidationsequencesActions::workflowSettings()) ?>
+        </div>
     </div>
     <div class="row g-3 role-menu-access-tables flex-grow-1">
         <section class="col-lg-5 d-flex flex-column">

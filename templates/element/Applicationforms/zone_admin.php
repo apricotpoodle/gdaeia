@@ -9,6 +9,7 @@
  * @var array<int, string> $assistants
  * @var list<\App\Model\Entity\User> $departmentManagers
  * @var bool $canEditAdmin
+ * @var bool|null $circuitLocked
  */
 
 ?>
@@ -103,7 +104,11 @@
             <div class="col-md-12">
                 <label class="form-label fs-7 fw-medium"><?= $this->FieldMetadata->label('Applicationforms', 'department_id') ?></label>
                 <!-- Le composant visuel Treeselect s'accroche ici : -->
-                <div id="department-tree-select"></div>
+                <?php if ($circuitLocked ?? false): ?>
+                    <div class="form-control form-control-sm bg-light"><?= h($applicationform->department->name ?? '') ?></div>
+                <?php else: ?>
+                    <div id="department-tree-select"></div>
+                <?php endif; ?>
 
                 <!-- L'input CakePHP doit impérativement être masqué (hidden) : -->
                 <?= $this->Form->hidden('department_id', ['id' => 'department-id']) ?>

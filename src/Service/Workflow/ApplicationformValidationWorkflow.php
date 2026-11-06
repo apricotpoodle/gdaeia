@@ -10,7 +10,6 @@ use App\Model\Entity\Validationsequence;
 use App\Model\Entity\ValidationWorkflowRun;
 use App\Model\Entity\WorkflowSetting;
 use App\Policy\ApplicationformPolicy;
-use Cake\Database\Exception\DatabaseException;
 use Cake\I18n\DateTime;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -29,7 +28,6 @@ final class ApplicationformValidationWorkflow
     private Table $validations;
     private Table $settings;
     private Table $applicationforms;
-    private Table $circuitRules;
 
     /** Initialise les tables utilisées par le workflow. */
     public function __construct()
@@ -43,7 +41,6 @@ final class ApplicationformValidationWorkflow
         $this->validations = $locator->get('Validations');
         $this->settings = $locator->get('WorkflowSettings');
         $this->applicationforms = $locator->get('Applicationforms');
-        $this->circuitRules = $locator->get('ValidationCircuitRules');
     }
 
     /** @return array{accepter: bool, refuser: bool} Règles courantes d'obligation de commentaire. */
@@ -246,67 +243,13 @@ final class ApplicationformValidationWorkflow
     /** @return array{issues: list<string>, recipients: list<\App\Model\Entity\User>, run: object|null} */
     public function start(Applicationform $applicationform, User $actor): array
     {
-        /** @var list<\App\Model\Entity\Validationsequence> $sequences */
-        $sequences = $this->sequences->find()
-            ->contain(['Roles'])
-            ->where([
-                'Validationsequences.department_id' => $applicationform->department_id,
-                'Validationsequences.deleted IS' => null,
-            ])
-            ->orderByAsc('Validationsequences.sequence')->all()->toList();
-        $issues = [];
-        if ($sequences === []) {
-            $issues[] = __('Aucune séquence de validation n’est configurée pour ce département.');
-        }
-        /** @var \App\Model\Entity\ValidationCircuitRule|null $rule */
-        $rule = null;
-        if ($applicationform->contracttype_id !== null) {
-            try {
-                $rule = $this->circuitRules->find()
-                    ->where([
-                        'department_id' => $applicationform->department_id,
-                        'contracttype_id' => $applicationform->contracttype_id,
-                    ])
-                    ->first();
-            } catch (DatabaseException) {
-                // Compatibilité avec les environnements n'ayant pas encore appliqué V3.
-            }
-        }
-        if ($rule !== null) {
-            $finalSequence = null;
-            foreach ($sequences as $sequence) {
-                if ((int)$sequence->role_id === (int)$rule->get('final_role_id')) {
-                    $finalSequence = (int)$sequence->sequence;
-                    break;
-                }
-            }
-            if ($finalSequence === null) {
-                /** @var \App\Model\Entity\Role|null $role */
-                $role = $this->roles->find()->where(['Roles.id' => $rule->get('final_role_id')])->first();
-                $roleName = $role?->get('name') ?? __('Rôle n°{0}', $rule->get('final_role_id'));
-                $issues[] = __(
-                    'La règle de circuit pour le contrat {0} demande le rôle final « {1} », '
-                    . 'absent du circuit du département.',
-                    $applicationform->contracttype_id,
-                    $roleName,
-                );
-            } else {
-                $sequences = array_values(array_filter(
-                    $sequences,
-                    static fn(Validationsequence $sequence): bool => (int)$sequence->sequence <= $finalSequence,
-                ));
-            }
-        }
-        foreach ($sequences as $sequence) {
-            if ($this->eligibleUsers($applicationform, (int)$sequence->role_id) === []) {
-                $roleName = $sequence->role->name ?? __('Rôle n°{0}', $sequence->role_id);
-                $issues[] = __(
-                    'Le rôle « {0} » de la séquence {1} ne possède aucun utilisateur rattaché au département.',
-                    $roleName,
-                    $sequence->sequence,
-                );
-            }
-        }
+        $resolved = (new ValidationCircuitResolver())->resolve(
+            (int)$applicationform->department_id,
+            (int)$applicationform->contracttype_id,
+            applicationform: $applicationform,
+        );
+        $sequences = $resolved['sequences'];
+        $issues = $resolved['issues'];
         if ($issues !== []) {
             return ['issues' => $issues, 'recipients' => [], 'run' => null];
         }
@@ -717,8 +660,15 @@ final class ApplicationformValidationWorkflow
         return array_values($grouped);
     }
 
-    /** @return list<\App\Model\Entity\User> */
-    private function eligibleUsers(Applicationform $applicationform, int $roleId): array
+    /**
+     * Réutilise l'éligibilité de vote pour résoudre les validateurs d'une étape.
+     *
+     * Le rôle sémantique demandeur désigne le créateur actif de la DAE ; les
+     * autres rôles exigent un rattachement explicite à son département.
+     *
+     * @return list<\App\Model\Entity\User>
+     */
+    public function eligibleUsers(Applicationform $applicationform, int $roleId): array
     {
         if ($this->isRequesterRole($roleId)) {
             /** @var \App\Model\Entity\User|null $requester */
@@ -738,7 +688,7 @@ final class ApplicationformValidationWorkflow
     }
 
     /** Détermine le rôle sémantique du créateur de la demande par son code stable. */
-    private function isRequesterRole(int $roleId): bool
+    public function isRequesterRole(int $roleId): bool
     {
         /** @var \App\Model\Entity\Role|null $role */
         $role = $this->roles->find()

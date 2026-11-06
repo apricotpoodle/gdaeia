@@ -190,4 +190,37 @@ class ApplicationformsControllerTest extends TestCase
 
         $this->assertRedirect(['controller' => 'Applicationforms', 'action' => 'index']);
     }
+
+    public function testLEditionVerrouilleLeContratEtLeDepartementApresUnCycleTermine(): void
+    {
+        ConnectionManager::get('test')->insert('validation_workflow_runs', [
+            'applicationform_id' => 1, 'started_by_user_id' => 1, 'state' => 'acceptee',
+            'started_at' => '2026-11-06 10:00:00', 'created' => '2026-11-06 10:00:00', 'modified' => '2026-11-06 10:00:00',
+        ]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $body = (string)$this->_response->getBody();
+        $this->assertMatchesRegularExpression('/<select(?=[^>]*name="contracttype_id")(?=[^>]*disabled)[^>]*>/', $body);
+        $this->assertStringNotContainsString('id="department-tree-select"', $body);
+        $this->assertStringContainsString('Le contrat et le département sont verrouillés', $body);
+    }
+
+    public function testUneSoumissionWebNeChangePasLeDepartementDUnCycleTermine(): void
+    {
+        ConnectionManager::get('test')->insert('validation_workflow_runs', [
+            'applicationform_id' => 1, 'started_by_user_id' => 1, 'state' => 'refusee',
+            'started_at' => '2026-11-06 10:00:00', 'created' => '2026-11-06 10:00:00', 'modified' => '2026-11-06 10:00:00',
+        ]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->post('/applicationforms/edit/1', ['department_id' => 2]);
+
+        $this->assertResponseOk();
+        $this->assertSame(1, (int)$this->getTableLocator()->get('Applicationforms')->get(1)->department_id);
+        $this->assertResponseContains('verrouillé');
+    }
 }

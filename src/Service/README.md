@@ -57,3 +57,14 @@ validation est lu depuis ses étapes immuables ; ses statuts sont affichés
 avec un libellé et un renforcement par couleur. L'action Web
 `/applicationforms/viewpdf/{id}` est protégée par `ApplicationformPolicy` et
 retourne le document inline avec un nom `dae-{id}.pdf`.
+
+## Circuits locaux de validation (0017)
+
+`ValidationCircuitAdministrationService` centralise les habilitations, les
+références actives et l'atomicité des ajouts groupés ; un doublon refuse le lot.
+`Workflow/ValidationCircuitResolver` partage le parcours et ses diagnostics
+entre aperçu, enregistrement et lancement : couple département–contrat exact,
+rôles parallèles inclus, éligibilité des seules étapes retenues. Le demandeur
+est contrôlé au lancement. Les cycles lancés conservent leur instantané.
+
+Voir le [guide opérateur](../../docs/validation-circuit-rules.md) et l'ADR 0070.

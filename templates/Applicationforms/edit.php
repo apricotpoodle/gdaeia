@@ -16,6 +16,7 @@
  * @var array<int, string> $assistants
  * @var list<\App\Model\Entity\User> $departmentManagers
  * @var array<string, string> $fieldSchema
+ * @var bool $circuitLocked
  */
 
 $this->assign('title', __('Demande de recrutement #{0}', $applicationform->id));
@@ -56,6 +57,10 @@ $this->Html->script('views/Applicationforms/salary-calculation', ['type' => 'mod
     <!-- Formulaire Principal -->
     <?= $this->Form->create($applicationform, ['id' => 'applicationform-main-form', 'class' => 'needs-validation']) ?>
 
+    <?php if ($circuitLocked): ?>
+        <p class="alert alert-info"><?= __('Le contrat et le département sont verrouillés tant qu’un cycle de validation existe.') ?></p>
+    <?php endif; ?>
+
     <div class="row g-4">
 
         <!-- ZONE 1 : ADMINISTRATION -->
@@ -68,6 +73,7 @@ $this->Html->script('views/Applicationforms/salary-calculation', ['type' => 'mod
                     'departmentManagers' => $departmentManagers ?? [],
                     'fieldSchema' => $fieldSchema ?? [],
                     'canEditAdmin' => $identity->can('editZoneAdmin', $applicationform),
+                    'circuitLocked' => $circuitLocked,
                 ]) ?>
             </div>
         <?php endif; ?>
