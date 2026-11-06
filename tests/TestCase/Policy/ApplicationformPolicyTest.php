@@ -31,7 +31,7 @@ class ApplicationformPolicyTest extends TestCase
 
     public function testLaModificationEstAutoriseeAuProprietaireEtAuSuperAdministrateur(): void
     {
-        $applicationform = new Applicationform(['user_id' => 10]);
+        $applicationform = new Applicationform(['id' => 42, 'user_id' => 10]);
 
         $this->assertTrue($this->policy->canEdit(new User(['id' => 10]), $applicationform));
         $this->assertFalse($this->policy->canEdit(new User(['id' => 11, 'role_id' => User::ROLE_ADMIN]), $applicationform));
@@ -63,7 +63,7 @@ class ApplicationformPolicyTest extends TestCase
 
     public function testLaModificationEtLaSuppressionSontRefuseesAuDemandeurEtranger(): void
     {
-        $applicationform = new Applicationform(['user_id' => 10]);
+        $applicationform = new Applicationform(['id' => 42, 'user_id' => 10]);
         $requester = new User(['id' => 11, 'role_id' => User::ROLE_DEMANDEUR]);
 
         $this->assertFalse($this->policy->canEdit($requester, $applicationform));
@@ -72,7 +72,7 @@ class ApplicationformPolicyTest extends TestCase
 
     public function testLesZonesDeRemunerationEtReserveesRespectentLesRoles(): void
     {
-        $applicationform = new Applicationform(['user_id' => 10]);
+        $applicationform = new Applicationform(['id' => 42, 'user_id' => 10]);
         $requester = new User(['id' => 10, 'role_id' => User::ROLE_DEMANDEUR]);
         $rrh = new User(['id' => 11, 'role_id' => User::ROLE_2_VALIDEUR_RRH]);
         $cg = new User(['id' => 12, 'role_id' => User::ROLE_4_VALIDEUR_CG]);
@@ -147,7 +147,7 @@ class ApplicationformPolicyTest extends TestCase
 
     public function testLesZonesEtLaSuppressionRespectentLeProprietaireEtLeSuperUtilisateur(): void
     {
-        $applicationform = new Applicationform(['user_id' => 10]);
+        $applicationform = new Applicationform(['id' => 42, 'user_id' => 10]);
         $owner = $this->identity(new User(['id' => 10, 'role_id' => User::ROLE_DEMANDEUR]));
         $superUser = $this->identity(new User(['id' => 11, 'issuperuser' => true]));
         $foreign = $this->identity(new User(['id' => 12, 'role_id' => User::ROLE_DEMANDEUR]));
