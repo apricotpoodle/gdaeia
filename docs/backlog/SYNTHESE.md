@@ -14,16 +14,18 @@ depuis le démarrage de son étape 1.
 
 Mise à jour ciblée du **6 novembre 2026** : 0017 est implémenté ; sa configuration
 métier reste à saisir par l’opérateur. Les autres constats de cet audit
-historique n’ont pas été réévalués dans cette livraison.
+historique n’ont pas été réévalués dans cette livraison. Les tickets 0027 et
+0028 ont été ajoutés pour traiter respectivement la création d'une demande par
+le rôle Demandeur et la fiabilisation de l'IHM des autorisations de champs.
 
 ## Vue d’ensemble
 
 | Périmètre | Total | Entièrement traité | Partiellement traité | Reste à faire |
 |---|---:|---:|---:|---:|
-| Backlog technique racine (`0001`–`0026`) | 26 | 17 | 1 | 8 |
+| Backlog technique racine (`0001`–`0028`) | 28 | 17 | 1 | 10 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
 | Workflow `visibilite-manageabilite` (`0001`–`0009`) | 9 | 9 | 0 | 0 |
-| **Total** | **48** | **39** | **1** | **8** |
+| **Total** | **50** | **39** | **1** | **10** |
 
 Le ticket 0002 est compté comme partiellement traité ; les tickets restants
 concernent les sujets 0001, 0007, 0019, 0021 à 0023, 0025 et 0026, auxquels s'ajoutent
@@ -43,6 +45,8 @@ les compléments du 0002.
 | [0023 — Migration de base](0023-migrer-la-base-de-donnees.md) | Moyenne | À planifier | Préparer une migration MySQL simple par export/restauration, migrations et contrôles de cohérence. | Nouveau ticket créé le 29 octobre ; aucune bascule de base engagée. |
 | [0024 — Associations multiples des départements](0024-generaliser-les-associations-des-departements.md) | **Haute** | Terminé | Remplacer les responsables et rattachements CGR directs par des tables de liaison, migrer les données et adapter l’ORM, l’API et les écrans. | Migration, ORM, API, IHM et validations finalisées. |
 | [0026 — Plan d'architecture et de backlog en huit étapes](0026-executer-le-plan-architecture-et-backlog.md) | **Haute** | **En cours** | Coordonner l'assainissement documentaire, l'acceptation des ADR, les habilitations, la visibilité/gérabilité, les évolutions métier, la qualité, la migration et la gouvernance. | Étape 1 réalisée ; l'étape 2 reste conditionnée à la revue humaine des ADR 0071 et 0072. |
+| [0027 — Création d'une Applicationform par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) | **Haute** | À planifier | Distinguer une entité nouvelle d'une demande existante, autoriser la saisie métier du demandeur et conserver les restrictions de périmètre et de champs réservés. | Nouveau ticket ajouté le 6 novembre 2026 à la suite de l'analyse de `/applicationforms/add`. |
+| [0028 — IHM des autorisations de champs](0028-ameliorer-ihm-autorisations-champs.md) | **Haute** | À planifier | Remplacer les saisies libres de ressource et de champ par des listes dépendantes issues de `field_definitions`, avec validation serveur. | Nouveau ticket ajouté le 6 novembre 2026 après analyse de `/field-authorizations/add`. |
 
 ## Tickets déjà traités — contrôle de non-réouverture
 
@@ -85,6 +89,10 @@ L’ordre recommandé est :
 9. **0023**, pour préparer la migration contrôlée de la base MySQL.
 10. Pour **0017**, la partie implémentation de l’étape 6 de **0026** est
     réalisée ; la configuration réelle relève de l’opérateur.
+11. **0028**, avant **0027**, pour stabiliser le modèle des autorisations de
+    champs et de zones fonctionnelles.
+12. **0027**, après **0028**, pour autoriser la création d'une demande par un
+    demandeur avec le modèle final des habilitations.
 
 Le ticket **0024** est terminé et ne fait plus partie des prochaines étapes.
 

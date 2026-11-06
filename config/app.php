@@ -224,12 +224,14 @@ return [
      */
     'EmailTransport' => [
         'default' => [
-            'className' => MailTransport::class,
+            // 'className' => MailTransport::class,
+            'className' => \Cake\Mailer\Transport\SmtpTransport::class,
             /*
              * The keys host, port, timeout, username, password, client and tls
              * are used in SMTP transports
              */
-            'host' => 'localhost',
+            // 'host' => 'localhost',
+            'host' => "smtpout.glm.lan",
             'port' => 25,
             'timeout' => 30,
             /*
