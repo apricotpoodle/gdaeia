@@ -15,10 +15,12 @@ $this->assign('title', __('Modifier la règle d’autorisation #{0}', $fieldAuth
                 <?= $this->Action->render(\App\View\Action\FieldAuthorizationsActions::index()) ?>
             </div>
             <div class="card-body">
-                <?= $this->Form->create($fieldAuthorization, ['id' => 'field-authorization-form', 'data-id' => (string)$fieldAuthorization->id, 'novalidate' => true]) ?>
+                <?= $this->Form->create($fieldAuthorization, ['id' => 'field-authorization-form', 'data-id' => (string)$fieldAuthorization->id, 'data-current-type' => (string)$fieldAuthorization->get('target_type'), 'data-current-resource' => (string)$fieldAuthorization->get('resource'), 'data-current-target' => (string)$fieldAuthorization->get('target'), 'data-schema-url' => '/api/field-authorizations/get-form-schema.json', 'novalidate' => true]) ?>
                 <?= $this->Form->control('role_id', ['label' => __('Rôle applicatif'), 'options' => $roles, 'class' => 'form-select mb-3']) ?>
-                <?= $this->Form->control('resource', ['label' => __('Ressource'), 'class' => 'form-control mb-3', 'maxlength' => 50]) ?>
-                <?= $this->Form->control('field', ['label' => __('Champ'), 'class' => 'form-control mb-3', 'maxlength' => 50]) ?>
+                <?= $this->Form->control('target_type', ['label' => __('Type de cible'), 'options' => ['field' => __('Champ ORM'), 'section' => __('Zone fonctionnelle')], 'class' => 'form-select mb-3']) ?>
+                <?= $this->Form->control('resource', ['label' => __('Ressource'), 'options' => [], 'class' => 'form-select mb-3', 'data-target-resource' => true]) ?>
+                <?= $this->Form->control('target', ['label' => __('Cible'), 'options' => [], 'class' => 'form-select mb-3', 'data-target-select' => true]) ?>
+                <p class="form-text" data-target-description></p>
                 <?= $this->Form->control('access_level', [
                     'label' => __('Niveau d’accès'),
                     'options' => ['EDIT' => __('Modification'), 'VIEW' => __('Lecture seule'), 'NONE' => __('Aucun accès')],

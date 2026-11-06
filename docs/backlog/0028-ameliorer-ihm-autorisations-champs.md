@@ -1,6 +1,6 @@
 # 0028 — Améliorer l'IHM des autorisations de champs
 
-**Statut :** À planifier
+**Statut :** Terminé — implémenté sur `feature/tickets-0028-0027`
 
 **Priorité :** Haute — fiabilité du paramétrage des habilitations
 
@@ -136,6 +136,11 @@ Exécuter les commandes adaptées via le Makefile racine :
 - `make cs.check` et `make stan` si du PHP est modifié.
 
 ## Références
+
+L’implémentation introduit la migration `20261106100000`, le référentiel
+`authorization_targets`, le catalogue JSON `get-form-schema.json` et le
+sélecteur partagé des formulaires d’ajout et d’édition. Les règles historiques
+restent éditables, tandis que les nouvelles cibles doivent être actives.
 
 - `src/Controller/FieldAuthorizationsController.php`
 - `src/Controller/Api/FieldAuthorizationsController.php`

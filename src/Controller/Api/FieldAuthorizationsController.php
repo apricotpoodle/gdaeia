@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use App\Model\Entity\AuthorizationTarget;
 use App\Model\Entity\FieldAuthorization;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Metadata\FieldMetadataService;
@@ -80,9 +81,14 @@ class FieldAuthorizationsController extends AppController
                     (string)$authorization->get(FieldAuthorization::FIELD_ACCESS_LEVEL),
                 );
                 $resource = (string)$authorization->get(FieldAuthorization::FIELD_RESOURCE);
-                $field = (string)$authorization->get(FieldAuthorization::FIELD_FIELD);
-                $data['field_label'] = $metadata->label($resource, $field);
-                $data['field_description'] = $metadata->description($resource, $field);
+                $target = (string)$authorization->get(FieldAuthorization::FIELD_TARGET);
+                $type = (string)$authorization->get(FieldAuthorization::FIELD_TARGET_TYPE);
+                $data['target_label'] = $metadata->targetLabel($resource, $type, $target);
+                $data['target_description'] = $metadata->targetDescription($resource, $type, $target);
+                // Compatibilité avec les consommateurs historiques de la grille.
+                $data['field'] = $target;
+                $data['field_label'] = $data['target_label'];
+                $data['field_description'] = $data['target_description'];
 
                 return $data;
             },
@@ -110,9 +116,41 @@ class FieldAuthorizationsController extends AppController
 
         $rolesTable = TableRegistry::getTableLocator()->get('Roles');
         $roles = $rolesTable->find('list', keyField: 'id', valueField: 'name')->toArray();
+        $currentResource = (string)$this->request->getQuery('current_resource');
+        $currentTarget = (string)$this->request->getQuery('current_target');
+        $fields = TableRegistry::getTableLocator()->get('FieldDefinitions')->find()
+            ->where(['OR' => [
+                ['active' => true],
+                ['resource' => $currentResource, 'field' => $currentTarget, 'active' => false],
+            ]])
+            ->orderBy(['resource' => 'ASC', 'position' => 'ASC'])
+            ->all()->toArray();
+        $sections = TableRegistry::getTableLocator()->get('AuthorizationTargets')->find()
+            ->where(['target_type' => AuthorizationTarget::TYPE_SECTION, 'OR' => [
+                ['active' => true],
+                ['resource' => $currentResource, 'target' => $currentTarget, 'active' => false],
+            ]])
+            ->orderBy(['resource' => 'ASC', 'position' => 'ASC'])
+            ->all()->toArray();
+        $resources = array_values(array_unique(array_merge(
+            array_map(static fn($item): string => (string)$item->get('resource'), $fields),
+            array_map(static fn($item): string => (string)$item->get('resource'), $sections),
+        )));
+        $targets = array_merge(
+            array_map(static fn($item): array => [
+                'resource' => $item->get('resource'), 'target_type' => 'field',
+                'target' => $item->get('field'), 'label' => $item->get('label'),
+                'description' => $item->get('description'),
+            ], $fields),
+            array_map(static fn($item): array => [
+                'resource' => $item->get('resource'), 'target_type' => 'section',
+                'target' => $item->get('target'), 'label' => $item->get('label'),
+                'description' => $item->get('description'),
+            ], $sections),
+        );
 
-        $this->set(compact('schema', 'roles'));
-        $this->viewBuilder()->setOption('serialize', ['schema', 'roles']);
+        $this->set(compact('schema', 'roles', 'resources', 'targets'));
+        $this->viewBuilder()->setOption('serialize', ['schema', 'roles', 'resources', 'targets']);
     }
 
     /**

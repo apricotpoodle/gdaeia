@@ -118,9 +118,19 @@ class ApplicationformsController extends AppController
         $applicationform->set(Applicationform::FIELD_ASSISTANT_ID, $currentUser->get(User::FIELD_ID));
 
         if ($this->request->is('post')) {
+            $data = $this->authorizedRequestData('Applicationforms');
+            if ($currentUser->hasRole(User::ROLE_DEMANDEUR)) {
+                $reservedFields = [
+                    'hr_description', 'control_management_validation', 'final_argument',
+                    'budgetfeature_id', 'yesno_id', 'qualification',
+                ];
+                foreach ($reservedFields as $reservedField) {
+                    unset($data[$reservedField]);
+                }
+            }
             $applicationform = $this->Applicationforms->patchEntity(
                 $applicationform,
-                $this->authorizedRequestData('Applicationforms'),
+                $data,
             );
 
             // Attribution de l'utilisateur créateur

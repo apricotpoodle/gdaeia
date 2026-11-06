@@ -71,6 +71,7 @@ class FieldAuthorizationServiceTest extends TestCase
         $query->expects($this->once())->method('where')->with([
             'role_id' => 4,
             'resource' => 'Applicationforms',
+            'target_type' => 'field',
         ])->willReturnSelf();
         $query->expects($this->once())->method('all')->willReturn($records);
         $authorizations = $this->createMock(FieldAuthorizationsTable::class);
@@ -95,6 +96,7 @@ class FieldAuthorizationServiceTest extends TestCase
         $query->expects($this->once())->method('where')->with([
             'role_id' => 4,
             'resource' => 'Departments',
+            'target_type' => 'field',
         ])->willReturnSelf();
         $query->expects($this->once())->method('all')->willReturn($records);
         $authorizations = $this->createMock(FieldAuthorizationsTable::class);
@@ -131,6 +133,7 @@ class FieldAuthorizationServiceTest extends TestCase
         $query->expects($this->once())->method('where')->with([
             'role_id' => 4,
             'resource' => 'Departments',
+            'target_type' => 'field',
         ])->willReturnSelf();
         $query->expects($this->once())->method('all')->willReturn(new ResultSet([]));
         $authorizations = $this->createMock(FieldAuthorizationsTable::class);

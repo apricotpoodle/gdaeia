@@ -42,6 +42,12 @@ leurs propres listes blanches.
 
 Voir l’[ADR 0065](../docs/adr/0065-acl-automatique-des-mutations-web-api.md).
 
+Le paramétrage des autorisations utilise désormais `authorization_targets` :
+`field_definitions` décrit les champs ORM et ce nouveau référentiel décrit les
+zones fonctionnelles (`section`). La table `field_authorizations` conserve le
+type et le code de la cible ; une cible inactive reste lisible pour une règle
+existante, mais ne peut plus être choisie pour une nouvelle règle.
+
 `UserDepartmentAuthorizationService` contrôle les associations explicites
 `user_departments` avant les écritures Web et API. Il compare les états avant
 et après hydratation pour couvrir les ajouts comme les retraits et refuse les

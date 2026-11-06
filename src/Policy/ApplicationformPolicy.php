@@ -105,8 +105,7 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        // Exemple : Tout profil autorisé à se connecter peut initier une demande
-        return true;
+        return $this->canCreateApplicationform($user, $applicationform);
     }
 
     /**
@@ -135,6 +134,10 @@ class ApplicationformPolicy extends AppPolicy
         $user = $this->getValidUser($identity);
         if (!$user) {
             return false;
+        }
+
+        if ($applicationform->get(Applicationform::FIELD_ID) === null) {
+            return $this->canCreateApplicationform($user, $applicationform);
         }
 
         if ($user->get(User::FIELD_ISSUPERUSER)) {
@@ -299,7 +302,11 @@ class ApplicationformPolicy extends AppPolicy
      */
     public function canViewZoneAdmin(IdentityInterface $identity, Applicationform $applicationform): bool
     {
-        return $this->getValidUser($identity) !== null;
+        $user = $this->getValidUser($identity);
+
+        return $user !== null && ($applicationform->get(Applicationform::FIELD_ID) === null
+            ? $this->canCreateApplicationform($user, $applicationform)
+            : true);
     }
 
     /**
@@ -356,7 +363,10 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        // Exemple : Accessible aux Admins, RH et Créateurs
+        if ($applicationform->get(Applicationform::FIELD_ID) === null) {
+            return $this->canCreateApplicationform($user, $applicationform);
+        }
+
         return $user->get(User::FIELD_ISSUPERUSER)
             || $applicationform->get(Applicationform::FIELD_USER_ID) === $user->get(User::FIELD_ID)
             || in_array($user->get(User::FIELD_ROLE_ID), [
@@ -378,6 +388,10 @@ class ApplicationformPolicy extends AppPolicy
         $user = $this->getValidUser($identity);
         if (!$user) {
             return false;
+        }
+
+        if ($applicationform->get(Applicationform::FIELD_ID) === null) {
+            return $this->canCreateApplicationform($user, $applicationform);
         }
 
         return $user->get(User::FIELD_ISSUPERUSER)
@@ -449,5 +463,18 @@ class ApplicationformPolicy extends AppPolicy
     public function canEditZoneCommentaires(IdentityInterface $identity, Applicationform $applicationform): bool
     {
         return $this->getValidUser($identity) !== null;
+    }
+
+    /** Vérifie les profils autorisés à initialiser une nouvelle demande. */
+    private function canCreateApplicationform(User $user, Applicationform $applicationform): bool
+    {
+        if ($applicationform->get(Applicationform::FIELD_ID) !== null) {
+            return false;
+        }
+
+        return $user->isSuperUser() || in_array($user->get(User::FIELD_ROLE_ID), [
+            User::ROLE_DEMANDEUR,
+            User::ROLE_ADMIN,
+        ], true);
     }
 }
