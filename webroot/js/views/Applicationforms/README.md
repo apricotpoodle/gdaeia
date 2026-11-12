@@ -31,3 +31,13 @@ concatène prénom et nom dans le champ historique à la sauvegarde; choisir un
 collaborateur renseigne ce champ, puis efface et verrouille les champs externes.
 Les anciennes demandes sans champs V3 gardent leur saisie unique du nom complet
 en édition.
+
+`salary-calculation.js` met à jour l'aperçu du salaire de base dès que la
+périodicité et la rémunération sont renseignées. Les unités mensuelles sont
+calculées sans nombre de jours; l'API valide les jours requis pour une
+rémunération journalière et son message apparaît sous l'aperçu. Le script
+`zone-contract.js` déclenche aussi ce calcul lorsque les dates modifient
+automatiquement le nombre de jours ouvrés. Un ajustement manuel des jours
+déclenche le même recalcul. La matrice ACL autorise la soumission de
+`working_days` et garde `salary_base` en lecture seule, car le modèle recalcule
+ce dernier à l'enregistrement.

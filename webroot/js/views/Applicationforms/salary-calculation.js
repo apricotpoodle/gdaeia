@@ -4,17 +4,22 @@ const period = document.getElementById('period-id');
 const amount = document.getElementById('grossremuneration');
 const workingDays = document.getElementById('working-days');
 const salaryBase = document.getElementById('salary-base');
+const salaryMessage = document.getElementById('salary-base-message');
 
 if (form && period && amount && salaryBase) {
     let requestId = 0;
 
     const calculate = async () => {
-        if (!period.value || !amount.value || (workingDays && workingDays.value === '')) {
+        const currentRequest = ++requestId;
+        if (!period.value || !amount.value) {
             salaryBase.value = '';
+            if (salaryMessage) {
+                salaryMessage.textContent = '';
+                salaryMessage.classList.add('d-none');
+            }
             return;
         }
 
-        const currentRequest = ++requestId;
         const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
         const response = await fetch('/api/applicationforms/calculate-salary.json', {
             method: 'POST',
@@ -33,7 +38,20 @@ if (form && period && amount && salaryBase) {
         const payload = await response.json();
         if (currentRequest !== requestId) return;
 
-        salaryBase.value = response.ok && payload.success ? payload.salary_base : '';
+        if (response.ok && payload.success) {
+            salaryBase.value = payload.salary_base;
+            if (salaryMessage) {
+                salaryMessage.textContent = '';
+                salaryMessage.classList.add('d-none');
+            }
+            return;
+        }
+
+        salaryBase.value = '';
+        if (salaryMessage) {
+            salaryMessage.textContent = payload.message || '';
+            salaryMessage.classList.toggle('d-none', !payload.message);
+        }
     };
 
     [period, amount, workingDays].filter(Boolean).forEach((element) => {

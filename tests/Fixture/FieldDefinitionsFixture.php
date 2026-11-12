@@ -16,6 +16,8 @@ final class FieldDefinitionsFixture extends TestFixture
         $this->records = [
             ['id' => 1, 'resource' => 'Applicationforms', 'field' => 'jobtitle', 'label' => 'Intitulé du poste', 'description' => null, 'active' => 1, 'position' => 1],
             ['id' => 2, 'resource' => 'Applicationforms', 'field' => 'department_id', 'label' => 'Département', 'description' => null, 'active' => 1, 'position' => 2],
+            ['id' => 15, 'resource' => 'Applicationforms', 'field' => 'working_days', 'label' => 'Nombre de jours ouvrés', 'description' => null, 'active' => 1, 'position' => 15],
+            ['id' => 16, 'resource' => 'Applicationforms', 'field' => 'salary_base', 'label' => 'Salaire de base calculé', 'description' => null, 'active' => 1, 'position' => 16],
             ['id' => 3, 'resource' => 'Users', 'field' => 'email', 'label' => 'Adresse courriel', 'description' => null, 'active' => 1, 'position' => 3],
             ['id' => 4, 'resource' => 'Users', 'field' => 'password', 'label' => 'Mot de passe', 'description' => null, 'active' => 1, 'position' => 4],
             ['id' => 5, 'resource' => 'Users', 'field' => 'user_departments', 'label' => 'Périmètre organisationnel', 'description' => null, 'active' => 1, 'position' => 5],

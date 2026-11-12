@@ -14,7 +14,9 @@ $this->Html->script('views/Applicationforms/zone-contract', ['block' => true]);
 
 // Traitement des autorisations au niveau des champs (Field-Level ACL)
 $isEditable = function (string $field) use ($fieldSchema): bool {
-    return ($fieldSchema[$field] ?? 'EDIT') === 'EDIT';
+    $defaultAccess = empty($fieldSchema) ? 'EDIT' : 'NONE';
+
+    return ($fieldSchema[$field] ?? $defaultAccess) === 'EDIT';
 };
 ?>
 

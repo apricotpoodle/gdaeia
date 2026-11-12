@@ -143,6 +143,38 @@ class ApplicationformsControllerTest extends TestCase
         );
     }
 
+    public function testLaCreationDesactiveUnChampAbsentDeLaMatriceAcl(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $authorizationId = 900_100;
+        $connection->insert('field_authorizations', [
+            'id' => $authorizationId,
+            'role_id' => User::ROLE_ADMIN,
+            'resource' => 'Applicationforms',
+            'target_type' => 'field',
+            'target' => 'jobtitle',
+            'access_level' => 'EDIT',
+            'created' => '2026-11-12 10:00:00',
+        ]);
+        $this->session(['Auth' => new User([
+            'id' => 1,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+
+        try {
+            $this->get('/applicationforms/add');
+
+            $this->assertResponseOk();
+            $this->assertMatchesRegularExpression(
+                '/<input(?=[^>]*name="working_days")(?=[^>]*disabled)[^>]*>/s',
+                (string)$this->_response->getBody(),
+            );
+        } finally {
+            $connection->delete('field_authorizations', ['id' => $authorizationId]);
+        }
+    }
+
     public function testLEditionPreselectionneLOperateurSeulementSilEstEligible(): void
     {
         $connection = ConnectionManager::get('test');

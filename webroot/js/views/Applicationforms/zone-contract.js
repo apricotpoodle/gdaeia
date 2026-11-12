@@ -63,6 +63,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
+     * Met à jour les jours ouvrés et notifie le calculateur si la valeur change.
+     *
+     * @param {string} value Nombre de jours à afficher.
+     * @returns {void}
+     */
+    function setWorkingDays(value) {
+        if (workingDaysInput.value === value) return;
+
+        workingDaysInput.value = value;
+        workingDaysInput.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    /**
      * Synchronise la visibilité, la limite et la valeur par défaut des jours.
      *
      * @param {boolean} resetValue Réinitialise la valeur après une modification de date.
@@ -76,7 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!begin || !end || end < begin || endAtInput?.disabled) {
             workingDaysContainer.classList.add('d-none');
             workingDaysInput.removeAttribute('max');
-            if (resetValue) workingDaysInput.value = '';
+            if (resetValue) setWorkingDays('');
             return;
         }
 
@@ -85,9 +98,9 @@ document.addEventListener('DOMContentLoaded', function () {
         workingDaysContainer.classList.remove('d-none');
 
         if (resetValue || workingDaysInput.value === '') {
-            workingDaysInput.value = String(workingDaysInclusive(begin, end));
+            setWorkingDays(String(workingDaysInclusive(begin, end)));
         } else if (Number(workingDaysInput.value) > maximum) {
-            workingDaysInput.value = String(maximum);
+            setWorkingDays(String(maximum));
         }
     }
 

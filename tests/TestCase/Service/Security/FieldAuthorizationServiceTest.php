@@ -116,6 +116,41 @@ class FieldAuthorizationServiceTest extends TestCase
         );
     }
 
+    public function testLesJoursSontModifiablesEtLeSalaireCalculeResteEnLectureSeule(): void
+    {
+        $records = new ResultSet([
+            new FieldAuthorization([
+                'target_type' => FieldAuthorization::TARGET_TYPE_FIELD,
+                'target' => 'working_days',
+                'access_level' => FieldAuthorization::ACCESS_LEVEL_EDIT,
+            ]),
+            new FieldAuthorization([
+                'target_type' => FieldAuthorization::TARGET_TYPE_FIELD,
+                'target' => 'salary_base',
+                'access_level' => FieldAuthorization::ACCESS_LEVEL_VIEW,
+            ]),
+        ]);
+        $query = $this->createMock(SelectQuery::class);
+        $query->expects($this->once())->method('where')->with([
+            'role_id' => User::ROLE_DEMANDEUR,
+            'resource' => 'Applicationforms',
+            'target_type' => FieldAuthorization::TARGET_TYPE_FIELD,
+        ])->willReturnSelf();
+        $query->expects($this->once())->method('all')->willReturn($records);
+        $authorizations = $this->createMock(FieldAuthorizationsTable::class);
+        $authorizations->expects($this->once())->method('find')->willReturn($query);
+        TableRegistry::getTableLocator()->set('FieldAuthorizations', $authorizations);
+
+        $this->assertSame(
+            ['working_days' => '11'],
+            $this->service->filterAuthorizedRequestData(
+                new User(['issuperuser' => false, 'role_id' => User::ROLE_DEMANDEUR]),
+                'Applicationforms',
+                ['working_days' => '11', 'salary_base' => '1760.0000'],
+            ),
+        );
+    }
+
     public function testUnChampAbsentDeLaMatriceEstRefusePourUneRessourceConfiguree(): void
     {
         $this->assertSame(

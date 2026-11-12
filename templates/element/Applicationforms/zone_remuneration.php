@@ -16,7 +16,9 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditRemuneration):
         return false;
     }
 
-    return ($fieldSchema[$field] ?? 'EDIT') === 'EDIT';
+    $defaultAccess = empty($fieldSchema) ? 'EDIT' : 'NONE';
+
+    return ($fieldSchema[$field] ?? $defaultAccess) === 'EDIT';
 };
 ?>
 
@@ -108,6 +110,12 @@ $isEditable = function (string $field) use ($fieldSchema, $canEditRemuneration):
                     'readonly' => true,
                     'disabled' => !$isEditable('salary_base'),
                 ]) ?>
+                <div
+                    id="salary-base-message"
+                    class="form-text text-danger d-none"
+                    role="status"
+                    aria-live="polite"
+                ></div>
             </div>
 
         </div>
