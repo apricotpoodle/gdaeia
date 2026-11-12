@@ -113,6 +113,12 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertLessThan($assistantPosition, $departmentPosition);
         $this->assertStringContainsString('data-can-load="true"', $body);
         $this->assertStringContainsString('data-managers-url="/api/applicationforms/managers-for-department.json"', $body);
+        $this->assertStringContainsString('id="assistant-select-wrapper"', $body);
+        $this->assertStringContainsString('id="assistant-options-single"', $body);
+        $this->assertMatchesRegularExpression(
+            '/<input(?=[^>]*type="hidden")(?=[^>]*name="assistant_id")(?=[^>]*id="assistant-single-id")(?=[^>]*disabled)[^>]*>/',
+            $body,
+        );
         $this->assertMatchesRegularExpression('/<select(?=[^>]*name="assistant_id")(?=[^>]*disabled)[^>]*>/', $body);
         $this->assertStringContainsString('Aucune assistante éligible pour ce département.', $body);
         $this->assertDoesNotMatchRegularExpression(
@@ -183,7 +189,7 @@ class ApplicationformsControllerTest extends TestCase
         $this->post('/applicationforms/edit/1', ['assistant_id' => 2]);
 
         $this->assertResponseOk();
-        $this->assertResponseContains('appartenir à ce département');
+        $this->assertResponseContains('être rattachée au département sélectionné');
     }
 
     public function testUneSoumissionWebRefuseUneAssistanteDunDepartementHorsPerimetre(): void

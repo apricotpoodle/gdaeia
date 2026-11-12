@@ -38,16 +38,23 @@
             </div>
 
             <div class="col-md-6">
-                <?= $this->Form->control('assistant_id', [
-                    'label' => __('Assistante'),
-                    'options' => $assistants ?? [],
-                    'empty' => __('-- Sélectionner --'),
-                    'class' => 'form-select form-select-sm',
-                    'disabled' => !$canEditAdmin || (int)$applicationform->get('department_id') < 1,
-                    'data-assistants-url' => '/api/applicationforms/assistants-for-department.json',
-                    'data-default-assistant-id' => (string)($assistantDefaultId ?? ''),
-                    'data-can-edit' => $canEditAdmin ? 'true' : 'false',
+                <div id="assistant-select-wrapper">
+                    <?= $this->Form->control('assistant_id', [
+                        'label' => __('Assistante'),
+                        'options' => $assistants ?? [],
+                        'empty' => __('-- Sélectionner --'),
+                        'class' => 'form-select form-select-sm',
+                        'disabled' => !$canEditAdmin || (int)$applicationform->get('department_id') < 1,
+                        'data-assistants-url' => '/api/applicationforms/assistants-for-department.json',
+                        'data-default-assistant-id' => (string)($assistantDefaultId ?? ''),
+                        'data-can-edit' => $canEditAdmin ? 'true' : 'false',
+                    ]) ?>
+                </div>
+                <?= $this->Form->hidden('assistant_id', [
+                    'id' => 'assistant-single-id',
+                    'disabled' => true,
                 ]) ?>
+                <div id="assistant-options-single" class="form-text text-info" role="status" aria-live="polite" hidden></div>
                 <div id="assistant-options-empty" class="form-text text-warning" hidden>
                     <?= __('Aucune assistante éligible pour ce département.') ?>
                 </div>

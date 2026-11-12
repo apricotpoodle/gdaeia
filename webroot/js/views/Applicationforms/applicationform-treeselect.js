@@ -17,13 +17,47 @@ document.addEventListener('DOMContentLoaded', async function () {
     if (assistantSelect) {
         let requestNumber = 0;
         const canEditAssistant = assistantSelect.dataset.canEdit === 'true';
+        const assistantWrapper = document.getElementById('assistant-select-wrapper');
+        const singleAssistantMessage = document.getElementById('assistant-options-single');
+        const singleAssistantInput = document.getElementById('assistant-single-id');
         const emptyMessage = document.getElementById('assistant-options-empty');
         const errorMessage = document.getElementById('assistant-options-error');
         let selectedAssistantId = assistantSelect.value;
 
+        const clearSingleAssistant = () => {
+            if (assistantWrapper) assistantWrapper.hidden = false;
+            if (singleAssistantMessage) {
+                singleAssistantMessage.hidden = true;
+                singleAssistantMessage.textContent = '';
+            }
+            if (singleAssistantInput) {
+                singleAssistantInput.value = '';
+                singleAssistantInput.disabled = true;
+            }
+        };
+
+        const showSingleAssistant = (assistant) => {
+            if (!assistantWrapper || !singleAssistantMessage || !singleAssistantInput) {
+                return false;
+            }
+
+            const assistantId = String(assistant.id);
+            assistantSelect.value = assistantId;
+            assistantSelect.disabled = true;
+            assistantWrapper.hidden = true;
+            singleAssistantMessage.textContent = `Une seule assistante est autorisée pour ce département : ${assistant.display_name}.`;
+            singleAssistantMessage.hidden = false;
+            singleAssistantInput.value = assistantId;
+            singleAssistantInput.disabled = !canEditAssistant;
+            selectedAssistantId = assistantId;
+
+            return true;
+        };
+
         const updateAssistants = async (departmentId) => {
             const currentRequest = ++requestNumber;
             const previousAssistantId = assistantSelect.value || selectedAssistantId;
+            clearSingleAssistant();
             assistantSelect.replaceChildren(new Option('-- Sélectionner --', ''));
             assistantSelect.disabled = true;
             if (emptyMessage) emptyMessage.hidden = true;
@@ -63,6 +97,11 @@ document.addEventListener('DOMContentLoaded', async function () {
                 assistantSelect.value = previousIsEligible
                     ? previousAssistantId
                     : (defaultIsEligible ? defaultAssistantId : '');
+                if (assistants.length === 1 && showSingleAssistant(assistants[0])) {
+                    if (emptyMessage) emptyMessage.hidden = true;
+                    return;
+                }
+
                 selectedAssistantId = assistantSelect.value;
                 assistantSelect.disabled = !canEditAssistant;
                 if (emptyMessage) emptyMessage.hidden = assistantIds.length > 0;
@@ -79,11 +118,27 @@ document.addEventListener('DOMContentLoaded', async function () {
                 selectedAssistantId = assistantSelect.value;
             });
             hiddenInput.addEventListener('change', () => updateAssistants(hiddenInput.value));
+            const initialOptions = Array.from(assistantSelect.options)
+                .filter((option) => option.value !== '');
+            if (initialOptions.length === 1) {
+                showSingleAssistant({
+                    id: initialOptions[0].value,
+                    display_name: initialOptions[0].textContent || initialOptions[0].text,
+                });
+            }
             if (hiddenInput.value) {
                 updateAssistants(hiddenInput.value);
             }
         } else {
             assistantSelect.disabled = true;
+            const initialOptions = Array.from(assistantSelect.options)
+                .filter((option) => option.value !== '');
+            if (initialOptions.length === 1) {
+                showSingleAssistant({
+                    id: initialOptions[0].value,
+                    display_name: initialOptions[0].textContent || initialOptions[0].text,
+                });
+            }
         }
     }
 

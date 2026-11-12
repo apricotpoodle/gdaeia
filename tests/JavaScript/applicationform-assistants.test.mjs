@@ -1,14 +1,21 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-function makeSelect({ value = '', dataset = {} } = {}) {
+function makeSelect({ value = '', dataset = {}, initialAssistants = [] } = {}) {
     let selectedValue = value;
-    const options = [{ value: '' }];
+    const options = [
+        { value: '' },
+        ...initialAssistants.map((assistant) => ({
+            value: String(assistant.id),
+            text: assistant.display_name,
+        })),
+    ];
     const listeners = {};
 
     return {
         dataset,
         disabled: true,
+        hidden: false,
         addEventListener(type, listener) {
             listeners[type] = listener;
         },
@@ -42,6 +49,7 @@ async function initializeForm({
     assistantId = '',
     canEdit = true,
     canEditManagers = false,
+    initialAssistants = [],
     responses = [],
 } = {}) {
     let onReady;
@@ -59,12 +67,16 @@ async function initializeForm({
     };
     const assistantSelect = makeSelect({
         value: assistantId,
+        initialAssistants,
         dataset: {
             assistantsUrl: '/api/applicationforms/assistants-for-department.json',
             defaultAssistantId: '10',
             canEdit: String(canEdit),
         },
     });
+    const assistantWrapper = { hidden: false };
+    const singleAssistantMessage = { hidden: true, textContent: '' };
+    const singleAssistantInput = { value: '', disabled: true };
     const emptyMessage = { hidden: true };
     const errorMessage = { hidden: true };
     const managersContainer = {
@@ -80,6 +92,9 @@ async function initializeForm({
         getElementById: (id) => ({
             'department-id': hiddenInput,
             'department-tree-select': null,
+            'assistant-select-wrapper': assistantWrapper,
+            'assistant-options-single': singleAssistantMessage,
+            'assistant-single-id': singleAssistantInput,
             'assistant-options-empty': emptyMessage,
             'assistant-options-error': errorMessage,
             'department-managers': managersContainer,
@@ -114,6 +129,9 @@ async function initializeForm({
 
     return {
         assistantSelect,
+        assistantWrapper,
+        singleAssistantMessage,
+        singleAssistantInput,
         emptyMessage,
         errorMessage,
         managersContainer,
@@ -167,8 +185,76 @@ test('charge les assistantes et présélectionne l’opérateur seulement s’il
     t.after(form.restore);
 
     assert.equal(form.assistantSelect.disabled, false);
+    assert.equal(form.assistantWrapper.hidden, false);
+    assert.equal(form.singleAssistantMessage.hidden, true);
+    assert.equal(form.singleAssistantInput.disabled, true);
     assert.equal(form.assistantSelect.value, '10');
     assert.deepEqual(form.assistantSelect.options.map((option) => option.value), ['', '10', '11']);
+});
+
+test('masque la liste et transmet l’assistante unique autorisée', async (t) => {
+    const form = await initializeForm({
+        departmentId: '2',
+        responses: [() => response({
+            success: true,
+            data: [{ id: 12, display_name: 'Assistante 12' }],
+        })],
+    });
+    t.after(form.restore);
+
+    assert.equal(form.assistantWrapper.hidden, true);
+    assert.equal(form.singleAssistantMessage.hidden, false);
+    assert.equal(form.singleAssistantMessage.textContent,
+        'Une seule assistante est autorisée pour ce département : Assistante 12.');
+    assert.equal(form.singleAssistantInput.value, '12');
+    assert.equal(form.singleAssistantInput.disabled, false);
+    assert.equal(form.assistantSelect.disabled, true);
+    assert.equal(form.assistantSelect.options.map((option) => option.value).includes(''), true);
+});
+
+test('signale l’assistante unique initiale sans activer le champ en lecture seule', async (t) => {
+    const form = await initializeForm({
+        departmentId: '2',
+        assistantId: '12',
+        canEdit: false,
+        initialAssistants: [{ id: 12, display_name: 'Assistante 12' }],
+        responses: [() => { throw new Error('Aucune requête attendue'); }],
+    });
+    t.after(form.restore);
+
+    assert.equal(form.assistantWrapper.hidden, true);
+    assert.equal(form.singleAssistantMessage.hidden, false);
+    assert.match(form.singleAssistantMessage.textContent, /Assistante 12/);
+    assert.equal(form.singleAssistantInput.disabled, true);
+    assert.equal(form.assistantSelect.disabled, true);
+    assert.equal(form.fetchCalls.length, 0);
+});
+
+test('réaffiche le sélecteur après le passage à un département avec plusieurs assistantes', async (t) => {
+    const form = await initializeForm({
+        departmentId: '1',
+        responses: [
+            () => response({ success: true, data: [{ id: 11, display_name: 'Assistante 11' }] }),
+            () => response({
+                success: true,
+                data: [
+                    { id: 10, display_name: 'Assistante 10' },
+                    { id: 11, display_name: 'Assistante 11' },
+                ],
+            }),
+        ],
+    });
+    t.after(form.restore);
+
+    assert.equal(form.assistantWrapper.hidden, true);
+    await form.hiddenInput.dispatchChange('2');
+
+    assert.equal(form.assistantWrapper.hidden, false);
+    assert.equal(form.singleAssistantMessage.hidden, true);
+    assert.equal(form.singleAssistantInput.disabled, true);
+    assert.equal(form.singleAssistantInput.value, '');
+    assert.equal(form.assistantSelect.disabled, false);
+    assert.equal(form.assistantSelect.value, '11');
 });
 
 test('ignore la réponse tardive d’un département précédent', async (t) => {
@@ -191,7 +277,8 @@ test('ignore la réponse tardive d’un département précédent', async (t) => 
     await oldResponse;
 
     assert.deepEqual(form.assistantSelect.options.map((option) => option.value), ['', '20']);
-    assert.equal(form.assistantSelect.value, '');
+    assert.equal(form.assistantSelect.value, '20');
+    assert.equal(form.singleAssistantInput.value, '20');
 });
 
 test('conserve la sélection encore éligible après un changement de département', async (t) => {
@@ -244,6 +331,9 @@ test('affiche un message lorsque le département n’a aucune assistante éligib
     t.after(form.restore);
 
     assert.equal(form.emptyMessage.hidden, false);
+    assert.equal(form.assistantWrapper.hidden, false);
+    assert.equal(form.singleAssistantMessage.hidden, true);
+    assert.equal(form.singleAssistantInput.disabled, true);
     assert.equal(form.assistantSelect.value, '');
 });
 

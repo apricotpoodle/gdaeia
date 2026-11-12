@@ -31,10 +31,14 @@ champ.
 Dans les formulaires de DAE, le département précède l'assistante. Le script
 `webroot/js/views/Applicationforms/applicationform-treeselect.js` recharge les
 options après chaque changement de département et conserve uniquement une
-assistante encore éligible. Il recharge aussi les responsables associés au
-département sélectionné, sans héritage depuis un parent, et ignore les réponses
-tardives. Les chargements sont suspendus lorsque le département est en lecture
-seule. La sauvegarde complète le filtrage des assistantes côté serveur.
+assistante encore éligible. Lorsqu'une seule assistante est disponible, il
+masque le sélecteur, affiche son nom et transmet son identifiant dans un champ
+masqué si le champ est modifiable. En lecture seule, il utilise l'option déjà
+fournie par le serveur sans rendre le champ modifiable. Le script recharge aussi
+les responsables associés au département sélectionné, sans héritage depuis un
+parent, et ignore les réponses tardives. Les chargements sont suspendus lorsque
+le département est en lecture seule. La sauvegarde conserve le filtrage des
+assistantes côté serveur.
 
 ## Administration des départements
 
