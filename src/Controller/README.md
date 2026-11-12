@@ -28,6 +28,14 @@ Les mutations des formulaires Web filtrent leurs données avec les helpers
 nécessaire ; la matrice `field_authorizations` ajoute le contrôle au niveau du
 champ.
 
+Dans les formulaires de DAE, le département précède l'assistante. Le script
+`webroot/js/views/Applicationforms/applicationform-treeselect.js` recharge les
+options après chaque changement de département et conserve uniquement une
+assistante encore éligible. Il recharge aussi les responsables associés au
+département sélectionné, sans héritage depuis un parent, et ignore les réponses
+tardives. Les chargements sont suspendus lorsque le département est en lecture
+seule. La sauvegarde complète le filtrage des assistantes côté serveur.
+
 ## Administration des départements
 
 `DepartmentsController` rend l'écran `/departments` réservé aux opérateurs

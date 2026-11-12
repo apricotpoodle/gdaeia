@@ -34,6 +34,7 @@ class ApplicationformsControllerTest extends TestCase
         'app.Periods',
         'app.Yesnos',
         'app.UserDepartments',
+        'app.DepartmentManagers',
         'app.Roles',
         'app.Validationsequences',
         'app.Validationstatuses',
@@ -61,6 +62,161 @@ class ApplicationformsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertHeaderContains('Content-Type', 'application/json');
+    }
+
+    public function testLEndpointAssistantesFiltreLesOptionsParDepartement(): void
+    {
+        $this->seedAssistantOptions();
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_DEMANDEUR,
+        ])]);
+
+        $this->get('/api/applicationforms/assistants-for-department.json?department_id=2');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(['3' => 'Assistante 3'], $body['assistants']);
+    }
+
+    public function testLEndpointAssistantesRefuseUnDepartementHorsPerimetre(): void
+    {
+        $this->seedAssistantOptions();
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_DEMANDEUR])]);
+
+        $this->get('/api/applicationforms/assistants-for-department.json?department_id=3');
+
+        $this->assertResponseCode(404);
+    }
+
+    public function testLEndpointAssistantesRefuseUnIdentifiantInvalideAvec422(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/api/applicationforms/assistants-for-department.json?department_id=invalide');
+
+        $this->assertResponseCode(422);
+    }
+
+    public function testLEndpointAssistantesExigeLeDroitDeCreerUneDae(): void
+    {
+        $this->seedAssistantOptions();
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_1_VALIDEUR_POLE,
+        ])]);
+
+        $this->get('/api/applicationforms/assistants-for-department.json?department_id=2');
+
+        $this->assertResponseCode(403);
+    }
+
+    public function testLEndpointResponsablesRetourneLesAssociationsDirectesDuDepartementVisible(): void
+    {
+        $this->seedAssistantOptions();
+        $this->seedDepartmentManager(1, 2);
+        $this->seedDepartmentManager(2, 3);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/api/applicationforms/managers-for-department.json?department_id=2');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(['success' => true, 'data' => ['Assistante 3']], $body);
+    }
+
+    public function testLEndpointResponsablesRetourneUneListeVideSansAssociation(): void
+    {
+        $this->seedAssistantOptions();
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/api/applicationforms/managers-for-department.json?department_id=2');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(['success' => true, 'data' => []], $body);
+    }
+
+    public function testLEndpointResponsablesRefuseUnDepartementHorsPerimetre(): void
+    {
+        $this->seedAssistantOptions();
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_DEMANDEUR])]);
+
+        $this->get('/api/applicationforms/managers-for-department.json?department_id=3');
+
+        $this->assertResponseCode(404);
+    }
+
+    public function testLEndpointResponsablesRetourne404PourUnDepartementAbsent(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/api/applicationforms/managers-for-department.json?department_id=999');
+
+        $this->assertResponseCode(404);
+    }
+
+    public function testLEndpointResponsablesRetourne422PourUnIdentifiantInvalide(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/api/applicationforms/managers-for-department.json?department_id=invalide');
+
+        $this->assertResponseCode(422);
+    }
+
+    public function testLEndpointResponsablesExigeLeDroitDeCreerUneDae(): void
+    {
+        $this->seedAssistantOptions();
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_1_VALIDEUR_POLE,
+        ])]);
+
+        $this->get('/api/applicationforms/managers-for-department.json?department_id=2');
+
+        $this->assertResponseCode(403);
+    }
+
+    public function testLEditionApiRefuseUneAssistanteNonDemandeuse(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/edit/1.json', ['assistant_id' => 2]);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"field":"assistant_id"');
+    }
+
+    public function testLEditionApiRefuseUneAssistanteDunDepartementHorsPerimetre(): void
+    {
+        $this->seedAssistantOptions();
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationforms', [
+            'deleted' => null,
+            'user_id' => 2,
+            'department_id' => 2,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/edit/1.json', [
+            'department_id' => 3,
+            'assistant_id' => 4,
+        ]);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"field":"assistant_id"');
+        $applicationform = TableRegistry::getTableLocator()->get('Applicationforms')->get(1);
+        $this->assertSame(2, (int)$applicationform->get('department_id'));
     }
 
     public function testLApiDesDemandesExposeLesReferentielsNecessairesAuxColonnes(): void
@@ -1000,5 +1156,65 @@ class ApplicationformsControllerTest extends TestCase
             'state' => 'en_attente',
             'reminder_count' => 0,
         ]);
+    }
+
+    private function seedAssistantOptions(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('departments', ['deleted' => null], ['id' => 2]);
+        $connection->insert('departments', [
+            'id' => 3,
+            'parent_id' => null,
+            'lft' => 5,
+            'rght' => 6,
+            'level' => 1,
+            'base' => 1,
+            'code' => 'AUTRE-SERVICE',
+            'name' => 'Autre service',
+            'sort' => 'Autre service',
+            'department_type_id' => 1,
+            'deleted' => null,
+        ]);
+        $connection->update('roles', ['deleted' => null], ['id' => User::ROLE_ADMIN]);
+        $connection->insert('roles', [
+            'id' => User::ROLE_DEMANDEUR,
+            'base' => 1,
+            'code' => 'DEMANDEUR',
+            'name' => 'Demandeur',
+            'sort' => 'Demandeur',
+            'deleted' => null,
+            'created' => '2026-07-03 09:01:32',
+            'modified' => '2026-07-03 09:01:32',
+        ]);
+        foreach ([3, 4] as $id) {
+            $connection->insert('users', [
+                'id' => $id,
+                'username' => 'assistante-api-' . $id,
+                'email' => 'assistante-api-' . $id . '@example.test',
+                'password' => 'mot-de-passe',
+                'firstname' => 'Assistante',
+                'lastname' => (string)$id,
+                'issuperuser' => 0,
+                'role_id' => User::ROLE_DEMANDEUR,
+                'deleted' => null,
+                'created' => '2026-07-03 09:01:33',
+                'modified' => '2026-07-03 09:01:33',
+            ]);
+        }
+        $userDepartments = TableRegistry::getTableLocator()->get('UserDepartments');
+        $userDepartments->saveManyOrFail($userDepartments->newEntities([
+            ['user_id' => 2, 'department_id' => 2],
+            ['user_id' => 3, 'department_id' => 2],
+            ['user_id' => 4, 'department_id' => 3],
+        ]));
+    }
+
+    private function seedDepartmentManager(int $departmentId, int $userId): void
+    {
+        $table = TableRegistry::getTableLocator()->get('DepartmentManagers');
+        $table->saveOrFail($table->newEntity([
+            'department_id' => $departmentId,
+            'user_id' => $userId,
+        ]));
     }
 }

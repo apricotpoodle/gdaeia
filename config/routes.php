@@ -159,6 +159,16 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/applicationforms/{id}/validation', ['controller' => 'Applicationforms', 'action' => 'validationState', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/calculate-salary', ['controller' => 'Applicationforms', 'action' => 'calculateSalary', '_ext' => 'json']);
         $builder->connect('/applicationforms/blocked-validations', ['controller' => 'Applicationforms', 'action' => 'blockedValidations', '_ext' => 'json']);
+        $builder->connect('/applicationforms/assistants-for-department', [
+            'controller' => 'Applicationforms',
+            'action' => 'assistantsForDepartment',
+            '_ext' => 'json',
+        ], ['methods' => ['GET']]);
+        $builder->connect('/applicationforms/managers-for-department', [
+            'controller' => 'Applicationforms',
+            'action' => 'managersForDepartment',
+            '_ext' => 'json',
+        ], ['methods' => ['GET']]);
         $builder->connect('/applicationforms/{id}/duplicate', ['controller' => 'Applicationforms', 'action' => 'duplicate', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/archive', ['controller' => 'Applicationforms', 'action' => 'archive', '_ext' => 'json'], ['pass' => ['id']]);
 

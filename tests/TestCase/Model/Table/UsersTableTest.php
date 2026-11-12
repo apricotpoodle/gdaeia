@@ -98,6 +98,69 @@ class UsersTableTest extends TestCase
         $this->assertArrayHasKey('username', $user->getErrors());
     }
 
+    public function testLeFinderAssistantsForDepartmentExclutLesComptesIneligibles(): void
+    {
+        $connection = $this->Users->getConnection();
+        $departments = $this->getTableLocator()->get('Departments');
+        $departments->updateAll(['deleted' => null], ['id IN' => [1, 2]]);
+        $connection->insert('departments', [
+            'id' => 3,
+            'parent_id' => null,
+            'lft' => 5,
+            'rght' => 6,
+            'level' => 1,
+            'base' => 1,
+            'code' => 'AUTRE-SERVICE',
+            'name' => 'Autre service',
+            'sort' => 'Autre service',
+            'department_type_id' => 1,
+            'deleted' => null,
+        ]);
+        $connection->update('roles', ['deleted' => null], ['id' => User::ROLE_ADMIN]);
+        $connection->insert('roles', [
+            'id' => User::ROLE_DEMANDEUR,
+            'base' => 1,
+            'code' => 'DEMANDEUR',
+            'name' => 'Demandeur',
+            'sort' => 'Demandeur',
+            'deleted' => null,
+            'created' => '2026-07-03 09:01:32',
+            'modified' => '2026-07-03 09:01:32',
+        ]);
+
+        foreach ([3, 4, 5, 6] as $id) {
+            $connection->insert('users', [
+                'id' => $id,
+                'username' => 'assistante-' . $id,
+                'email' => 'assistante-' . $id . '@example.test',
+                'password' => 'mot-de-passe',
+                'firstname' => 'Assistante',
+                'lastname' => (string)$id,
+                'issuperuser' => 0,
+                'role_id' => $id === 5 ? User::ROLE_ADMIN : User::ROLE_DEMANDEUR,
+                'deleted' => $id === 6 ? '2026-07-03 09:01:33' : null,
+                'created' => '2026-07-03 09:01:33',
+                'modified' => '2026-07-03 09:01:33',
+            ]);
+        }
+
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveManyOrFail($userDepartments->newEntities([
+            ['user_id' => 2, 'department_id' => 2],
+            ['user_id' => 3, 'department_id' => 2],
+            ['user_id' => 4, 'department_id' => 3],
+            ['user_id' => 5, 'department_id' => 2],
+            ['user_id' => 6, 'department_id' => 2],
+        ]));
+
+        $assistants = $this->Users->find('assistantsForDepartment', departmentId: 2)
+            ->find('list', keyField: 'id', valueField: 'display_name')
+            ->toArray();
+
+        $this->assertSame([3], array_map('intval', array_keys($assistants)));
+        $this->assertSame('Assistante 3', $assistants[3]);
+    }
+
     public function testLeFinderManageableToRetourneLesUtilisateursLocauxEtExclutLesAncetres(): void
     {
         $connection = $this->Users->getConnection();

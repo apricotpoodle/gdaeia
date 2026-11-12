@@ -115,7 +115,6 @@ class ApplicationformsController extends AppController
         $identity = $this->request->getAttribute('identity');
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $identity->getOriginalData();
-        $applicationform->set(Applicationform::FIELD_ASSISTANT_ID, $currentUser->get(User::FIELD_ID));
 
         if ($this->request->is('post')) {
             $data = $this->authorizedRequestData('Applicationforms');
@@ -135,6 +134,7 @@ class ApplicationformsController extends AppController
 
             // Attribution de l'utilisateur créateur
             $applicationform->set(Applicationform::FIELD_USER_ID, $currentUser->get(User::FIELD_ID));
+            $this->Applicationforms->validateAssistantVisibility($applicationform, $currentUser);
 
             if ($this->Applicationforms->save($applicationform)) {
                 $this->Flash->success(__('La demande de recrutement a été créée avec succès.'));
@@ -166,7 +166,8 @@ class ApplicationformsController extends AppController
         $collaborators = $this->Applicationforms->Users
             ->find('visibleTo', user: $currentUser)
             ->find('list', keyField: 'id', valueField: 'display_name')->toArray();
-        $assistants = $this->ensureUserOption($collaborators, $currentUser->get(User::FIELD_ID));
+        $assistants = $this->assistantOptionsFor($applicationform, $currentUser);
+        $assistantDefaultId = (int)$currentUser->get(User::FIELD_ID);
         $departmentManagers = [];
 
         $this->set(compact(
@@ -181,6 +182,7 @@ class ApplicationformsController extends AppController
             'yesnos',
             'collaborators',
             'assistants',
+            'assistantDefaultId',
             'departmentManagers',
         ));
 
@@ -202,12 +204,6 @@ class ApplicationformsController extends AppController
         $this->Authorization->authorize($applicationform, 'edit');
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
-        if ($applicationform->get(Applicationform::FIELD_ASSISTANT_ID) === null) {
-            $applicationform->set(
-                Applicationform::FIELD_ASSISTANT_ID,
-                $applicationform->get(Applicationform::FIELD_USER_ID),
-            );
-        }
 
         // 3. Traitement de la soumission POST / PUT / PATCH
         if ($this->request->is(['post', 'put', 'patch'])) {
@@ -215,6 +211,7 @@ class ApplicationformsController extends AppController
                 $applicationform,
                 $this->authorizedRequestData('Applicationforms'),
             );
+            $this->Applicationforms->validateAssistantVisibility($applicationform, $currentUser);
 
             if ($this->Applicationforms->save($applicationform)) {
                 $this->Flash->success(__(
@@ -247,16 +244,15 @@ class ApplicationformsController extends AppController
         $budgetfeatures = $this->Applicationforms->Budgetfeatures->getVisibleList($currentUser);
         $yesnos = $this->Applicationforms->Yesnos->getVisibleList($currentUser);
 
-        // 💡 FILTRAGE STRICT DES COLLABORATEURS SELON LE PÉRIMÈTRE UTILISATEUR
+        // Les collaborateurs gardent leur périmètre général ; les assistantes
+        // sont filtrées par le département de la demande.
         /** @var array<int, string> $collaborators */
         $collaborators = $this->Applicationforms->Users
             ->find('visibleTo', user: $currentUser)
             ->find('list', keyField: 'id', valueField: 'display_name')
             ->toArray();
-        $assistants = $this->ensureUserOption(
-            $collaborators,
-            (int)$applicationform->get(Applicationform::FIELD_ASSISTANT_ID),
-        );
+        $assistants = $this->assistantOptionsFor($applicationform, $currentUser);
+        $assistantDefaultId = (int)$currentUser->get(User::FIELD_ID);
         $departmentManagers = $applicationform->get('department')?->get('managers') ?? [];
 
         $this->set(compact(
@@ -272,6 +268,7 @@ class ApplicationformsController extends AppController
             'yesnos',
             'collaborators',
             'assistants',
+            'assistantDefaultId',
             'departmentManagers',
             'circuitLocked',
         ));
@@ -280,23 +277,40 @@ class ApplicationformsController extends AppController
     }
 
     /**
-     * Ajoute uniquement l'utilisateur sélectionné à une liste filtrée si nécessaire.
+     * Charge les assistantes du département et conserve seulement une valeur éligible.
      *
-     * @param array<int|string, string> $options Options déjà restreintes au périmètre.
-     * @param int $userId Identifiant à conserver dans le formulaire.
-     * @return array<int|string, string> Options complétées sans élargir la liste.
+     * @param \App\Model\Entity\Applicationform $applicationform Demande affichée.
+     * @param \App\Model\Entity\User $operator Opérateur courant.
+     * @return array<int|string, string> Options d'assistantes éligibles.
      */
-    private function ensureUserOption(array $options, int $userId): array
+    private function assistantOptionsFor(Applicationform $applicationform, User $operator): array
     {
-        if ($userId <= 0 || array_key_exists($userId, $options)) {
-            return $options;
+        $departmentId = (int)$applicationform->get(Applicationform::FIELD_DEPARTMENT_ID);
+        $options = [];
+        if ($departmentId > 0) {
+            /** @var array<int|string, string> $options */
+            $options = $this->Applicationforms->Users
+                ->find('assistantsForDepartment', departmentId: $departmentId)
+                ->find('visibleTo', user: $operator)
+                ->find('list', keyField: 'id', valueField: 'display_name')
+                ->toArray();
         }
 
-        $user = $this->Applicationforms->Users->find()
-            ->where(['Users.id' => $userId])
-            ->first();
-        if ($user instanceof User) {
-            $options[$userId] = $user->get('display_name');
+        $submittedData = $this->request->getData();
+        $assistantWasSubmitted = $this->request->is(['post', 'put', 'patch'])
+            && array_key_exists(Applicationform::FIELD_ASSISTANT_ID, $submittedData);
+        $assistantId = $applicationform->get(Applicationform::FIELD_ASSISTANT_ID);
+        if ($assistantId === null && !$assistantWasSubmitted) {
+            $assistantId = $operator->get(User::FIELD_ID);
+        }
+
+        $operatorId = (int)$operator->get(User::FIELD_ID);
+        if ($assistantId !== null && array_key_exists((int)$assistantId, $options)) {
+            $applicationform->set(Applicationform::FIELD_ASSISTANT_ID, (int)$assistantId);
+        } elseif (!$assistantWasSubmitted && array_key_exists($operatorId, $options)) {
+            $applicationform->set(Applicationform::FIELD_ASSISTANT_ID, $operatorId);
+        } else {
+            $applicationform->set(Applicationform::FIELD_ASSISTANT_ID, null);
         }
 
         return $options;

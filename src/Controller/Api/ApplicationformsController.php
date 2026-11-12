@@ -568,6 +568,87 @@ class ApplicationformsController extends AppController
         ]);
     }
 
+    /**
+     * Retourne les assistantes éligibles pour un département visible.
+     *
+     * @return void
+     * @throws \Cake\Http\Exception\UnprocessableContentException Si l'identifiant est invalide.
+     * @throws \Cake\Http\Exception\NotFoundException Si le département est hors périmètre.
+     */
+    public function assistantsForDepartment(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->authorize($this->Applicationforms->newEmptyEntity(), 'add');
+        $departmentId = filter_var($this->request->getQuery('department_id'), FILTER_VALIDATE_INT);
+        if ($departmentId === false || $departmentId < 1) {
+            throw new UnprocessableContentException(__('Le département sélectionné est invalide.'));
+        }
+
+        /** @var \App\Model\Entity\User $operator */
+        $operator = $this->request->getAttribute('identity')->getOriginalData();
+        $departments = TableRegistry::getTableLocator()->get('Departments');
+        $department = $departments->find('visibleTo', user: $operator)
+            ->where(['Departments.id' => $departmentId])
+            ->first();
+        if ($department === null) {
+            throw new NotFoundException(__('Le département demandé est introuvable.'));
+        }
+
+        /** @var \App\Model\Table\UsersTable $users */
+        $users = TableRegistry::getTableLocator()->get('Users');
+        $assistants = $users->find('assistantsForDepartment', departmentId: (int)$departmentId)
+            ->find('visibleTo', user: $operator)
+            ->orderByAsc('Users.firstname')
+            ->orderByAsc('Users.lastname')
+            ->find('list', keyField: 'id', valueField: 'display_name')
+            ->toArray();
+
+        $this->set(compact('assistants'));
+        $this->viewBuilder()->setOption('serialize', ['assistants']);
+    }
+
+    /**
+     * Retourne les noms des responsables directement associés à un département visible.
+     *
+     * @return void
+     * @throws \Cake\Http\Exception\UnprocessableContentException Si l'identifiant est invalide.
+     * @throws \Cake\Http\Exception\NotFoundException Si le département est hors périmètre ou absent.
+     */
+    public function managersForDepartment(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->authorize($this->Applicationforms->newEmptyEntity(), 'add');
+        $departmentId = filter_var($this->request->getQuery('department_id'), FILTER_VALIDATE_INT);
+        if ($departmentId === false || $departmentId < 1) {
+            throw new UnprocessableContentException(__('Le département sélectionné est invalide.'));
+        }
+
+        /** @var \App\Model\Entity\User $operator */
+        $operator = $this->request->getAttribute('identity')->getOriginalData();
+        $departments = TableRegistry::getTableLocator()->get('Departments');
+        $department = $departments->find('visibleTo', user: $operator)
+            ->contain([
+                'Managers' => static fn(SelectQuery $query): SelectQuery => $query
+                    ->orderByAsc('Managers.firstname')
+                    ->orderByAsc('Managers.lastname'),
+            ])
+            ->where(['Departments.id' => $departmentId])
+            ->first();
+        if ($department === null) {
+            throw new NotFoundException(__('Le département demandé est introuvable.'));
+        }
+
+        /** @var list<\App\Model\Entity\User> $managers */
+        $managers = $department->get('managers') ?? [];
+        $data = array_map(
+            static fn(User $manager): string => (string)$manager->get('display_name'),
+            $managers,
+        );
+
+        $this->set(['success' => true, 'data' => $data]);
+        $this->viewBuilder()->setOption('serialize', ['success', 'data']);
+    }
+
     /** Calcule le salaire de base sans persister la demande. */
     public function calculateSalary(): Response
     {
@@ -631,6 +712,7 @@ class ApplicationformsController extends AppController
         $filteredData[Applicationform::FIELD_USER_ID] = $user->get(User::FIELD_ID);
 
         $applicationform = $this->Applicationforms->patchEntity($applicationform, $filteredData);
+        $this->Applicationforms->validateAssistantVisibility($applicationform, $user);
 
         if ($this->Applicationforms->save($applicationform)) {
             return $this->response->withType('application/json')
@@ -707,13 +789,14 @@ class ApplicationformsController extends AppController
                 ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID),
                 'state' => 'en_attente',
             ])->first();
+        /** @var \App\Model\Entity\User $operator */
+        $operator = $identity->getOriginalData();
         $applicationform = $this->Applicationforms->patchEntity($applicationform, $filteredData);
+        $this->Applicationforms->validateAssistantVisibility($applicationform, $operator);
         $hasChanges = $applicationform->isDirty();
 
         if ($this->Applicationforms->save($applicationform)) {
             if ($activeRun !== null && $hasChanges) {
-                /** @var \App\Model\Entity\User $operator */
-                $operator = $identity->getOriginalData();
                 $this->fetchTable('Comments')->saveOrFail($this->fetchTable('Comments')->newEntity([
                     'model' => 'Applicationforms',
                     'foreign_key' => $applicationform->get(Applicationform::FIELD_ID),

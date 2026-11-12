@@ -627,6 +627,17 @@ class ApplicationformsTable extends Table
         ) {
             $rules->add($rules->existsIn([$field], $association), ['errorField' => $field]);
         }
+        $rules->add(
+            function (Applicationform $applicationform): bool {
+                return $this->assistantMatchesDepartment($applicationform);
+            },
+            [
+                'errorField' => Applicationform::FIELD_ASSISTANT_ID,
+                'message' => __(
+                    'L’assistante doit être active, avoir le rôle Demandeur et appartenir à ce département.',
+                ),
+            ],
+        );
         $rules->add($rules->existsIn([Applicationform::FIELD_CONTRACTTYPE_ID], 'Contracttypes'), [
             'errorField' => Applicationform::FIELD_CONTRACTTYPE_ID,
         ]);
@@ -650,6 +661,76 @@ class ApplicationformsTable extends Table
         ]);
 
         return $rules;
+    }
+
+    /**
+     * Vérifie que l'assistante sélectionnée figure dans les options visibles de l'opérateur.
+     *
+     * Cette vérification complète les règles d'intégrité qui ne disposent pas
+     * de l'identité courante. Les mutations Web et API l'appellent après
+     * l'hydratation et avant la sauvegarde.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform DAE à vérifier.
+     * @param \App\Model\Entity\User $operator Opérateur courant.
+     * @return void
+     */
+    public function validateAssistantVisibility(Applicationform $applicationform, User $operator): void
+    {
+        $assistantId = $applicationform->get(Applicationform::FIELD_ASSISTANT_ID);
+        if ($assistantId === null || $assistantId === '' || $assistantId === 0 || $assistantId === '0') {
+            return;
+        }
+
+        $assistantId = filter_var($assistantId, FILTER_VALIDATE_INT);
+        $departmentId = filter_var(
+            $applicationform->get(Applicationform::FIELD_DEPARTMENT_ID),
+            FILTER_VALIDATE_INT,
+        );
+        if ($assistantId === false || $assistantId < 1 || $departmentId === false || $departmentId < 1) {
+            return;
+        }
+
+        if (!$this->assistantMatchesDepartment($applicationform)) {
+            return;
+        }
+
+        $isVisible = $this->Users
+            ->find('assistantsForDepartment', departmentId: $departmentId)
+            ->find('visibleTo', user: $operator)
+            ->where(['Users.id' => $assistantId])
+            ->count() > 0;
+
+        if (!$isVisible) {
+            $applicationform->setError(Applicationform::FIELD_ASSISTANT_ID, [
+                'visibility' => __('L’assistante ne figure pas parmi les options visibles pour ce département.'),
+            ], false);
+        }
+    }
+
+    /**
+     * Vérifie que l'assistante choisie appartient au département de la demande.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform Demande à vérifier.
+     * @return bool Vrai sans assistante, ou si elle est éligible.
+     */
+    private function assistantMatchesDepartment(Applicationform $applicationform): bool
+    {
+        $assistantId = $applicationform->get(Applicationform::FIELD_ASSISTANT_ID);
+        if ($assistantId === null || $assistantId === '' || (int)$assistantId === 0) {
+            return true;
+        }
+
+        $departmentId = (int)$applicationform->get(Applicationform::FIELD_DEPARTMENT_ID);
+        if ($departmentId < 1) {
+            return false;
+        }
+
+        /** @var \App\Model\Table\UsersTable $users */
+        $users = TableRegistry::getTableLocator()->get('Users');
+
+        return $users->find('assistantsForDepartment', departmentId: $departmentId)
+            ->where(['Users.id' => (int)$assistantId])
+            ->count() > 0;
     }
 
     /**

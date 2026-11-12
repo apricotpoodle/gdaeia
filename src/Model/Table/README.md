@@ -4,6 +4,13 @@ Ce répertoire contient la couche d'accès aux données (ORM CakePHP).
 
 ## Filtres et Recherches
 * **`ApplicationformsTable`** : Intègre le Behavior `FriendsOfCake/Search` avec un filtre callback configuré en `MATCH() AGAINST() IN BOOLEAN MODE` sur l'index FULLTEXT multi-colonnes (`jobtitle`, `applicantname`, `qualification`, `reasonforreplacement`).
+  Les règles de sauvegarde limitent `assistant_id` aux comptes actifs de rôle
+  Demandeur rattachés explicitement au département de la DAE. Le contrôle
+  `validateAssistantVisibility()` complète cette règle dans les mutations Web
+  et API avec le périmètre de visibilité de l'opérateur.
+* **`UsersTable`** : Le finder `assistantsForDepartment()` retourne les comptes
+  actifs de rôle Demandeur associés directement au département demandé. Il se
+  compose avec `visibleTo()` quand les options dépendent de l'opérateur.
 * **`WorkflowSettingsTable`** et **`ValidationCommentTemplatesTable`** : Portent respectivement les paramètres globaux du workflow, dont l'obligation de commenter par décision, et le catalogue administrable des commentaires prédéfinis. Le modèle sélectionné préremplit le champ libre ; seul le texte final du vote est conservé dans `validations.obs`.
 * **`DepartmentsTable`** : Fournit le finder `activeChildren()` utilisé par
   l'arbre d'administration, porte les validations, unicités et règles

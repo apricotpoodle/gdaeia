@@ -155,6 +155,29 @@ class UsersTable extends Table
     }
 
     /**
+     * Liste les demandeurs actifs explicitement associés à un département.
+     *
+     * La visibilité de l'opérateur se compose avec ce finder via
+     * `find('visibleTo', user: $operator)` lorsque le contexte le nécessite.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query
+     * @param int $departmentId Identifiant du département sélectionné.
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
+     */
+    public function findAssistantsForDepartment(SelectQuery $query, int $departmentId): SelectQuery
+    {
+        return $query
+            ->where([
+                'Users.role_id' => User::ROLE_DEMANDEUR,
+                'Users.deleted IS' => null,
+            ])
+            ->innerJoinWith('UserDepartments', static function ($query) use ($departmentId) {
+                return $query->where(['UserDepartments.department_id' => $departmentId]);
+            })
+            ->distinct(['Users.id']);
+    }
+
+    /**
      * Restreint la liste des utilisateurs visibles à ceux gérables par l'opérateur.
      *
      * Un utilisateur associé à un ancêtre strict d'une racine explicite de

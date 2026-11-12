@@ -45,6 +45,8 @@ class ApplicationformsTableTest extends TestCase
         'app.Applicationforms',
         'app.Departments',
         'app.Users',
+        'app.Roles',
+        'app.UserDepartments',
         'app.Contracttypes',
         'app.Hiringreasons',
         'app.Budgetfeatures',
@@ -124,6 +126,93 @@ class ApplicationformsTableTest extends TestCase
 
         $this->assertFalse($this->Applicationforms->save($applicationform));
         $this->assertArrayHasKey('department_id', $applicationform->getErrors());
+    }
+
+    public function testLaSauvegardeRefuseUneAssistanteNonRattacheeOuInactiveOuAuMauvaisRole(): void
+    {
+        $connection = $this->Applicationforms->getConnection();
+        $connection->update('departments', ['deleted' => null], ['id' => 2]);
+        $connection->update('roles', ['deleted' => null], ['id' => User::ROLE_ADMIN]);
+        $connection->insert('roles', [
+            'id' => User::ROLE_DEMANDEUR,
+            'base' => 1,
+            'code' => 'DEMANDEUR',
+            'name' => 'Demandeur',
+            'sort' => 'Demandeur',
+            'deleted' => null,
+            'created' => '2026-07-03 09:01:32',
+            'modified' => '2026-07-03 09:01:32',
+        ]);
+
+        foreach ([3, 4, 5] as $id) {
+            $connection->insert('users', [
+                'id' => $id,
+                'username' => 'candidat-assistante-' . $id,
+                'email' => 'candidat-assistante-' . $id . '@example.test',
+                'password' => 'mot-de-passe',
+                'firstname' => 'Assistante',
+                'lastname' => (string)$id,
+                'issuperuser' => 0,
+                'role_id' => $id === 4 ? User::ROLE_ADMIN : User::ROLE_DEMANDEUR,
+                'deleted' => $id === 5 ? '2026-07-03 09:01:33' : null,
+                'created' => '2026-07-03 09:01:33',
+                'modified' => '2026-07-03 09:01:33',
+            ]);
+        }
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveManyOrFail($userDepartments->newEntities([
+            ['user_id' => 3, 'department_id' => 2],
+            ['user_id' => 4, 'department_id' => 2],
+            ['user_id' => 5, 'department_id' => 2],
+        ]));
+        $connection->insert('departments', [
+            'id' => 3,
+            'parent_id' => null,
+            'lft' => 5,
+            'rght' => 6,
+            'level' => 1,
+            'base' => 1,
+            'code' => 'AUTRE-SERVICE',
+            'name' => 'Autre service',
+            'sort' => 'Autre service',
+            'department_type_id' => 1,
+            'deleted' => null,
+        ]);
+        $connection->insert('user_departments', [
+            'user_id' => 6,
+            'department_id' => 3,
+            'created' => '2026-07-03 09:01:33',
+            'modified' => '2026-07-03 09:01:33',
+        ]);
+        $connection->insert('users', [
+            'id' => 6,
+            'username' => 'assistante-autre-departement',
+            'email' => 'assistante-autre-departement@example.test',
+            'password' => 'mot-de-passe',
+            'firstname' => 'Assistante',
+            'lastname' => 'Autre département',
+            'issuperuser' => 0,
+            'role_id' => User::ROLE_DEMANDEUR,
+            'deleted' => null,
+            'created' => '2026-07-03 09:01:33',
+            'modified' => '2026-07-03 09:01:33',
+        ]);
+
+        $eligible = $this->Applicationforms->newEntity($this->validData([
+            'department_id' => 2,
+            'assistant_id' => 3,
+        ]));
+        $this->assertNotFalse($this->Applicationforms->save($eligible));
+
+        foreach ([4, 5, 6] as $assistantId) {
+            $applicationform = $this->Applicationforms->newEntity($this->validData([
+                'department_id' => 2,
+                'assistant_id' => $assistantId,
+            ]));
+
+            $this->assertFalse($this->Applicationforms->save($applicationform));
+            $this->assertArrayHasKey('assistant_id', $applicationform->getErrors());
+        }
     }
 
     /**

@@ -5,8 +5,10 @@
  * @description Élément représentant la Zone 1 (Administration) du formulaire.
  *
  * @var \App\View\AppView $this
+ * @var \App\Model\Entity\Applicationform $applicationform
  * @var array<int, string> $collaborators
  * @var array<int, string> $assistants
+ * @var int $assistantDefaultId
  * @var list<\App\Model\Entity\User> $departmentManagers
  * @var bool $canEditAdmin
  * @var bool|null $circuitLocked
@@ -23,30 +25,58 @@
     <div class="card-body">
         <div class="row g-3">
 
+            <!-- Sélection du Département -->
+            <div class="col-md-12">
+                <label class="form-label fs-7 fw-medium"><?= $this->FieldMetadata->label('Applicationforms', 'department_id') ?></label>
+                <?php if ($circuitLocked ?? false): ?>
+                    <div class="form-control form-control-sm bg-light"><?= h($applicationform->department->name ?? '') ?></div>
+                <?php else: ?>
+                    <div id="department-tree-select"></div>
+                <?php endif; ?>
+
+                <?= $this->Form->hidden('department_id', ['id' => 'department-id']) ?>
+            </div>
+
             <div class="col-md-6">
                 <?= $this->Form->control('assistant_id', [
                     'label' => __('Assistante'),
                     'options' => $assistants ?? [],
                     'empty' => __('-- Sélectionner --'),
                     'class' => 'form-select form-select-sm',
-                    'disabled' => !$canEditAdmin,
+                    'disabled' => !$canEditAdmin || (int)$applicationform->get('department_id') < 1,
+                    'data-assistants-url' => '/api/applicationforms/assistants-for-department.json',
+                    'data-default-assistant-id' => (string)($assistantDefaultId ?? ''),
+                    'data-can-edit' => $canEditAdmin ? 'true' : 'false',
                 ]) ?>
+                <div id="assistant-options-empty" class="form-text text-warning" hidden>
+                    <?= __('Aucune assistante éligible pour ce département.') ?>
+                </div>
+                <div id="assistant-options-error" class="form-text text-danger" hidden>
+                    <?= __('La liste des assistantes n’a pas pu être chargée.') ?>
+                </div>
             </div>
 
             <div class="col-md-6">
                 <label class="form-label"><?= __('Responsables du département') ?></label>
-                <?php if ($departmentManagers !== []): ?>
-                    <div class="form-control form-control-sm bg-light">
-                        <?= h(implode(', ', array_map(
-                            static fn($manager): string => (string)$manager->get('display_name'),
-                            $departmentManagers,
-                        ))) ?>
-                    </div>
-                <?php else: ?>
-                    <div class="form-control form-control-sm text-danger bg-light">
-                        <?= __('Aucun responsable associé') ?>
-                    </div>
-                <?php endif; ?>
+                <?php
+                $canLoadDepartmentManagers = $canEditAdmin
+                    && !($circuitLocked ?? false)
+                    && ($fieldSchema['department_id'] ?? 'EDIT') === 'EDIT';
+                $managerNames = array_map(
+                    static fn($manager): string => (string)$manager->get('display_name'),
+                    $departmentManagers,
+                );
+                ?>
+                <div
+                    id="department-managers"
+                    class="form-control form-control-sm bg-light"
+                    data-managers-url="/api/applicationforms/managers-for-department.json"
+                    data-can-load="<?= $canLoadDepartmentManagers ? 'true' : 'false' ?>"
+                    aria-live="polite"
+                ><?= h($managerNames === [] ? __('Aucun responsable associé') : implode(', ', $managerNames)) ?></div>
+                <div id="department-managers-error" class="form-text text-danger" hidden>
+                    <?= __('La liste des responsables n’a pas pu être chargée.') ?>
+                </div>
             </div>
 
             <!-- Intitulé du poste -->
@@ -98,20 +128,6 @@
                     'placeholder' => __('Saisir le nom du candidat...'),
                     'disabled' => !$canEditAdmin
                 ]) ?>
-            </div>
-
-            <!-- Sélection du Département -->
-            <div class="col-md-12">
-                <label class="form-label fs-7 fw-medium"><?= $this->FieldMetadata->label('Applicationforms', 'department_id') ?></label>
-                <!-- Le composant visuel Treeselect s'accroche ici : -->
-                <?php if ($circuitLocked ?? false): ?>
-                    <div class="form-control form-control-sm bg-light"><?= h($applicationform->department->name ?? '') ?></div>
-                <?php else: ?>
-                    <div id="department-tree-select"></div>
-                <?php endif; ?>
-
-                <!-- L'input CakePHP doit impérativement être masqué (hidden) : -->
-                <?= $this->Form->hidden('department_id', ['id' => 'department-id']) ?>
             </div>
 
             <!-- Saisie dynamique du Code CGR -->
