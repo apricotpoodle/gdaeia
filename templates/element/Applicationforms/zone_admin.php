@@ -6,6 +6,7 @@
  *
  * @var \App\View\AppView $this
  * @var \App\Model\Entity\Applicationform $applicationform
+ * @var bool $canLoadCgrConfig
  * @var array<int, string> $collaborators
  * @var array<int, string> $assistants
  * @var int $assistantDefaultId
@@ -153,6 +154,7 @@
                     'label' => false,
                     'class' => 'form-control form-control-sm bg-light',
                     'readonly' => true,
+                    'data-can-load-cgr-config' => $canLoadCgrConfig ? 'true' : 'false',
                     'disabled' => !$canEditAdmin,
                     'placeholder' => __('Sélectionnez d\'abord un département...')
                 ]) ?>

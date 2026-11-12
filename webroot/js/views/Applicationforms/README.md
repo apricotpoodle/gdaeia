@@ -17,7 +17,9 @@ existe, affiche les sélecteurs par segment lorsqu'il y en a plusieurs et rend l
 champ libre lorsqu'aucun CGR complet n'est disponible. Un CGR libre existant est
 conservé à l'ouverture de l'édition. Les valeurs précédentes sont effacées
 pendant le chargement, les réponses tardives sont ignorées et une erreur affiche
-un message français. Le champ `cgr` conserve son autorisation serveur existante.
+un message français. Si l'opérateur ne peut pas créer de DAE, le chargement est
+ignoré en édition et la valeur existante reste en lecture seule. Le champ `cgr`
+conserve son autorisation serveur existante.
 
 Le chargement des responsables est désactivé lorsque le champ département est
 en lecture seule. Les listes précédentes sont effacées pendant le chargement,

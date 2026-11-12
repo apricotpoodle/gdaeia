@@ -84,7 +84,7 @@ class FakeElement {
     }
 }
 
-function createHarness({ departmentId = '1', value = '', disabled = false, fetcher }) {
+function createHarness({ departmentId = '1', value = '', disabled = false, canLoadConfig = true, fetcher }) {
     const departmentSelect = new FakeElement('input');
     departmentSelect.value = departmentId;
     const cgrContainer = new FakeElement();
@@ -100,6 +100,7 @@ function createHarness({ departmentId = '1', value = '', disabled = false, fetch
         cgrContainer,
         cgrFinalInput,
         errorMessage,
+        canLoadConfig,
         fetcher,
         document: { createElement: tagName => new FakeElement(tagName) },
     });
@@ -138,6 +139,26 @@ test('charge le CGR unique AAN02 du demandeur sans afficher d’erreur', async (
     assert.equal(harness.cgrFinalInput.value, 'AAN02');
     assert.equal(harness.cgrFinalInput.readOnly, true);
     assert.equal(harness.cgrContainer.children.length, 0);
+    assert.equal(harness.errorMessage.hidden, true);
+});
+
+test('conserve le CGR existant sans erreur si le chargement est interdit', async () => {
+    const calls = [];
+    const harness = createHarness({
+        departmentId: '2',
+        value: 'AAN02',
+        canLoadConfig: false,
+        fetcher: async (url) => {
+            calls.push(url);
+            return { ok: false, status: 403 };
+        },
+    });
+
+    await harness.controller.ready;
+
+    assert.deepEqual(calls, []);
+    assert.equal(harness.cgrFinalInput.value, 'AAN02');
+    assert.equal(harness.cgrFinalInput.readOnly, true);
     assert.equal(harness.errorMessage.hidden, true);
 });
 

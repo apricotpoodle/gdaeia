@@ -167,6 +167,26 @@ class ApplicationformsControllerTest extends TestCase
         );
     }
 
+    public function testUnValidateurPeutEditerSansDroitDeCreationEtConserverLeCgr(): void
+    {
+        $this->seedActiveValidatorForEdit();
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_1_VALIDEUR_POLE,
+        ])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $body = (string)$this->_response->getBody();
+        $this->assertStringContainsString('data-can-load-cgr-config="false"', $body);
+        $this->assertMatchesRegularExpression(
+            '/<input(?=[^>]*name="cgr")(?=[^>]*value="AAN02")(?=[^>]*readonly)[^>]*>/s',
+            $body,
+        );
+    }
+
     public function testLEditionNePreselectionnePasUneAssistanteIneligible(): void
     {
         ConnectionManager::get('test')->update('applicationforms', ['assistant_id' => null], ['id' => 1]);
@@ -313,6 +333,55 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertSame(1, (int)$this->getTableLocator()->get('Applicationforms')->get(1)->department_id);
         $this->assertResponseContains('verrouillé');
+    }
+
+    private function seedActiveValidatorForEdit(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $now = '2026-11-12 10:00:00';
+        $connection->update('applicationforms', [
+            'deleted' => null,
+            'user_id' => 1,
+            'department_id' => 1,
+            'cgr' => 'AAN02',
+        ], ['id' => 1]);
+        $connection->update('departments', ['deleted' => null], ['id' => 1]);
+        $connection->update('users', [
+            'role_id' => User::ROLE_1_VALIDEUR_POLE,
+            'deleted' => null,
+        ], ['id' => 2]);
+        $connection->insert('roles', [
+            'id' => User::ROLE_1_VALIDEUR_POLE,
+            'base' => 1,
+            'code' => 'val_pole',
+            'name' => 'Valideur de pôle',
+            'sort' => 'Valideur de pôle',
+            'deleted' => null,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->insert('user_departments', [
+            'id' => 2,
+            'user_id' => 2,
+            'department_id' => 1,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->insert('validation_workflow_runs', [
+            'id' => 900_003,
+            'applicationform_id' => 1,
+            'started_by_user_id' => 1,
+            'state' => 'en_attente',
+            'started_at' => $now,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->update('applicationvalidationsteps', [
+            'validation_workflow_run_id' => 900_003,
+            'role_id' => User::ROLE_1_VALIDEUR_POLE,
+            'state' => 'en_attente',
+            'deleted' => null,
+        ], ['id' => 1]);
     }
 
     private function seedAssistantOutsideOperatorScope(): void

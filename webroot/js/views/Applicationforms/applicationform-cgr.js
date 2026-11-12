@@ -12,6 +12,7 @@ import { isStructuredCgrValue } from './applicationform-cgr-utils.js';
  * @param {HTMLElement} elements.cgrContainer Conteneur des sélecteurs de segments.
  * @param {HTMLInputElement} elements.cgrFinalInput Champ soumis sous le nom `cgr`.
  * @param {HTMLElement|null} elements.errorMessage Message d'erreur affiché en cas d'échec.
+ * @param {boolean} [elements.canLoadConfig=true] Autorise le chargement côté API.
  * @param {Function} [elements.fetcher] Fonction compatible avec `fetch`.
  * @param {Document} [elements.document] Document utilisé pour créer les sélecteurs.
  * @returns {{ready: Promise<void>, refresh: Function}} Contrôle du chargement CGR.
@@ -21,11 +22,22 @@ export function initializeCgrForm({
     cgrContainer,
     cgrFinalInput,
     errorMessage,
+    canLoadConfig = true,
     fetcher = (...args) => fetch(...args),
     document: documentRef = document,
 }) {
     let requestNumber = 0;
     const initialValue = cgrFinalInput.value;
+
+    if (!canLoadConfig) {
+        cgrFinalInput.readOnly = true;
+        if (errorMessage) errorMessage.hidden = true;
+
+        return {
+            ready: Promise.resolve(),
+            refresh: async () => {},
+        };
+    }
 
     const clearComponents = () => {
         cgrContainer.replaceChildren();
@@ -206,6 +218,7 @@ if (typeof document !== 'undefined') {
             cgrContainer,
             cgrFinalInput,
             errorMessage: document.getElementById('cgr-config-error'),
+            canLoadConfig: cgrFinalInput.dataset.canLoadCgrConfig !== 'false',
         });
     });
 }

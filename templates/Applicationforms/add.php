@@ -57,6 +57,7 @@ $this->Html->script('views/Applicationforms/salary-calculation', ['type' => 'mod
             <div class="col-12 col-lg-6">
                 <?= $this->element('Applicationforms/zone_admin', [
                     'applicationform' => $applicationform,
+                    'canLoadCgrConfig' => $canLoadCgrConfig,
                     'collaborators' => $collaborators ?? [],
                     'assistants' => $assistants ?? [],
                     'assistantDefaultId' => $assistantDefaultId ?? 0,

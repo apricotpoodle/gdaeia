@@ -112,7 +112,9 @@ class ApplicationformsController extends AppController
     {
         $applicationform = $this->Applicationforms->newEmptyEntity();
         $this->Authorization->authorize($applicationform, 'add');
+        /** @var \Authorization\IdentityInterface $identity */
         $identity = $this->request->getAttribute('identity');
+        $canLoadCgrConfig = true;
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $identity->getOriginalData();
 
@@ -172,6 +174,7 @@ class ApplicationformsController extends AppController
 
         $this->set(compact(
             'applicationform',
+            'canLoadCgrConfig',
             'fieldSchema',
             'contracttypes',
             'hiringreasons',
@@ -202,8 +205,11 @@ class ApplicationformsController extends AppController
 
         // 2. Verrou d'autorisation strict (exécuté avant tout traitement)
         $this->Authorization->authorize($applicationform, 'edit');
+        /** @var \Authorization\IdentityInterface $identity */
+        $identity = $this->request->getAttribute('identity');
+        $canLoadCgrConfig = $identity->can('add', $this->Applicationforms->newEmptyEntity());
         /** @var \App\Model\Entity\User $currentUser */
-        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $currentUser = $identity->getOriginalData();
 
         // 3. Traitement de la soumission POST / PUT / PATCH
         if ($this->request->is(['post', 'put', 'patch'])) {
@@ -257,6 +263,7 @@ class ApplicationformsController extends AppController
 
         $this->set(compact(
             'applicationform',
+            'canLoadCgrConfig',
             'fieldSchema',
             // 'departments',
             'contracttypes',
