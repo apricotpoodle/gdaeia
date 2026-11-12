@@ -1,146 +1,211 @@
 /**
  * @file applicationform-cgr.js
- * @description Génération dynamique des sélecteurs CGR et écoute du Treeselect.
+ * @description Charge la configuration CGR du département sélectionné.
  */
 import { isStructuredCgrValue } from './applicationform-cgr-utils.js';
 
-document.addEventListener('DOMContentLoaded', function() {
-    const departmentSelect = document.getElementById('department-id');
-    const cgrContainer = document.getElementById('cgr-components-container');
-    const cgrFinalInput = document.getElementById('cgr-final-input');
+/**
+ * Initialise la synchronisation du champ CGR avec le département.
+ *
+ * @param {Object} elements Éléments du formulaire et dépendances du chargement.
+ * @param {HTMLInputElement} elements.departmentSelect Sélecteur du département.
+ * @param {HTMLElement} elements.cgrContainer Conteneur des sélecteurs de segments.
+ * @param {HTMLInputElement} elements.cgrFinalInput Champ soumis sous le nom `cgr`.
+ * @param {HTMLElement|null} elements.errorMessage Message d'erreur affiché en cas d'échec.
+ * @param {Function} [elements.fetcher] Fonction compatible avec `fetch`.
+ * @param {Document} [elements.document] Document utilisé pour créer les sélecteurs.
+ * @returns {{ready: Promise<void>, refresh: Function}} Contrôle du chargement CGR.
+ */
+export function initializeCgrForm({
+    departmentSelect,
+    cgrContainer,
+    cgrFinalInput,
+    errorMessage,
+    fetcher = (...args) => fetch(...args),
+    document: documentRef = document,
+}) {
+    let requestNumber = 0;
+    const initialValue = cgrFinalInput.value;
 
-    // 💡 DIAGNOSTIC : Affichage explicite des éléments manquants
-    if (!departmentSelect) console.warn("🚨 CGR: L'élément #department-id est introuvable sur la page !");
-    if (!cgrContainer) console.warn("🚨 CGR: L'élément #cgr-components-container est introuvable !");
-    if (!cgrFinalInput) console.warn("🚨 CGR: L'élément #cgr-final-input est introuvable !");
+    const clearComponents = () => {
+        cgrContainer.replaceChildren();
+    };
 
-    if (!departmentSelect || !cgrContainer || !cgrFinalInput) return;
-
-    function refreshAllSelectStyles() {
+    const updateFinalCgrValue = () => {
         const selects = cgrContainer.querySelectorAll('.cgr-segment-select');
-        const isCgrComplete = cgrFinalInput.value && cgrFinalInput.value.trim() !== '';
+        const values = Array.from(selects).map(select => select.value);
+        cgrFinalInput.value = values.length > 0 && values.every(Boolean)
+            ? values.join('-')
+            : '';
 
+        const isComplete = cgrFinalInput.value !== '';
         selects.forEach(select => {
-            select.classList.remove('border-success', 'bg-success-subtle', 'text-success-emphasis', 'fw-semibold', 'border-secondary-subtle', 'bg-light');
-            if (isCgrComplete) {
-                select.classList.add('border-secondary-subtle', 'bg-light');
-            } else if (select.value) {
-                select.classList.add('border-success', 'bg-success-subtle', 'text-success-emphasis', 'fw-semibold');
-            } else {
-                select.classList.add('border-secondary-subtle', 'bg-light');
-            }
+            select.classList.remove(
+                'border-success',
+                'bg-success-subtle',
+                'text-success-emphasis',
+                'fw-semibold',
+                'border-secondary-subtle',
+                'bg-light',
+            );
+            select.classList.add(...(isComplete || !select.value
+                ? ['border-secondary-subtle', 'bg-light']
+                : ['border-success', 'bg-success-subtle', 'text-success-emphasis', 'fw-semibold']));
         });
-    }
 
-    function fetchAndBuildCgr(departmentId, initialValue = '') {
+        cgrFinalInput.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    const refresh = async (departmentId = departmentSelect.value, preserveInitialValue = false) => {
+        const currentRequest = ++requestNumber;
+        const valueToPreserve = preserveInitialValue ? initialValue : '';
+        clearComponents();
+        cgrFinalInput.value = '';
+        cgrFinalInput.readOnly = true;
+        cgrFinalInput.setAttribute('aria-busy', 'true');
+        cgrFinalInput.dispatchEvent(new Event('input', { bubbles: true }));
+        if (errorMessage) errorMessage.hidden = true;
+
         if (!departmentId) {
-            cgrContainer.innerHTML = '';
-            cgrFinalInput.value = '';
+            cgrFinalInput.value = valueToPreserve;
+            cgrFinalInput.readOnly = false;
+            cgrFinalInput.removeAttribute('aria-busy');
+            cgrFinalInput.dispatchEvent(new Event('input', { bubbles: true }));
             return;
         }
 
-        console.log(`[3] CGR: Appel réseau vers /api/applicationforms/getCgrConfig/${departmentId}.json`);
-
-        fetch(`/api/applicationforms/getCgrConfig/${departmentId}.json`, {
-            headers: {
-                'Accept': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
+        try {
+            const response = await fetcher(
+                `/api/applicationforms/getCgrConfig/${departmentId}.json`,
+                {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                },
+            );
+            if (!response.ok) {
+                throw new Error(`Erreur HTTP ${response.status}`);
             }
-        })
-            .then(res => {
-                if (!res.ok) throw new Error(`HTTP erreur ${res.status}`);
-                return res.json();
-            })
-            .then(data => {
-                console.log("[4] CGR: Données reçues du serveur :", data);
-                cgrContainer.innerHTML = '';
 
-                if (!data.schema || data.schema.length === 0) {
-                    cgrFinalInput.readOnly = false;
-                    if (!initialValue) cgrFinalInput.value = '';
-                    return;
-                }
+            const data = await response.json();
+            if (currentRequest !== requestNumber) return;
+            if (!Array.isArray(data.schema) || !data.options || typeof data.options !== 'object') {
+                throw new Error('Configuration CGR invalide');
+            }
 
-                cgrFinalInput.readOnly = true;
-                const currentParts = initialValue ? initialValue.split('-') : [];
-                const preserveFreeValue = Boolean(
-                    initialValue && !isStructuredCgrValue(initialValue, data.schema, data.options),
+            const schema = data.schema;
+            const options = data.options;
+            const availableOptions = schema.map(segmentType => {
+                const cleanType = String(segmentType).trim().toUpperCase();
+                const matchedKey = Object.keys(options).find(
+                    key => String(key).trim().toUpperCase() === cleanType,
                 );
-                if (preserveFreeValue) {
-                    cgrFinalInput.readOnly = false;
+
+                return (matchedKey && Array.isArray(options[matchedKey]) ? options[matchedKey] : [])
+                    .filter(option => option && option.code != null && String(option.code) !== '');
+            });
+            const hasCompleteCgr = schema.length > 0
+                && availableOptions.every(segmentOptions => segmentOptions.length > 0);
+            const preserveFreeValue = Boolean(
+                valueToPreserve
+                && !isStructuredCgrValue(valueToPreserve, schema, options),
+            );
+
+            if (preserveFreeValue) {
+                cgrFinalInput.value = valueToPreserve;
+                cgrFinalInput.readOnly = false;
+                return;
+            }
+
+            if (!hasCompleteCgr) {
+                cgrFinalInput.value = valueToPreserve;
+                cgrFinalInput.readOnly = false;
+                return;
+            }
+
+            if (availableOptions.every(segmentOptions => segmentOptions.length === 1)) {
+                cgrFinalInput.value = availableOptions
+                    .map(segmentOptions => String(segmentOptions[0].code))
+                    .join('-');
+                cgrFinalInput.readOnly = true;
+                return;
+            }
+
+            const currentParts = isStructuredCgrValue(valueToPreserve, schema, options)
+                ? valueToPreserve.split('-')
+                : [];
+            cgrFinalInput.readOnly = true;
+
+            schema.forEach((segmentType, index) => {
+                const select = documentRef.createElement('select');
+                select.className = 'form-select form-select-sm cgr-segment-select mb-2 w-auto flex-grow-1';
+                select.dataset.type = segmentType;
+                select.required = true;
+                select.disabled = cgrFinalInput.disabled;
+
+                const placeholder = documentRef.createElement('option');
+                placeholder.value = '';
+                placeholder.textContent = `-- ${segmentType} --`;
+                select.appendChild(placeholder);
+
+                for (const optionData of availableOptions[index]) {
+                    const option = documentRef.createElement('option');
+                    option.value = String(optionData.code);
+                    option.textContent = optionData.label ?? String(optionData.code);
+                    select.appendChild(option);
                 }
 
-                data.schema.forEach((segmentType, index) => {
-                    const select = document.createElement('select');
-                    // select.className = 'form-select form-select-sm cgr-segment-select mb-2';
-                    // NOUVEAU CODE : Ajout de "w-auto" et "flex-grow-1"
-                    select.className = 'form-select form-select-sm cgr-segment-select mb-2 w-auto flex-grow-1';                    select.dataset.type = segmentType;
-                    select.required = true;
-
-                    const defaultOption = document.createElement('option');
-                    defaultOption.value = '';
-                    defaultOption.textContent = `-- ${segmentType} --`;
-                    select.appendChild(defaultOption);
-
-                    const cleanType = String(segmentType).trim().toUpperCase();
-                    const matchedKey = Object.keys(data.options || {}).find(k => k.trim().toUpperCase() === cleanType);
-                    const availableOptions = matchedKey ? data.options[matchedKey] : [];
-
-                    if (availableOptions.length === 0) {
-                        const emptyOpt = document.createElement('option');
-                        emptyOpt.disabled = true;
-                        emptyOpt.textContent = `(Aucun ${segmentType})`;
-                        select.appendChild(emptyOpt);
-                    } else {
-                        let hasPreselection = false;
-                        availableOptions.forEach(opt => {
-                            const option = document.createElement('option');
-                            option.value = opt.code;
-                            option.textContent = opt.label;
-                            if (currentParts[index] && currentParts[index] === opt.code) {
-                                option.selected = true;
-                                hasPreselection = true;
-                            }
-                            select.appendChild(option);
-                        });
-
-                        if (!hasPreselection && availableOptions.length === 1) {
-                            select.value = availableOptions[0].code;
-                        }
-                    }
-
-                    select.addEventListener('change', updateFinalCgrValue);
-                    cgrContainer.appendChild(select);
-                });
-
-                if (!preserveFreeValue) {
-                    updateFinalCgrValue();
+                const existingPart = currentParts[index];
+                if (existingPart && availableOptions[index].some(
+                    option => String(option.code) === existingPart,
+                )) {
+                    select.value = existingPart;
+                } else if (availableOptions[index].length === 1) {
+                    select.value = String(availableOptions[index][0].code);
                 }
-            })
-            .catch(err => console.error('[Erreur CGR] Le chargement a échoué :', err));
-    }
 
-    function updateFinalCgrValue() {
-        const selects = cgrContainer.querySelectorAll('.cgr-segment-select');
-        if (selects.length === 0) return;
+                select.addEventListener('change', updateFinalCgrValue);
+                cgrContainer.appendChild(select);
+            });
 
-        const values = Array.from(selects).map(s => s.value).filter(Boolean);
-        if (values.length === selects.length) {
-            cgrFinalInput.value = values.join('-');
-        } else {
-            cgrFinalInput.value = '';
+            updateFinalCgrValue();
+        } catch {
+            if (currentRequest !== requestNumber) return;
+            cgrFinalInput.value = valueToPreserve;
+            cgrFinalInput.readOnly = false;
+            if (errorMessage) errorMessage.hidden = false;
+        } finally {
+            if (currentRequest === requestNumber) {
+                cgrFinalInput.removeAttribute('aria-busy');
+                cgrFinalInput.dispatchEvent(new Event('input', { bubbles: true }));
+            }
         }
-        refreshAllSelectStyles();
-        cgrFinalInput.dispatchEvent(new Event('input', { bubbles: true }));
-    }
+    };
 
-    // Le listener crucial qui fait le pont entre les deux scripts
-    departmentSelect.addEventListener('change', function() {
-        console.log(`[2] CGR: Événement 'change' intercepté ! Lancement de l'hydratation pour le département ${this.value}`);
-        fetchAndBuildCgr(this.value, '');
+    departmentSelect.addEventListener('change', () => {
+        void refresh(departmentSelect.value);
     });
 
-    if (departmentSelect.value) {
-        fetchAndBuildCgr(departmentSelect.value, cgrFinalInput.value);
-    }
-});
+    return {
+        ready: refresh(departmentSelect.value, true),
+        refresh,
+    };
+}
+
+if (typeof document !== 'undefined') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const departmentSelect = document.getElementById('department-id');
+        const cgrContainer = document.getElementById('cgr-components-container');
+        const cgrFinalInput = document.getElementById('cgr-final-input');
+
+        if (!departmentSelect || !cgrContainer || !cgrFinalInput) return;
+
+        initializeCgrForm({
+            departmentSelect,
+            cgrContainer,
+            cgrFinalInput,
+            errorMessage: document.getElementById('cgr-config-error'),
+        });
+    });
+}

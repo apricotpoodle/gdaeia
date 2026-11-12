@@ -1077,10 +1077,24 @@ class ApplicationformsController extends AppController
     public function getCgrConfig(string $departmentId): void
     {
         $this->request->allowMethod(['get']);
-        $this->Authorization->skipAuthorization();
+        $this->Authorization->authorize($this->Applicationforms->newEmptyEntity(), 'add');
+        $validatedDepartmentId = filter_var($departmentId, FILTER_VALIDATE_INT);
+        if ($validatedDepartmentId === false || $validatedDepartmentId < 1) {
+            throw new UnprocessableContentException(__('Le département sélectionné est invalide.'));
+        }
+
+        /** @var \App\Model\Entity\User $operator */
+        $operator = $this->request->getAttribute('identity')->getOriginalData();
+        $departments = TableRegistry::getTableLocator()->get('Departments');
+        $department = $departments->find('visibleTo', user: $operator)
+            ->where(['Departments.id' => $validatedDepartmentId])
+            ->first();
+        if ($department === null) {
+            throw new NotFoundException(__('Le département demandé est introuvable.'));
+        }
 
         $resolver = new CgrResolverService();
-        $config = $resolver->getCgrConfigForDepartment((int)$departmentId);
+        $config = $resolver->getCgrConfigForDepartment($validatedDepartmentId);
 
         $this->set($config);
         $this->viewBuilder()->setOption('serialize', array_keys($config));

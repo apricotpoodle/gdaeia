@@ -156,6 +156,9 @@
                     'disabled' => !$canEditAdmin,
                     'placeholder' => __('Sélectionnez d\'abord un département...')
                 ]) ?>
+                <div id="cgr-config-error" class="form-text text-danger" role="alert" aria-live="polite" hidden>
+                    <?= __('La configuration du CGR n’a pas pu être chargée.') ?>
+                </div>
             </div>
 
         </div>

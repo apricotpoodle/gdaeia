@@ -24,7 +24,10 @@ class ApplicationformsControllerTest extends TestCase
     protected array $fixtures = [
         'app.FieldDefinitions',
         'app.Applicationforms',
+        'app.CgrStrategies',
         'app.Departments',
+        'app.CgrCodes',
+        'app.DepartmentCgrCodes',
         'app.Users',
         'app.Contracttypes',
         'app.Hiringreasons',
@@ -35,6 +38,9 @@ class ApplicationformsControllerTest extends TestCase
         'app.Yesnos',
         'app.UserDepartments',
         'app.DepartmentManagers',
+        'app.Permissions',
+        'app.PermissionScopes',
+        'app.RolePermissions',
         'app.Roles',
         'app.Validationsequences',
         'app.Validationstatuses',
@@ -62,6 +68,73 @@ class ApplicationformsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertHeaderContains('Content-Type', 'application/json');
+    }
+
+    public function testLEndpointConfigurationCgrRetourneLaConfigurationDuDepartementVisible(): void
+    {
+        $this->seedAssistantOptions();
+        $this->seedUniqueCgrCode();
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_DEMANDEUR,
+        ])]);
+
+        $this->get('/api/applicationforms/getCgrConfig/2.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame([
+            'strategy' => 'UNIQUE',
+            'schema' => ['ANALYTIQUE'],
+            'options' => [
+                'ANALYTIQUE' => [[
+                    'code' => 'AAN02',
+                    'label' => 'AAN02 - Développement Éditorial',
+                ]],
+            ],
+        ], $body);
+    }
+
+    public function testLEndpointConfigurationCgrRefuseUnIdentifiantInvalide(): void
+    {
+        $this->seedAssistantOptions();
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+
+        $this->get('/api/applicationforms/getCgrConfig/invalide.json');
+
+        $this->assertResponseCode(422);
+    }
+
+    public function testLEndpointConfigurationCgrRefuseUnDepartementHorsPerimetre(): void
+    {
+        $this->seedAssistantOptions();
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+
+        $this->get('/api/applicationforms/getCgrConfig/3.json');
+
+        $this->assertResponseCode(404);
+    }
+
+    public function testLEndpointConfigurationCgrExigeLeDroitDeCreerUneDae(): void
+    {
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_1_VALIDEUR_POLE,
+        ])]);
+
+        $this->get('/api/applicationforms/getCgrConfig/2.json');
+
+        $this->assertResponseCode(403);
     }
 
     public function testLEndpointAssistantesFiltreLesOptionsParDepartement(): void
@@ -1226,6 +1299,26 @@ class ApplicationformsControllerTest extends TestCase
             ['user_id' => 3, 'department_id' => 2],
             ['user_id' => 4, 'department_id' => 3],
         ]));
+    }
+
+    private function seedUniqueCgrCode(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('cgr_strategies', [
+            'code' => 'UNIQUE',
+            'name' => 'CGR analytique unique',
+            'definition_json' => json_encode(['ANALYTIQUE'], JSON_THROW_ON_ERROR),
+        ], ['id' => 1]);
+        $connection->update('departments', ['cgr_strategy_id' => 1], ['id' => 2]);
+        $connection->update('cgr_codes', [
+            'type' => 'ANALYTIQUE',
+            'code' => 'AAN02',
+            'label' => 'Développement Éditorial',
+        ], ['id' => 1]);
+        $connection->insert('department_cgr_codes', [
+            'department_id' => 2,
+            'cgr_code_id' => 1,
+        ]);
     }
 
     private function seedDepartmentManager(int $departmentId, int $userId): void
