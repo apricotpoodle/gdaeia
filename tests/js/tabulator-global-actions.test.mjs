@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { resolveGlobalAction, TabulatorBuilder } from '../../webroot/js/core/Tabulator/TabulatorBuilder.js';
+import { globalTabulatorObserver } from '../../webroot/js/core/Tabulator/TabulatorObserver.js';
 
 function targetFor(selector, action = null) {
     return {
@@ -91,5 +92,42 @@ test('délègue les actions globales au conteneur de grille en phase de capture'
         assert.equal(listeners[0][2], true);
     } finally {
         globalThis.document = previousDocument;
+    }
+});
+
+test('publie les données de ligne sur le canal de double clic Tabulator', () => {
+    const selector = '#row-double-click-grid';
+    const originalDocument = globalThis.document;
+    const OriginalTabulator = globalThis.Tabulator;
+    const handlers = new Map();
+    const user = { id: 17, display_name: 'Ada Lovelace' };
+
+    globalThis.document = { querySelector: () => null };
+    globalThis.Tabulator = class {
+        constructor() {
+            this.element = {};
+        }
+
+        on(eventName, callback) {
+            handlers.set(eventName, callback);
+        }
+    };
+
+    try {
+        const published = [];
+        globalTabulatorObserver.subscribe(`${selector}:rowDblClick`, data => published.push(data));
+
+        const table = new TabulatorBuilder(selector)
+            .setAjaxSource('/api/users.json')
+            .build();
+        const rowDblClick = handlers.get('rowDblClick');
+        assert.equal(typeof rowDblClick, 'function');
+        rowDblClick({}, { getData: () => user });
+
+        assert.equal(table instanceof globalThis.Tabulator, true);
+        assert.deepEqual(published, [user]);
+    } finally {
+        globalThis.document = originalDocument;
+        globalThis.Tabulator = OriginalTabulator;
     }
 });

@@ -180,6 +180,7 @@ Le moteur `TabulatorBuilder.js` centralise l'intelligence d'aiguillage au sein d
 ### 3. Couche Distribution (TabulatorObserver) : Sémantique Unifiée
 La transmission des signaux vers l'extérieur de la grille s'appuie sur le patron de conception **Publish-Subscribe (Pub/Sub)** géré par le `globalTabulatorObserver`. Les canaux d'émissions sont normalisés pour utiliser rigoureusement le sélecteur CSS d'en-tête (incluant le caractère `#`), éliminant toute dérive sémantique (CamelCase ou chaînes orphelines) :
 * Clic sur une ligne : `${this.selector}:rowClick` (Ex: `#users-table:rowClick`)
+* Double-clic sur une ligne : `${this.selector}:rowDblClick` (Ex: `#users-table:rowDblClick`)
 * Clic sur un bouton événement : `${this.selector}:action:${action}` (Ex: `#users-table:action:edit`)
 
 ### 4. Couche Applicative (Orchestrateur de Vue) : Consommation Passive

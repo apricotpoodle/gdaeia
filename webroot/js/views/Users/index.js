@@ -6,6 +6,7 @@
 import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js';
 import { globalTabulatorObserver } from '../../core/Tabulator/TabulatorObserver.js';
 import { FlashManager } from '../../core/FlashManager.js';
+import { confirmAndTriggerUserImpersonation } from './user-impersonation.js';
 
 // 1. Instanciation directe (plus besoin d'attendre le DOMContentLoaded)
 const usersTable = TabulatorFactory.createUsersGrid("#users-table");
@@ -16,6 +17,13 @@ if (globalTabulatorObserver) {
     globalTabulatorObserver.subscribe('#users-table:rowClick', (userData) => {
         console.log("=== LIGNE CLIQUÉE ===");
         console.log("Utilisateur sélectionné :", userData.email);
+    });
+
+    globalTabulatorObserver.subscribe('#users-table:rowDblClick', (userData) => {
+        confirmAndTriggerUserImpersonation(userData, () => usersTable
+            .getRow(userData.id)
+            ?.getElement()
+            .querySelector('.btn-action[data-action="impersonate"]'));
     });
 
     globalTabulatorObserver.subscribe('#users-table:action:create', () => {

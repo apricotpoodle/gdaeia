@@ -681,6 +681,12 @@ export class TabulatorBuilder {
             }
         });
 
+        table.on("rowDblClick", (e, row) => {
+            if (typeof globalTabulatorObserver !== "undefined") {
+                globalTabulatorObserver.publish(`${this.selector}:rowDblClick`, row.getData());
+            }
+        });
+
         return table;
     }
 
