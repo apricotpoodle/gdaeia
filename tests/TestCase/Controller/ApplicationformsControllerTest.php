@@ -116,6 +116,22 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertStringContainsString('id="assistant-select-wrapper"', $body);
         $this->assertStringContainsString('id="assistant-options-single"', $body);
         $this->assertMatchesRegularExpression(
+            '/<input(?=[^>]*type="hidden")(?=[^>]*name="applicantname")[^>]*>/s',
+            $body,
+        );
+        $this->assertMatchesRegularExpression(
+            '/<input(?=[^>]*name="applicant_first_name")[^>]*>/s',
+            $body,
+        );
+        $this->assertMatchesRegularExpression(
+            '/<input(?=[^>]*name="applicant_last_name")[^>]*>/s',
+            $body,
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/<input(?=[^>]*type="text")(?=[^>]*name="applicantname")[^>]*>/s',
+            $body,
+        );
+        $this->assertMatchesRegularExpression(
             '/<input(?=[^>]*type="hidden")(?=[^>]*name="assistant_id")(?=[^>]*id="assistant-single-id")(?=[^>]*disabled)[^>]*>/',
             $body,
         );
@@ -248,6 +264,22 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertNotFalse($workingDaysPosition);
         $this->assertLessThan($workingDaysPosition, $endAtPosition);
         $this->assertStringContainsString('views/Applicationforms/zone-contract.js', $body);
+    }
+
+    public function testLEditionConserveLaSaisieUniqueDesAnciennesDemandes(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $body = (string)$this->_response->getBody();
+        $this->assertMatchesRegularExpression(
+            '/<input(?=[^>]*type="text")(?=[^>]*name="applicantname")(?=[^>]*value="Lorem ipsum dolor sit amet")[^>]*>/s',
+            $body,
+        );
+        $this->assertStringNotContainsString('name="applicant_first_name"', $body);
+        $this->assertStringNotContainsString('name="applicant_last_name"', $body);
     }
 
     public function testLaFicheAfficheLAbsenceDeChefDeServiceSansChampDeSaisie(): void

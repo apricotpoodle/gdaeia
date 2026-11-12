@@ -187,13 +187,25 @@ class Applicationform extends AppEntity
     /** Synchronise le champ historique avec les champs nom et prénom V3. */
     public function synchronizeApplicantName(): void
     {
+        if ((int)$this->get(self::FIELD_COLLABORATOR_ID) > 0) {
+            $this->set(self::FIELD_APPLICANT_FIRST_NAME, null);
+            $this->set(self::FIELD_APPLICANT_LAST_NAME, null);
+
+            return;
+        }
+
+        if (
+            !$this->isDirty(self::FIELD_APPLICANT_FIRST_NAME)
+            && !$this->isDirty(self::FIELD_APPLICANT_LAST_NAME)
+        ) {
+            return;
+        }
+
         $firstName = trim((string)$this->get(self::FIELD_APPLICANT_FIRST_NAME));
         $lastName = trim((string)$this->get(self::FIELD_APPLICANT_LAST_NAME));
         $name = trim($firstName . ' ' . $lastName);
 
-        if ($name !== '') {
-            $this->set(self::FIELD_APPLICANTNAME, $name);
-        }
+        $this->set(self::FIELD_APPLICANTNAME, $name);
     }
 
     public const FIELD_ID = 'id';

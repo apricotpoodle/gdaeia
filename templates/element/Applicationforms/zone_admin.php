@@ -15,6 +15,12 @@
  * @var bool|null $circuitLocked
  */
 
+$isLegacyCandidateName = !$applicationform->isNew()
+    && (int)$applicationform->get('collaborator_id') === 0
+    && trim((string)$applicationform->get('applicant_first_name')) === ''
+    && trim((string)$applicationform->get('applicant_last_name')) === ''
+    && trim((string)$applicationform->get('applicantname')) !== '';
+
 ?>
 
 <div class="card shadow-sm border-0 mb-3">
@@ -111,32 +117,40 @@
                 ]) ?>
             </div>
 
-            <!-- Champ Texte Candidat Externe / Nom du poste -->
-            <div class="col-md-6">
-                <?= $this->Form->control('applicant_first_name', [
-                    'label' => __('Prénom du candidat'),
-                    'class' => 'form-control form-control-sm',
-                    'disabled' => !$canEditAdmin,
-                ]) ?>
-            </div>
+            <?php if ($isLegacyCandidateName): ?>
+                <div class="col-md-6">
+                    <?= $this->Form->control('applicantname', [
+                        'id' => 'applicantname',
+                        'label' => ['text' => $this->FieldMetadata->label('Applicationforms', 'applicantname'), 'class' => 'form-label fs-7 fw-medium'],
+                        'class' => 'form-control form-control-sm',
+                        'placeholder' => __('Saisir le nom du candidat...'),
+                        'disabled' => !$canEditAdmin,
+                    ]) ?>
+                </div>
+            <?php else: ?>
+                <div class="col-md-6">
+                    <?= $this->Form->control('applicant_first_name', [
+                        'id' => 'applicant-first-name',
+                        'label' => __('Prénom du candidat'),
+                        'class' => 'form-control form-control-sm',
+                        'disabled' => !$canEditAdmin,
+                    ]) ?>
+                </div>
 
-            <div class="col-md-6">
-                <?= $this->Form->control('applicant_last_name', [
-                    'label' => __('Nom du candidat'),
-                    'class' => 'form-control form-control-sm',
-                    'disabled' => !$canEditAdmin,
-                ]) ?>
-            </div>
+                <div class="col-md-6">
+                    <?= $this->Form->control('applicant_last_name', [
+                        'id' => 'applicant-last-name',
+                        'label' => __('Nom du candidat'),
+                        'class' => 'form-control form-control-sm',
+                        'disabled' => !$canEditAdmin,
+                    ]) ?>
+                </div>
 
-            <div class="col-md-6">
-                <?= $this->Form->control('applicantname', [
+                <?= $this->Form->hidden('applicantname', [
                     'id' => 'applicantname',
-                    'label' => ['text' => $this->FieldMetadata->label('Applicationforms', 'applicantname'), 'class' => 'form-label fs-7 fw-medium'],
-                    'class' => 'form-control form-control-sm',
-                    'placeholder' => __('Saisir le nom du candidat...'),
-                    'disabled' => !$canEditAdmin
+                    'disabled' => !$canEditAdmin,
                 ]) ?>
-            </div>
+            <?php endif; ?>
 
             <!-- Saisie dynamique du Code CGR -->
             <div class="col-md-12 mt-2">

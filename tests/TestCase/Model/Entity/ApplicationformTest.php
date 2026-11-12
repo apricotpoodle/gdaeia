@@ -30,4 +30,58 @@ class ApplicationformTest extends TestCase
 
         $this->assertSame('Ada Lovelace', $applicationform->applicantname);
     }
+
+    public function testPreserveLeNomHistoriqueDesDemandesSansChampsV3(): void
+    {
+        $applicationform = new Applicationform(['applicantname' => 'Marie Curie']);
+
+        $applicationform->synchronizeApplicantName();
+
+        $this->assertSame('Marie Curie', $applicationform->applicantname);
+    }
+
+    public function testEffaceLesChampsExternesQuandUnCollaborateurEstSelectionne(): void
+    {
+        $applicationform = new Applicationform([
+            'collaborator_id' => 12,
+            'applicant_first_name' => 'Ancien',
+            'applicant_last_name' => 'Candidat',
+            'applicantname' => 'Collaborateur sélectionné',
+        ]);
+
+        $applicationform->synchronizeApplicantName();
+
+        $this->assertSame('Collaborateur sélectionné', $applicationform->applicantname);
+        $this->assertNull($applicationform->applicant_first_name);
+        $this->assertNull($applicationform->applicant_last_name);
+    }
+
+    public function testEffaceLeNomHistoriqueLorsqueLesChampsV3SontVides(): void
+    {
+        $applicationform = new Applicationform([
+            'applicant_first_name' => '',
+            'applicant_last_name' => '',
+            'applicantname' => 'Ancienne valeur',
+        ]);
+
+        $applicationform->synchronizeApplicantName();
+
+        $this->assertSame('', $applicationform->applicantname);
+    }
+
+    public function testUneSelectionDeCollaborateurVideConserveLeCandidatExterne(): void
+    {
+        $applicationform = new Applicationform([
+            'collaborator_id' => '',
+            'applicant_first_name' => 'Ada',
+            'applicant_last_name' => 'Lovelace',
+            'applicantname' => '',
+        ]);
+
+        $applicationform->synchronizeApplicantName();
+
+        $this->assertSame('Ada Lovelace', $applicationform->applicantname);
+        $this->assertSame('Ada', $applicationform->applicant_first_name);
+        $this->assertSame('Lovelace', $applicationform->applicant_last_name);
+    }
 }

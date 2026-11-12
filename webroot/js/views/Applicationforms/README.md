@@ -25,3 +25,9 @@ Le chargement des responsables est désactivé lorsque le champ département est
 en lecture seule. Les listes précédentes sont effacées pendant le chargement,
 les réponses tardives sont ignorées et une liste vide ou une erreur réseau
 reçoit un message français dans la zone d'administration.
+
+`applicationform-candidate.js` gère le candidat interne ou externe. Le modèle
+concatène prénom et nom dans le champ historique à la sauvegarde; choisir un
+collaborateur renseigne ce champ, puis efface et verrouille les champs externes.
+Les anciennes demandes sans champs V3 gardent leur saisie unique du nom complet
+en édition.
