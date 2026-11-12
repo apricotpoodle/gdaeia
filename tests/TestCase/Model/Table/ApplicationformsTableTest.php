@@ -215,6 +215,17 @@ class ApplicationformsTableTest extends TestCase
         }
     }
 
+    public function testUneModificationSansChangementAffectationConserveUneDaeExistante(): void
+    {
+        $connection = $this->Applicationforms->getConnection();
+        $connection->update('applicationforms', ['assistant_id' => 2, 'deleted' => null], ['id' => 1]);
+        $applicationform = $this->Applicationforms->get(1);
+        $this->Applicationforms->patchEntity($applicationform, ['jobtitle' => 'Poste mis à jour']);
+
+        $this->assertNotFalse($this->Applicationforms->save($applicationform));
+        $this->assertSame(2, (int)$applicationform->get(Applicationform::FIELD_ASSISTANT_ID));
+    }
+
     /**
      * La recherche FULLTEXT normalise plusieurs termes et exige leur présence.
      *

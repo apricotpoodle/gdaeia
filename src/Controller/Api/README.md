@@ -18,19 +18,7 @@ requête, de droit et de règle métier gardent leurs réponses propres.
 * **`FieldAuthorizationsController`** : Gestion CRUD de la matrice de sécurité des champs et zones (`[role_id, resource, target_type, target, access_level]`). L’administration est réservée aux super-administrateurs ; les niveaux acceptés sont `EDIT`, `VIEW` et `NONE`. `get-form-schema.json` expose les ressources et cibles actives pour les formulaires recherchables.
 * **`ValidationsequencesController`** : Administration réservée aux Super Admins des séquences par département.
 * **`WorkflowSettingsController`** : Paramétrage global du workflow via `/default-due-hours.json` et `/comment-requirements.json`, ainsi que catalogue paginé des commentaires prédéfinis. Les modèles servent à préremplir le champ de vote ; seul le texte final est conservé dans `validations.obs`.
-* **ApplicationformsController** : Retourne les assistantes actives de rôle
-  Demandeur, associées explicitement au département et visibles par l'opérateur,
-  via `GET /applicationforms/assistants-for-department.json?department_id={id}`.
-  Le département est refusé s'il est hors périmètre. Les créations et éditions
-  Web/API vérifient également l'assistante soumise avant sauvegarde. L'endpoint
-  GET `/applicationforms/managers-for-department.json?department_id={id}`
-  retourne les noms des responsables directement associés à un département
-  visible. Les deux endpoints exigent le droit de créer une DAE ; un identifiant
-  invalide renvoie HTTP 422 et un département absent ou hors périmètre HTTP 404.
-  L'endpoint
-  POST `/applicationforms/{id}/validation/remind.json` relance uniquement les
-  validateurs éligibles aux étapes bloquées du cycle, après contrôle de la
-  Policy administrateur.
+* **ApplicationformsController** : L'endpoint POST `/applicationforms/{id}/validation/remind.json` relance uniquement les validateurs éligibles aux étapes bloquées du cycle, après contrôle de la Policy administrateur. L'endpoint GET `/applicationforms/assistants-for-department.json?department_id=…` retourne les assistantes éligibles d'un département visible pour un opérateur autorisé à créer une DAE. L'endpoint GET `/applicationforms/managers-for-department.json?department_id=…` retourne les noms des responsables explicitement associés au département visible ; identifiant invalide : HTTP 422, département absent ou hors périmètre : HTTP 404.
 * **`DepartmentsController`** : Arbre lazy des départements, fiche, CRUD, calcul d'impact et désactivation logique. Sans filtre, seules les racines sont chargées et les descendants le sont à la demande ; avec filtre, l'arbre complet des branches correspondantes est renvoyé et déployé, avec conservation des ancêtres nécessaires et exclusion des branches sans correspondance. La désactivation accepte un plan de nettoyage explicite réservé au super-administrateur, retourne les opérations effectuées et le bilan des courriels. Les codes CGR sont gérés par des routes imbriquées ; les mutations sont autorisées par `DepartmentPolicy` et `CgrCodePolicy`. La fiche expose aussi les grilles distantes disponibles/associées des responsables et des CGR, avec association ou dissociation immédiate.
 
 Pour les départements, les payloads utilisent `manager_ids` et `cgr_code_ids`.

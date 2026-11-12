@@ -154,8 +154,23 @@ class ApplicationformsControllerTest extends TestCase
         $this->get('/applicationforms/edit/1');
 
         $this->assertResponseOk();
+        $this->assertResponseContains('data-default-assistant-id="1"');
         $this->assertMatchesRegularExpression(
             '/<select[^>]+name="assistant_id"[^>]*>.*<option(?=[^>]*value="1")(?=[^>]*selected)[^>]*>/s',
+            (string)$this->_response->getBody(),
+        );
+    }
+
+    public function testLEditionNePreselectionnePasUneAssistanteIneligible(): void
+    {
+        ConnectionManager::get('test')->update('applicationforms', ['assistant_id' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $this->assertDoesNotMatchRegularExpression(
+            '/<select(?=[^>]*name="assistant_id")(?:(?!<\/select>).)*<option(?=[^>]*value="1")(?=[^>]*selected)[^>]*>.*?<\/select>/s',
             (string)$this->_response->getBody(),
         );
     }

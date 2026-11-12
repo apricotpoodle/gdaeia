@@ -628,13 +628,13 @@ class ApplicationformsTable extends Table
             $rules->add($rules->existsIn([$field], $association), ['errorField' => $field]);
         }
         $rules->add(
-            function (Applicationform $applicationform): bool {
-                return $this->assistantMatchesDepartment($applicationform);
-            },
+            fn(Applicationform $applicationform): bool => !$this->assistantAssignmentChanged($applicationform)
+                || $this->assistantMatchesDepartment($applicationform),
             [
                 'errorField' => Applicationform::FIELD_ASSISTANT_ID,
                 'message' => __(
-                    'L’assistante doit être active, avoir le rôle Demandeur et appartenir à ce département.',
+                    'L’assistante doit être active, avoir le rôle Demandeur et être rattachée '
+                    . 'au département sélectionné.',
                 ),
             ],
         );
@@ -664,11 +664,29 @@ class ApplicationformsTable extends Table
     }
 
     /**
+     * Indique si l'assistante ou le département a changé depuis le chargement.
+     *
+     * Les DAE historiques conservent leur possibilité d'édition tant que leur
+     * affectation n'est pas modifiée.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform Demande à vérifier.
+     * @return bool Vrai pour une création ou un changement d'affectation.
+     */
+    private function assistantAssignmentChanged(Applicationform $applicationform): bool
+    {
+        if ($applicationform->isNew()) {
+            return true;
+        }
+
+        return $applicationform->isDirty(Applicationform::FIELD_ASSISTANT_ID)
+            || $applicationform->isDirty(Applicationform::FIELD_DEPARTMENT_ID);
+    }
+
+    /**
      * Vérifie que l'assistante sélectionnée figure dans les options visibles de l'opérateur.
      *
-     * Cette vérification complète les règles d'intégrité qui ne disposent pas
-     * de l'identité courante. Les mutations Web et API l'appellent après
-     * l'hydratation et avant la sauvegarde.
+     * Les DAE historiques conservent leur affectation tant qu'elle n'est pas
+     * modifiée. Toute nouvelle affectation reste contrôlée côté serveur.
      *
      * @param \App\Model\Entity\Applicationform $applicationform DAE à vérifier.
      * @param \App\Model\Entity\User $operator Opérateur courant.
@@ -676,6 +694,10 @@ class ApplicationformsTable extends Table
      */
     public function validateAssistantVisibility(Applicationform $applicationform, User $operator): void
     {
+        if (!$this->assistantAssignmentChanged($applicationform)) {
+            return;
+        }
+
         $assistantId = $applicationform->get(Applicationform::FIELD_ASSISTANT_ID);
         if ($assistantId === null || $assistantId === '' || $assistantId === 0 || $assistantId === '0') {
             return;

@@ -171,6 +171,9 @@ class UsersTable extends Table
                 'Users.role_id' => User::ROLE_DEMANDEUR,
                 'Users.deleted IS' => null,
             ])
+            ->innerJoinWith('Roles', static function (SelectQuery $roleQuery): SelectQuery {
+                return $roleQuery->where(['Roles.deleted IS' => null]);
+            })
             ->innerJoinWith('UserDepartments', static function ($query) use ($departmentId) {
                 return $query->where(['UserDepartments.department_id' => $departmentId]);
             })

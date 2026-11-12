@@ -596,15 +596,19 @@ class ApplicationformsController extends AppController
 
         /** @var \App\Model\Table\UsersTable $users */
         $users = TableRegistry::getTableLocator()->get('Users');
-        $assistants = $users->find('assistantsForDepartment', departmentId: (int)$departmentId)
+        $assistantOptions = $users->find('assistantsForDepartment', departmentId: (int)$departmentId)
             ->find('visibleTo', user: $operator)
             ->orderByAsc('Users.firstname')
             ->orderByAsc('Users.lastname')
             ->find('list', keyField: 'id', valueField: 'display_name')
             ->toArray();
+        $data = [];
+        foreach ($assistantOptions as $id => $displayName) {
+            $data[] = ['id' => (int)$id, 'display_name' => (string)$displayName];
+        }
 
-        $this->set(compact('assistants'));
-        $this->viewBuilder()->setOption('serialize', ['assistants']);
+        $this->set(['success' => true, 'data' => $data]);
+        $this->viewBuilder()->setOption('serialize', ['success', 'data']);
     }
 
     /**
@@ -789,9 +793,9 @@ class ApplicationformsController extends AppController
                 ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID),
                 'state' => 'en_attente',
             ])->first();
+        $applicationform = $this->Applicationforms->patchEntity($applicationform, $filteredData);
         /** @var \App\Model\Entity\User $operator */
         $operator = $identity->getOriginalData();
-        $applicationform = $this->Applicationforms->patchEntity($applicationform, $filteredData);
         $this->Applicationforms->validateAssistantVisibility($applicationform, $operator);
         $hasChanges = $applicationform->isDirty();
 

@@ -77,7 +77,10 @@ class ApplicationformsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
-        $this->assertSame(['3' => 'Assistante 3'], $body['assistants']);
+        $this->assertSame([
+            'success' => true,
+            'data' => [['id' => 3, 'display_name' => 'Assistante 3']],
+        ], $body);
     }
 
     public function testLEndpointAssistantesRefuseUnDepartementHorsPerimetre(): void
@@ -111,6 +114,22 @@ class ApplicationformsControllerTest extends TestCase
         $this->get('/api/applicationforms/assistants-for-department.json?department_id=2');
 
         $this->assertResponseCode(403);
+    }
+
+    public function testLaCreationApiRefuseUneAssistanteHorsDepartement(): void
+    {
+        $this->seedAssistantOptions();
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/add.json', [
+            'department_id' => 2,
+            'assistant_id' => 4,
+            'jobtitle' => 'Poste avec assistante hors département',
+        ]);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"field":"assistant_id"');
     }
 
     public function testLEndpointResponsablesRetourneLesAssociationsDirectesDuDepartementVisible(): void

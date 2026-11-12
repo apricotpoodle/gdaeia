@@ -16,33 +16,20 @@ document.addEventListener('DOMContentLoaded', async function () {
 
     if (assistantSelect) {
         let requestNumber = 0;
-        let preferredAssistantId = assistantSelect.value;
-        let isLoadingAssistants = false;
         const canEditAssistant = assistantSelect.dataset.canEdit === 'true';
         const emptyMessage = document.getElementById('assistant-options-empty');
         const errorMessage = document.getElementById('assistant-options-error');
-
-        assistantSelect.addEventListener('change', () => {
-            if (!isLoadingAssistants) {
-                preferredAssistantId = assistantSelect.value;
-            }
-        });
+        let selectedAssistantId = assistantSelect.value;
 
         const updateAssistants = async (departmentId) => {
-            if (!isLoadingAssistants) {
-                preferredAssistantId = assistantSelect.value;
-            }
-            const assistantIdToKeep = preferredAssistantId;
             const currentRequest = ++requestNumber;
+            const previousAssistantId = assistantSelect.value || selectedAssistantId;
             assistantSelect.replaceChildren(new Option('-- Sélectionner --', ''));
             assistantSelect.disabled = true;
-            isLoadingAssistants = true;
             if (emptyMessage) emptyMessage.hidden = true;
             if (errorMessage) errorMessage.hidden = true;
 
             if (!departmentId) {
-                preferredAssistantId = '';
-                isLoadingAssistants = false;
                 return;
             }
 
@@ -58,38 +45,45 @@ document.addEventListener('DOMContentLoaded', async function () {
                 });
                 if (!response.ok) throw new Error('Erreur API Assistantes');
 
-                const data = await response.json();
+                const payload = await response.json();
                 if (currentRequest !== requestNumber) return;
-
-                const assistants = data.assistants ?? {};
-                const assistantIds = Object.keys(assistants);
-                for (const assistantId of assistantIds) {
-                    assistantSelect.add(new Option(assistants[assistantId], assistantId));
+                if (!payload.success || !Array.isArray(payload.data)) {
+                    throw new Error('Réponse API Assistantes invalide');
                 }
 
-                const previousIsEligible = assistantIds.includes(assistantIdToKeep);
+                const assistants = payload.data;
+                const assistantIds = assistants.map((assistant) => String(assistant.id));
+                for (const assistant of assistants) {
+                    assistantSelect.add(new Option(assistant.display_name, assistant.id));
+                }
+
+                const previousIsEligible = assistantIds.includes(previousAssistantId);
                 const defaultAssistantId = assistantSelect.dataset.defaultAssistantId;
                 const defaultIsEligible = assistantIds.includes(defaultAssistantId);
-                preferredAssistantId = previousIsEligible
-                    ? assistantIdToKeep
+                assistantSelect.value = previousIsEligible
+                    ? previousAssistantId
                     : (defaultIsEligible ? defaultAssistantId : '');
-                assistantSelect.value = preferredAssistantId;
-                isLoadingAssistants = false;
+                selectedAssistantId = assistantSelect.value;
                 assistantSelect.disabled = !canEditAssistant;
                 if (emptyMessage) emptyMessage.hidden = assistantIds.length > 0;
             } catch (error) {
                 if (currentRequest !== requestNumber) return;
-                preferredAssistantId = '';
-                isLoadingAssistants = false;
                 assistantSelect.disabled = !canEditAssistant;
                 if (errorMessage) errorMessage.hidden = false;
                 console.error('Erreur lors du chargement des assistantes :', error);
             }
         };
 
-        hiddenInput.addEventListener('change', () => updateAssistants(hiddenInput.value));
-        if (hiddenInput.value) {
-            updateAssistants(hiddenInput.value);
+        if (canEditAssistant) {
+            assistantSelect.addEventListener('change', () => {
+                selectedAssistantId = assistantSelect.value;
+            });
+            hiddenInput.addEventListener('change', () => updateAssistants(hiddenInput.value));
+            if (hiddenInput.value) {
+                updateAssistants(hiddenInput.value);
+            }
+        } else {
+            assistantSelect.disabled = true;
         }
     }
 
