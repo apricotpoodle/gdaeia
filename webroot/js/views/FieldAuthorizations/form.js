@@ -14,6 +14,24 @@ export function initializeFieldAuthorizationForm(endpoint) {
     const description = form.querySelector('[data-target-description]');
     let targets = [];
 
+    const refreshResources = (selectedResource = '') => {
+        const type = typeSelect?.value || '';
+        const resources = [...new Set(
+            targets.filter(item => item.target_type === type).map(item => item.resource),
+        )];
+        if (!resourceSelect) return;
+
+        resourceSelect.replaceChildren(new Option(
+            '— Sélectionner une ressource —', '', true, false,
+        ));
+        resources.forEach(resource => resourceSelect.add(new Option(
+            resource,
+            resource,
+            false,
+            resource === selectedResource,
+        )));
+    };
+
     const refreshTargets = () => {
         const type = typeSelect?.value || '';
         const resource = resourceSelect?.value || '';
@@ -33,7 +51,7 @@ export function initializeFieldAuthorizationForm(endpoint) {
     };
 
     typeSelect?.addEventListener('change', () => {
-        if (resourceSelect) resourceSelect.value = '';
+        refreshResources();
         refreshTargets();
     });
     resourceSelect?.addEventListener('change', refreshTargets);
@@ -53,11 +71,7 @@ export function initializeFieldAuthorizationForm(endpoint) {
         .then(payload => {
             targets = payload.targets || [];
             if (typeSelect && form.dataset.currentType) typeSelect.value = form.dataset.currentType;
-            if (resourceSelect) {
-                const resources = [...new Set(targets.filter(item => item.target_type === typeSelect?.value).map(item => item.resource))];
-                resourceSelect.replaceChildren(new Option('— Sélectionner une ressource —', '', true, false));
-                resources.forEach(resource => resourceSelect.add(new Option(resource, resource, false, resource === form.dataset.currentResource)));
-            }
+            refreshResources(form.dataset.currentResource || '');
             refreshTargets();
         })
         .catch(() => {
