@@ -54,7 +54,7 @@ class RolesController extends AppController
         return null;
     }
 
-    /** Modifie un rôle non socle. */
+    /** Modifie un rôle selon les droits et la protection ORM du socle. */
     public function edit(string $id): ?Response
     {
         $role = $this->getActiveRole($id);
@@ -64,7 +64,7 @@ class RolesController extends AppController
             $role = $this->Roles->patchEntity(
                 $role,
                 $this->authorizedRequestData('Roles'),
-                $this->patchOptions(),
+                $this->patchOptions(true),
             );
             if ($this->Roles->save($role)) {
                 $this->Flash->success(__('Le rôle a été mis à jour avec succès.'));
@@ -119,13 +119,13 @@ class RolesController extends AppController
     }
 
     /**
-     * Empêche une requête forgée de créer ou de modifier un rôle socle.
+     * Autorise le champ socle après filtrage ACL, tout en protégeant la suppression.
      *
-     * @return array{accessibleFields: array{base: false, deleted: false}}
+     * @return array{accessibleFields: array{base: true, deleted: false, id: bool}}
      */
-    private function patchOptions(): array
+    private function patchOptions(bool $isEdit = false): array
     {
-        return ['accessibleFields' => ['base' => false, 'deleted' => false]];
+        return ['accessibleFields' => ['base' => true, 'deleted' => false, 'id' => $isEdit]];
     }
 
     /** @return \App\Model\Entity\User */

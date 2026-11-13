@@ -32,6 +32,18 @@ Les mutations de champs reçues par les contrôleurs API passent par
 `field_authorizations` est donc appliquée côté serveur en complément des
 Policies et des options `accessibleFields` CakePHP.
 
+Pour les sept références communes, les rôles et les départements, les
+réponses exposent `base`. Seul le superadministrateur peut soumettre ce champ
+à la création ou à l'édition ; les autres requêtes sont filtrées côté serveur.
+Si une ligne est ou devient socle, seule une bascule isolée de `base` est
+acceptée. La suppression d'une ligne persistée socle est refusée. Un
+basculement de département accompagné de champs ou d'associations est
+rejeté avant persistance. Les refus de validation utilisent HTTP 422 et
+`{success, message, errors}`. Voir l'[ADR 0075 proposé](../../../docs/adr/0075-protection-references-socles.md).
+L'édition d'un département socle est réservée au superadministrateur ; la
+gestion des associations utilise ses routes imbriquées et la Policy de
+périmètre prévue pour ces mutations séparées.
+
 ## Liens ADR
 * [ADR 0045 : Administration CRUD de la sécurité des champs](../../docs/adr/0045-gestion-crud-field-authorizations.md)
 * [ADR 0046 : Standardisation du CRUD hybride (FieldAuthorizations)](../../docs/adr/0046-standardisation-crud-field-authorizations.md)

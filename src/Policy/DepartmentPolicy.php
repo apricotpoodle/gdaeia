@@ -36,6 +36,16 @@ final class DepartmentPolicy extends AppPolicy
     /** Autorise la modification d’un département actif. */
     public function canEdit(IdentityInterface $identity, EntityInterface $department): bool
     {
+        if ($department->get('base')) {
+            return $this->isSuperUser($identity) && $department->get('deleted') === null;
+        }
+
+        return $this->canManageDepartments($identity, $department) && $department->get('deleted') === null;
+    }
+
+    /** Autorise la gestion séparée des associations d’un département actif. */
+    public function canManageAssociations(IdentityInterface $identity, EntityInterface $department): bool
+    {
         return $this->canManageDepartments($identity, $department) && $department->get('deleted') === null;
     }
 

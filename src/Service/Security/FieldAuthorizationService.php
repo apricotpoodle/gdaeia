@@ -53,6 +53,10 @@ class FieldAuthorizationService
             );
         }
 
+        if ($schema !== []) {
+            $schema['base'] = FieldAuthorization::ACCESS_LEVEL_NONE;
+        }
+
         return $schema;
     }
 
@@ -117,7 +121,14 @@ class FieldAuthorizationService
         array $data,
     ): array {
         $fieldSchema = $this->getFieldSchema($identity, $resource);
+        $filteredData = $this->filterRequestData($data, $fieldSchema);
 
-        return $this->filterRequestData($data, $fieldSchema);
+        /** @var \App\Model\Entity\User $user */
+        $user = $identity->getOriginalData();
+        if (!$user->get(User::FIELD_ISSUPERUSER)) {
+            unset($filteredData['base']);
+        }
+
+        return $filteredData;
     }
 }

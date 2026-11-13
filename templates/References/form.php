@@ -15,7 +15,12 @@ use App\View\Action\ReferencesActions;
 /** @var string $referenceAlias */
 /** @var string $referenceLabel */
 /** @var string $mode */
+/** @var \Authorization\IdentityInterface|null $identity */
 $isEdit = $mode === 'edit';
+$operator = $identity?->getOriginalData();
+$isSuperAdministrator = $operator instanceof \App\Model\Entity\User
+    && (bool)$operator->get(\App\Model\Entity\User::FIELD_ISSUPERUSER);
+$isBase = $isEdit && (bool)$reference->get('base');
 $this->assign('title', $isEdit ? __('Modifier : {0}', $referenceLabel) : __('Nouvelle référence : {0}', $referenceLabel));
 ?>
 <div class="references form content">
@@ -26,14 +31,19 @@ $this->assign('title', $isEdit ? __('Modifier : {0}', $referenceLabel) : __('Nou
     <?= $this->Form->create($reference) ?>
     <div class="row g-3">
         <div class="col-md-4">
-            <?= $this->Form->control('code', ['label' => __('Code'), 'maxlength' => 16, 'required' => true]) ?>
+            <?= $this->Form->control('code', ['label' => __('Code'), 'maxlength' => 16, 'required' => true, 'readonly' => $isBase]) ?>
         </div>
         <div class="col-md-4">
-            <?= $this->Form->control('name', ['label' => __('Libellé'), 'maxlength' => 32, 'required' => true]) ?>
+            <?= $this->Form->control('name', ['label' => __('Libellé'), 'maxlength' => 32, 'required' => true, 'readonly' => $isBase]) ?>
         </div>
         <div class="col-md-4">
-            <?= $this->Form->control('sort', ['label' => __('Clé de tri'), 'maxlength' => 32, 'required' => true]) ?>
+            <?= $this->Form->control('sort', ['label' => __('Clé de tri'), 'maxlength' => 32, 'required' => true, 'readonly' => $isBase]) ?>
         </div>
+        <?php if ($isSuperAdministrator): ?>
+            <div class="col-md-4">
+                <?= $this->Form->control('base', ['label' => __('Référence socle'), 'type' => 'checkbox']) ?>
+            </div>
+        <?php endif; ?>
     </div>
     <div class="mt-4 d-flex gap-2">
         <?= $this->Form->button($isEdit ? __('Enregistrer') : __('Créer'), ['class' => 'btn btn-primary']) ?>

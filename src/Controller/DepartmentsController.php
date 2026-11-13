@@ -28,10 +28,19 @@ final class DepartmentsController extends AppController
 
         if ($this->request->is('post')) {
             try {
-                (new DepartmentManagementService())->save($department, $this->authorizedRequestData('Departments'));
-                $this->Flash->success(__('Le département a été créé.'));
+                $data = $this->authorizedRequestData('Departments');
+                $data += ['base' => false];
+                $saved = (new DepartmentManagementService())->save(
+                    $department,
+                    $data,
+                );
+                if ($saved->getErrors() === []) {
+                    $this->Flash->success(__('Le département a été créé.'));
 
-                return $this->redirect(['action' => 'index']);
+                    return $this->redirect(['action' => 'index']);
+                }
+                $this->flashValidationErrors($saved, 'Departments');
+                $department = $saved;
             } catch (DomainException $exception) {
                 $this->Flash->error($exception->getMessage());
             }
@@ -56,10 +65,17 @@ final class DepartmentsController extends AppController
 
         if ($this->request->is(['post', 'put', 'patch'])) {
             try {
-                (new DepartmentManagementService())->save($department, $this->authorizedRequestData('Departments'));
-                $this->Flash->success(__('Le département a été mis à jour.'));
+                $saved = (new DepartmentManagementService())->save(
+                    $department,
+                    $this->authorizedRequestData('Departments'),
+                );
+                if ($saved->getErrors() === []) {
+                    $this->Flash->success(__('Le département a été mis à jour.'));
 
-                return $this->redirect(['action' => 'index']);
+                    return $this->redirect(['action' => 'index']);
+                }
+                $this->flashValidationErrors($saved, 'Departments');
+                $department = $saved;
             } catch (DomainException $exception) {
                 $this->Flash->error($exception->getMessage());
             }

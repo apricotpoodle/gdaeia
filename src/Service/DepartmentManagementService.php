@@ -122,10 +122,45 @@ final class DepartmentManagementService
         $connection = $this->table()->getConnection();
 
         return $connection->transactional(function () use ($department, $data): Department {
-            $parentId = array_key_exists('parent_id', $data) && $data['parent_id'] !== ''
-                ? (int)$data['parent_id']
-                : null;
             $currentParentId = $department->get('parent_id') === null ? null : (int)$department->get('parent_id');
+            $parentId = array_key_exists('parent_id', $data)
+                ? ($data['parent_id'] === null || $data['parent_id'] === '' ? null : (int)$data['parent_id'])
+                : $currentParentId;
+
+            $wasBase = !$department->isNew() && (bool)$department->get('base');
+            $filtered = array_intersect_key($data, array_flip(self::EDITABLE_FIELDS));
+            if ($department->isNew() && !array_key_exists('department_type_id', $filtered)) {
+                $filtered['department_type_id'] = 1;
+            }
+            $entity = $this->table()->patchEntity($department, $filtered);
+            $isBase = $wasBase || (bool)$entity->get('base');
+            $baseTransition = !$department->isNew() && $entity->isDirty('base') && $isBase;
+
+            if (
+                !$department->isNew()
+                && array_key_exists('id', $data)
+                && (string)$data['id'] !== (string)$department->get('id')
+            ) {
+                $entity->setError('id', [
+                    'immutable' => __('L’identifiant d’un département ne peut pas être modifié.'),
+                ]);
+            }
+
+            if ($baseTransition) {
+                $message = __('Le changement du statut socle doit être enregistré seul.');
+                foreach ($entity->getDirty() as $field) {
+                    if ($field !== 'base') {
+                        $entity->setError($field, ['base' => $message]);
+                    }
+                }
+                if (array_key_exists('manager_ids', $data) || array_key_exists('cgr_code_ids', $data)) {
+                    $entity->setError('base', ['associations' => $message]);
+                }
+            }
+            if ($entity->getErrors() !== []) {
+                return $entity;
+            }
+
             if ($parentId !== $currentParentId) {
                 $this->assertParentChangeAllowed($department, $parentId);
                 if ($this->hasOperationalDependencies($department)) {
@@ -144,19 +179,12 @@ final class DepartmentManagementService
                 ));
             }
 
-            $filtered = array_intersect_key($data, array_flip(self::EDITABLE_FIELDS));
-            if ($department->isNew() && !array_key_exists('department_type_id', $filtered)) {
-                $filtered['department_type_id'] = 1;
+            if ($entity->isNew() || array_key_exists('parent_id', $data)) {
+                $entity->set('parent_id', $parentId);
             }
-            if ($department->isNew()) {
-                $department->set('base', false);
+            if ($this->table()->save($entity) === false || $entity->getErrors() !== []) {
+                return $entity;
             }
-            $entity = $this->table()->patchEntity($department, $filtered);
-            if ($entity->isNew()) {
-                $entity->set('base', false);
-            }
-            $entity->set('parent_id', $parentId);
-            $this->table()->save($entity);
             if (array_key_exists('manager_ids', $data)) {
                 $this->replaceAssociation($entity, 'Managers', $this->associationIds($data['manager_ids']));
             }

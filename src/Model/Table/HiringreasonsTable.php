@@ -26,7 +26,7 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Hiringreason>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Hiringreason> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class HiringreasonsTable extends AppTable
+class HiringreasonsTable extends ReferenceTable
 {
     /**
      * Initialize method

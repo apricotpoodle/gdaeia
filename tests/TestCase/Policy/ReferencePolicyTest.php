@@ -36,7 +36,7 @@ class ReferencePolicyTest extends TestCase
         $baseReference = new Contracttype(['base' => true]);
         $operator = new User(['issuperuser' => false]);
 
-        $this->assertFalse($policy->canEdit(new User(['issuperuser' => true]), $baseReference));
+        $this->assertTrue($policy->canEdit(new User(['issuperuser' => true]), $baseReference));
         $this->assertFalse($policy->canDelete(new User(['issuperuser' => true]), $baseReference));
         $this->assertFalse($policy->canIndex($operator));
         $this->assertFalse($policy->canView($operator, $baseReference));

@@ -34,6 +34,115 @@ final class DepartmentManagementServiceIntegrationTest extends TestCase
         $this->assertIsBool($impact['can_deactivate']);
     }
 
+    public function testLaCreationInitialeDunDepartementSocleEstAutorisee(): void
+    {
+        $department = $this->getTableLocator()->get('Departments')->newEmptyEntity();
+
+        $saved = (new DepartmentManagementService())->save($department, [
+            'code' => 'SOCLE-INITIAL',
+            'name' => 'Département socle initial',
+            'base' => true,
+        ]);
+
+        self::assertSame([], $saved->getErrors());
+        self::assertTrue((bool)$this->getTableLocator()->get('Departments')->get($saved->get('id'))->get('base'));
+    }
+
+    public function testUneBasculeDeSocleIsoleeEstAutoriseeDansLesDeuxSens(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        $connection = ConnectionManager::get('test');
+        $connection->update('departments', ['base' => 0], ['id' => 2]);
+        $department = $departments->get(2);
+
+        $enabled = (new DepartmentManagementService())->save($department, ['base' => true]);
+        self::assertSame([], $enabled->getErrors());
+        self::assertTrue((bool)$departments->get(2)->get('base'));
+
+        $disabled = (new DepartmentManagementService())->save($departments->get(2), ['base' => false]);
+        self::assertSame([], $disabled->getErrors());
+        self::assertFalse((bool)$departments->get(2)->get('base'));
+    }
+
+    public function testUneBasculeDeSocleRefuseUnChangementDeNom(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        ConnectionManager::get('test')->update('departments', ['base' => 0], ['id' => 2]);
+        $department = $departments->get(2);
+
+        $result = (new DepartmentManagementService())->save($department, [
+            'base' => true,
+            'name' => 'Nom interdit avec la bascule',
+        ]);
+
+        self::assertArrayHasKey('name', $result->getErrors());
+        self::assertFalse((bool)$departments->get(2)->get('base'));
+        self::assertSame('Service de test', $departments->get(2)->get('name'));
+    }
+
+    public function testUneBasculeDeSocleRefuseUnIdentifiantForge(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        ConnectionManager::get('test')->update('departments', ['base' => 0], ['id' => 2]);
+
+        $result = (new DepartmentManagementService())->save($departments->get(2), [
+            'base' => true,
+            'id' => 999,
+        ]);
+
+        self::assertArrayHasKey('id', $result->getErrors());
+        self::assertFalse((bool)$departments->get(2)->get('base'));
+        self::assertSame(2, (int)$departments->get(2)->get('id'));
+    }
+
+    public function testUneBasculeDeSocleRefuseUnChangementDeParent(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        ConnectionManager::get('test')->update('departments', ['base' => 0], ['id' => 2]);
+        $department = $departments->get(2);
+
+        $result = (new DepartmentManagementService())->save($department, [
+            'base' => true,
+            'parent_id' => null,
+        ]);
+
+        self::assertArrayHasKey('parent_id', $result->getErrors());
+        self::assertFalse((bool)$departments->get(2)->get('base'));
+        self::assertSame(1, (int)$departments->get(2)->get('parent_id'));
+    }
+
+    public function testUneBasculeDeSocleRefuseLesMutationsDeResponsablesEtDeCgr(): void
+    {
+        $departments = $this->getTableLocator()->get('Departments');
+        $connection = ConnectionManager::get('test');
+        $connection->update('departments', ['base' => 0, 'cgr_strategy_id' => 1], ['id' => 2]);
+        $this->getTableLocator()->get('CgrStrategies')->updateAll([
+            'definition_json' => json_encode([['type' => 'AXE']], JSON_THROW_ON_ERROR),
+        ], ['id' => 1]);
+        $this->getTableLocator()->get('CgrCodes')->updateAll(['type' => 'AXE'], ['id' => 1]);
+        $managerCount = (int)$connection->execute(
+            'SELECT COUNT(*) FROM department_managers WHERE department_id = 2',
+        )->fetchColumn(0);
+        $cgrCount = (int)$connection->execute(
+            'SELECT COUNT(*) FROM department_cgr_codes WHERE department_id = 2',
+        )->fetchColumn(0);
+
+        $result = (new DepartmentManagementService())->save($departments->get(2), [
+            'base' => true,
+            'manager_ids' => [1],
+            'cgr_code_ids' => [1],
+        ]);
+
+        self::assertArrayHasKey('base', $result->getErrors());
+        self::assertFalse((bool)$departments->get(2)->get('base'));
+        self::assertSame($managerCount, (int)$connection->execute(
+            'SELECT COUNT(*) FROM department_managers WHERE department_id = 2',
+        )->fetchColumn(0));
+        self::assertSame($cgrCount, (int)$connection->execute(
+            'SELECT COUNT(*) FROM department_cgr_codes WHERE department_id = 2',
+        )->fetchColumn(0));
+    }
+
     /** Vérifie le remplacement atomique des deux collections sans supprimer leurs cibles. */
     public function testLesAssociationsSontRemplaceesSansSupprimerLesEntitesCibles(): void
     {

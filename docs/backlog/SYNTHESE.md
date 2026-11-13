@@ -18,18 +18,23 @@ historique n’ont pas été réévalués dans cette livraison. Les tickets 0027
 0028 ont été ajoutés pour traiter respectivement la création d'une demande par
 le rôle Demandeur et la fiabilisation de l'IHM des autorisations de champs.
 
+Mise à jour ciblée du **13 novembre 2026** : le ticket 0029 planifie la
+protection ORM commune des enregistrements socles, avec création et bascule
+isolée de `base` réservées au superadministrateur dans les parcours Web/API.
+Les autres constats de l'audit historique n'ont pas été réévalués.
+
 ## Vue d’ensemble
 
 | Périmètre | Total | Entièrement traité | Partiellement traité | Reste à faire |
 |---|---:|---:|---:|---:|
-| Backlog technique racine (`0001`–`0028`) | 28 | 17 | 1 | 10 |
+| Backlog technique racine (`0001`–`0029`) | 29 | 17 | 1 | 11 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
 | Workflow `visibilite-manageabilite` (`0001`–`0009`) | 9 | 9 | 0 | 0 |
-| **Total** | **50** | **39** | **1** | **10** |
+| **Total** | **51** | **39** | **1** | **11** |
 
 Le ticket 0002 est compté comme partiellement traité ; les tickets restants
-concernent les sujets 0001, 0007, 0019, 0021 à 0023, 0025 et 0026, auxquels s'ajoutent
-les compléments du 0002.
+concernent les sujets 0001, 0007, 0019, 0021 à 0023 et 0026 à 0029,
+auxquels s'ajoutent les compléments du 0002.
 
 ## Tickets restant à effectuer
 
@@ -47,6 +52,7 @@ les compléments du 0002.
 | [0026 — Plan d'architecture et de backlog en huit étapes](0026-executer-le-plan-architecture-et-backlog.md) | **Haute** | **En cours** | Coordonner l'assainissement documentaire, l'acceptation des ADR, les habilitations, la visibilité/gérabilité, les évolutions métier, la qualité, la migration et la gouvernance. | Étape 1 réalisée ; l'étape 2 reste conditionnée à la revue humaine des ADR 0071 et 0072. |
 | [0027 — Création d'une Applicationform par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) | **Haute** | À planifier | Distinguer une entité nouvelle d'une demande existante, autoriser la saisie métier du demandeur et conserver les restrictions de périmètre et de champs réservés. | Nouveau ticket ajouté le 6 novembre 2026 à la suite de l'analyse de `/applicationforms/add`. |
 | [0028 — IHM des autorisations de champs](0028-ameliorer-ihm-autorisations-champs.md) | **Haute** | À planifier | Remplacer les saisies libres de ressource et de champ par des listes dépendantes issues de `field_definitions`, avec validation serveur. | Nouveau ticket ajouté le 6 novembre 2026 après analyse de `/field-authorizations/add`. |
+| [0029 — Protection des références socles](0029-proteger-references-socles-behavior-commun.md) | **Haute** | À planifier | Créer un Behavior ORM commun activé explicitement, bloquer la suppression des lignes socles et isoler les basculements de `base`. | Ticket ajouté le 13 novembre 2026 ; neuf Tables correspondent au contrat structurel, avec autorisation HTTP réservée au superadministrateur. |
 
 ## Tickets déjà traités — contrôle de non-réouverture
 

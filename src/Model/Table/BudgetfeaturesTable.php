@@ -26,7 +26,7 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Budgetfeature>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Budgetfeature> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class BudgetfeaturesTable extends AppTable
+class BudgetfeaturesTable extends ReferenceTable
 {
     /**
      * Initialize method

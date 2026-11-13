@@ -46,7 +46,15 @@ class RolesControllerTest extends TestCase
 
         $roles = $this->getTableLocator()->get('Roles');
         $role = $roles->find()->where(['code' => 'GESTIONNAIRE'])->firstOrFail();
-        $this->assertFalse($role->base);
+        $this->assertTrue($role->base);
+
+        $this->get('/api/roles/' . $role->id . '.json');
+        $this->assertResponseOk();
+        $this->assertResponseRegExp('/"base"\s*:\s*true/');
+
+        $this->put('/api/roles/' . $role->id . '.json', ['base' => false]);
+        $this->assertResponseOk();
+        $this->assertFalse($roles->get($role->id)->base);
 
         $this->put('/api/roles/' . $role->id . '.json', [
             'code' => 'GESTIONNAIRE',
@@ -58,6 +66,60 @@ class RolesControllerTest extends TestCase
         $this->delete('/api/roles/' . $role->id . '.json');
         $this->assertResponseOk();
         $this->assertNotNull($roles->get($role->id)->deleted);
+    }
+
+    public function testUnRoleSocleNePeutEtreModifieQueParBasculeIsolee(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->getTableLocator()->get('Roles')->updateAll(['deleted' => null], ['id' => 1]);
+
+        $this->put('/api/roles/1.json', ['base' => false, 'name' => 'Modification interdite']);
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"errors":');
+        $this->assertTrue($this->getTableLocator()->get('Roles')->get(1)->base);
+
+        $this->put('/api/roles/1.json', ['base' => false]);
+        $this->assertResponseOk();
+        $this->assertFalse($this->getTableLocator()->get('Roles')->get(1)->base);
+
+        $this->put('/api/roles/1.json', ['base' => true]);
+        $this->assertResponseOk();
+        $this->delete('/api/roles/1.json');
+        $this->assertResponseCode(403);
+    }
+
+    public function testLeFormulaireWebDuRoleSocleConserveSeulementBaseModifiable(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->getTableLocator()->get('Roles')->updateAll(['deleted' => null], ['id' => 1]);
+
+        $this->get('/roles/add');
+        $this->assertResponseOk();
+        $this->assertResponseContains('name="base"');
+        $this->assertResponseContains('Rôle socle');
+
+        $this->get('/roles/edit/1');
+        $this->assertResponseOk();
+        $this->assertResponseContains('name="base"');
+        foreach (['code', 'name', 'sort'] as $field) {
+            $this->assertResponseRegExp('/<input(?=[^>]*name="' . $field . '")(?=[^>]*readonly)[^>]*>/');
+        }
+    }
+
+    public function testUnUtilisateurStandardNePeutPasCreerUnRoleSocleParPost(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->post('/api/roles.json', [
+            'code' => 'SOCLEFORGE', 'name' => 'Socle forgé', 'sort' => 'socle', 'base' => true,
+        ]);
+
+        $this->assertResponseCode(403);
+        $this->assertSame(
+            0,
+            $this->getTableLocator()->get('Roles')->find()->where(['code' => 'SOCLEFORGE'])->count(),
+        );
     }
 
     public function testLaGrilleNeRetourneQueLesRolesActifs(): void

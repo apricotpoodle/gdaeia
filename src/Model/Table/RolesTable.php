@@ -53,6 +53,8 @@ class RolesTable extends AppTable
         $this->setDisplayField(Role::FIELD_NAME);
         $this->setPrimaryKey(Role::FIELD_ID);
 
+        $this->addBehavior('ProtectBaseRecords', ['priority' => 1]);
+
         $this->hasMany('Applicationvalidationsteps', [
             'foreignKey' => 'role_id',
         ]);

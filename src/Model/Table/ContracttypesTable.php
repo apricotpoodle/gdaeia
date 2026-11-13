@@ -26,7 +26,7 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Contracttype>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Contracttype> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class ContracttypesTable extends AppTable
+class ContracttypesTable extends ReferenceTable
 {
     /**
      * Initialize method

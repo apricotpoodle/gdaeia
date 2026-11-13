@@ -11,6 +11,7 @@ declare(strict_types=1);
 use App\View\Action\DepartmentsActions;
 
 $isEdit = $mode === 'edit';
+$isBaseRecord = (bool)$department->get('base') || (bool)$department->getOriginal('base');
 $currentUser = $identity?->getOriginalData();
 $isSuperUser = $currentUser instanceof \App\Model\Entity\User
     && (bool)$currentUser->get(\App\Model\Entity\User::FIELD_ISSUPERUSER);
@@ -69,13 +70,13 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
             <div class="card mb-4">
                 <div class="card-body row g-3">
                     <div class="col-md-4">
-                        <?= $this->Form->control('code', ['label' => __('Code'), 'required' => true]) ?>
+                        <?= $this->Form->control('code', ['label' => __('Code'), 'required' => true, 'readonly' => $isBaseRecord]) ?>
                     </div>
                     <div class="col-md-4">
-                        <?= $this->Form->control('name', ['label' => __('Nom'), 'required' => true]) ?>
+                        <?= $this->Form->control('name', ['label' => __('Nom'), 'required' => true, 'readonly' => $isBaseRecord]) ?>
                     </div>
                     <div class="col-md-4">
-                        <?= $this->Form->control('sort', ['label' => __('Tri')]) ?>
+                        <?= $this->Form->control('sort', ['label' => __('Tri'), 'readonly' => $isBaseRecord]) ?>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" for="department-parent-tree"><?= __('Département parent') ?></label>
@@ -90,13 +91,19 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
                                         array_values($parents),
                                     ),
                                     'value' => $parentValue === null ? [] : [(int)$parentValue],
+                                    'readOnly' => $isBaseRecord,
                                 ],
                                 JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP,
                             ) ?>
                         </script>
                     </div>
                     <div class="col-md-6">
-                        <?= $this->Form->control('cgr_strategy_id', ['label' => __('Stratégie CGR'), 'empty' => __('Aucune'), 'options' => $strategies]) ?>
+                        <?= $this->Form->control('cgr_strategy_id', [
+                            'label' => __('Stratégie CGR'),
+                            'empty' => __('Aucune'),
+                            'options' => $strategies,
+                            'disabled' => $isBaseRecord,
+                        ]) ?>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label"><?= __('Responsables') ?></label>

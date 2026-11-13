@@ -110,9 +110,11 @@ final class DepartmentsController extends AppController
         $this->Authorization->authorize($department, 'add');
 
         try {
+            $data = $this->authorizedRequestData('Departments');
+            $data += ['base' => false];
             $saved = (new DepartmentManagementService())->save(
                 $department,
-                $this->authorizedRequestData('Departments'),
+                $data,
             );
         } catch (DomainException $exception) {
             return $this->domainError($exception);
@@ -510,7 +512,7 @@ final class DepartmentsController extends AppController
     private function activeDepartmentForAssociation(string $id): Department
     {
         $department = $this->activeDepartment($id);
-        $this->Authorization->authorize($department, 'edit');
+        $this->Authorization->authorize($department, 'manageAssociations');
 
         return $department;
     }

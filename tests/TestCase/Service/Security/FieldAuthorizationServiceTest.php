@@ -81,6 +81,7 @@ class FieldAuthorizationServiceTest extends TestCase
         $this->assertSame([
             'jobtitle' => 'EDIT',
             'grossremuneration' => 'VIEW',
+            'base' => 'NONE',
         ], $this->service->getFieldSchema(new User([
             'issuperuser' => false,
             'role_id' => 4,
@@ -182,6 +183,44 @@ class FieldAuthorizationServiceTest extends TestCase
                 'Departments',
                 ['jobtitle' => 'Analyste'],
             ),
+        );
+    }
+
+    public function testUneMatriceVideRefuseBaseMaisConserveLesAutresChamps(): void
+    {
+        $query = $this->createMock(SelectQuery::class);
+        $query->expects($this->exactly(2))->method('where')->willReturnSelf();
+        $query->expects($this->exactly(2))->method('all')->willReturn(new ResultSet([]));
+        $authorizations = $this->createMock(FieldAuthorizationsTable::class);
+        $authorizations->expects($this->exactly(2))->method('find')->willReturn($query);
+        TableRegistry::getTableLocator()->set('FieldAuthorizations', $authorizations);
+
+        $identity = new User(['issuperuser' => false, 'role_id' => 4]);
+        $this->assertSame([], $this->service->getFieldSchema($identity, 'Roles'));
+        $this->assertSame(
+            ['name' => 'Gestionnaire'],
+            $this->service->filterAuthorizedRequestData($identity, 'Roles', ['name' => 'Gestionnaire', 'base' => true]),
+        );
+    }
+
+    public function testUneMatriceEditNeDonnePasLeDroitDeModifierBase(): void
+    {
+        $records = new ResultSet([
+            new FieldAuthorization(['field' => 'name', 'access_level' => 'EDIT']),
+            new FieldAuthorization(['field' => 'base', 'access_level' => 'EDIT']),
+        ]);
+        $query = $this->createMock(SelectQuery::class);
+        $query->expects($this->exactly(2))->method('where')->willReturnSelf();
+        $query->expects($this->exactly(2))->method('all')->willReturn($records);
+        $authorizations = $this->createMock(FieldAuthorizationsTable::class);
+        $authorizations->expects($this->exactly(2))->method('find')->willReturn($query);
+        TableRegistry::getTableLocator()->set('FieldAuthorizations', $authorizations);
+
+        $identity = new User(['issuperuser' => false, 'role_id' => 4]);
+        $this->assertSame(['name' => 'EDIT', 'base' => 'NONE'], $this->service->getFieldSchema($identity, 'Roles'));
+        $this->assertSame(
+            ['name' => 'Gestionnaire'],
+            $this->service->filterAuthorizedRequestData($identity, 'Roles', ['name' => 'Gestionnaire', 'base' => true]),
         );
     }
 }

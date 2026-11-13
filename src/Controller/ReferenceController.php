@@ -42,7 +42,6 @@ abstract class ReferenceController extends AppController
                 $this->authorizedRequestData($this->referenceAlias()),
                 $this->patchOptions(),
             );
-            $entity->set('base', false);
             if ($table->save($entity)) {
                 $this->Flash->success(__('La référence a été créée avec succès.'));
 
@@ -68,7 +67,7 @@ abstract class ReferenceController extends AppController
             $entity = $table->patchEntity(
                 $entity,
                 $this->authorizedRequestData($this->referenceAlias()),
-                $this->patchOptions(),
+                $this->patchOptions(true),
             );
             if ($table->save($entity)) {
                 $this->Flash->success(__('La référence a été mise à jour.'));
@@ -125,10 +124,10 @@ abstract class ReferenceController extends AppController
         return ['referenceLabel' => $this->referenceLabel(), 'referenceAlias' => $this->referenceAlias()];
     }
 
-    /** @return array{accessibleFields: array{base: false, deleted: false}} */
-    protected function patchOptions(): array
+    /** @return array{accessibleFields: array{base: true, deleted: false, id: bool}} */
+    protected function patchOptions(bool $isEdit = false): array
     {
-        return ['accessibleFields' => ['base' => false, 'deleted' => false]];
+        return ['accessibleFields' => ['base' => true, 'deleted' => false, 'id' => $isEdit]];
     }
 
     /** Retourne la table de la nomenclature courante. */

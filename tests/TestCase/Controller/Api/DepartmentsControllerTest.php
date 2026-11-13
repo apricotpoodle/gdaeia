@@ -268,6 +268,81 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertResponseContains('"success":true');
     }
 
+    public function testUneBasculeDeSocleCombineeEstRefuseeSansPersistancePartielle(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $departments = $this->getTableLocator()->get('Departments');
+        $departments->updateAll(['base' => 0, 'deleted' => null], ['id' => 2]);
+
+        $this->post('/api/departments/2.json', [
+            'base' => true,
+            'name' => 'Modification combinée refusée',
+            'manager_ids' => [1],
+        ]);
+
+        $this->assertResponseCode(422);
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertFalse($payload['success']);
+        $this->assertArrayHasKey('errors', $payload);
+        self::assertFalse((bool)$departments->get(2)->get('base'));
+        self::assertSame('Service de test', $departments->get(2)->get('name'));
+        self::assertSame(0, $this->getTableLocator()->get('DepartmentManagers')->find()
+            ->where(['department_id' => 2, 'user_id' => 1])->count());
+    }
+
+    public function testUneBasculeApiRefuseUnIdentifiantForgeAvecUneErreur422(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $departments = $this->getTableLocator()->get('Departments');
+        $departments->updateAll(['base' => 0, 'deleted' => null], ['id' => 2]);
+
+        $this->post('/api/departments/2.json', ['base' => true, 'id' => 999]);
+
+        $this->assertResponseCode(422);
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        $this->assertFalse($payload['success']);
+        $this->assertContains('id', array_column($payload['errors'], 'field'));
+        self::assertFalse((bool)$departments->get(2)->get('base'));
+    }
+
+    public function testLeSuperAdministrateurCreeUnDepartementSocleParApi(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/departments/add.json', [
+            'code' => 'SOCLE-API',
+            'name' => 'Département socle API',
+            'base' => true,
+        ]);
+
+        $this->assertResponseOk();
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        self::assertTrue((bool)$this->getTableLocator()->get('Departments')->get($payload['id'])->get('base'));
+    }
+
+    public function testUnAdministrateurOrdinaireNePeutPasModifierUnDepartementSocle(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 2]);
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 2,
+            'department_id' => 2,
+        ]));
+
+        $this->post('/api/departments/2.json', ['name' => 'Modification interdite']);
+
+        $this->assertResponseCode(403);
+        $this->assertSame('Service de test', $this->getTableLocator()->get('Departments')->get(2)->get('name'));
+    }
+
     /** Vérifie que l'API refuse le nettoyage des dépendances à un administrateur ordinaire. */
     public function testUnAdministrateurOrdinaireNePeutPasNettoyerLesDependances(): void
     {
@@ -749,5 +824,38 @@ final class DepartmentsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('Département socle');
+    }
+
+    public function testLeFormulaireSocleRendLesChampsOrdinairesEnLectureSeule(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+
+        $this->get('/departments/edit/1');
+
+        $this->assertResponseOk();
+        $this->assertMatchesRegularExpression('/<input[^>]*name="code"[^>]*readonly/', (string)$this->_response->getBody());
+        $this->assertMatchesRegularExpression('/<input[^>]*name="name"[^>]*readonly/', (string)$this->_response->getBody());
+        $this->assertResponseContains('Département socle');
+    }
+
+    public function testLeFormulaireWebAfficheLesErreursDuneBasculeCombinee(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $departments = $this->getTableLocator()->get('Departments');
+        $departments->updateAll(['base' => 0, 'deleted' => null], ['id' => 2]);
+
+        $this->post('/departments/edit/2', [
+            'base' => '1',
+            'name' => 'Nom interdit avec la bascule',
+            'parent_id' => '1',
+            'department_type_id' => '1',
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Champ');
+        self::assertFalse((bool)$departments->get(2)->get('base'));
+        self::assertSame('Service de test', $departments->get(2)->get('name'));
     }
 }

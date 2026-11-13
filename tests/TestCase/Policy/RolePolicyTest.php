@@ -20,13 +20,14 @@ class RolePolicyTest extends TestCase
         $this->assertTrue($policy->canEdit(new User(['issuperuser' => true]), $role));
     }
 
-    public function testUnRoleSocleNePeutEtreNiModifieNiDesactive(): void
+    public function testLeSuperAdministrateurPeutEditerUnRoleSocleSansLeSupprimer(): void
     {
         $policy = new RolePolicy();
         $superAdministrator = new User(['issuperuser' => true]);
         $baseRole = new Role(['base' => true]);
 
-        $this->assertFalse($policy->canEdit($superAdministrator, $baseRole));
+        $this->assertTrue($policy->canEdit($superAdministrator, $baseRole));
+        $this->assertFalse($policy->canEdit(new User(['issuperuser' => false]), $baseRole));
         $this->assertFalse($policy->canDelete($superAdministrator, $baseRole));
     }
 

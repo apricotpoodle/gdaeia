@@ -25,7 +25,7 @@ use Cake\Validation\Validator;
  * @method iterable<\App\Model\Entity\Professionalcategory>|\Cake\Datasource\ResultSetInterface<int, \App\Model\Entity\Professionalcategory> deleteManyOrFail(iterable<\Cake\Datasource\EntityInterface> $entities, array<string, mixed> $options = [])
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class ProfessionalcategoriesTable extends AppTable
+class ProfessionalcategoriesTable extends ReferenceTable
 {
     /**
      * Initialize method

@@ -54,6 +54,7 @@ class DepartmentsTable extends AppTable
         $this->setPrimaryKey(Department::FIELD_ID);
 
         $this->addBehavior('Timestamp');
+        $this->addBehavior('ProtectBaseRecords', ['priority' => 1]);
         $this->addBehavior('Tree');
 
         $this->belongsTo('ParentDepartments', [

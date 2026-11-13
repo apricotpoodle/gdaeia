@@ -68,7 +68,6 @@ abstract class ReferenceController extends AppController
             $this->authorizedRequestData($this->referenceAlias()),
             $this->patchOptions(),
         );
-        $entity->set('base', false);
         if ($table->save($entity)) {
             return $this->jsonSuccess(['id' => $entity->get('id')], __('La référence a été créée avec succès.'));
         }
@@ -76,7 +75,7 @@ abstract class ReferenceController extends AppController
         return $this->validationErrorResponse($entity, $this->referenceAlias());
     }
 
-    /** Modifie une ligne non socle. */
+    /** Modifie une ligne selon les droits et la protection ORM du socle. */
     public function edit(string $id): Response
     {
         $this->request->allowMethod(['post', 'put', 'patch']);
@@ -86,7 +85,7 @@ abstract class ReferenceController extends AppController
         $entity = $table->patchEntity(
             $entity,
             $this->authorizedRequestData($this->referenceAlias()),
-            $this->patchOptions(),
+            $this->patchOptions(true),
         );
         if ($table->save($entity)) {
             return $this->jsonSuccess(message: __('La référence a été mise à jour.'));
@@ -124,10 +123,10 @@ abstract class ReferenceController extends AppController
             ->firstOrFail();
     }
 
-    /** @return array{accessibleFields: array{base: false, deleted: false}} */
-    protected function patchOptions(): array
+    /** @return array{accessibleFields: array{base: true, deleted: false, id: bool}} */
+    protected function patchOptions(bool $isEdit = false): array
     {
-        return ['accessibleFields' => ['base' => false, 'deleted' => false]];
+        return ['accessibleFields' => ['base' => true, 'deleted' => false, 'id' => $isEdit]];
     }
 
     /** Désactive logiquement une ligne possédant une colonne deleted. */

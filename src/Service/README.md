@@ -17,8 +17,16 @@ Le référentiel SQL field_definitions est initialisé par migration avec les li
 `DepartmentManagementService` centralise les règles de l'administration des
 départements : chargement des enfants actifs, prévention des cycles, calcul des
 impacts, blocage des déplacements ou changements de stratégie incompatibles et
-désactivation logique transactionnelle. Le service force les nouveaux
-départements administrés à ne pas être des lignes socle.
+désactivation logique transactionnelle. Il ne déduit pas l'identité de
+l'opérateur et conserve la valeur `base` autorisée par le contrôleur. Les
+contrôleurs appliquent l'ACL avant de fournir `base=false` par défaut lors
+d'une création sans valeur explicite.
+
+Pour un département existant qui est ou devient socle, le service accepte une
+bascule de `base` seule. Il retourne des erreurs d'entité si la bascule
+accompagne un autre champ ou une mutation de responsable/CGR, avant toute
+écriture. Les associations restent gérées par leurs endpoints séparés et
+leurs Policies de périmètre.
 
 Il centralise également l'association idempotente et la dissociation immédiate
 des responsables et des codes CGR dans les tables de liaison normalisées.

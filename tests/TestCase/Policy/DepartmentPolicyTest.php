@@ -53,6 +53,26 @@ final class DepartmentPolicyTest extends TestCase
         self::assertTrue($policy->canEdit($administrator, $department));
     }
 
+    public function testUnAdministrateurOrdinaireNePeutPasModifierUnDepartementSocle(): void
+    {
+        $policy = new DepartmentPolicy(new PermissionResolver([
+            'departments.manage' => [PermissionResolver::SCOPE_ALL],
+        ]));
+        $department = new Department(['base' => true, 'deleted' => null]);
+        $administrator = new User(['id' => 2, 'role_id' => User::ROLE_ADMIN, 'issuperuser' => false]);
+
+        self::assertFalse($policy->canEdit($administrator, $department));
+    }
+
+    public function testLeSuperAdministrateurPeutModifierUnDepartementSocle(): void
+    {
+        $policy = new DepartmentPolicy(new PermissionResolver([]));
+        $department = new Department(['base' => true, 'deleted' => null]);
+        $superAdministrator = new User(['issuperuser' => true]);
+
+        self::assertTrue($policy->canEdit($superAdministrator, $department));
+    }
+
     public function testUnDepartementDejaDesactiveNePeutPasEtreDesactive(): void
     {
         $policy = new DepartmentPolicy();

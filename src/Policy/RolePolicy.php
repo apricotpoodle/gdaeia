@@ -28,10 +28,10 @@ class RolePolicy extends AppPolicy
         return $this->isSuperAdministrator($identity);
     }
 
-    /** Les rôles socles sont immuables afin de préserver la cartographie métier. */
+    /** Réserve la modification des rôles au superadministrateur. */
     public function canEdit(IdentityInterface $identity, Role $role): bool
     {
-        return $this->isSuperAdministrator($identity) && !$role->get(Role::FIELD_BASE);
+        return $this->isSuperAdministrator($identity);
     }
 
     /** La suppression est logique ; un rôle socle ne peut jamais être désactivé. */

@@ -27,10 +27,10 @@ abstract class ReferencePolicy extends AppPolicy
         return $this->isSuperUser($identity);
     }
 
-    /** Interdit la modification des lignes socles. */
+    /** Réserve la modification, y compris d'un socle, au superadministrateur. */
     public function canEdit(IdentityInterface $identity, EntityInterface $entity): bool
     {
-        return $this->isSuperUser($identity) && !$entity->get('base');
+        return $this->isSuperUser($identity);
     }
 
     /** Interdit la suppression des lignes socles. */

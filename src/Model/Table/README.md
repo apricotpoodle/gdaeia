@@ -2,6 +2,28 @@
 
 Ce répertoire contient la couche d'accès aux données (ORM CakePHP).
 
+## Références socles
+
+Les sept nomenclatures communes (`Budgetfeatures`, `Contracttypes`,
+`Hiringreasons`, `Periods`, `Professionalcategories`, `Worktimes` et
+`Yesnos`) héritent de `ReferenceTable`, qui attache
+`ProtectBaseRecordsBehavior`. `DepartmentsTable` et `RolesTable`
+attachent ce Behavior explicitement et conservent leurs règles spécialisées.
+`AppTable` n'active aucune protection à partir des noms de colonnes.
+
+Le Behavior ne connaît pas l'opérateur. Il permet les valeurs initiales d'une
+création socle, interdit de changer `id` sur toute ligne et n'accepte qu'un
+changement isolé de `base` si la ligne est ou devient socle. Le `code`
+d'une telle ligne ne change pas. Une ligne persistée `base = true` ne peut
+être supprimée physiquement ou logiquement, même si son entité porte un
+basculement non sauvegardé. Les lignes locales conservent leur CRUD.
+
+Les Policies et `FieldAuthorizationService` réservent l'accès HTTP à
+`base` au superadministrateur. Les changements d'associations d'un
+département ne peuvent accompagner un basculement de `base`. Les opérations
+`updateAll`, `deleteAll` et le SQL direct ne déclenchent pas les callbacks
+ORM : ce contrat ne les intercepte pas. Voir l'[ADR 0075 proposé](../../../docs/adr/0075-protection-references-socles.md).
+
 ## Filtres et Recherches
 * **`ApplicationformsTable`** : Intègre le Behavior `FriendsOfCake/Search` avec un filtre callback configuré en `MATCH() AGAINST() IN BOOLEAN MODE` sur l'index FULLTEXT multi-colonnes (`jobtitle`, `applicantname`, `qualification`, `reasonforreplacement`).
 * **`UsersTable`** : Le finder `assistantsForDepartment()` sélectionne les comptes Demandeur actifs associés explicitement au département demandé. L'API compose ce finder avec `visibleTo()` pour appliquer le périmètre de l'opérateur.

@@ -53,7 +53,7 @@ class RolesController extends AppController
         $this->viewBuilder()->setOption('serialize', ['data']);
     }
 
-    /** Crée un rôle non socle. */
+    /** Crée un rôle selon les droits de l'opérateur. */
     public function add(): Response
     {
         $this->request->allowMethod(['post']);
@@ -72,7 +72,7 @@ class RolesController extends AppController
         return $this->validationErrorResponse($role, 'Roles');
     }
 
-    /** Modifie un rôle non socle. */
+    /** Modifie un rôle selon les droits et la protection ORM du socle. */
     public function edit(string $id): Response
     {
         $this->request->allowMethod(['post', 'put', 'patch']);
@@ -81,7 +81,7 @@ class RolesController extends AppController
         $role = $this->Roles->patchEntity(
             $role,
             $this->authorizedRequestData('Roles'),
-            $this->patchOptions(),
+            $this->patchOptions(true),
         );
 
         if ($this->Roles->save($role)) {
@@ -105,10 +105,10 @@ class RolesController extends AppController
         return $this->jsonError(__('La désactivation du rôle a échoué.'));
     }
 
-    /** @return array{accessibleFields: array{base: false, deleted: false}} */
-    private function patchOptions(): array
+    /** @return array{accessibleFields: array{base: true, deleted: false, id: bool}} */
+    private function patchOptions(bool $isEdit = false): array
     {
-        return ['accessibleFields' => ['base' => false, 'deleted' => false]];
+        return ['accessibleFields' => ['base' => true, 'deleted' => false, 'id' => $isEdit]];
     }
 
     /** @return \App\Model\Entity\Role */

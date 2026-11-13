@@ -14,6 +14,15 @@ partagent `ReferenceController` pour le rendu Web de leurs grilles et formulaire
 Leurs mutations sont exposées par les contrôleurs API correspondants et restent
 réservées aux superadministrateurs via `ReferencePolicy`.
 
+Le formulaire de création permet au superadministrateur de créer une ligne
+`base` ; celui d'édition permet de basculer ce seul champ. Lorsqu'une ligne
+reste socle, ses autres champs sont en lecture seule et sa suppression est
+interdite. Les rôles suivent la même règle dans leur formulaire spécialisé.
+Le formulaire des départements conserve son contrôle `base` ; sur un
+département socle, l'accès à l'édition est réservé au superadministrateur.
+Un basculement de `base` ne peut accompagner aucun autre champ ni aucune
+association. Voir l'[ADR 0075 proposé](../../docs/adr/0075-protection-references-socles.md).
+
 ## Erreurs des formulaires Web
 
 Après un échec de sauvegarde, les contrôleurs Web appellent `AppController::flashValidationErrors()` avec l'entité et sa ressource ORM. Cette méthode utilise `ValidationErrorPresenter` pour produire un message Flash par champ invalide, avec tous ses motifs distincts. Les formulaires liés à l'entité conservent les erreurs CakePHP près des contrôles.

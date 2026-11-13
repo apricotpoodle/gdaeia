@@ -19,6 +19,7 @@ opérationnelle.
 - [0026 — Exécuter le plan d'architecture et de backlog en huit étapes](0026-executer-le-plan-architecture-et-backlog.md) — priorité haute ; ticket parent reprenable sur plusieurs sessions.
 - [0027 — Autoriser la création d'une Applicationform par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) — priorité haute ; distinguer la création d'une demande nouvelle de la modification d'une demande existante.
 - [0028 — Améliorer l'IHM des autorisations de champs](0028-ameliorer-ihm-autorisations-champs.md) — priorité haute ; utiliser `field_definitions` pour les ressources et champs.
+- [0029 — Protéger les références socles avec un Behavior commun](0029-proteger-references-socles-behavior-commun.md) — priorité haute ; bloquer leur suppression et isoler les basculements de `base`.
 - [0001 — Mettre en place un gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) — priorité moyenne.
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute ; permissions génériques, Policies CakePHP et périmètres V1 directs, avec la gestion des descendants et des droits individuels différée.

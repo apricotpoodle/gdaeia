@@ -24,6 +24,7 @@ function initialiseParentSelector() {
             isSingleSelect: true,
             searchable: true,
             clearable: true,
+            readOnly: data.readOnly || false,
             placeholder: 'Sélectionner un département parent...',
         });
     } catch (error) {
