@@ -347,7 +347,7 @@ class ApplicationformsTable extends Table
         ]);
         $this->belongsTo('Budgetfeatures', [
             'foreignKey' => Applicationform::FIELD_BUDGETFEATURE_ID,
-            'joinType' => 'INNER',
+            'joinType' => 'LEFT',
         ]);
         $this->belongsTo('Professionalcategories', [
             'foreignKey' => Applicationform::FIELD_PROFESSIONALCATEGORY_ID,
@@ -363,7 +363,7 @@ class ApplicationformsTable extends Table
         ]);
         $this->belongsTo('Yesnos', [
             'foreignKey' => Applicationform::FIELD_YESNO_ID,
-            'joinType' => 'INNER',
+            'joinType' => 'LEFT',
         ]);
         $this->hasMany('Applicationformstatuses', [
             'foreignKey' => 'applicationform_id',

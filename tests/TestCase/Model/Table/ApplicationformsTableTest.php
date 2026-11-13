@@ -128,6 +128,24 @@ class ApplicationformsTableTest extends TestCase
         $this->assertArrayHasKey('department_id', $applicationform->getErrors());
     }
 
+    public function testLesAssociationsFacultativesNeRetirentPasLaDemandeAvecContain(): void
+    {
+        $this->Applicationforms->getConnection()->update('applicationforms', [
+            'budgetfeature_id' => null,
+            'yesno_id' => null,
+            'deleted' => null,
+        ], ['id' => 1]);
+
+        $applicationform = $this->Applicationforms->find()
+            ->contain(['Budgetfeatures', 'Yesnos'])
+            ->where(['Applicationforms.id' => 1])
+            ->first();
+
+        $this->assertInstanceOf(Applicationform::class, $applicationform);
+        $this->assertNull($applicationform->get(Applicationform::FIELD_BUDGETFEATURE));
+        $this->assertNull($applicationform->get(Applicationform::FIELD_YESNO));
+    }
+
     public function testLaSauvegardeRefuseUneAssistanteNonRattacheeOuInactiveOuAuMauvaisRole(): void
     {
         $connection = $this->Applicationforms->getConnection();

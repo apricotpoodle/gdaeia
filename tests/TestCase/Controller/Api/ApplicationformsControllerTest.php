@@ -329,6 +329,20 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertArrayHasKey('end_at', $row);
     }
 
+    public function testLApiInclutUneDemandeSansCaracteristiqueBudgetaire(): void
+    {
+        ConnectionManager::get('test')->update('applicationforms', [
+            'budgetfeature_id' => null,
+            'deleted' => null,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->get('/api/applicationforms.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertContains(1, array_column($body['data'], 'id'));
+    }
+
     public function testLApiCalculeLeSalaireDeBaseManquantPourLaGrille(): void
     {
         ConnectionManager::get('test')->update('periods', ['code' => Period::CODE_EUR_PER_MONTH], ['id' => 1]);
