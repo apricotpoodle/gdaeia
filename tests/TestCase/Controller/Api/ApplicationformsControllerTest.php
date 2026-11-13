@@ -491,6 +491,80 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertSame([1, 5, 2, 3, 4], array_column($body['data'], 'id'));
     }
 
+    public function testLeStatutEtLeDroitDeLancementSuiventLeCycleCourant(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationforms', ['deleted' => null], ['id' => 1]);
+        $applicationform = $connection->execute(
+            'SELECT * FROM applicationforms WHERE id = 1',
+        )->fetch('assoc');
+        $this->assertIsArray($applicationform);
+
+        foreach ([10 => 'annulee', 26 => 'en_attente', 27 => 'acceptee', 32 => 'refusee'] as $id => $state) {
+            $applicationform['id'] = $id;
+            $connection->insert('applicationforms', $applicationform);
+            $connection->insert('validation_workflow_runs', [
+                'id' => 930_000 + $id,
+                'applicationform_id' => $id,
+                'started_by_user_id' => 1,
+                'state' => $state,
+                'started_at' => '2026-10-01 09:00:00',
+                'finished_at' => $state === 'en_attente' ? null : '2026-10-02 09:00:00',
+                'created' => '2026-10-01 09:00:00',
+                'modified' => '2026-10-02 09:00:00',
+            ]);
+        }
+
+        $applicationform['id'] = 23;
+        $connection->insert('applicationforms', $applicationform);
+        $connection->insert('validationstatuses', [
+            'id' => 5,
+            'code' => 'refusee-test',
+            'name' => 'Refusée test',
+            'deleted' => null,
+            'created' => '2026-10-01 09:00:00',
+            'modified' => '2026-10-01 09:00:00',
+        ]);
+        $legacyStep = $connection->execute(
+            'SELECT * FROM applicationvalidationsteps WHERE id = 1',
+        )->fetch('assoc');
+        $this->assertIsArray($legacyStep);
+        $legacyStep['id'] = 930_023;
+        $legacyStep['applicationform_id'] = 23;
+        $legacyStep['validation_workflow_run_id'] = null;
+        $legacyStep['sequence_number'] = null;
+        $legacyStep['state'] = null;
+        $legacyStep['deleted'] = null;
+        $connection->insert('applicationvalidationsteps', $legacyStep);
+
+        $legacyVote = $connection->execute(
+            'SELECT * FROM validations WHERE id = 1',
+        )->fetch('assoc');
+        $this->assertIsArray($legacyVote);
+        $legacyVote['id'] = 930_023;
+        $legacyVote['applicationform_id'] = 23;
+        $legacyVote['applicationvalidationstep_id'] = 930_023;
+        $legacyVote['validationstatus_id'] = 5;
+        $legacyVote['deleted'] = null;
+        $connection->insert('validations', $legacyVote);
+
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->get('/api/applicationforms.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $rows = array_column($body['data'], null, 'id');
+        $expectedStatuses = [10 => 6, 23 => 1, 26 => 2, 27 => 4, 32 => 5];
+        foreach ($expectedStatuses as $id => $status) {
+            $this->assertArrayHasKey($id, $rows);
+            $this->assertSame($status, (int)$rows[$id]['validation_status']);
+            $this->assertSame(
+                $id === 23,
+                $rows[$id]['grid_rights']['actions']['launchValidation'],
+            );
+        }
+    }
+
     public function testLApiRefuseUnePlageDeDatesInverseeAvecUneErreurJson(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
