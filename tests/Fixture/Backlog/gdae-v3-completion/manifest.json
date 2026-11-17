@@ -1,0 +1,8 @@
+{
+  "workflow": "gdae-v3-completion",
+  "tickets": [
+    {"id":"0001","path":"0001-bloque.md","status":"À faire","dependsOn":["0000"]},
+    {"id":"0000","path":"0000-dependance.md","status":"À faire","dependsOn":["0002"]},
+    {"id":"0002","path":"0002-racine.md","status":"À faire","dependsOn":[]}
+  ]
+}

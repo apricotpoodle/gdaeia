@@ -1,15 +1,15 @@
 # 0021 — Implémenter les habilitations génériques
 
-**Statut :** En cours — vertical départements implémenté
+**Statut :** Terminé — vertical départements livré
 
 **Priorité :** Haute
 
 ## Contexte
 
-L'accès à `/departments` est actuellement réservé au super-administrateur
-par `DepartmentPolicy`, même lorsqu'un utilisateur possède le rôle
-administrateur. Plusieurs Policies utilisent encore des rôles ou des
-conditions codées en dur. L'ADR 0069 accepté centralise ces capacités
+À l'origine du ticket, l'accès à `/departments` était réservé au
+super-administrateur par `DepartmentPolicy`, même lorsqu'un utilisateur
+possédait le rôle administrateur. Plusieurs Policies utilisaient des rôles ou
+des conditions codées en dur. L'ADR 0069 accepté centralise ces capacités
 dans un catalogue de permissions et des associations de permissions aux
 rôles.
 
@@ -85,4 +85,6 @@ API et dispose d'un écran Web d'audit ; les attributions sont protégées par
 - [ADR 0064 — Administration de l'arbre des départements](../adr/0064-administration-arbre-departements.md)
 - Le ticket 0007 fournit le socle générique ; ce ticket en implémente le
   premier vertical sur les départements.
+- La généralisation des permissions aux autres domaines reste dans le ticket
+  0007 ; elle ne fait pas partie de ce vertical terminé.
 - `src/Policy/DepartmentPolicy.php`

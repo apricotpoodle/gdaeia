@@ -1,6 +1,6 @@
 # 0028 — Améliorer l'IHM des autorisations de champs
 
-**Statut :** Terminé — implémenté sur `feature/tickets-0028-0027`
+**Statut :** Partiel — code livré, tests d'acceptation à compléter
 
 **Priorité :** Haute — fiabilité du paramétrage des habilitations
 
@@ -11,9 +11,10 @@ autorisations de champs et de zones.
 
 ## Contexte
 
-L'URL `/field-authorizations/add` propose actuellement une saisie libre pour
-les champs `resource` et `field`. Cette saisie permet d'enregistrer des
-valeurs mal orthographiées, incohérentes avec les ressources ORM ou absentes
+Au moment de la création de ce ticket, l'URL `/field-authorizations/add`
+proposait une saisie libre pour les champs `resource` et `field`. Cette saisie
+permettait d'enregistrer des valeurs mal orthographiées, incohérentes avec les
+ressources ORM ou absentes
 du référentiel des champs métier. Certaines valeurs existantes, comme
 `job_section` ou `rh_section`, désignent des zones fonctionnelles de l'IHM et
 non des colonnes de table.
@@ -59,38 +60,38 @@ des doublons.
 
 ### Modèle, référentiels et API
 
-- [ ] Créer `authorization_targets` avec la ressource, le type de cible, le
+- [x] Créer `authorization_targets` avec la ressource, le type de cible, le
   code, le libellé, la description, l'état actif et l'ordre d'affichage.
-- [ ] Déclarer les zones fonctionnelles existantes, notamment `job_section` et
+- [x] Déclarer les zones fonctionnelles existantes, notamment `job_section` et
   `rh_section`, dans ce référentiel.
-- [ ] Faire évoluer `field_authorizations` pour distinguer `field` et
+- [x] Faire évoluer `field_authorizations` pour distinguer `field` et
   `section`, en conservant une migration contrôlée des valeurs historiques.
-- [ ] Exposer une API de consultation des ressources et cibles actives issues
+- [x] Exposer une API de consultation des ressources et cibles actives issues
   des deux référentiels, avec une réponse exploitable par l'IHM.
-- [ ] Permettre le chargement des cibles après sélection du type et de la
+- [x] Permettre le chargement des cibles après sélection du type et de la
   ressource, sans exposer les cibles inactives.
-- [ ] Conserver les libellés, descriptions et noms techniques dans la
+- [x] Conserver les libellés, descriptions et noms techniques dans la
   réponse afin que l'IHM n'ait pas à les reconstruire.
-- [ ] Ajouter une validation ORM côté `FieldAuthorizationsTable` pour vérifier
+- [x] Ajouter une validation ORM côté `FieldAuthorizationsTable` pour vérifier
   l'existence et l'activation de la cible dans le référentiel correspondant.
-- [ ] Prévoir le comportement des anciennes autorisations dont la définition
+- [x] Prévoir le comportement des anciennes autorisations dont la définition
   serait devenue inactive : elles restent consultables et éditables, mais ne
   peuvent pas être sélectionnées pour une nouvelle règle.
 
 ### Interface Web
 
-- [ ] Remplacer la saisie texte de `resource` par une liste recherchable.
-- [ ] Ajouter un choix explicite du type de cible : champ ORM ou zone
+- [x] Remplacer la saisie texte de `resource` par une liste recherchable.
+- [x] Ajouter un choix explicite du type de cible : champ ORM ou zone
   fonctionnelle.
-- [ ] Remplacer la saisie texte de la cible par une liste recherchable,
+- [x] Remplacer la saisie texte de la cible par une liste recherchable,
   dépendante du type et de la ressource.
-- [ ] Réinitialiser la cible lorsque le type ou la ressource change et
+- [x] Réinitialiser la cible lorsque le type ou la ressource change et
   empêcher l'envoi d'une cible appartenant à un autre référentiel.
-- [ ] Afficher le nom technique, le libellé et la description en complément de
+- [x] Afficher le nom technique, le libellé et la description en complément de
   la catégorie choisie.
-- [ ] Mutualiser le comportement JavaScript entre les formulaires d'ajout et
+- [x] Mutualiser le comportement JavaScript entre les formulaires d'ajout et
   d'édition, sans script inline.
-- [ ] Afficher des messages français lorsque le référentiel est indisponible,
+- [x] Afficher des messages français lorsque le référentiel est indisponible,
   vide ou incompatible avec une règle existante.
 
 ### Tests et documentation
@@ -103,7 +104,7 @@ des doublons.
   type ou d'une autre ressource.
 - [ ] Tester la migration et la consultation des autorisations historiques
   contenant des valeurs comme `job_section` et `rh_section`.
-- [ ] Documenter le fonctionnement du référentiel dans le README local du
+- [x] Documenter le fonctionnement du référentiel dans le README local du
   domaine sécurité.
 
 ## Critères d'acceptation
@@ -140,7 +141,11 @@ Exécuter les commandes adaptées via le Makefile racine :
 L’implémentation introduit la migration `20261106100000`, le référentiel
 `authorization_targets`, le catalogue JSON `get-form-schema.json` et le
 sélecteur partagé des formulaires d’ajout et d’édition. Les règles historiques
-restent éditables, tandis que les nouvelles cibles doivent être actives.
+restent éditables, tandis que les nouvelles cibles doivent être actives. Les
+tests présents couvrent le formulaire d'ajout, une cible inconnue et l'affichage
+d'un libellé de cible ; les tests d'acceptation des sections, cibles inactives,
+changements de formulaire, requêtes incohérentes et migration historique restent
+à ajouter.
 
 - `src/Controller/FieldAuthorizationsController.php`
 - `src/Controller/Api/FieldAuthorizationsController.php`

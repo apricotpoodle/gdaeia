@@ -9,8 +9,27 @@ Ce répertoire contient les commandes en ligne de commande (CLI) accessibles via
 * **`bin/cake validation remind`** : Relance les validateurs des étapes échues, au plus une fois par étape et par période de vingt-quatre heures.
 * **`bin/cake validation notify-blocked`** : Envoie chaque matin le récapitulatif des cycles bloqués, avec le périmètre de consultation propre à chaque administrateur.
 * **`bin/cake validation repair-orphaned-sequences [--apply]`** : Détecte les références de séquences orphelines et applique uniquement les réalignements uniques avec `--apply`.
+* **`bin/cake backlog next <workflow>`** : Recherche le manifeste du workflow dans `docs/backlog/` et affiche le premier ticket dont les dépendances sont terminées.
 
 * **migration_import_departments --source-dir <répertoire> [--dry-run|--apply]** : Prépare ou applique l’import transactionnel des sociétés, services et codes CGR historiques.
+
+## Prochain ticket d'un sous-workflow
+
+Chaque sous-workflow possède un fichier `manifest.json` sous `docs/backlog/`.
+La commande résout l'identifiant passé en argument avec la propriété `workflow`
+des manifestes, puis respecte l'ordre des tickets et leurs dépendances
+`dependsOn`. Elle conserve la compatibilité avec
+`bin/cake backlog next validation-af`.
+
+Exemple pour la séquence de finalisation GDAE V3 :
+
+```bash
+bin/cake backlog next gdae-v3-completion
+```
+
+La commande est en lecture seule. Elle affiche `Aucun ticket exécutable.` si
+aucun ticket non terminé n'a toutes ses dépendances au statut `Terminé`, et
+signale en français un identifiant de workflow absent.
 
 ## Relances de validation
 

@@ -1,15 +1,16 @@
 # 0019 — Reprendre les quatre zones dans la vue d'une DAE
 
-**Statut :** À planifier
+**Statut :** Terminé — implémenté et couvert par les tests
 
 **Priorité :** Moyenne
 
 ## Contexte
 
-L'onglet « Détails de la demande » de l'interface de consultation d'une DAE
-présente actuellement une organisation différente de celle utilisée pour
-l'édition. Les informations sont regroupées en sections générales, ce qui
-rend la comparaison entre consultation et saisie moins directe.
+Au moment de la création de ce ticket, l'onglet « Détails de la demande » de
+l'interface de consultation d'une DAE présentait une organisation différente
+de celle utilisée pour l'édition. Les informations étaient regroupées en
+sections générales, ce qui rendait la comparaison entre consultation et saisie
+moins directe.
 
 ## Objectif
 

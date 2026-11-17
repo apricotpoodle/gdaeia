@@ -342,15 +342,16 @@ La prochaine étape réalisable est l'étape 6.
   l'édition, en lecture seule.
 - [x] Implémenter 0017 selon l'ADR 0070 : règles locales, administration,
   lancement, contrôles d'éligibilité et conservation des cycles.
-- [ ] Ajouter les tests au niveau pertinent et mettre à jour la documentation
+- [x] Ajouter les tests au niveau pertinent et mettre à jour la documentation
   métier locale.
 
 #### Suivi de l'étape 6 — ticket 0020
 
 - Le ticket 0020 est terminé séparément; sa migration, ses tests ORM/API et
   sa documentation sont présents.
-- Les tickets 0019 et 0017 restent à planifier et ne sont pas inclus dans
-  cette livraison.
+- Les tickets 0019 et 0017 sont implémentés et leurs tests/documentation sont
+  présents. La configuration métier réelle de 0017 reste à saisir par
+  l'opérateur et sera reprise dans le workflow de finalisation GDAE V3.
 
 #### Suivi de l'étape 6 — ticket 0019
 
@@ -376,7 +377,9 @@ La prochaine étape réalisable est l'étape 6.
   (9), suite complète (537 tests, 1 828 assertions), 10 fichiers JavaScript,
   style PHP/tests et PHPStan. Base MySQL exclusivement `daetf2_test`.
 - L’ADR 0074 reste `Proposé`. Les autres points du plan ne sont pas étendus
-  dans cette livraison ; la case générale tests/documentation reste ouverte.
+  dans cette livraison. L'étape 6 couvre les implémentations et leur
+  documentation ; l'arbitrage et la recette des règles métier restantes sont
+  suivis séparément dans le workflow GDAE V3.
 
 **Critère de sortie :** chaque ticket est livré séparément, avec ses critères
 d'acceptation et ses vérifications propres satisfaits.

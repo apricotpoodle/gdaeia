@@ -5,9 +5,12 @@ l'opérateur humain complète uniquement les colonnes **Réponse métier du
 client** et **Exemple métier donné par le client**, sans interpréter la
 réponse.
 
-Les questions sont regroupées par ticket. Les tickets principaux 0018 à 0023
-et les tickets du sous-workflow validation-applicationform à partir de 0018
-sont couverts.
+Les questions sont regroupées par ticket. Les questions Q-0018-01 à
+Q-0018-06, encore ouvertes après la livraison technique du ticket 0018, sont
+également des entrées du ticket [0030](../backlog/0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md).
+Le code décrit dans les tickets terminés ne remplace pas une réponse métier.
+Les tickets principaux 0018 à 0023 et les tickets du sous-workflow
+validation-applicationform à partir de 0018 restent couverts.
 
 | ID | Ticket | Statut | Question | Réponse métier du client | Exemple métier donné par le client |
 |---|---|---|---|---|---|
@@ -37,6 +40,12 @@ sont couverts.
 | Q-0023-02 | 0023 | À poser | Quelles données doivent être migrées et quelles données doivent être archivées ou exclues ? |  |  |
 | Q-0023-03 | 0023 | À poser | Quelle durée d'indisponibilité est acceptable pendant la migration ? |  |  |
 | Q-0023-04 | 0023 | À poser | Quels contrôles métier doivent être réalisés avant d'autoriser la reprise de l'application ? |  |  |
+| Q-0030-01 | 0030 | À poser | Quelle formule faut-il appliquer à l'unité €/heure, ou cette unité doit-elle rester sans calcul de salaire de base ? |  |  |
+| Q-0030-02 | 0030 | À poser | Qui peut récupérer une DAE transmise, jusqu'à quelle étape, et que deviennent les étapes, votes et traces déjà enregistrés ? |  |  |
+| Q-0030-03 | 0030 | À poser | Quelles demandes et après quel délai doivent être archivées, quels rôles peuvent archiver ou consulter les archives, et quelle durée de conservation s'applique ? |  |  |
+| Q-0030-04 | 0030 | À poser | Qui reçoit les listes quotidiennes de demandes à valider, les avis de signature et la synthèse hebdomadaire, et à quelle heure chaque envoi doit-il partir ? |  |  |
+| Q-0030-05 | 0030 | À poser | Quelles résolutions, tailles de fenêtre et facteurs de zoom définissent l'objectif « voir l'ensemble des champs sans ascenseur » ? |  |  |
+| Q-0030-06 | 0030 | À poser | Le champ `current_manager_id` de l'Applicationform doit-il être supprimé, conservé pour compatibilité ou migré, et quel sort donner aux données existantes ? |  |  |
 | Q-VAF-0018-01 | validation-applicationform/0018 | À poser | Dans quels cas un cycle de validation peut-il être annulé par un utilisateur ou un administrateur ? |  |  |
 | Q-VAF-0018-02 | validation-applicationform/0018 | À poser | Une annulation doit-elle conserver l'historique des votes et des commentaires ? |  |  |
 | Q-VAF-0018-03 | validation-applicationform/0018 | À poser | Qui peut réinitialiser un cycle annulé et quelles données doivent être conservées ? |  |  |

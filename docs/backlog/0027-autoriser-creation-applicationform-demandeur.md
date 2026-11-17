@@ -1,6 +1,6 @@
 # 0027 — Autoriser la création d'une Applicationform par un demandeur
 
-**Statut :** Terminé — implémenté sur `feature/tickets-0028-0027`
+**Statut :** Partiel — code livré, tests fonctionnels du demandeur à compléter
 
 **Priorité :** Haute — création et habilitations des demandes
 
@@ -11,10 +11,11 @@ zones fonctionnelles et configurer les droits du demandeur.
 
 ## Contexte
 
-L'URL `/applicationforms/add` utilise une entité `Applicationform` vide. Les
-Policies actuelles appliquent principalement les règles de visibilité et de
-modification d'une demande déjà enregistrée. Une nouvelle demande ne possède
-encore ni `user_id`, ni `department_id`, ce qui peut empêcher le rôle
+Au moment de la création de ce ticket, l'URL `/applicationforms/add` utilisait
+une entité `Applicationform` vide. Les Policies appliquaient principalement
+les règles de visibilité et de modification d'une demande déjà enregistrée.
+Une nouvelle demande ne possédait alors ni `user_id`, ni `department_id`, ce
+qui pouvait empêcher le rôle
 `Demandeur` de modifier la zone administrative et de renseigner les champs
 nécessaires à l'enregistrement.
 
@@ -32,23 +33,26 @@ l'administration ou aux RH.
 
 ## Travail attendu
 
-- [ ] Distinguer explicitement, dans `ApplicationformPolicy`, une entité
+- [x] Distinguer explicitement, dans `ApplicationformPolicy`, une entité
   nouvelle d'une demande persistée pour l'autorisation des zones de création.
-- [ ] Autoriser le demandeur à consulter et modifier les zones métier
+- [x] Autoriser le demandeur à consulter et modifier les zones métier
   nécessaires à la création : administration/candidat, contrat et
   rémunération/temps de travail.
-- [ ] Maintenir la protection de la zone réservée RH/administration et des
+- [x] Maintenir la protection de la zone réservée RH/administration et des
   demandes déjà enregistrées hors périmètre.
-- [ ] Vérifier la cohérence entre les règles `field_authorizations` du rôle
+- [x] Vérifier la cohérence entre les règles `field_authorizations` du rôle
   `Demandeur` et les champs effectivement nécessaires au formulaire.
-- [ ] Vérifier que les listes de référence restent limitées aux valeurs
+- [x] Vérifier que les listes de référence restent limitées aux valeurs
   actives et que les départements/collaborateurs respectent le périmètre de
   l'utilisateur.
-- [ ] Conserver le filtrage serveur de `authorizedRequestData()` et
+- [x] Conserver le filtrage serveur de `authorizedRequestData()` et
   l'attribution automatique du `user_id` au demandeur connecté.
-- [ ] Ajouter les tests de Policy, de formulaire Web et d'enregistrement
-  réussi ou refusé.
-- [ ] Mettre à jour la documentation locale si le contrat d'habilitation des
+- [x] Ajouter les tests unitaires de Policy et les tests de présentation ou
+  de refus déjà présents.
+- [ ] Ajouter des tests HTTP du parcours de création par un demandeur,
+  incluant l'affichage du formulaire, l'enregistrement réussi et l'attribution
+  automatique du `user_id`.
+- [x] Mettre à jour la documentation locale si le contrat d'habilitation des
   zones évolue.
 
 ## Critères d'acceptation
@@ -82,6 +86,9 @@ La Policy distingue désormais l’entité nouvelle d’une demande persistée. 
 demandeur peut saisir les zones métier nécessaires à la création ; les champs
 RH et administration réservés sont retirés côté serveur avant l’hydratation
 ORM, et l’identifiant du demandeur reste attribué par le contrôleur.
+Le dépôt ne contient pas encore de test HTTP d'enregistrement réussi par un
+demandeur ni de vérification de l'attribution automatique du `user_id` dans ce
+parcours ; le ticket reste partiel jusqu'à l'ajout de ces preuves.
 
 - `src/Policy/ApplicationformPolicy.php`
 - `src/Controller/ApplicationformsController.php`
@@ -89,5 +96,5 @@ ORM, et l’identifiant du demandeur reste attribué par le contrôleur.
 - `templates/element/Applicationforms/zone_admin.php`
 - `src/Service/Security/FieldAuthorizationService.php`
 - [ADR 0042 — ACL granulaire au niveau du champ](../adr/0042-acl-granulaire-niveau-champ-formulaire.md)
-- [ADR 0048 — Découpage de l'IHM Applicationform en zones](../adr/0048-decoupage-ihm-applicationform.md)
+- [ADR 0048 — Découpage de l'IHM Applicationform en zones](../adr/0048-decoupage-ihm-zones-applicationform.md)
 - [ADR 0065 — ACL automatique des mutations Web et API](../adr/0065-acl-automatique-des-mutations-web-api.md)

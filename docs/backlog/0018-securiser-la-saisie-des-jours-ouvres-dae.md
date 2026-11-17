@@ -6,10 +6,11 @@
 
 ## Contexte
 
-Dans l'interface d'édition d'une DAE, le champ `working_days` peut être saisi
-sans repère suffisamment contraignant. La valeur doit rester cohérente avec
-la période indiquée par les dates de début et de fin, tout en permettant à
-l'opérateur de corriger le nombre de jours effectivement travaillés.
+Au moment de la création de ce ticket, dans l'interface d'édition d'une DAE,
+le champ `working_days` pouvait être saisi sans repère suffisamment
+contraignant. La valeur devait rester cohérente avec la période indiquée par
+les dates de début et de fin, tout en permettant à l'opérateur de corriger le
+nombre de jours effectivement travaillés.
 
 ## Objectif
 
@@ -71,3 +72,11 @@ Exécuter les commandes adaptées via le Makefile racine :
 - `src/Model/Table/ApplicationformsTable.php`
 - `src/Service/SalaryCalculationService.php`
 - [ADR 0039 — Défilement infini des grilles](../adr/0039-chargement-progressif-scroll-infini.md)
+
+## Limites métier et suite
+
+Le ticket couvre le calcul technique hors samedis et dimanches, la saisie
+manuelle et les bornes serveur. Il ne tranche pas la visibilité et le caractère
+obligatoire selon les contrats, l'exclusion des jours fériés ni les périodes
+sans jour ouvré. Les questions Q-0018-01 à Q-0018-06 restent ouvertes et sont
+des prérequis du ticket [0030 — Arbitrer le périmètre GDAE V3](0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md).

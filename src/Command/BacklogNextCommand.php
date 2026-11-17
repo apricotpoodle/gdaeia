@@ -8,13 +8,16 @@ use Cake\Console\Arguments;
 use Cake\Console\CommandFactoryInterface;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
+use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 
 /** Affiche le prochain ticket dont toutes les dépendances sont terminées. */
 final class BacklogNextCommand extends Command
 {
     /**
      * @param \Cake\Console\CommandFactoryInterface|null $factory Fabrique CakePHP.
-     * @param string|null $manifestPath Chemin de manifeste, surchargeable en test.
+     * @param string|null $manifestPath Chemin du manifeste ou du backlog, surchargeable en test.
      */
     public function __construct(?CommandFactoryInterface $factory = null, private readonly ?string $manifestPath = null)
     {
@@ -42,13 +45,22 @@ final class BacklogNextCommand extends Command
     public function execute(Arguments $args, ConsoleIo $io): int
     {
         $workflow = (string)$args->getArgument('workflow');
-        $path = $this->manifestPath ?? ROOT . DS
+        $backlogPath = $this->manifestPath ?? ROOT . DS
             . 'docs' . DS
-            . 'backlog' . DS
-            . 'validation-applicationform' . DS
-            . 'manifest.json';
-        $manifest = json_decode((string)file_get_contents($path), true, flags: JSON_THROW_ON_ERROR);
-        if (($manifest['workflow'] ?? null) !== $workflow) {
+            . 'backlog';
+        $manifestPaths = is_file($backlogPath)
+            ? [$backlogPath]
+            : $this->findManifestPaths($backlogPath);
+        $manifest = null;
+        foreach ($manifestPaths as $manifestPath) {
+            $candidate = json_decode((string)file_get_contents($manifestPath), true, flags: JSON_THROW_ON_ERROR);
+            if (($candidate['workflow'] ?? null) === $workflow) {
+                $manifest = $candidate;
+
+                break;
+            }
+        }
+        if ($manifest === null) {
             $io->error(__('Workflow inconnu.'));
 
             return static::CODE_ERROR;
@@ -72,5 +84,31 @@ final class BacklogNextCommand extends Command
         $io->out(__('Aucun ticket exécutable.'));
 
         return static::CODE_SUCCESS;
+    }
+
+    /**
+     * Trouve les manifestes de workflow présents dans le backlog.
+     *
+     * @param string $backlogPath Répertoire racine du backlog.
+     * @return list<string> Chemins triés des manifestes trouvés.
+     */
+    private function findManifestPaths(string $backlogPath): array
+    {
+        if (!is_dir($backlogPath)) {
+            return [];
+        }
+
+        $manifestPaths = [];
+        $iterator = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($backlogPath, FilesystemIterator::SKIP_DOTS),
+        );
+        foreach ($iterator as $file) {
+            if ($file->isFile() && $file->getFilename() === 'manifest.json') {
+                $manifestPaths[] = $file->getPathname();
+            }
+        }
+        sort($manifestPaths, SORT_STRING);
+
+        return $manifestPaths;
     }
 }

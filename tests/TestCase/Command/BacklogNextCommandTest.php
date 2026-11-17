@@ -9,6 +9,37 @@ use Cake\Console\Arguments;
 /** Vérifie la sélection du prochain ticket du backlog. */
 class BacklogNextCommandTest extends CommandTestCase
 {
+    public function testReconnaîtLeWorkflowGdaeV3QuelQueSoitSonEtat(): void
+    {
+        $streams = $this->createIo();
+        $command = new BacklogNextCommand();
+
+        $result = $command->execute(
+            new Arguments(['gdae-v3-completion'], [], ['workflow']),
+            $streams['io'],
+        );
+
+        $this->assertSame(BacklogNextCommand::CODE_SUCCESS, $result);
+        $this->assertStringNotContainsString('Workflow inconnu.', $this->streamContents($streams['err']));
+    }
+
+    public function testDecouvreLeWorkflowEtIgnoreUnTicketDontLaDependanceNestPasTerminee(): void
+    {
+        $streams = $this->createIo();
+        $command = new BacklogNextCommand(
+            null,
+            TESTS . DS . 'Fixture' . DS . 'Backlog',
+        );
+
+        $result = $command->execute(
+            new Arguments(['gdae-v3-completion'], [], ['workflow']),
+            $streams['io'],
+        );
+
+        $this->assertSame(BacklogNextCommand::CODE_SUCCESS, $result);
+        $this->assertSame('0002 — 0002-racine.md' . PHP_EOL, $this->streamContents($streams['out']));
+    }
+
     public function testAfficheLePremierTicketDontLesDependancesSontTerminees(): void
     {
         $streams = $this->createIo();

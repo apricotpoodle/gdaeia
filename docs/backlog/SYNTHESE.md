@@ -1,108 +1,90 @@
 # Synthèse du backlog
 
-État vérifié le **5 novembre 2026** à partir des fiches de tickets, des
-manifestes `validation-applicationform/manifest.json` et
-`visibilite-manageabilite/manifest.json`, du code, des migrations et des tests
-présents dans le dépôt. Les statuts ci-dessous décrivent le reste à faire, pas
-seulement le statut historique écrit dans une fiche.
+Cette synthèse combine l'état des tickets racine relevé le 5 novembre 2026 et
+un audit ciblé effectué le **17 novembre 2026** sur les tickets 0017 à 0021,
+0027 à 0029 et l'étape 6 du ticket 0026. Les statuts décrivent le travail
+restant. L'audit ciblé s'appuie sur les fiches, le code, les tests et les
+documents présents ; il ne remplace pas l'exécution des suites.
 
-Les tickets 0017 à 0023 ont été ajoutés les **23 et 29 octobre 2026** sans
-nouvel audit global. Le ticket 0025 a été ajouté le **4 novembre 2026** ; son
-sous-workflow est désormais terminé et l'ADR 0073 est accepté.
-Le ticket 0026 formalise le plan transverse en huit étapes et est en cours
-depuis le démarrage de son étape 1.
+## Vue d'ensemble
 
-Mise à jour ciblée du **6 novembre 2026** : 0017 est implémenté ; sa configuration
-métier reste à saisir par l’opérateur. Les autres constats de cet audit
-historique n’ont pas été réévalués dans cette livraison. Les tickets 0027 et
-0028 ont été ajoutés pour traiter respectivement la création d'une demande par
-le rôle Demandeur et la fiabilisation de l'IHM des autorisations de champs.
-
-Mise à jour ciblée du **13 novembre 2026** : le ticket 0029 planifie la
-protection ORM commune des enregistrements socles, avec création et bascule
-isolée de `base` réservées au superadministrateur dans les parcours Web/API.
-Les autres constats de l'audit historique n'ont pas été réévalués.
-
-## Vue d’ensemble
-
-| Périmètre | Total | Entièrement traité | Partiellement traité | Reste à faire |
+| Périmètre | Total | Terminé | Partiel | Reste à faire |
 |---|---:|---:|---:|---:|
-| Backlog technique racine (`0001`–`0029`) | 29 | 17 | 1 | 11 |
+| Backlog racine historique (`0001`–`0029`) | 29 | 20 | 4 | 5 |
+| Workflow obligatoire `gdae-v3-completion` (`0030`–`0039`) | 10 | 0 | 0 | 10 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
 | Workflow `visibilite-manageabilite` (`0001`–`0009`) | 9 | 9 | 0 | 0 |
-| **Total** | **51** | **39** | **1** | **11** |
+| **Total obligatoire** | **61** | **42** | **4** | **15** |
 
-Le ticket 0002 est compté comme partiellement traité ; les tickets restants
-concernent les sujets 0001, 0007, 0019, 0021 à 0023 et 0026 à 0029,
-auxquels s'ajoutent les compléments du 0002.
+Les tickets racine 0002, 0017, 0027 et 0028 sont partiels. Le code et les tests de
+0017 sont livrés, mais sa configuration métier SEM reste à saisir par
+l'opérateur. Le code de 0028 est livré, mais des tests d'acceptation restent à
+ajouter.
+Le ticket 0040 est un bonus facultatif et n'entre pas dans ces totaux.
 
-## Tickets restant à effectuer
+## Travail restant sur le backlog racine
 
-| Ticket | Priorité | État après vérification | Reste à faire | Vérification de l’existant |
-|---|---|---|---|---|
-| [0001 — Gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) | Moyenne | À faire | Choisir et mettre en service l’outil, documenter le processus, migrer les fiches actives et décider du sort de `docs/backlog/`. | Aucun gestionnaire ni migration externe n’est documenté ; le dépôt reste le backlog transitoire. |
-| [0002 — Couverture de tests](0002-etendre-la-couverture-de-tests.md) | Haute | **Partiel** | Mesurer et documenter la couverture cible, décider de l’automatisation des seuils (80 % global, 90 % critique, objectif branches), puis traiter l’écart restant. | Tests HTTP, workflow/vues SQL, PCOV et rapports Clover/HTML existent ; la fiche indique elle-même 61,5 % de lignes et des seuils différés. |
-| [0007 — Accès menus et permissions](0007-separer-acces-menus-et-permissions-administration.md) | Haute | À faire | Introduire `permissions`/`role_permissions` et `manage_menus`, centraliser la résolution des accès, migrer les données et ajouter les tests HTTP, Policy et intégration. La V1 couvre `self`, les départements directement affectés (`assigned`) et `all` ; les descendants et les droits individuels sont différés. | `src/Policy/MenuPolicy.php` autorise encore via `isSuperUser()` ; aucune table `permissions`/`role_permissions` ni permission `manage_menus` n’a été trouvée. Les Policies et custom finders existants constituent le socle de migration ; le ticket écarte provisoirement ARO/ACO. |
-| [0019 — Quatre zones de la vue DAE](0019-reprendre-les-quatre-zones-dans-la-vue-dae.md) | Moyenne | À planifier | Aligner l'onglet « Détails de la demande » sur les quatre zones de l'édition, en lecture seule et avec conservation des droits. | Nouveau ticket créé le 29 octobre ; aucune implémentation engagée. |
-| [0020 — Duplication des DAE](0020-fiabiliser-la-duplication-des-dae.md) | Haute | **Terminé** | — | Duplication typée, champs administratifs réinitialisés, brouillons sans budget/inscription budgétaire et erreurs API par catégorie vérifiés. |
-| [0021 — Habilitations génériques](0021-implementer-les-habilitations-generiques.md) | Haute | À planifier | Implémenter le premier vertical du socle 0007 : permissions génériques et sécurisation Web/API de l'administration des départements. | L'ADR 0069 est accepté ; le ticket 0007 définit le socle générique et 0021 en constitue l'implémentation spécialisée. |
-| [0022 — Référentiel des départements](0022-mettre-a-jour-le-referentiel-des-departements.md) | Moyenne | À planifier | Mettre à jour les départements, principalement les fils de SEM/Rédac, avec import contrôlé et vérification d'intégrité. | Nouveau ticket créé le 29 octobre ; aucune transformation de données engagée. |
-| [0023 — Migration de base](0023-migrer-la-base-de-donnees.md) | Moyenne | À planifier | Préparer une migration MySQL simple par export/restauration, migrations et contrôles de cohérence. | Nouveau ticket créé le 29 octobre ; aucune bascule de base engagée. |
-| [0024 — Associations multiples des départements](0024-generaliser-les-associations-des-departements.md) | **Haute** | Terminé | Remplacer les responsables et rattachements CGR directs par des tables de liaison, migrer les données et adapter l’ORM, l’API et les écrans. | Migration, ORM, API, IHM et validations finalisées. |
-| [0026 — Plan d'architecture et de backlog en huit étapes](0026-executer-le-plan-architecture-et-backlog.md) | **Haute** | **En cours** | Coordonner l'assainissement documentaire, l'acceptation des ADR, les habilitations, la visibilité/gérabilité, les évolutions métier, la qualité, la migration et la gouvernance. | Étape 1 réalisée ; l'étape 2 reste conditionnée à la revue humaine des ADR 0071 et 0072. |
-| [0027 — Création d'une Applicationform par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) | **Haute** | À planifier | Distinguer une entité nouvelle d'une demande existante, autoriser la saisie métier du demandeur et conserver les restrictions de périmètre et de champs réservés. | Nouveau ticket ajouté le 6 novembre 2026 à la suite de l'analyse de `/applicationforms/add`. |
-| [0028 — IHM des autorisations de champs](0028-ameliorer-ihm-autorisations-champs.md) | **Haute** | À planifier | Remplacer les saisies libres de ressource et de champ par des listes dépendantes issues de `field_definitions`, avec validation serveur. | Nouveau ticket ajouté le 6 novembre 2026 après analyse de `/field-authorizations/add`. |
-| [0029 — Protection des références socles](0029-proteger-references-socles-behavior-commun.md) | **Haute** | À planifier | Créer un Behavior ORM commun activé explicitement, bloquer la suppression des lignes socles et isoler les basculements de `base`. | Ticket ajouté le 13 novembre 2026 ; neuf Tables correspondent au contrat structurel, avec autorisation HTTP réservée au superadministrateur. |
-
-## Tickets déjà traités — contrôle de non-réouverture
-
-| Ticket | Statut constaté | Éléments vérifiés |
+| Ticket | État après vérification | Travail restant |
 |---|---|---|
-| 0003 — Moderniser `Table::get()` des menus | Terminé | Fiche marquée terminée ; inclus dans l’historique des changements du backlog. |
-| 0004 — Validation locale MySQL et couverture | Terminé | Procédure MySQL et garde `daetf2_test` documentées dans la fiche. |
-| 0005 — Moderniser `TreeBehavior::recover()` | Terminé | Fiche marquée terminée et réalisation documentée. |
-| 0006 — Protéger l’URL d’administration des menus | Terminé | Contrôleur, Policy et tests d’accès URL présents ; le sujet distinct 0007 reste ouvert. |
-| 0008 — Sécuriser les URL de retour post-authentification | Terminé | Fiche et contrôleur d’authentification documentent le traitement sécurisé du paramètre `redirect`. |
-| 0009 — Conformité PHP_CodeSniffer | Terminé | Statut terminé ; ticket dédié aux corrections de style clôturé. |
-| 0010 — Rétablir PHPStan dans le conteneur | Terminé | Statut terminé ; outillage PHPStan rétabli dans le dépôt. |
-| 0011 — Conformité PHPStan | Clôturé | Fiche explicitement clôturée ; les erreurs restantes éventuelles relèvent d’un nouveau ticket. |
-| 0012 — Verrouiller une AF pendant la validation | Terminé | Workflow, Policy et tests de verrouillage présents. |
-| 0013 — Présentation des erreurs de validation | Terminé | `ValidationErrorPresenter`, ADR 0052 et tests présents. |
-| 0014 — Perte de session | Terminé | Middleware API 401 JSON, journalisation sans secret et tests HTTP présents. |
-| 0015 — Reconnexion après expiration | Terminé | Gestionnaire `fetch` mutualisé, message de connexion et tests JavaScript présents. |
-| 0016 — Parcours de reconnexion | Terminé | Tests API/Web et tests réseau, timeout et non-rejeu présents. |
-| [0017 — Circuits courts locaux](0017-implementer-les-circuits-courts-locaux.md) | Implémenté | Règles locales, habilitations explicites, administration et diagnostics, lancement et conservation des cycles couverts ; configuration métier réelle à saisir par l’opérateur. |
-| 0018 — Jours ouvrés des DAE | Terminé | Champ regroupé avec la date de fin, calcul automatique des jours ouvrés, plafond serveur sur la durée calendaire et tests unitaires, ORM, API et Web présents. |
-| Workflow 0021 — Concurrence des votes | Terminé | Verrouillage transactionnel de l’étape, contrainte d’unicité, message métier homogène, exposition de l’horodatage du vote et couverture PHPUnit/API/IHM présents. |
-| Workflow 0009 à 0020 | Terminé | Les treize entrées correspondantes du manifeste sont `Terminé` ; les fiches, migrations, services et tests associés sont présents. |
-| [0025 — Visibilité et gérabilité des utilisateurs](0025-separer-visibilite-et-manageabilite-utilisateurs.md) | Terminé | Le sous-workflow `visibilite-manageabilite/` est terminé ; les neuf sous-tickets, les mutations Web/API, les grilles et la recette transversale sont vérifiés. |
+| [0001 — Gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) | À faire | Choisir et mettre en service l'outil, migrer les fiches actives et décider du sort de `docs/backlog/`. |
+| [0002 — Couverture de tests](0002-etendre-la-couverture-de-tests.md) | Partiel | Mesurer la couverture cible, décider de l'automatisation des seuils et traiter l'écart restant. PCOV et les rapports Clover/HTML existent déjà. |
+| [0007 — Accès menus et permissions](0007-separer-acces-menus-et-permissions-administration.md) | À faire | Généraliser les permissions aux autres domaines, centraliser les règles d'accès et compléter les tests. Le vertical départements livré par 0021 ne clôt pas ce ticket. |
+| [0017 — Circuits courts locaux](0017-implementer-les-circuits-courts-locaux.md) | Implémenté, configuration à faire | Saisir les règles et rattachements SEM retenus dans l'environnement convenu ; aucune règle métier n'est créée automatiquement. L'ADR 0074 reste proposé. |
+| [0027 — Création par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) | Partiel — code livré | Ajouter le test HTTP d'une création réussie par un demandeur et vérifier l'attribution de `user_id`. |
+| [0028 — IHM des autorisations de champs](0028-ameliorer-ihm-autorisations-champs.md) | Partiel — code livré | Ajouter les tests manquants pour le catalogue, les cibles actives/inactives, les sections, les changements de formulaire, les requêtes incohérentes et la migration historique. |
+| [0022 — Référentiel des départements](0022-mettre-a-jour-le-referentiel-des-departements.md) | À planifier | Obtenir le référentiel officiel SEM/Rédac et réaliser l'import contrôlé. |
+| [0023 — Migration de base](0023-migrer-la-base-de-donnees.md) | À planifier | Préparer et recetter la migration vers l'instance MySQL cible. |
+| [0026 — Plan d'architecture et de backlog](0026-executer-le-plan-architecture-et-backlog.md) | En cours | Poursuivre les étapes restantes de gouvernance, couverture, référentiel et migration ; l'étape 6 est réalisée côté implémentation et documentation. |
 
-## Conclusion opérationnelle
+## Séquence obligatoire GDAE V3
 
-L’ordre recommandé est :
+Le manifeste [`gdae-v3-completion/manifest.json`](gdae-v3-completion/manifest.json)
+est la source de vérité pour l'ordre. Exécuter
+`bin/cake backlog next gdae-v3-completion` avant chaque ticket. Les tickets
+0031 à 0039 dépendent chacun du précédent ; le 0030 recueille les arbitrages
+et met à jour les questions métier avant tout développement dépendant.
 
-1. **0026**, pour piloter les huit étapes et corriger d'abord les index du
-   backlog, notamment la divergence du ticket 0024 ;
-2. **0007**, après validation de l'ADR et du modèle de permissions ;
-3. **0002**, pour décider des seuils et résorber l'écart de couverture ;
-4. **0001**, qui relève de la gouvernance et de la migration du backlog.
-5. **0017** est implémenté ; effectuer la configuration métier manuelle des
-   seuls services retenus selon le guide opérateur.
-6. **0019**, pour aligner la consultation d'une DAE sur l'organisation de son édition.
-7. **0021**, priorité haute, pour mettre en œuvre les habilitations génériques
-   et résoudre l'accès administrateur aux départements.
-8. **0022**, pour mettre à jour le référentiel des départements SEM/Rédac.
-9. **0023**, pour préparer la migration contrôlée de la base MySQL.
-10. Pour **0017**, la partie implémentation de l’étape 6 de **0026** est
-    réalisée ; la configuration réelle relève de l’opérateur.
-11. **0028**, avant **0027**, pour stabiliser le modèle des autorisations de
-    champs et de zones fonctionnelles.
-12. **0027**, après **0028**, pour autoriser la création d'une demande par un
-    demandeur avec le modèle final des habilitations.
+| Ticket | Sujet | État |
+|---|---|---|
+| [0030](0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md) | Arbitrer les règles métier et actualiser le périmètre | Prêt |
+| [0031](0031-aligner-dates-jours-travailles-remuneration.md) | Dates, jours travaillés et rémunération | À planifier |
+| [0032](0032-habiliter-administration-locale-sgr.md) | Administration locale SGR des références métier | À planifier |
+| [0033](0033-reprendre-une-dae-pendant-son-circuit.md) | Reprise d'une DAE en cours de circuit | À planifier |
+| [0034](0034-finaliser-archivage-et-acces-archives.md) | Archivage et accès aux archives | À planifier |
+| [0035](0035-completer-notifications-gdae.md) | Notifications quotidiennes et hebdomadaires | À planifier |
+| [0036](0036-ajouter-compteur-demandes-a-valider.md) | Compteur et filtre des DAE à valider | À planifier |
+| [0037](0037-completer-donnees-imprimees-pdf.md) | Données imprimées du PDF | À planifier |
+| [0038](0038-respecter-affichage-sans-defilement.md) | Affichage selon les dimensions convenues | À planifier |
+| [0039](0039-configurer-et-recetter-gdae-v3.md) | Configuration et recette transversale | À planifier |
 
-Le ticket **0024** est terminé et ne fait plus partie des prochaines étapes.
+Le ticket facultatif [0040](0040-parametrer-champs-reinitialises-duplication.md)
+est hors manifeste et ne sera examiné qu'après le 0039.
 
-Cette synthèse est un audit statique du dépôt. Elle confirme la présence des
-implémentations et tests versionnés ; elle ne remplace pas l’exécution des
-commandes de validation, en particulier pour les scénarios MySQL et les tests
-de concurrence.
+Les questions Q-0018-01 à Q-0018-06 sur les jours travaillés restent ouvertes
+et font partie des entrées du 0030. Les choix relatifs à €/heure, à la reprise,
+à l'archivage, aux destinataires et horaires des notifications, aux dimensions
+d'écran et à `current_manager_id` ne sont pas déduits du code.
+
+## Tickets historiques réconciliés
+
+| Ticket | État constaté | Éléments vérifiés |
+|---|---|---|
+| [0018 — Jours ouvrés](0018-securiser-la-saisie-des-jours-ouvres-dae.md) | Terminé pour son périmètre technique | Calcul hors week-ends, saisie et bornes serveur présents ; les règles métier V3 restent au 0030/0031. |
+| [0019 — Vue en quatre zones](0019-reprendre-les-quatre-zones-dans-la-vue-dae.md) | Terminé | Vue en lecture seule, visibilité de la zone réservée et tests fonctionnels présents. |
+| [0020 — Duplication des DAE](0020-fiabiliser-la-duplication-des-dae.md) | Terminé | Liste canonique de champs réinitialisés et tests ORM/API présents. Le bonus de paramétrage 0040 n'est pas inclus dans ce ticket. |
+| [0021 — Habilitations génériques](0021-implementer-les-habilitations-generiques.md) | Terminé pour le vertical départements | Permissions, périmètres et interfaces de gestion avec tests présents. La généralisation du ticket 0007 reste distincte. |
+| [0027 — Création par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) | Partiel | Policy et filtrage serveur livrés ; les tests HTTP d'enregistrement réussi et d'attribution `user_id` restent ouverts. |
+| [0028 — IHM des autorisations de champs](0028-ameliorer-ihm-autorisations-champs.md) | Partiel | Référentiel, API et formulaires livrés ; la fiche conserve ouverts les tests d'acceptation non présents dans le dépôt. |
+| [0029 — Protection des références socles](0029-proteger-references-socles-behavior-commun.md) | Terminé | Behavior, classe `ReferenceTable`, attachements, tests ORM/API et documentation présents. L'ADR 0075 reste au statut proposé pour revue. |
+
+Les autres tickets terminés du backlog racine gardent leurs statuts et
+preuves consignés dans leurs fiches. Les workflows de validation et de
+visibilité/gérabilité sont terminés selon leurs manifestes respectifs.
+
+## Vérifications et limites
+
+Les tickets applicatifs précisent les suites à exécuter selon leur périmètre.
+Les tests MySQL utilisent exclusivement `daetf2_test` via
+`DATABASE_TEST_URL`. La recette transversale du 0039 prévoit `make test.all`
+si son environnement de test est disponible. Les statuts historiques sont
+des constats documentaires ; ils ne valent pas nouvelle exécution des suites.

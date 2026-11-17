@@ -1,15 +1,15 @@
 # 0029 — Protéger les références socles avec un Behavior commun
 
-**Statut :** À planifier
+**Statut :** Terminé — code et tests présents ; ADR 0075 proposé pour revue
 
 **Priorité :** Haute — intégrité des nomenclatures
 
 ## Contexte
 
-Le champ booléen `base` désigne les enregistrements fournis par le socle
-applicatif. Les contrôles Web/API ne couvrent pas les écritures ORM internes.
-Une règle commune doit protéger ces lignes sans faire dépendre l'ORM de
-l'identité de l'opérateur.
+À l'origine du ticket, le champ booléen `base` désignait les enregistrements
+fournis par le socle applicatif, mais les contrôles Web/API ne couvraient pas
+les écritures ORM internes. Une règle commune devait protéger ces lignes sans
+faire dépendre l'ORM de l'identité de l'opérateur.
 
 Les neuf Tables concernées exposent `base`, `code`, `name` et `sort` :
 `budgetfeatures`, `contracttypes`, `hiringreasons`, `periods`,
@@ -42,26 +42,26 @@ automatiquement la protection.
 ### Architecture et ORM
 
 - [x] Inventorier les neuf Tables correspondant au contrat structurel.
-- [ ] Créer `ProtectBaseRecordsBehavior` pour appliquer les règles aux
+- [x] Créer `ProtectBaseRecordsBehavior` pour appliquer les règles aux
   opérations ORM standard.
-- [ ] Créer `ReferenceTable extends AppTable` et faire hériter les sept
+- [x] Créer `ReferenceTable extends AppTable` et faire hériter les sept
   nomenclatures communes de cette classe. Attacher le Behavior explicitement
   à `DepartmentsTable` et `RolesTable`.
-- [ ] Garder l'identité hors du Behavior : les Policies et
+- [x] Garder l'identité hors du Behavior : les Policies et
   `FieldAuthorizationService` réservent la mutation de `base` au
   superadministrateur dans les parcours Web/API. Sur un département socle,
   seul le superadministrateur peut accéder à l'édition.
-- [ ] Refuser avant persistance toute modification d'association de
+- [x] Refuser avant persistance toute modification d'association de
   département accompagnant un basculement de `base`.
 
 ### Interface, API et documentation
 
-- [ ] Ajouter `base` aux formulaires de création et d'édition des références
+- [x] Ajouter `base` aux formulaires de création et d'édition des références
   communes et des rôles pour le superadministrateur ; conserver le contrôle
   existant du formulaire des départements. Les autres champs d'une ligne
   socle restent en lecture seule. Aucune nouvelle colonne Tabulator n'est
   prévue.
-- [ ] Exposer `base` dans les réponses API et filtrer les requêtes avant
+- [x] Exposer `base` dans les réponses API et filtrer les requêtes avant
   `patchEntity()`. Une requête non autorisée ne doit pas pouvoir imposer ce
   champ. Les refus de validation utilisent `{success, message, errors}` et
   HTTP 422.
@@ -98,6 +98,13 @@ automatiquement la protection.
 - `make cs.check`
 - `make stan`
 - `make test.all`
+
+## État vérifié le 17 novembre 2026
+
+`ProtectBaseRecordsBehavior`, `ReferenceTable`, les attachements explicites
+aux neuf Tables, les contrôles Web/API et les tests ORM/API sont présents.
+L'ADR 0075 satisfait le livrable de proposition et reste au statut `Proposé` ;
+son acceptation relève de la revue architecturale.
 
 ## Références
 
