@@ -1,6 +1,6 @@
 # 0007 — Séparer les accès aux menus des permissions d'administration
 
-**Statut :** À planifier
+**Statut :** Prêt
 
 **Priorité :** Haute
 
@@ -8,7 +8,7 @@
 
 Les Policies de menus déterminent aujourd'hui plusieurs autorisations au moyen de rôles codés en dur. Cette approche est simple tant que les rôles sont peu nombreux, mais elle confond deux notions distinctes : l'accès à un écran métier et l'administration transversale de l'application.
 
-La table `role_menus` permet déjà d'associer un rôle à une option de menu, avec un éventuel périmètre départemental. Elle est donc le bon support de données pour définir qui peut utiliser un écran métier. En revanche, utiliser cette association pour décider qui peut modifier les menus et les droits créerait une dépendance circulaire : il faut contrôler l'administration du référentiel avant de pouvoir modifier les données qui définissent les accès.
+La table `role_menus` associe déjà un rôle à une option de menu, avec un éventuel département. Elle reste en service pendant la transition, mais ne constitue pas une permission d'action. Son `department_id` n'est actuellement pas utilisé par le chargement du menu général pour filtrer les options : sa signification doit être inventoriée séparément. Le modèle cible de l'ADR 0069 fait référencer à chaque menu la permission nécessaire à l'entrée dans sa page, sans confondre navigation et administration des droits.
 
 Le ticket 0007 définit le socle générique des habilitations. Le ticket 0021
 en constitue la première implémentation spécialisée pour l'administration des
@@ -32,7 +32,7 @@ et les menus métier suivants :
 | Validation demande | 11 |
 | Gestion des menus | 90 |
 
-`role_menus` peut décrire les accès métier de façon déclarative :
+`role_menus` décrit historiquement les associations de navigation :
 
 | role_id | menu_id | Effet |
 |---:|---:|---|
@@ -41,21 +41,23 @@ et les menus métier suivants :
 | 2 | 10 | Le gestionnaire saisit une demande. |
 | 3 | 10 | L'agent saisit une demande. |
 
-Ajouter `role_id = 3, menu_id = 11` donne ensuite accès à la validation à l'agent, sans modifier une Policy ni déployer l'application.
+Ajouter `role_id = 3, menu_id = 11` associe l'option de validation à l'agent. Cette association ne lui accorde pas à elle seule le droit de valider : dans le modèle cible, la permission d'entrée, la Policy et les règles du workflow restent nécessaires.
 
-Une table générique distincte, par exemple `role_permissions`, porte les capacités techniques :
+Dans le modèle cible, `permissions` est le catalogue des capacités ;
+`permission_scopes` décrit leurs périmètres admissibles et
+`role_permissions` porte leurs attributions explicites. Exemple d'attributions
+à confirmer par la matrice, sans droit implicite lié au numéro du rôle :
 
-| role_id | permission | Effet |
-|---:|---|---|
-| 1 | `manage_users` | Administrer les utilisateurs. |
-| 1 | `manage_menus` | Administrer les menus et leurs associations. |
-| 2 | `manage_applicationforms` | Administrer le référentiel de demandes, si cette capacité existe. |
+| role_id | Permission | Périmètre | Effet |
+|---:|---|---|---|
+| 1 | `users.read` | `all` | Consulter les utilisateurs si cette attribution est retenue. |
+| 2 | `applicationforms.read` | `assigned` | Consulter les demandes des départements affectés. |
 
-Le gestionnaire peut ainsi utiliser « Saisie demande » sans jamais pouvoir accéder à `/menus`. L'administrateur technique peut disposer de `manage_menus` sans que cela lui accorde automatiquement tous les écrans métier. Cette séparation applique le principe du moindre privilège.
+Le gestionnaire peut ainsi utiliser « Saisie demande » sans pouvoir accéder à `/menus`. Conformément au ticket 0006, un Admin ordinaire (`role_id = 1`, `issuperuser = false`) ne reçoit pas `menus.manage` et reste exclu de l'administration des menus. Le super-administrateur bénéficie du contournement explicite des permissions et périmètres prévu par l'ADR 0069 ; ce statut est distinct du rôle Admin et ne contourne ni les invariants métier ni les restrictions du workflow.
 
 ## Objectif
 
-Faire de `role_menus` la source de vérité des accès aux écrans métier et introduire des permissions de rôle explicites pour les fonctions transversales d'administration. Les Policies doivent conserver leur rôle de frontière de sécurité, mais déléguer la décision aux données centralisées plutôt que comparer des identifiants de rôles.
+Faire reposer l'entrée dans les pages, la navigation et les actions d'administration sur les permissions explicites de l'ADR 0069. Conserver `role_menus` jusqu'à validation de la comparaison des droits avant/après. Les Policies restent la frontière de sécurité et consultent les attributions, les périmètres et les conditions métier plutôt que comparer des identifiants de rôles.
 
 ### Choix d'architecture pour la première version
 
@@ -116,6 +118,7 @@ Le champ `scope_type` accepte les valeurs suivantes :
 | `self` | L'objet appartient à l'opérateur connecté (`user_id = identity.id`). |
 | `assigned` | L'objet est rattaché à l'un des départements directement affectés à l'opérateur dans `user_departments`. |
 | `all` | Aucun filtrage organisationnel n'est appliqué pour cette permission. |
+| `unscoped` | Une règle propre à l'action est appliquée par la Policy ou un service, sans supprimer les contrôles. |
 
 `assigned` est préféré à `department` : le premier décrit la règle d'accès
 fondée sur les affectations de l'opérateur, tandis que le second ne décrit
@@ -126,7 +129,8 @@ de permission vaut refus.
 
 Les menus et les permissions restent deux décisions distinctes :
 
-- `role_menus` détermine uniquement si une option de navigation est visible ;
+- `menus.required_permission_id` référence la permission nécessaire pour entrer dans la page ; une rubrique sans destination est visible si au moins un enfant est visible ;
+- `role_menus` reste en service pendant la transition, jusqu'à validation des écarts ;
 - `role_permissions` détermine les actions autorisées ;
 - la Policy et le finder SQL réévaluent toujours l'identité, le périmètre et
   l'état métier de l'objet.
@@ -180,34 +184,52 @@ que des tests supplémentaires. Elle ne devra être engagée qu'après
 confirmation du besoin métier et restera basée sur les mêmes tables
 génériques, sans table spécifique aux DAE.
 
+## Feuille de route restante
+
+Le point de départ connu de la base de développement `daetf` est de
+**3 permissions**, **5 périmètres admissibles**, **2 attributions de rôle** et
+**28 associations `role_menus`**. La colonne `menus.required_permission_id`
+n'existe pas encore. Ces constats ne constituent pas une reprise complète.
+Les étapes suivantes restent à réaliser ; leur décomposition rend le ticket
+prêt, sans démarrer son implémentation.
+
+- [ ] **1. Inventorier l'existant.** Relever les permissions et règles dans les Policies, finders et routes Web/API ; comparer le comportement au catalogue, aux périmètres et attributions de `daetf` et aux 28 associations `role_menus`. Examiner séparément `department_id` et les destinations partagées ; distinguer les droits déductibles des exceptions à arbitrer.
+- [ ] **2. Fixer la matrice des permissions.** Définir pour chaque capacité son code, ses périmètres admissibles et ses attributions aux rôles, conformément à l'ADR 0069. Préserver le refus d'administration des menus pour l'Admin ordinaire du ticket 0006 et l'exception explicite du super-administrateur.
+- [ ] **3. Automatiser la reprise des données.** Écrire une migration répétable qui préserve les lignes existantes et complète le catalogue `permissions`, les périmètres admissibles `permission_scopes` et les attributions déterminables `role_permissions`. Ajouter `menus.required_permission_id` et les liens menu déductibles sans ambiguïté ; signaler les autres. Ne pas attribuer `menus.manage` à l'Admin ordinaire.
+- [ ] **4. Sécuriser la transition des menus.** Vérifier les mêmes permissions pour la visibilité et l'entrée directe par URL/API, avec les Policies et périmètres applicables. Traiter les rubriques sans destination et les associations non migrables automatiquement. Garder `role_menus` jusqu'à validation de la comparaison des droits avant/après.
+- [ ] **5. Généraliser par domaine.** Avancer par volets indépendamment vérifiables : utilisateurs et périmètres ; DAE et règles de workflow ; puis références et autres fonctions d'administration. Conserver les invariants métier et du workflow dans leurs Policies et services, ainsi que les protections de champs et d'usurpation.
+- [ ] **6. Compléter la base de développement.** Valider la migration sur `daetf2_test`, vérifier explicitement la connexion cible, puis l'appliquer à `daetf`. Configurer uniquement les attributions exceptionnelles non déductibles avec l'API protégée existante et les consigner ; ne pas utiliser de SQL manuel. La page Web du catalogue reste en lecture seule, sans nouvelle interface de gestion.
+- [ ] **7. Vérifier et clôturer.** Comparer les accès avant/après pour les comptes et périmètres repris, documenter les écarts et exceptions validés, puis actualiser les critères d'acceptation et le statut pour clôturer le ticket. Prévoir les vérifications unitaires, d'intégration et HTTP/API ci-dessous, puis `make test.all` sur `daetf2_test`.
+
 ## Décisions à préparer
 
 - Appliquer l'ADR 0069 accepté avant la migration, en conservant le modèle de données, les règles de priorité et le cycle d'administration des permissions qu'il définit.
-- Définir les tables génériques `permissions` et `role_permissions`, avec une permission normalisée et une affectation unique par rôle, permission et périmètre.
-- Documenter les valeurs `self`, `assigned` et `all`, ainsi que la règle de refus par défaut.
+- Compléter les tables génériques `permissions`, `permission_scopes` et `role_permissions`, avec une permission normalisée et une affectation unique par rôle, permission et périmètre.
+- Documenter les valeurs `self`, `assigned`, `all` et `unscoped`, ainsi que la règle de refus par défaut.
 - Documenter explicitement que `assigned` couvre uniquement les départements directs en V1 ; le calcul des descendants et les droits spécifiques à un utilisateur sont différés.
-- Créer un `MenuAccessService` ou des custom finders spécialisés pour résoudre les accès aux menus à partir de `role_menus`, de la visibilité départementale et du statut de super-administrateur.
-- Faire dépendre les Policies de capacités nommées telles que `manage_menus`, au lieu de `role_id = 1`.
+- Créer un `MenuAccessService` ou des custom finders spécialisés pour résoudre la visibilité depuis la permission référencée par le menu et la Policy, en conservant `role_menus` pendant la comparaison de transition.
+- Faire dépendre les Policies de capacités nommées telles que `menus.manage`, au lieu de `role_id = 1`.
 - Maintenir le contrôle côté serveur : la disparition d'un lien de navigation ne suffit pas à interdire l'accès direct à son URL ou à son API.
 - Garantir que les créations de DAE fixent le propriétaire côté serveur et que les lectures, modifications et suppressions appliquent le périmètre effectif.
 
 ## Critères d'acceptation
 
 - Le schéma et l'ADR définissent clairement la différence entre accès métier et permission d'administration.
-- Les accès à une option métier sont calculés depuis `role_menus`, y compris les règles de département déjà applicables.
+- L'entrée dans une page et la visibilité de son menu reposent sur la même permission et la Policy ; `role_menus` n'est retiré qu'après comparaison validée des droits, avec le traitement explicite de `department_id`.
 - Les permissions sont définies génériquement par ressource, action et périmètre, sans logique spécifique au rôle `demandeur` dans les contrôleurs.
-- Les périmètres `self`, `assigned` et `all` sont documentés et testés ; `assigned` est résolu depuis les affectations organisationnelles effectives de l'opérateur.
+- Les périmètres `self`, `assigned`, `all` et `unscoped` sont documentés et testés ; `assigned` est résolu depuis les affectations organisationnelles effectives de l'opérateur.
 - La V1 ne dépend ni d'une hiérarchie de départements calculée à la volée ni d'une affectation de permission propre à chaque utilisateur.
 - Le rôle `demandeur` dispose uniquement du CRUD `self` sur les DAE ; la création impose le propriétaire connecté.
-- Un rôle sans association à un menu ne voit pas le lien correspondant et ne peut pas atteindre l'URL ou l'API directement.
-- `manage_menus` est requis pour `/menus`, ses actions d'écriture et l'écran d'attribution rôles-menus.
+- Un opérateur sans permission requise ne voit pas le lien correspondant et ne peut pas atteindre l'URL ou l'API directement, sous réserve du contournement explicite du super-administrateur.
+- `menus.manage` protège `/menus`, ses actions d'écriture et l'écran d'attribution rôles-menus ; l'Admin ordinaire en reste exclu conformément au ticket 0006, et l'exception super-administrateur est conservée.
 - Le rôle `Roles.id = 1` n'obtient aucun droit implicite : chaque accès et permission est explicitement attribué.
 - L'absence d'une permission ou d'un périmètre accordé vaut refus, y compris par accès direct à l'API.
-- Le super-administrateur suit une règle documentée et testée, notamment sur son éventuel contournement des permissions ordinaires.
+- Le contournement explicite des permissions et périmètres par le super-administrateur est documenté et testé ; les invariants métier, le workflow et les protections d'usurpation restent applicables. En usurpation, seule l'identité effective est évaluée.
 - Des tests unitaires couvrent la résolution des permissions et des accès aux menus ; des tests d'intégration couvrent les finders ; des tests HTTP couvrent visibilité, refus d'URL, redirection et Flash.
 - Les tests couvrent au minimum un demandeur, un opérateur `assigned`, un accès `all` explicite en lecture et un accès hors périmètre.
 - Les cas `assigned` avec descendants et les différences de périmètre entre utilisateurs de même rôle sont identifiés comme une évolution ultérieure, avec une solution générique documentée.
-- Les données existantes reçoivent une migration de reprise explicite, réversible et vérifiée.
+- Les données existantes reçoivent une migration de reprise explicite, répétable, réversible et vérifiée : lignes préservées, périmètres admissibles respectés, liens menu migrés ou signalés comme exceptions. Les comptes et périmètres repris et les écarts avant/après sont documentés.
+- Le catalogue Web reste en lecture seule ; l'attribution et le retrait exceptionnels passent par l'API protégée existante et leurs refus sont vérifiés en HTTP/API.
 - La suite complète reste verte avec `make test.all`.
 
 ## Motivations
@@ -224,5 +246,6 @@ génériques, sans table spécifique aux DAE.
 - [ApplicationformPolicy](../../src/Policy/ApplicationformPolicy.php)
 - [UserDepartmentsTable](../../src/Model/Table/UserDepartmentsTable.php)
 - [Ticket 0006 — Protéger l'accès URL à l'administration des menus](0006-proteger-lacces-url-a-ladministration-des-menus.md)
+- [ADR 0069 — Habilitations par rôles et périmètres](../adr/0069-habilitations-par-roles-et-perimetres.md)
 - [ADR 0041 — Ségrégation des données via Custom Finders](../adr/0041-segregation-donnees-model-custom-finders.md)
 - [ADR 0053 — Stratégie de tests et MySQL dédié à l’intégration](../adr/0053-strategie-tests-unitaires-et-integration.md)
