@@ -175,6 +175,105 @@ class ApplicationformsControllerTest extends TestCase
         }
     }
 
+    public function testUnDemandeurPeutCreerUneDemandeSansInjecterLeCreateurNiLesChampsReserves(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $now = '2026-11-18 10:00:00';
+        $connection->insert('roles', [
+            'id' => User::ROLE_DEMANDEUR,
+            'base' => 1,
+            'code' => 'DEMANDEUR',
+            'name' => 'Demandeur',
+            'sort' => 'Demandeur',
+            'deleted' => null,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->update('users', ['role_id' => User::ROLE_DEMANDEUR], ['id' => 2]);
+        $connection->insert('user_departments', [
+            'id' => 2,
+            'user_id' => 2,
+            'department_id' => 2,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        foreach (['contracttypes', 'professionalcategories', 'periods'] as $table) {
+            $connection->update($table, ['deleted' => null], ['id' => 1]);
+        }
+        $businessData = [
+            'department_id' => 2,
+            'contracttype_id' => 1,
+            'hiringreason_id' => 1,
+            'jobtitle' => 'Poste créé par le demandeur HTTP',
+            'professionalcategory_id' => 1,
+            'worktime_id' => 1,
+            'grossremuneration' => '2500.00',
+            'period_id' => 1,
+            'applicantname' => 'Camille Martin',
+        ];
+        $authorizationIds = [];
+        try {
+            foreach (array_keys($businessData) as $index => $field) {
+                $authorizationId = 900_200 + $index;
+                $connection->insert('field_authorizations', [
+                    'id' => $authorizationId,
+                    'role_id' => User::ROLE_DEMANDEUR,
+                    'resource' => 'Applicationforms',
+                    'target_type' => 'field',
+                    'target' => $field,
+                    'access_level' => 'EDIT',
+                    'created' => $now,
+                ]);
+                $authorizationIds[] = $authorizationId;
+            }
+            $this->session(['Auth' => new User([
+                'id' => 2,
+                'issuperuser' => false,
+                'role_id' => User::ROLE_DEMANDEUR,
+            ])]);
+
+            $this->get('/applicationforms/add');
+
+            $this->assertResponseOk();
+            $this->assertMatchesRegularExpression(
+                '/<input(?=[^>]*name="jobtitle")(?![^>]*disabled)[^>]*>/s',
+                (string)$this->_response->getBody(),
+            );
+            $applicationforms = $this->getTableLocator()->get('Applicationforms');
+            $countBefore = $applicationforms->find()->count();
+            $this->enableCsrfToken();
+
+            $this->post('/applicationforms/add', $businessData + [
+                'user_id' => 1,
+                'hr_description' => 'Description RH injectée',
+                'control_management_validation' => 'Validation injectée',
+                'final_argument' => 'Argument final injecté',
+                'budgetfeature_id' => 1,
+                'yesno_id' => 1,
+                'qualification' => 'Qualification injectée',
+            ]);
+
+            $this->assertRedirect(['controller' => 'Applicationforms', 'action' => 'index']);
+            $this->assertSame($countBefore + 1, $applicationforms->find()->count());
+            $created = $applicationforms->find()
+                ->where(['jobtitle' => 'Poste créé par le demandeur HTTP'])
+                ->firstOrFail();
+            $this->assertSame(2, (int)$created->get('user_id'));
+            $this->assertSame(2, (int)$created->get('department_id'));
+            $this->assertSame('Camille Martin', $created->get('applicantname'));
+            $this->assertNull($created->get('hr_description'));
+            $this->assertNull($created->get('control_management_validation'));
+            $this->assertNull($created->get('final_argument'));
+            $this->assertNull($created->get('budgetfeature_id'));
+            $this->assertNull($created->get('yesno_id'));
+            $this->assertNull($created->get('qualification'));
+        } finally {
+            if ($authorizationIds !== []) {
+                $connection->delete('field_authorizations', ['id IN' => $authorizationIds]);
+            }
+        }
+    }
+
     public function testLEditionPreselectionneLOperateurSeulementSilEstEligible(): void
     {
         $connection = ConnectionManager::get('test');

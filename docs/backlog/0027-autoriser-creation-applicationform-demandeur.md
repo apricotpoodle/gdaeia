@@ -1,6 +1,6 @@
 # 0027 — Autoriser la création d'une Applicationform par un demandeur
 
-**Statut :** Partiel — code livré, tests fonctionnels du demandeur à compléter
+**Statut :** Terminé
 
 **Priorité :** Haute — création et habilitations des demandes
 
@@ -49,7 +49,7 @@ l'administration ou aux RH.
   l'attribution automatique du `user_id` au demandeur connecté.
 - [x] Ajouter les tests unitaires de Policy et les tests de présentation ou
   de refus déjà présents.
-- [ ] Ajouter des tests HTTP du parcours de création par un demandeur,
+- [x] Ajouter des tests HTTP du parcours de création par un demandeur,
   incluant l'affichage du formulaire, l'enregistrement réussi et l'attribution
   automatique du `user_id`.
 - [x] Mettre à jour la documentation locale si le contrat d'habilitation des
@@ -80,15 +80,19 @@ Exécuter les commandes adaptées via le Makefile racine :
 - `make test.style` si des tests sont ajoutés ;
 - `make cs.check` et `make stan` si du PHP est modifié.
 
+Vérification du **18 novembre 2026** : `make test.api` réussit avec 238 tests
+et 1 015 assertions ; `make test.style` et `make cs.check` réussissent ;
+`make stan` ne signale aucune erreur. Le parcours HTTP couvre l’affichage du
+formulaire, l’enregistrement et l’attribution automatique du créateur.
+
 ## Références
 
 La Policy distingue désormais l’entité nouvelle d’une demande persistée. Un
 demandeur peut saisir les zones métier nécessaires à la création ; les champs
 RH et administration réservés sont retirés côté serveur avant l’hydratation
 ORM, et l’identifiant du demandeur reste attribué par le contrôleur.
-Le dépôt ne contient pas encore de test HTTP d'enregistrement réussi par un
-demandeur ni de vérification de l'attribution automatique du `user_id` dans ce
-parcours ; le ticket reste partiel jusqu'à l'ajout de ces preuves.
+Le test HTTP couvre désormais l'enregistrement réussi par un demandeur et
+vérifie l'attribution automatique du `user_id` au demandeur connecté.
 
 - `src/Policy/ApplicationformPolicy.php`
 - `src/Controller/ApplicationformsController.php`

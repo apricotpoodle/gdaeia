@@ -22,12 +22,12 @@ manifestes des sous-workflows sont leur source de vérité opérationnelle.
 - [0002 — Étendre la couverture de tests applicatifs](0002-etendre-la-couverture-de-tests.md) — priorité haute.
 - [0007 — Séparer les accès aux menus des permissions d'administration](0007-separer-acces-menus-et-permissions-administration.md) — priorité haute ; permissions génériques, Policies CakePHP et périmètres V1 directs, avec la gestion des descendants et des droits individuels différée.
 - [0017 — Implémenter les circuits courts locaux de validation](0017-implementer-les-circuits-courts-locaux.md) — implémenté selon l’ADR 0070 ; configuration métier manuelle à effectuer.
-- [0027 — Autoriser la création d'une Applicationform par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) — code livré ; tests HTTP de création réussie et d'attribution du demandeur à compléter.
 - [0022 — Mettre à jour le référentiel des départements](0022-mettre-a-jour-le-referentiel-des-departements.md) — priorité moyenne ; actualiser principalement les fils de SEM/Rédac avec une procédure contrôlée.
 - [0023 — Migrer la base de données vers une nouvelle instance](0023-migrer-la-base-de-donnees.md) — priorité moyenne ; documenter une exportation/restauration reproductible et vérifiable.
 
 ## Tickets terminés
 
+- [0027 — Autoriser la création d'une Applicationform par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) — parcours HTTP de création réussie et attribution automatique du créateur vérifiés.
 - [0024 — Généraliser les associations des départements](0024-generaliser-les-associations-des-departements.md) — priorité haute.
 - [0013 — Mutualiser la présentation des erreurs de validation](0013-mutualiser-la-presentation-des-erreurs-validation.md) — priorité moyenne.
 - [0014 — Détecter et tracer la perte de session](0014-detecter-et-tracer-la-perte-de-session.md) — priorité haute.
