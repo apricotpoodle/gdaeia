@@ -50,4 +50,12 @@ class Contracttype extends Entity
     public const FIELD_CREATED = 'created';
     public const FIELD_MODIFIED = 'modified';
     public const FIELD_APPLICATIONFORMS = 'applicationforms';
+
+    public const CODE_CDI = 'cdi';
+    public const CODE_CDD = 'cdd';
+    public const CODE_INTERIM = 'interim';
+    public const CODE_APPR = 'appr.';
+    public const CODE_STAGE = 'stage';
+    public const CODE_PIGE = 'pige';
+    public const CODE_FACT = 'fact';
 }
