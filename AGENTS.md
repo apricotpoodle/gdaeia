@@ -13,17 +13,19 @@ Avant de modifier un fichier :
    - `feature/...` pour une fonctionnalité ;
    - `fix/...` pour une correction ;
    - `refactor/...` pour un refactoring.
-4. Lorsque des modifications préexistantes sont présentes, les identifier et
+4. Par défaut, ne pas créer de worktree Git séparé. Après confirmation
+   explicite de la branche dédiée, travailler dans le checkout courant. Ne
+   créer un worktree séparé que sur demande explicite de l'opérateur.
+5. Lorsque des modifications préexistantes sont présentes, les identifier et
    les préserver. Ne jamais les réinitialiser, les mettre de côté, les écraser
-   ou les mélanger à la nouvelle tâche sans décision explicite. Un worktree
-   dédié permet de les laisser dans leur arbre de travail.
-5. Si le checkout est sur `main` et contient des modifications, prévenir
+   ou les mélanger à la nouvelle tâche sans décision explicite.
+6. Si le checkout est sur `main` et contient des modifications, prévenir
    l'opérateur humain avant toute opération qui modifie le dépôt. Présenter
    les fichiers concernés et proposer des suites possibles, par exemple un
    commit distinct sur une branche dédiée. Attendre sa décision explicite
    avant de créer une branche ou un worktree, d'indexer, de modifier ou de
    commiter.
-6. Vérifier à nouveau la branche active avant la première écriture.
+7. Vérifier à nouveau la branche active avant la première écriture.
 
 Ne jamais réutiliser une branche préexistante pour une nouvelle tâche. Si le
 nom proposé existe déjà, proposer un nom inédit et demander confirmation.
