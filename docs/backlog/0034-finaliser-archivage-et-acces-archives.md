@@ -8,20 +8,25 @@
 
 ## Objectif
 
-Mettre en œuvre l'archivage et la recherche des demandes archivées selon les
-acteurs, délais et règles de conservation confirmés au 0030.
+Mettre en œuvre l'archivage réversible de tous les types de DAE, à l'unité ou
+en masse, puis la recherche des demandes selon les rôles, périmètres, délais
+et règles de conservation confirmés au 0030.
 
 ## Travail attendu
 
 - [ ] Réutiliser et compléter l'endpoint API et les règles de Policy
-  d'archivage déjà présents ; vérifier leurs rôles et périmètres contre la
-  décision du 0030.
-- [ ] Ajouter l'action d'archivage aux rôles confirmés, avec Policy serveur
-  et transition d'état explicite.
+  d'archivage déjà présents ; vérifier leurs rôles, périmètres et codes de
+  contrats contre la décision du 0030.
+- [ ] Ajouter les actions d'archivage et de restauration, à l'unité et en
+  masse, aux superusers et aux utilisateurs de rôle ADMIN qui peuvent voir la
+  DAE, avec Policy serveur et transitions d'état explicites.
+- [ ] Utiliser les constantes publiques de `Contracttype` pour identifier les
+  codes de contrat dans les règles d'archivage, sans codes écrits en dur.
 - [ ] Préserver le contenu, les votes, les commentaires, les pièces jointes
   et les dates nécessaires à l'historique.
 - [ ] Permettre la recherche et la consultation des demandes archivées aux
-  seuls rôles et périmètres autorisés.
+  seuls rôles et périmètres autorisés. La liste doit exclure les DAE archivées
+  par défaut tout en permettant de rechercher parmi toutes les DAE autorisées.
 - [ ] Définir les interactions de l'archivage avec la duplication, la
   suppression logique et la conservation.
 - [ ] Documenter les règles et la procédure d'exploitation.
@@ -29,10 +34,14 @@ acteurs, délais et règles de conservation confirmés au 0030.
 ## Critères d'acceptation
 
 1. Les droits, conditions et délais correspondent aux décisions du 0030.
-2. Une demande archivée est en lecture seule, consultable et recherchable
+2. Toute DAE peut être archivée ou restaurée à l'unité ou en masse, selon les
+   droits et conditions décidés.
+3. Une DAE archivée est en lecture seule ; sa restauration la rend de nouveau
+   active, consultable et modifiable selon les droits habituels.
+4. La liste exclut les DAE archivées par défaut et permet de les retrouver
    dans le respect des Policies et des périmètres.
-3. L'historique utile n'est pas effacé par l'archivage.
-4. Les routes et mutations directes refusent les actions non autorisées.
+5. L'historique utile n'est pas effacé par l'archivage.
+6. Les routes et mutations directes refusent les actions non autorisées.
 
 ## Vérifications
 

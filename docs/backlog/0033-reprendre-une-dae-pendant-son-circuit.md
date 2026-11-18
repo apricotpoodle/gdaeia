@@ -4,7 +4,7 @@
 
 **Priorité :** Haute — continuité de traitement
 
-**Dépendance :** [0032 — Habiliter l'administration locale du SGR](0032-habiliter-administration-locale-sgr.md).
+**Dépendance :** [0032 — Habiliter l'administration des services par les rôles ADMIN](0032-habiliter-administration-locale-par-service.md).
 
 ## Objectif
 

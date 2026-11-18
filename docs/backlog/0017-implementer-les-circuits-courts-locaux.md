@@ -100,8 +100,9 @@ Voir le [guide opérateur](../validation-circuit-rules.md).
 3. Le rôle final absent ou inactif, ou une étape retenue sans validateur,
    produit une erreur explicite sans cycle partiellement créé.
 4. Les super-administrateurs et les gestionnaires locaux ont exactement les
-   accès prévus, y compris via l'API et les opérations groupées. Un SGR hors
-   du périmètre sélectionné ne peut pas modifier ses règles.
+   accès prévus, y compris via l'API et les opérations groupées. Un utilisateur
+   ADMIN qui ne voit pas les services concernés ne peut pas modifier leurs
+   règles.
 5. Les cycles préexistants restent inchangés, le type de contrat est
    verrouillé après lancement et la remise à zéro autorisée fonctionne encore.
 

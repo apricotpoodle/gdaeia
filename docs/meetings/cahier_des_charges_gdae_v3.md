@@ -57,8 +57,7 @@ Le système doit appliquer les règles suivantes au calcul du "Salaire de base" 
 
 ## 4. Administration et Paramétrage
 
-* **Autonomie :** Créer un profil "Administrateur" pour le Secrétariat Général de la Rédaction :
-  * le SGR est un department, donc certains users seront administrateurs de l'arbre SGR et tous ses sous departments.
+* **Autonomie :** Permettre aux utilisateurs de rôle ADMIN d'administrer les services qu'ils voient et les données métier associées :
   * Permettant la modification/ajout des valeurs dans les menus déroulants (Chef de service, Assistantes, Service, CGR) sans intervention technique tierce ;
   * Donnant la possibilité de récupérer une AE déjà passée au niveau de validation suivant (avant la dernière étape).
 * **Gestion multi-chefs :** Possibilité d'associer plusieurs chefs de service à un même department.
@@ -86,7 +85,7 @@ Le système doit appliquer les règles suivantes au calcul du "Salaire de base" 
 ### Notifications :
 * **Quotidienne :**
   * AE en attente de validation classées par date (push mail aux valideurs) ;
-  * AE signées (push mail au demandeur, chef de service et SGR).
+  * AE signées (push mail à l'assistante qui a saisi la DAE, aux responsables du service et aux utilisateurs de rôle ADMIN qui voient ce service).
 * **Hebdomadaire :** Synthèse des AE entièrement validées.
 
 ### Interface :
@@ -99,6 +98,6 @@ Le système doit appliquer les règles suivantes au calcul du "Salaire de base" 
 ## 7. Demandes complémentaires
 
 * Augmenter le nombre de caractères visibles à l'impression du champ "Référencement" (nouveau nom : validation Contrôle de Gestion) (2 lignes).
-* Création d'un bouton "Archiver" sur les rôles SGR et Direction Financière pour factures et piges.
+* Archivage réversible de tous les types de DAE, accessible aux superusers et aux utilisateurs de rôle ADMIN qui voient le service concerné.
 * Circuit "facture" s'arrête au niveau SGR / Circuit "pige" s'arrête au niveau Contrôle de Gestion.
 * Voir l'ensemble des champs d'une dae sur une seule vue (pas d'ascenseur).

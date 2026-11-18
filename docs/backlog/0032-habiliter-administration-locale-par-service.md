@@ -1,4 +1,4 @@
-# 0032 — Habiliter l'administration locale du SGR
+# 0032 — Habiliter l'administration des services par les rôles ADMIN
 
 **Statut :** À planifier
 
@@ -8,8 +8,8 @@
 
 ## Objectif
 
-Permettre aux utilisateurs désignés d'administrer les responsables,
-assistantes, services et CGR dans le périmètre SGR confirmé au 0030.
+Permettre aux utilisateurs de rôle ADMIN d'administrer les responsables,
+assistantes, services et CGR des services qu'ils voient.
 
 Le CRUD de l'arbre départemental, le catalogue générique de permissions et les
 associations multiples de responsables existent déjà dans les tickets
@@ -19,8 +19,9 @@ recrée pas ces fondations.
 
 ## Travail attendu
 
-- [ ] Définir les rôles habilités et résoudre le périmètre SGR et ses
-  sous-départements par les custom finders existants.
+- [ ] Définir les opérations d'administration accessibles au rôle ADMIN et
+  appliquer les périmètres de services visibles avec les custom finders
+  existants.
 - [ ] Gérer les affectations de responsables, assistantes, services et CGR
   nécessaires à la saisie des DAE, en respectant les associations multiples.
 - [ ] Appliquer les mêmes droits aux pages Web, listes API et mutations
@@ -31,11 +32,11 @@ recrée pas ces fondations.
 
 ## Critères d'acceptation
 
-1. Un gestionnaire autorisé voit et modifie uniquement les données de son
-   périmètre SGR et des descendants permis.
+1. Un utilisateur de rôle ADMIN voit et modifie uniquement les données des
+   services qu'il est autorisé à voir.
 2. Une requête Web ou API fabriquée hors périmètre est refusée côté serveur.
-3. Les responsables multiples restent pris en charge sans réintroduire
-   `current_manager_id` dans les DAE.
+3. Les responsables multiples restent pris en charge ; l'application
+   n'utilise pas `applicationforms.manager_id` comme responsable unique.
 4. L'administration des autres périmètres n'est pas élargie.
 
 ## Vérifications

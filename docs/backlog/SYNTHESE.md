@@ -48,7 +48,7 @@ et met à jour les questions métier avant tout développement dépendant.
 |---|---|---|
 | [0030](0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md) | Arbitrer les règles métier et actualiser le périmètre | Prêt |
 | [0031](0031-aligner-dates-jours-travailles-remuneration.md) | Dates, jours travaillés et rémunération | À planifier |
-| [0032](0032-habiliter-administration-locale-sgr.md) | Administration locale SGR des références métier | À planifier |
+| [0032](0032-habiliter-administration-locale-par-service.md) | Administration des références métier par les rôles ADMIN dans leur périmètre | À planifier |
 | [0033](0033-reprendre-une-dae-pendant-son-circuit.md) | Reprise d'une DAE en cours de circuit | À planifier |
 | [0034](0034-finaliser-archivage-et-acces-archives.md) | Archivage et accès aux archives | À planifier |
 | [0035](0035-completer-notifications-gdae.md) | Notifications quotidiennes et hebdomadaires | À planifier |
@@ -60,10 +60,13 @@ et met à jour les questions métier avant tout développement dépendant.
 Le ticket facultatif [0040](0040-parametrer-champs-reinitialises-duplication.md)
 est hors manifeste et ne sera examiné qu'après le 0039.
 
-Les questions Q-0018-01 à Q-0018-06 sur les jours travaillés restent ouvertes
-et font partie des entrées du 0030. Les choix relatifs à €/heure, à la reprise,
-à l'archivage, aux destinataires et horaires des notifications, aux dimensions
-d'écran et à `current_manager_id` ne sont pas déduits du code.
+Les questions Q-0018-02 à Q-0018-04 sur les jours travaillés restent ouvertes
+et font partie des entrées du 0030 ; les règles de visibilité, de période sans
+jour ouvré et de changement de dates (Q-0018-01, 05 et 06) sont décidées.
+Les choix relatifs à €/heure, à la reprise et à l'archivage restent ouverts.
+Les destinataires et déclencheurs des notifications, les dimensions d'écran
+cibles et le maintien en base de `applicationforms.manager_id` sont décidés au
+0030 ; les commandes de notification seront planifiées par Airflow.
 
 ## Tickets historiques réconciliés
 

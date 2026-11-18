@@ -71,9 +71,9 @@ Les super-administrateurs peuvent gérer toutes les règles et désigner, par
 département, les rôles autorisés à les administrer. Un utilisateur non
 super-administrateur ne peut lire ou modifier que les règles des départements
 explicitement associés à son compte dans `user_departments` **et** pour
-lesquels son rôle dispose de cette habilitation de gestion. Le rôle SGR est
-ainsi habilitable pour les services de sa rédaction sans exiger le rôle Admin
-global ni donner le même pouvoir aux autres sociétés.
+lesquels son rôle dispose de cette habilitation de gestion. Un utilisateur de
+rôle ADMIN peut recevoir cette habilitation pour les services qu'il voit,
+sans l'étendre aux autres services ou sociétés.
 Le rôle gestionnaire est une donnée de configuration distincte du rôle final
 d'une règle ; changer ce dernier ne confère jamais un droit d'administration.
 La Policy applique le même périmètre à la page, aux listes, aux mutations API

@@ -18,11 +18,22 @@ les écarts vérifiés, pas sur une réécriture de ces comportements existants.
 
 ## Travail attendu
 
-- [ ] Appliquer la visibilité et le caractère obligatoire de `working_days`
-  selon les contrats confirmés au 0030 ; conserver une validation serveur.
+- [ ] Appliquer les règles de validation de `working_days` décidées au 0030 et
+  conserver la visibilité décidée (dates valides, sauf date de fin désactivée
+  pour un CDI) ; conserver une validation serveur.
+- [ ] Déclarer les codes de contrat comme constantes publiques dans l'entité
+  `Contracttype` et n'utiliser que ces constantes dans les règles métier pour
+  `cdi`, `cdd`, `interim`, `appr.`, `stage`, `pige` et `fact`.
 - [ ] Aligner les bornes de dates, les unités de durée et le nombre de jours
   sur les règles confirmées, y compris les périodes sans jour ouvré et les
   éventuelles corrections manuelles.
+- [ ] Lors d'un changement de dates, afficher la valeur actuelle de
+  `working_days` et le nouveau calcul, puis laisser l'opérateur décider de la
+  valeur à conserver.
+- [ ] Pour toute valeur de `working_days` égale à zéro, afficher un avertissement
+  avant l'enregistrement et envoyer le courriel à l'auteur, aux responsables
+  associés au service et à tout rôle ADMIN qui voit ce service,
+  uniquement après un enregistrement réussi.
 - [ ] Implémenter ou exclure explicitement le calcul €/heure selon la décision
   métier, avec une erreur française cohérente si l'unité n'est pas calculable.
 - [ ] Garder le montant calculé cohérent après toute modification des dates,
@@ -32,14 +43,18 @@ les écarts vérifiés, pas sur une réécriture de ces comportements existants.
 
 ## Critères d'acceptation
 
-1. Les contrats inclus et exclus du champ et son caractère obligatoire sont
-   ceux consignés au 0030, tant dans l'interface que côté serveur.
+1. La visibilité du champ et les règles de validation sont celles consignées
+   au 0030, tant dans l'interface que côté serveur.
 2. Une requête API fabriquée ne peut contourner les règles de jours et de
    dates.
 3. Le salaire de base correspond à la formule décidée pour chaque unité,
    notamment €/heure.
 4. Les erreurs de validation sont présentées en français et suivent le
    contrat API `{success, message, errors}` avec HTTP 422 lorsque pertinent.
+5. Un zéro déclenche l'avertissement avant enregistrement et le courriel après
+   succès, jamais sur un enregistrement rejeté.
+6. Les règles métier utilisent les constantes de `Contracttype`, sans codes
+   de contrat écrits en dur.
 
 ## Vérifications
 
