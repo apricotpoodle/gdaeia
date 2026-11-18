@@ -30,7 +30,7 @@ final class PermissionsControllerTest extends TestCase
         $this->assertResponseOk();
         $payload = (array)json_decode((string)$this->_response->getBody(), true);
         self::assertTrue($payload['success']);
-        self::assertCount(3, $payload['data']);
+        self::assertCount(42, $payload['data']);
     }
 
     public function testUnOperateurNePeutPasConsulterLeCatalogue(): void

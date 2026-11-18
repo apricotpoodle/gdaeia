@@ -115,7 +115,7 @@ class UsersController extends AppController
     public function index(): void
     {
         $this->Authorization->authorize($this->Users->newEmptyEntity(), 'index');
-        $this->set('canBulkDepartments', $this->Authorization->can($this->Users->newEmptyEntity(), 'add'));
+        $this->set('canBulkDepartments', $this->Authorization->can($this->Users->newEmptyEntity(), 'associate'));
     }
 
     /**
@@ -128,7 +128,7 @@ class UsersController extends AppController
      */
     public function bulkDepartments(): void
     {
-        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'associate');
 
         $fieldSchema = $this->fieldAuthorizationSchema('Users');
         $this->set('canEditDepartments', ($fieldSchema['user_departments'] ?? 'EDIT') === 'EDIT');
@@ -190,6 +190,8 @@ class UsersController extends AppController
     public function add(): ?Response
     {
         $user = $this->Users->newEmptyEntity();
+        $before = clone $user;
+        $beforeDepartmentIds = $this->userDepartmentAuthorization->snapshotDepartmentIds($user);
         $this->Authorization->authorize($user, 'add');
 
         if ($this->request->is('post')) {
@@ -208,12 +210,15 @@ class UsersController extends AppController
             $operator = $this->request->getAttribute('identity')->getOriginalData();
             $this->userDepartmentAuthorization->assertMutationAllowed(
                 $operator,
-                $this->Users->newEmptyEntity(),
+                $beforeDepartmentIds,
                 $user,
             );
+            if ($this->userDepartmentAuthorization->hasAssociationChanges($beforeDepartmentIds, $user)) {
+                $this->Authorization->authorize($user, 'associate');
+            }
             $this->userRoleAuthorization->assertMutationAllowed(
                 $operator,
-                $this->Users->newEmptyEntity(),
+                $before,
                 $user,
             );
             $this->Authorization->authorize($user, 'changeRole');
@@ -267,6 +272,7 @@ class UsersController extends AppController
         $user = $this->Users->get($id, contain: ['UserDepartments']);
         $this->Authorization->authorize($user, 'edit');
         $before = clone $user;
+        $beforeDepartmentIds = $this->userDepartmentAuthorization->snapshotDepartmentIds($user);
 
         if ($this->request->is(['post', 'put', 'patch'])) {
             $rawParams = $this->request->getData();
@@ -280,7 +286,11 @@ class UsersController extends AppController
                 . print_r($rawParams['user_departments'] ?? 'CLÉ ABSENTE', true),
             );
 
-            if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
+            if (
+                array_key_exists(User::FIELD_USER_DEPARTMENTS, $rawParams)
+                && ($rawParams[User::FIELD_USER_DEPARTMENTS] === null
+                    || $rawParams[User::FIELD_USER_DEPARTMENTS] === '')
+            ) {
                 $rawParams['user_departments'] = [];
             }
 
@@ -290,7 +300,10 @@ class UsersController extends AppController
             /** @var \App\Model\Entity\User $user */
 
             $operator = $this->request->getAttribute('identity')->getOriginalData();
-            $this->userDepartmentAuthorization->assertMutationAllowed($operator, $before, $user);
+            $this->userDepartmentAuthorization->assertMutationAllowed($operator, $beforeDepartmentIds, $user);
+            if ($this->userDepartmentAuthorization->hasAssociationChanges($beforeDepartmentIds, $user)) {
+                $this->Authorization->authorize($user, 'associate');
+            }
             $this->userRoleAuthorization->assertMutationAllowed($operator, $before, $user);
             if (
                 $before->get(User::FIELD_ROLE_ID) !== $user->get(User::FIELD_ROLE_ID)

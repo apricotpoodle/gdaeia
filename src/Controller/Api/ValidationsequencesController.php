@@ -5,6 +5,7 @@ namespace App\Controller\Api;
 
 use App\Controller\AppController;
 use App\Model\Entity\User;
+use App\Service\Security\PermissionResolver;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
@@ -30,9 +31,12 @@ class ValidationsequencesController extends AppController
     public function departmentsTree(): void
     {
         $this->request->allowMethod(['get']);
-        $this->authorizeManagement();
+        $this->Authorization->authorize($this->Validationsequences->newEmptyEntity(), 'index');
         $departments = $this->fetchTable('Departments')
-            ->find('treeThreadedVisibleTo', user: $this->getOperator())
+            ->find('threaded')
+            ->where(['Departments.deleted IS' => null])
+            ->where($this->readDepartmentConditions())
+            ->orderBy(['Departments.lft' => 'ASC'])
             ->all();
         $this->set('data', $departments);
         $this->viewBuilder()->setOption('serialize', ['data']);
@@ -42,8 +46,8 @@ class ValidationsequencesController extends AppController
     public function roles(): void
     {
         $this->request->allowMethod(['get']);
-        $this->authorizeManagement();
-        $roles = $this->fetchTable('Roles')->find('roleAccessVisibleTo', user: $this->getOperator())
+        $this->Authorization->authorize($this->Validationsequences->newEmptyEntity(), 'index');
+        $roles = $this->fetchTable('Roles')->find('visibleTo', user: $this->getOperator())
             ->orderByAsc('Roles.name')->all();
         $this->set('data', $roles);
         $this->viewBuilder()->setOption('serialize', ['data']);
@@ -53,7 +57,7 @@ class ValidationsequencesController extends AppController
     public function assignedRoles(): void
     {
         $this->request->allowMethod(['get']);
-        $this->authorizeManagement();
+        $this->Authorization->authorize($this->Validationsequences->newEmptyEntity(), 'index');
         $rawDepartmentIds = $this->request->getQuery('department_ids');
         if (!is_array($rawDepartmentIds) || $rawDepartmentIds === []) {
             $this->set('data', []);
@@ -61,7 +65,7 @@ class ValidationsequencesController extends AppController
 
             return;
         }
-        $departmentIds = $this->resolveDepartmentIds($rawDepartmentIds);
+        $departmentIds = $this->resolveDepartmentIds($rawDepartmentIds, false);
 
         $sequences = $this->Validationsequences->find()
             ->select([
@@ -102,15 +106,16 @@ class ValidationsequencesController extends AppController
     public function assignRole(): Response
     {
         $this->request->allowMethod(['post']);
-        $this->authorizeManagement();
+        $this->authorizeManagement('add');
         $rawData = $this->request->getData();
         $rawData['sequence'] ??= 1;
         $data = $this->authorizedRequestData('Validationsequences', $rawData);
         $departmentIds = $this->resolveDepartmentIds($data['department_ids'] ?? null);
+        $this->authorizeManagement('add', $departmentIds);
         $roleId = $this->positiveInteger($data['role_id'] ?? null, 'role_id');
         $sequence = $this->positiveInteger($data['sequence'] ?? null, 'sequence');
         $operator = $this->getOperator();
-        $role = $this->fetchTable('Roles')->find('roleAccessVisibleTo', user: $operator)
+        $role = $this->fetchTable('Roles')->find('visibleTo', user: $operator)
             ->where(['Roles.id' => $roleId])
             ->first();
         if ($role === null) {
@@ -179,9 +184,10 @@ class ValidationsequencesController extends AppController
     public function unassignRole(): Response
     {
         $this->request->allowMethod(['post']);
-        $this->authorizeManagement();
+        $this->authorizeManagement('delete');
         $data = $this->authorizedRequestData('Validationsequences');
         $departmentIds = $this->resolveDepartmentIds($data['department_ids'] ?? null);
+        $this->authorizeManagement('delete', $departmentIds);
         $roleId = $this->positiveInteger($data['role_id'] ?? null, 'role_id');
         try {
             $deleted = $this->Validationsequences->getConnection()->transactional(
@@ -209,9 +215,10 @@ class ValidationsequencesController extends AppController
     public function updateSequence(): Response
     {
         $this->request->allowMethod(['post']);
-        $this->authorizeManagement();
+        $this->authorizeManagement('edit');
         $data = $this->authorizedRequestData('Validationsequences');
         $departmentIds = $this->resolveDepartmentIds($data['department_ids'] ?? null);
+        $this->authorizeManagement('edit', $departmentIds);
         $roleId = $this->positiveInteger($data['role_id'] ?? null, 'role_id');
         $sequence = $this->positiveInteger($data['sequence'] ?? null, 'sequence');
         try {
@@ -238,9 +245,10 @@ class ValidationsequencesController extends AppController
     public function updateDelay(): Response
     {
         $this->request->allowMethod(['post']);
-        $this->authorizeManagement();
+        $this->authorizeManagement('edit');
         $data = $this->authorizedRequestData('Validationsequences');
         $departmentIds = $this->resolveDepartmentIds($data['department_ids'] ?? null);
+        $this->authorizeManagement('edit', $departmentIds);
         $roleId = $this->positiveInteger($data['role_id'] ?? null, 'role_id');
         $rawDelay = $data['reminder_delay_hours'] ?? null;
         $delay = $rawDelay === null || $rawDelay === ''
@@ -261,10 +269,14 @@ class ValidationsequencesController extends AppController
         return $this->jsonSuccess(['associations_updated' => $updated]);
     }
 
-    /** @return void */
-    private function authorizeManagement(): void
+    /** @param list<int> $departmentIds Cibles concrètes, après les filtres départementaux existants. */
+    private function authorizeManagement(string $action, array $departmentIds = []): void
     {
-        $this->Authorization->authorize($this->Validationsequences->newEmptyEntity(), 'manage');
+        foreach ($departmentIds === [] ? [null] : $departmentIds as $departmentId) {
+            $sequence = $this->Validationsequences->newEmptyEntity();
+            $sequence->set('department_id', $departmentId);
+            $this->Authorization->authorize($sequence, $action);
+        }
     }
 
     /** @param array<int> $departmentIds @return void */
@@ -278,17 +290,20 @@ class ValidationsequencesController extends AppController
     }
 
     /**
-     * @param mixed $rawDepartmentIds
+     * @param mixed $rawDepartmentIds Départements explicitement sélectionnés.
+     * @param bool $expandDescendants Étend uniquement les opérations de gestion historiques.
      * @return list<int>
      */
-    private function resolveDepartmentIds(mixed $rawDepartmentIds): array
+    private function resolveDepartmentIds(mixed $rawDepartmentIds, bool $expandDescendants = true): array
     {
         $selectedIds = $this->positiveIntegerList($rawDepartmentIds, 'department_ids');
         /** @var \App\Model\Table\DepartmentsTable $departments */
         $departments = $this->fetchTable('Departments');
-        $visibleDepartments = $departments
-            ->find('visibleTo', user: $this->getOperator())
-            ->select(['id', 'lft', 'rght'])->all()->toList();
+        $visibleQuery = $expandDescendants
+            ? $departments->find('visibleTo', user: $this->getOperator())
+            : $departments->find()->where(['Departments.deleted IS' => null])
+                ->where($this->readDepartmentConditions());
+        $visibleDepartments = $visibleQuery->select(['id', 'lft', 'rght'])->all()->toList();
         /** @var list<\App\Model\Entity\Department> $visibleDepartments */
         $selectedDepartments = array_filter(
             $visibleDepartments,
@@ -296,6 +311,10 @@ class ValidationsequencesController extends AppController
         );
         if (count($selectedDepartments) !== count($selectedIds)) {
             throw new ForbiddenException(__('Au moins un département ciblé est hors de votre périmètre.'));
+        }
+
+        if (!$expandDescendants) {
+            return $selectedIds;
         }
 
         $departmentIds = [];
@@ -309,6 +328,27 @@ class ValidationsequencesController extends AppController
         }
 
         return array_values(array_unique($departmentIds));
+    }
+
+    /**
+     * Limite les lectures aux départements directs, indépendamment de departments.read.
+     *
+     * @return array<string, mixed>
+     */
+    private function readDepartmentConditions(): array
+    {
+        $user = $this->getOperator();
+        $permissions = new PermissionResolver();
+        if ($permissions->allows($user, 'validationsequences.read', PermissionResolver::SCOPE_ALL)) {
+            return [];
+        }
+        if (!$permissions->allows($user, 'validationsequences.read', PermissionResolver::SCOPE_ASSIGNED)) {
+            return ['1 = 0'];
+        }
+        $departmentIds = $this->fetchTable('UserDepartments')->find()
+            ->select(['department_id'])->where(['user_id' => $user->get('id')]);
+
+        return ['Departments.id IN' => $departmentIds];
     }
 
     /**

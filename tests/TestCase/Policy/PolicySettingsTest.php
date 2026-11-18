@@ -6,13 +6,14 @@ namespace App\Test\TestCase\Policy;
 use App\Model\Entity\User;
 use App\Model\Entity\WorkflowSetting;
 use App\Policy\WorkflowSettingPolicy;
+use App\Service\Security\PermissionResolver;
 use Cake\TestSuite\TestCase;
 
 class PolicySettingsTest extends TestCase
 {
     public function testLeParametrageEstAutoriseUniquementAuSuperUtilisateur(): void
     {
-        $policy = new WorkflowSettingPolicy();
+        $policy = new WorkflowSettingPolicy(new PermissionResolver([]));
         $setting = new WorkflowSetting();
 
         $this->assertTrue($policy->canIndex(new User(['issuperuser' => true]), $setting));

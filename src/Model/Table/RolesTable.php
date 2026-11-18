@@ -5,6 +5,7 @@ namespace App\Model\Table;
 
 use App\Model\Entity\Role;
 use App\Model\Entity\User;
+use App\Service\Security\PermissionResolver;
 use Cake\I18n\DateTime;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
@@ -150,7 +151,7 @@ class RolesTable extends AppTable
     public function findRoleAccessVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
         $query = $this->findVisibleTo($query, $user);
-        if (!$user->get(User::FIELD_ISSUPERUSER) && $user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN) {
+        if (!(new PermissionResolver())->allows($user, 'menus.manage', PermissionResolver::SCOPE_UNSCOPED)) {
             $query->where(['1 = 0']);
         }
 

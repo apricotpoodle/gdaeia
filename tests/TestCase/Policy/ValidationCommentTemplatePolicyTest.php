@@ -6,13 +6,14 @@ namespace App\Test\TestCase\Policy;
 use App\Model\Entity\User;
 use App\Model\Entity\ValidationCommentTemplate;
 use App\Policy\ValidationCommentTemplatePolicy;
+use App\Service\Security\PermissionResolver;
 use Cake\TestSuite\TestCase;
 
 class ValidationCommentTemplatePolicyTest extends TestCase
 {
     public function testToutesLesActionsDeleguentALaLectureSuperUtilisateur(): void
     {
-        $policy = new ValidationCommentTemplatePolicy();
+        $policy = new ValidationCommentTemplatePolicy(new PermissionResolver([]));
         $template = new ValidationCommentTemplate();
 
         $this->assertTrue($policy->canIndex(new User(['issuperuser' => true]), $template));

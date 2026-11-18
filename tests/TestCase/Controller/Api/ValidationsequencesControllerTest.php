@@ -6,6 +6,7 @@ namespace App\Test\TestCase\Controller\Api;
 use App\Model\Entity\User;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @link \App\Controller\Api\ValidationsequencesController
@@ -18,6 +19,11 @@ class ValidationsequencesControllerTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
+        'app.Users',
+        'app.UserDepartments',
+        'app.Permissions',
+        'app.PermissionScopes',
+        'app.RolePermissions',
         'app.Departments',
         'app.Roles',
         'app.Validationsequences',
@@ -169,5 +175,46 @@ class ValidationsequencesControllerTest extends TestCase
         )->fetch('assoc');
         $this->assertSame(900, (int)$sequence['id']);
         $this->assertNull($sequence['deleted']);
+    }
+    /** @return array<string, array{string, string}> */
+    public static function mutationPermissions(): array
+    {
+        return [
+            'affectation' => ['assign-role', 'create'],
+            'ordre' => ['update-sequence', 'update'],
+            'délai' => ['update-delay', 'update'],
+            'retrait' => ['unassign-role', 'delete'],
+        ];
+    }
+
+    #[DataProvider('mutationPermissions')]
+    public function testChaqueMutationRefuseLesPermissionsDesAutresActions(string $route, string $required): void
+    {
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Roles')->updateAll(['deleted' => null], ['id' => 1]);
+        $permissions = $this->getTableLocator()->get('Permissions');
+        $grants = $this->getTableLocator()->get('RolePermissions');
+        foreach (['read', 'create', 'update', 'delete'] as $action) {
+            if ($action === $required) {
+                continue;
+            }
+            $permission = $permissions->find()
+                ->where(['resource' => 'validationsequences', 'action' => $action])->firstOrFail();
+            $grants->saveOrFail($grants->newEntity([
+                'role_id' => 1, 'permission_id' => $permission->get('id'), 'scope_type' => 'assigned',
+            ]));
+        }
+        $this->session(['Auth' => new User(['id' => 1, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $sequences = $this->getTableLocator()->get('Validationsequences');
+        $before = $sequences->find()->disableHydration()->orderByAsc('id')->all()->toList();
+
+        $this->post('/api/validationsequences/' . $route . '.json', [
+            'department_ids' => [1], 'role_id' => 1, 'sequence' => 1, 'reminder_delay_hours' => 24,
+        ]);
+
+        $this->assertResponseCode(403);
+        $this->assertSame($before, $sequences->find()->disableHydration()->orderByAsc('id')->all()->toList());
     }
 }

@@ -6,13 +6,14 @@ namespace App\Test\TestCase\Policy;
 use App\Model\Entity\CgrCode;
 use App\Model\Entity\User;
 use App\Policy\CgrCodePolicy;
+use App\Service\Security\PermissionResolver;
 use Cake\TestSuite\TestCase;
 
 final class CgrCodePolicyTest extends TestCase
 {
     public function testLeSuperAdministrateurGereUnCodeNonSysteme(): void
     {
-        $policy = new CgrCodePolicy();
+        $policy = new CgrCodePolicy(new PermissionResolver([]));
         $code = new CgrCode(['is_system' => false, 'active' => true]);
         $superAdministrator = new User(['issuperuser' => true]);
 
@@ -26,7 +27,7 @@ final class CgrCodePolicyTest extends TestCase
 
     public function testUnCodeSystemeNePeutPasEtreModifie(): void
     {
-        $policy = new CgrCodePolicy();
+        $policy = new CgrCodePolicy(new PermissionResolver([]));
         $code = new CgrCode(['is_system' => true, 'active' => true]);
         $superAdministrator = new User(['issuperuser' => true]);
 
@@ -36,7 +37,7 @@ final class CgrCodePolicyTest extends TestCase
 
     public function testUnOperateurNePeutPasGererLesCodesCgr(): void
     {
-        $policy = new CgrCodePolicy();
+        $policy = new CgrCodePolicy(new PermissionResolver([]));
         $code = new CgrCode(['is_system' => false, 'active' => true]);
         $operator = new User(['issuperuser' => false]);
 
@@ -48,7 +49,7 @@ final class CgrCodePolicyTest extends TestCase
 
     public function testUnAdministrateurPeutAssocierUnCodeActifSansGererLeReferentiel(): void
     {
-        $policy = new CgrCodePolicy();
+        $policy = new CgrCodePolicy(new PermissionResolver([]));
         $code = new CgrCode(['is_system' => false, 'active' => true]);
         $administrator = new User(['issuperuser' => false, 'role_id' => User::ROLE_ADMIN]);
 

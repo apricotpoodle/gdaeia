@@ -193,13 +193,365 @@ n'existe pas encore. Ces constats ne constituent pas une reprise complète.
 Les étapes suivantes restent à réaliser ; leur décomposition rend le ticket
 prêt, sans démarrer son implémentation.
 
-- [ ] **1. Inventorier l'existant.** Relever les permissions et règles dans les Policies, finders et routes Web/API ; comparer le comportement au catalogue, aux périmètres et attributions de `daetf` et aux 28 associations `role_menus`. Examiner séparément `department_id` et les destinations partagées ; distinguer les droits déductibles des exceptions à arbitrer.
-- [ ] **2. Fixer la matrice des permissions.** Définir pour chaque capacité son code, ses périmètres admissibles et ses attributions aux rôles, conformément à l'ADR 0069. Préserver le refus d'administration des menus pour l'Admin ordinaire du ticket 0006 et l'exception explicite du super-administrateur.
-- [ ] **3. Automatiser la reprise des données.** Écrire une migration répétable qui préserve les lignes existantes et complète le catalogue `permissions`, les périmètres admissibles `permission_scopes` et les attributions déterminables `role_permissions`. Ajouter `menus.required_permission_id` et les liens menu déductibles sans ambiguïté ; signaler les autres. Ne pas attribuer `menus.manage` à l'Admin ordinaire.
-- [ ] **4. Sécuriser la transition des menus.** Vérifier les mêmes permissions pour la visibilité et l'entrée directe par URL/API, avec les Policies et périmètres applicables. Traiter les rubriques sans destination et les associations non migrables automatiquement. Garder `role_menus` jusqu'à validation de la comparaison des droits avant/après.
-- [ ] **5. Généraliser par domaine.** Avancer par volets indépendamment vérifiables : utilisateurs et périmètres ; DAE et règles de workflow ; puis références et autres fonctions d'administration. Conserver les invariants métier et du workflow dans leurs Policies et services, ainsi que les protections de champs et d'usurpation.
+- [x] **1. Inventorier l'existant.** Relever les permissions et règles dans les Policies, finders et routes Web/API ; comparer le comportement au catalogue, aux périmètres et attributions de `daetf` et aux 28 associations `role_menus`. Examiner séparément `department_id` et les destinations partagées ; distinguer les droits déductibles des exceptions à arbitrer.
+- [x] **2. Fixer la matrice des permissions.** Définir pour chaque capacité son code, ses périmètres admissibles et ses attributions aux rôles, conformément à l'ADR 0069. Préserver le refus d'administration des menus pour l'Admin ordinaire du ticket 0006 et l'exception explicite du super-administrateur.
+- [x] **3. Automatiser la reprise des données.** Écrire une migration répétable qui préserve les lignes existantes et complète le catalogue `permissions`, les périmètres admissibles `permission_scopes` et les attributions déterminables `role_permissions`. Ajouter `menus.required_permission_id` et les liens menu déductibles sans ambiguïté ; signaler les autres. Ne pas attribuer `menus.manage` à l'Admin ordinaire.
+- [x] **4. Sécuriser la transition des menus.** Vérifier les mêmes permissions pour la visibilité et l'entrée directe par URL/API, avec les Policies et périmètres applicables. Traiter les rubriques sans destination et les associations non migrables automatiquement. Garder `role_menus` jusqu'à validation de la comparaison des droits avant/après.
+- [x] **5. Généraliser par domaine.** Avancer par volets indépendamment vérifiables : utilisateurs et périmètres ; DAE et règles de workflow ; puis références et autres fonctions d'administration. Conserver les invariants métier et du workflow dans leurs Policies et services, ainsi que les protections de champs et d'usurpation.
 - [ ] **6. Compléter la base de développement.** Valider la migration sur `daetf2_test`, vérifier explicitement la connexion cible, puis l'appliquer à `daetf`. Configurer uniquement les attributions exceptionnelles non déductibles avec l'API protégée existante et les consigner ; ne pas utiliser de SQL manuel. La page Web du catalogue reste en lecture seule, sans nouvelle interface de gestion.
 - [ ] **7. Vérifier et clôturer.** Comparer les accès avant/après pour les comptes et périmètres repris, documenter les écarts et exceptions validés, puis actualiser les critères d'acceptation et le statut pour clôturer le ticket. Prévoir les vérifications unitaires, d'intégration et HTTP/API ci-dessous, puis `make test.all` sur `daetf2_test`.
+
+### Résultats du point 1 — 18 novembre 2026
+
+#### Code et points d'entrée
+
+- `PermissionResolver` applique le refus par défaut, lit les attributions
+  `role_permissions` et laisse passer explicitement le super-administrateur.
+  Pour `assigned`, le périmètre est calculé depuis les associations directes
+  `user_departments`; aucun descendant n'est ajouté.
+- `DepartmentPolicy` et `DepartmentsTable::findVisibleTo` utilisent les
+  permissions génériques `departments.read` et `departments.manage`. Le
+  finder n'enlève le filtre des départements que si `departments.read` a le
+  périmètre `all`; sinon il filtre sur les départements directement affectés.
+- Les autres règles principales restent codées dans les Policies et finders
+  métier. `ApplicationformPolicy` et `ApplicationformsTable::findVisibleTo`
+  utilisent le créateur, le département affecté, des rôles historiques et
+  l'état du workflow. `UserPolicy` utilise des rôles autorisés, l'identité
+  propre et des contrôles de gestionabilité ; `UsersTable::findVisibleTo`
+  filtre sur le partage d'un département. Une fiche peut donc être refusée
+  par la Policy après avoir été incluse dans la liste. Les autorisations de
+  champs restent distinctes dans `field_authorizations`.
+- `MenuPolicy` et `PermissionPolicy` protègent la gestion des menus et des
+  attributions par `menus.manage` sur `unscoped`. L'écran Web `MenusController`
+  impose en plus le statut super-administrateur. Les Policies de références,
+  de séquences, de rôles et plusieurs Policies d'administration continuent
+  d'utiliser les règles historiques, souvent réservées au super-administrateur
+  ou à des rôles nommés.
+- Les routes Web utilisent les routes de repli CakePHP ; l'API déclare des
+  routes explicites puis des ressources REST. Les routes ne définissent pas
+  une matrice de permission : les contrôleurs appellent leurs Policies. Les
+  opérations d'administration des menus et des permissions sont gardées par
+  `MenuPolicy` et `PermissionPolicy`. À l'inverse, `GET /api/menus.json`
+  saute l'autorisation générique et filtre l'arbre avec `role_menus` et le
+  rôle de l'opérateur. Ce chargement ignore `department_id` et ne référence
+  pas de permission d'entrée.
+- Aucun usage de `menus.required_permission_id` ni de `MenuAccessService`
+  n'existe dans le code ou les migrations présents. Le menu général dépend
+  encore des associations `role_menus`.
+
+Références de code : [PermissionResolver](../../src/Service/Security/PermissionResolver.php),
+[MenuPolicy](../../src/Policy/MenuPolicy.php),
+[DepartmentPolicy](../../src/Policy/DepartmentPolicy.php),
+[ApplicationformPolicy](../../src/Policy/ApplicationformPolicy.php),
+[UserPolicy](../../src/Policy/UserPolicy.php),
+[MenusTable](../../src/Model/Table/MenusTable.php),
+[UsersTable](../../src/Model/Table/UsersTable.php),
+[ApplicationformsTable](../../src/Model/Table/ApplicationformsTable.php),
+[routes Web/API](../../config/routes.php).
+
+#### Catalogue et attributions de `daetf`
+
+La connexion de développement a été vérifiée comme pointant sur `daetf` ; la
+migration `CreateGenericPermissions` y est appliquée. L'inventaire en lecture
+seule donne :
+
+| Permission | Périmètres admissibles | Attribution existante |
+|---|---|---|
+| `departments.read` | `assigned`, `all` | rôle 1 : `assigned` |
+| `departments.manage` | `assigned`, `all` | rôle 1 : `assigned` |
+| `menus.manage` | `unscoped` | aucune |
+
+Il y a donc 3 permissions, 5 périmètres admissibles et 2 attributions. Le
+périmètre admissible `all` n'est pas accordé au rôle 1. Aucun droit n'est
+attribué aux rôles 2 à 7 dans `role_permissions`. Le super-administrateur
+reste un contournement séparé du catalogue.
+
+#### Les 28 associations de navigation
+
+Dans cette base, les rôles réels sont Admin (1), Demandeur (2), puis les cinq
+rôles de validation (3 à 7). Cette répartition diffère des identifiants
+illustratifs du ticket.
+
+| Rôle | Associations `role_menus` |
+|---|---|
+| 1 — Admin | 22 : menus 6–16, puis 18, 20, 22, 24 et 26–32 |
+| 2 — Demandeur | 1 : menu 7 « Saisie Demande » |
+| 3 à 7 — Valideurs | 1 chacun : menu 7 « Saisie Demande » |
+
+Les 28 lignes ont `department_id = NULL`. La colonne reste facultative dans
+le schéma et dans la validation de `RoleMenusTable`, mais aucune association
+actuelle ne fournit de périmètre départemental. Le chargement de
+`/api/menus.json` ne lit de toute façon pas cette colonne.
+
+Trois paires de menus ont la même destination après normalisation de la casse
+et des espaces :
+
+| Destination | Options de menu |
+|---|---|
+| `users` | 4 « Utilisateurs » (`users`), 13 « Utilisateurs » (`Users`) |
+| `validationsequences` | 15 « Association Séquence Department », 25 « Validation séquences et workflow » |
+| `contracttypes` | 16 « Types de Contrat » (`Contracttypes`), 26 « Types de contrats » (`contracttypes`) |
+
+Ces options ne sont pas toutes associées aux mêmes rôles ; elles doivent être
+traitées comme des destinations partagées à vérifier, et non comme des
+permissions distinctes déductibles de leur seul libellé.
+
+#### Droits déductibles et exceptions
+
+- `role_menus` décrit la navigation, pas l'autorisation d'une action. Le menu
+  7 pointe vers `applicationforms/add` pour les rôles 1 à 7, mais la création
+  est autorisée par `ApplicationformPolicy` au Demandeur, à l'Admin et au
+  super-administrateur. Les liens des rôles de validation ne leur accordent
+  donc pas le droit de créer.
+- Le rôle Admin possède aussi le menu 8 d'association des menus, alors que
+  `menus.manage` ne lui est pas attribué et que l'écran Web renvoie les
+  non-super-administrateurs à l'accueil. Cette association historique ne
+  doit pas devenir une attribution de `menus.manage`, conformément au ticket
+  0006.
+- `MenusTable::findRoleAccessVisibleTo` et `RolesTable::findRoleAccessVisibleTo`
+  admettent encore le rôle Admin, tandis que `MenuPolicy` exige
+  `menus.manage` et le contrôleur Web exige le statut super-administrateur.
+  Le parcours d'administration des associations contient ainsi des règles
+  divergentes qui doivent être arbitrées au point 4.
+- Les associations aux menus des utilisateurs, rôles, références et
+  configurations de workflow ne déterminent pas les permissions `read`,
+  `update` ou `manage` ni leurs périmètres. Leurs Policies gardent des
+  règles historiques distinctes ; aucune reprise automatique n'est justifiée
+  sans matrice validée.
+- Les rubriques sans destination (`#`), les destinations partagées et les
+  éventuelles différences d'accès à une même page restent à traiter avant
+  de renseigner `menus.required_permission_id`. Aucun lien de menu ne suffit
+  à déduire une attribution `role_permissions`.
+
+### Résultats du point 2 — 18 novembre 2026
+
+Les rôles de `daetf` sont Admin (1), Demandeur (2) et Valideurs (3 à 7).
+`assigned` couvre uniquement les départements directement associés à
+l'opérateur dans `user_departments`. Les périmètres attribués à une même
+permission se combinent par OU, conformément à l'ADR 0069.
+
+| Permission | Périmètres admissibles | Attributions explicites |
+|---|---|---|
+| `applicationforms.create` | `self` | Rôles 1 et 2 : `self` |
+| `applicationforms.read` | `self`, `assigned`, `all` | Rôle 1 et rôles 3–7 : `self`, `assigned` ; rôle 2 : `self` |
+| `applicationforms.update` | `self`, `assigned`, `all` | Rôle 1 et rôles 3–7 : `self`, `assigned` ; rôle 2 : `self` ; la Policy et le workflow restent déterminants |
+| `applicationforms.delete` | `self` | Rôles 1–7 : `self`, sous réserve du propriétaire et de l'absence de workflow |
+| `applicationforms.vote` | `unscoped` | Rôles 1–7 ; le workflow conditionne le vote du Demandeur et des Valideurs ; l'Admin ne peut qu'outrepasser une étape selon les règles existantes |
+| `users.read` | `self`, `assigned`, `all` | Tous les rôles : `self` ; rôle 1 : aussi `assigned` |
+| `users.update` | `self`, `assigned` | Tous les rôles : `self` ; rôle 1 : aussi `assigned` ; protections de champs et de rôle maintenues |
+| `departments.read` | `assigned`, `all` | Rôle 1 : `assigned`, comme dans `daetf` |
+| `departments.manage` | `assigned`, `all` | Rôle 1 : `assigned`, comme dans `daetf` |
+| `validationsequences.read` | `assigned`, `all` | Aucun rôle ordinaire pour l'instant ; réexaminer au point 5 |
+| `menus.manage` | `unscoped` | Aucun rôle ordinaire, en particulier pas l'Admin 1 |
+
+Aucun rôle ne reçoit le périmètre `all` dans cette matrice. Il reste
+admissible uniquement pour les permissions qui le déclarent ; toute
+attribution future devra être explicite. L'absence d'attribution vaut refus.
+Le super-administrateur conserve le contournement explicite de l'ADR 0069.
+
+Les règles de Policy, les conditions métier, le workflow, les protections de
+champs et l'identité effective en usurpation continuent de s'appliquer. Les
+permissions non couvertes par ce socle — notamment création, suppression,
+changement de rôle ou usurpation d'utilisateurs, ainsi que lancement et
+administration du workflow DAE — restent sous leurs Policies actuelles et
+sont différées au point 5. `role_menus` ne permet pas de déduire ces droits.
+
+### Résultats du point 3 — 18 novembre 2026
+
+La migration `ResumeGenericPermissions` complète les onze permissions, les
+vingt-et-un périmètres admissibles et les soixante attributions fixés au
+point 2. Chaque insertion vérifie l'absence de la même clé ; les libellés,
+périmètres et attributions préexistants ne sont ni remplacés ni supprimés.
+Elle ajoute `menus.required_permission_id` comme entier non signé nullable,
+son index et une clé étrangère `ON DELETE RESTRICT`. `down()` retire ces
+éléments de schéma et conserve les permissions, périmètres et attributions.
+La migration affiche aussi les entrées du catalogue, périmètres et
+attributions qui divergent de la matrice.
+
+Les URL sont normalisées en minuscules après suppression des espaces
+périphériques et des barres obliques en début et fin, puis comparées à une
+liste explicite :
+
+| URL | Permission référencée |
+|---|---|
+| `applicationforms/add` | `applicationforms.create` |
+| `departments` | `departments.read` |
+| `departments/assignManagers`, `departments/assignServices` | `departments.manage` |
+| `menus`, `menus/add`, `Menus/role_access` | `menus.manage` |
+| `users` | `users.read` |
+| `Validationsequences` | `validationsequences.read` |
+
+Les associations `role_menus` et les libellés n'interviennent pas dans cette
+correspondance. La matrice n'accorde toujours pas `menus.manage` au rôle 1.
+Une lecture seule de la base `daetf` confirme trois permissions déjà présentes,
+cinq périmètres admissibles et deux attributions, tous conformes à la matrice.
+Sur les données observées, la migration ajouterait huit permissions, seize
+périmètres et cinquante-huit attributions. Elle associerait onze des
+trente-trois menus ; les vingt-deux autres resteraient à `NULL` et seraient
+affichés avec leur identifiant, URL et nom :
+
+| ID | URL | Nom |
+|---:|---|---|
+| 1 | vide | Administration |
+| 5 | `users/add` | Utilisateur ajout |
+| 6 | `UserDepartments/assocDepartmentUsers` | Association Service Utilisateur |
+| 9 | `#` | Associations |
+| 10 | `UserDepartments/assocUserDepartments` | Association Utilisateur Service |
+| 11 | `#` | Références |
+| 14 | `Roles` | Rôles |
+| 16 | `Contracttypes` | Types de Contrat |
+| 17 | `Contracttypes/indexDyna` | Types Contrat UI dynamique Beta test |
+| 19 | `cgr-strategies` | Stratégies CGR |
+| 21 | `Tools/triggerDailyDigest` | Envoi email quotidien (préférez la CLI) |
+| 22 | `cgr-codes` | CGR Codes |
+| 23 | `field-authorizations` | Matrice des droits ApplicationForm |
+| 24 | `users/bulk-departments` | Association massive user department |
+| 26 | `contracttypes` | Types de contrats |
+| 27 | `hiringreasons` | Motifs de recrutement |
+| 28 | `professionalcategories` | Catégories professionnelles |
+| 29 | `worktimes` | Temps de travail |
+| 30 | `periods` | Périodicités |
+| 31 | `budgetfeatures` | Caractéristiques budgétaires |
+| 32 | `yesnos` | Réponses Oui / Non |
+| 33 | `workflow-settings` | Paramétrage global du cycle |
+
+La migration n'a pas été appliquée à `daetf` ni à `daetf2_test` ; son
+application et la validation des écarts relèvent du point 6.
+
+### Résultats du point 4 — 18 novembre 2026
+
+`MenuAccessService` filtre récursivement l’arbre historiquement éligible de
+`GET /api/menus.json`, sans changer l’ordre ni la structure des branches
+conservées. Un menu lié par `required_permission_id` exige son association
+`role_menus` et la permission sur un périmètre applicable. Une URL non
+mappée conserve la visibilité historique ; une rubrique vide ou `#` ne
+subsiste qu’avec un enfant visible. Le super-administrateur conserve son
+contournement des permissions et des associations. Le menu synthétique
+« Cycles bloqués » est toujours ajouté séparément selon sa règle actuelle.
+Aucune association `role_menus` n’est modifiée et son `department_id` reste
+ignoré par la navigation, comme auparavant.
+
+Les Policies DAE vérifient désormais `applicationforms.read`, `create`,
+`update`, `delete` et `vote`, avec les périmètres propriétaire, département
+direct ou global explicitement accordés. La duplication requiert aussi la
+permission de création. Les restrictions de création, de propriétaire,
+d’édition selon le rôle et de workflow restent applicables ; les actions
+hors matrice (lancement, réinitialisation, relance et archivage du cycle)
+conservent leurs règles et leur contrôle historique de visibilité.
+
+`UserPolicy` vérifie `users.read` et `users.update` sur l’identité propre ou
+le partage d’un département direct, avec `all` admissible en lecture. Les
+contrôles historiques de rôle et de gérabilité restent en place. Les finders
+`Applicationforms::findVisibleTo` et `Users::findVisibleTo` combinent les
+périmètres accordés par OU et refusent les listes sans périmètre applicable.
+Les protections de champs, de propriétaire à la création et d’usurpation ne
+sont pas modifiées ; seule l’identité effective est évaluée.
+
+Les départements conservent les contrôles existants `departments.read` et
+`departments.manage` de leur Policy. L’entrée Web des séquences et leurs
+API de lecture vérifient `validationsequences.read` ; les lectures ciblées
+restent limitées aux départements directs pour `assigned`, sans extension
+aux descendants. Leur administration reste réservée au super-administrateur.
+L’entrée Web des menus et les finders de l’écran d’association menus/rôles
+reprennent `menus.manage` sur `unscoped`, déjà exigé par `MenuPolicy` ;
+l’Admin ordinaire ne reçoit aucun droit implicite.
+
+Vérification du point 4 : syntaxe PHP valide sur les douze fichiers PHP
+ajoutés ou modifiés, relecture du diff et `git diff --check` sans erreur.
+Aucun test n’a été ajouté ou exécuté, conformément au plan approuvé. Aucun
+commit ni aucune application de migration n’ont été réalisés. Le contrôle
+fonctionnel et la comparaison des accès restent à effectuer aux points 6
+et 7 ; le lien des menus aux permissions dépend de la migration du point 3,
+qui reste non appliquée à `daetf` et `daetf2_test`.
+
+### Résultats du point 5 — 18 novembre 2026
+
+La généralisation couvre les utilisateurs, les actions de workflow DAE,
+puis les références et fonctions d’administration. Les permissions déjà
+intégrées au point 4 et leurs attributions sont conservées. La matrice
+complète contient **42 permissions**, **52 périmètres admissibles** et
+**76 attributions explicites** :
+
+| Permission | Périmètres admissibles | Attributions ordinaires retenues |
+|---|---|---|
+| `applicationforms.create` | `self` | Rôles 1 et 2 : `self` |
+| `applicationforms.read`, `applicationforms.update` | `self`, `assigned`, `all` | Rôle 1 et rôles 3–7 : `self`, `assigned` ; rôle 2 : `self` |
+| `applicationforms.delete` | `self` | Rôles 1–7 : `self` |
+| `applicationforms.vote` | `unscoped` | Rôles 1–7 |
+| `applicationforms.launch_validation` | `unscoped` | Rôles 1–7 |
+| `applicationforms.reset_validation`, `applicationforms.remind_validation`, `applicationforms.override_validation` | `unscoped` | Rôle 1 |
+| `applicationforms.archive` | `unscoped` | Rôles 1 et 7 |
+| `users.read` | `self`, `assigned`, `all` | Rôles 1–7 : `self` ; rôle 1 : aussi `assigned` |
+| `users.update` | `self`, `assigned` | Rôles 1–7 : `self` ; rôle 1 : aussi `assigned` |
+| `users.create`, `users.delete`, `users.change_role` | `unscoped` | Rôle 1 |
+| `users.associate_departments` | `assigned` | Rôle 1 |
+| `users.impersonate` | `unscoped` | Aucune |
+| `departments.read`, `departments.manage` | `assigned`, `all` | Rôle 1 : `assigned` |
+| `references.read`, `references.create`, `references.update`, `references.delete` | `unscoped` | Aucune |
+| `roles.read`, `roles.create`, `roles.update`, `roles.delete` | `unscoped` | Aucune |
+| `fieldauthorizations.read`, `fieldauthorizations.create`, `fieldauthorizations.update`, `fieldauthorizations.delete` | `unscoped` | Aucune |
+| `workflowsettings.read`, `workflowsettings.update` | `unscoped` | Aucune |
+| `validationcommenttemplates.read`, `validationcommenttemplates.create`, `validationcommenttemplates.update`, `validationcommenttemplates.delete` | `unscoped` | Aucune |
+| `validationsequences.read` | `assigned`, `all` | Aucune |
+| `validationsequences.create`, `validationsequences.update`, `validationsequences.delete` | `assigned` | Aucune |
+| `menus.manage` | `unscoped` | Aucune |
+
+Les nouvelles permissions utilisateurs complètent les contrôles historiques
+de rôle Admin, de gérabilité, de périmètre départemental et de champs. Les
+contrôleurs Web et API vérifient le droit d’association seulement lorsque
+l’ensemble des départements change et capturent les anciennes associations
+avant le marshalling. L’usurpation reste super-administrateur uniquement,
+sans cascade, et utilise l’identité effective.
+
+Les cinq actions de workflow DAE vérifient chacune leur permission
+`unscoped`, sans enlever les contrôles de créateur, de visibilité, de rôle,
+de contrat, d’étape ou d’état. Le vote par procuration vérifie
+`applicationforms.override_validation` dans la Policy, dans l’API et dans le
+service qui réalise le vote. Les indicateurs d’override et de relance des
+cycles bloqués sont calculés indépendamment.
+
+Les Policies des références communes, CGR, rôles, autorisations de champs,
+paramètres globaux et commentaires prédéfinis utilisent les permissions par
+action, avec refus sans attribution. Elles préservent le contournement du
+super-administrateur, la suppression interdite des références/rôles socles
+et les protections des CGR actifs/système. L’association CGR conserve sa
+règle spécialisée. `menus.manage`, la gestion des circuits spécialisés et
+les contrôles des gestionnaires locaux restent inchangés. Aucune attribution
+ordinaire d’administration, d’usurpation, de menu ou de lecture des séquences
+n’est créée.
+
+Les séquences disposent de méthodes de Policy distinctes pour la lecture,
+la création, la modification et la suppression. L’API utilise `add` pour
+affecter, `edit` pour modifier l’ordre ou le délai, et `delete` pour retirer.
+Chaque département ciblé reste contrôlé après les filtres existants et
+l’expansion historique ; `assigned` n’accorde aucun descendant implicitement.
+Un éventuel ancien scope `all` sur une mutation ne contourne pas ces
+contrôles. Le chargement des rôles actifs lors d’une affectation ne dépend
+plus du finder réservé aux accès des menus. L’API du paramétrage global
+sépare aussi les permissions GET de lecture et POST de modification.
+
+La nouvelle migration `20261118150000_GeneralizeDomainPermissions.php` est
+séparée de `ResumeGenericPermissions`, laissée intacte. Elle complète les
+permissions, scopes et attributions manquants de façon idempotente, sans
+écraser ni supprimer de ligne existante. Les écarts de libellés, de périmètres
+et d’attributions sont signalés, y compris toute attribution ordinaire là où
+la matrice n’en prévoit aucune. Son `down()` conserve toutes les données et
+les migrations antérieures. `PermissionsFixture`, `PermissionScopesFixture`
+et `RolePermissionsFixture` portent la matrice complète sans attribuer
+`validationsequences.read`.
+
+Vérifications : **125 tests ciblés de Policies et services, 639 assertions,
+réussis** avec `phpunit.unit.xml` après les échecs RED attendus ; syntaxe PHP
+valide sur les **53 fichiers PHP** ajoutés ou modifiés du checkout ;
+`git diff --check` sans erreur. Les scénarios API ajoutés couvrent les refus
+par action et scope, les mutations de départements, le workflow DAE, les
+séquences et les lectures/écritures de paramètres ; ceux qui utilisent les
+fixtures ne sont pas exécutés, car leur bootstrap appliquerait les migrations.
+`make test.all` n’a pas été lancé. **Aucune migration n’a été appliquée à
+`daetf2_test` ni à `daetf` pendant ce point.** Le point 5 est vérifié au niveau
+unitaire ; l’application et les contrôles sur base restent au point 6, et
+la comparaison fonctionnelle ainsi que la clôture restent au point 7. Ces
+deux étapes restent ouvertes.
 
 ## Décisions à préparer
 
@@ -227,6 +579,7 @@ prêt, sans démarrer son implémentation.
 - Le contournement explicite des permissions et périmètres par le super-administrateur est documenté et testé ; les invariants métier, le workflow et les protections d'usurpation restent applicables. En usurpation, seule l'identité effective est évaluée.
 - Des tests unitaires couvrent la résolution des permissions et des accès aux menus ; des tests d'intégration couvrent les finders ; des tests HTTP couvrent visibilité, refus d'URL, redirection et Flash.
 - Les tests couvrent au minimum un demandeur, un opérateur `assigned`, un accès `all` explicite en lecture et un accès hors périmètre.
+- Les scénarios d'acceptation couvrent le CRUD DAE `self` du Demandeur, l'accès `assigned`, le refus hors périmètre, un accès `all` accordé explicitement en lecture et le refus de `menus.manage` à l'Admin ordinaire.
 - Les cas `assigned` avec descendants et les différences de périmètre entre utilisateurs de même rôle sont identifiés comme une évolution ultérieure, avec une solution générique documentée.
 - Les données existantes reçoivent une migration de reprise explicite, répétable, réversible et vérifiée : lignes préservées, périmètres admissibles respectés, liens menu migrés ou signalés comme exceptions. Les comptes et périmètres repris et les écarts avant/après sont documentés.
 - Le catalogue Web reste en lecture seule ; l'attribution et le retrait exceptionnels passent par l'API protégée existante et leurs refus sont vérifiés en HTTP/API.

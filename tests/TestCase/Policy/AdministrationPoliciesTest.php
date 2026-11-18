@@ -15,7 +15,7 @@ class AdministrationPoliciesTest extends TestCase
 {
     public function testLesAutorisationsDeChampSontReserveesAuxSuperAdministrateurs(): void
     {
-        $policy = new FieldAuthorizationPolicy();
+        $policy = new FieldAuthorizationPolicy(new PermissionResolver([]));
         $record = new FieldAuthorization();
 
         $this->assertFalse($policy->canIndex(new User(['role_id' => User::ROLE_ADMIN])));

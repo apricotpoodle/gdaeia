@@ -7,17 +7,17 @@ use App\Model\Entity\WorkflowSetting;
 use Authorization\IdentityInterface;
 
 /** Politique du paramétrage global du workflow. */
-class WorkflowSettingPolicy extends AppPolicy
+class WorkflowSettingPolicy extends AdministrationPolicy
 {
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\WorkflowSetting $setting @return bool */
     public function canIndex(IdentityInterface $identity, WorkflowSetting $setting): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'workflowsettings.read');
     }
 
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\WorkflowSetting $setting @return bool */
     public function canManage(IdentityInterface $identity, WorkflowSetting $setting): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'workflowsettings.update');
     }
 }

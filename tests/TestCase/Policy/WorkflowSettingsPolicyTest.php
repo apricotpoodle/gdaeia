@@ -7,6 +7,7 @@ use App\Model\Entity\User;
 use App\Model\Entity\WorkflowSetting;
 use App\Policy\WorkflowSettingPolicy;
 use Authorization\IdentityInterface;
+use App\Service\Security\PermissionResolver;
 use Cake\TestSuite\TestCase;
 
 /** Vérifie les droits de paramétrage global du workflow. */
@@ -14,7 +15,7 @@ class WorkflowSettingsPolicyTest extends TestCase
 {
     public function testLeParametrageGlobalEstReserveAuSuperAdministrateur(): void
     {
-        $policy = new WorkflowSettingPolicy();
+        $policy = new WorkflowSettingPolicy(new PermissionResolver([]));
         $setting = new WorkflowSetting();
 
         $this->assertTrue($policy->canIndex($this->identity(new User(['issuperuser' => true])), $setting));

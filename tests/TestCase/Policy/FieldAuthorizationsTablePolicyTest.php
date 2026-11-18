@@ -7,13 +7,14 @@ use App\Model\Entity\User;
 use App\Model\Table\FieldAuthorizationsTable;
 use App\Policy\FieldAuthorizationsTablePolicy;
 use Authorization\IdentityInterface;
+use App\Service\Security\PermissionResolver;
 use Cake\TestSuite\TestCase;
 
 class FieldAuthorizationsTablePolicyTest extends TestCase
 {
     public function testLaListeEstReserveeAuxSuperAdministrateurs(): void
     {
-        $policy = new FieldAuthorizationsTablePolicy();
+        $policy = new FieldAuthorizationsTablePolicy(new PermissionResolver([]));
         $table = new FieldAuthorizationsTable();
 
         $this->assertTrue($policy->canIndex($this->identity(new User(['issuperuser' => true])), $table));

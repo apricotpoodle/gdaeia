@@ -7,6 +7,7 @@ use App\Model\Entity\Applicationform;
 use App\Model\Entity\User;
 use App\Model\Entity\UserDepartment;
 use App\Model\Entity\ValidationWorkflowRun;
+use App\Service\Security\PermissionResolver;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Authorization\IdentityInterface;
 use Cake\ORM\TableRegistry;
@@ -18,6 +19,11 @@ use Cake\ORM\TableRegistry;
  */
 class ApplicationformPolicy extends AppPolicy
 {
+    /** Construit la Policy avec le résolveur commun. */
+    public function __construct(private readonly PermissionResolver $permissions = new PermissionResolver())
+    {
+    }
+
     /**
      * Autorisation pour la liste (index)
      *
@@ -28,10 +34,7 @@ class ApplicationformPolicy extends AppPolicy
     {
         $user = $this->getValidUser($identity);
 
-        // Sécurité de base : il faut être connecté pour voir la page index.
-        // Note : Le filtrage réel des données selon le périmètre de l'utilisateur
-        // se fera plus tard au niveau de l'ORM dans l'API (via un custom finder).
-        return $user !== null;
+        return $user !== null && $this->permissions->allowsEntry($user, 'applicationforms.read');
     }
 
     /** L'accès à la synthèse des cycles bloqués est réservé aux administrateurs. */
@@ -50,6 +53,15 @@ class ApplicationformPolicy extends AppPolicy
      * @return bool
      */
     public function canView(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        $user = $this->getValidUser($identity);
+
+        return $user !== null
+            && $this->permissions->allowsApplicationform($user, 'applicationforms.read', $applicationform);
+    }
+
+    /** Visibilité historique conservée pour les actions hors matrice. */
+    private function canViewHistorically(IdentityInterface $identity, Applicationform $applicationform): bool
     {
         $user = $this->getValidUser($identity);
         if (!$user) {
@@ -119,7 +131,9 @@ class ApplicationformPolicy extends AppPolicy
     {
         $user = $this->getValidUser($identity);
 
-        return $user !== null && $this->canView($identity, $applicationform);
+        return $user !== null
+            && $this->permissions->allows($user, 'applicationforms.create', PermissionResolver::SCOPE_SELF)
+            && $this->canView($identity, $applicationform);
     }
 
     /**
@@ -142,6 +156,10 @@ class ApplicationformPolicy extends AppPolicy
 
         if ($user->get(User::FIELD_ISSUPERUSER)) {
             return true;
+        }
+
+        if (!$this->permissions->allowsApplicationform($user, 'applicationforms.update', $applicationform)) {
+            return false;
         }
 
         if (!$this->canView($identity, $applicationform)) {
@@ -180,7 +198,12 @@ class ApplicationformPolicy extends AppPolicy
         $user = $this->getValidUser($identity);
         if (
             $user === null
-            || !$this->canView($identity, $applicationform)
+            || !$this->permissions->allows(
+                $user,
+                'applicationforms.launch_validation',
+                PermissionResolver::SCOPE_UNSCOPED,
+            )
+            || !$this->canViewHistorically($identity, $applicationform)
             || (
                 $applicationform->get(Applicationform::FIELD_USER_ID) !== $user->get(User::FIELD_ID)
                 && (int)$user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN
@@ -206,7 +229,12 @@ class ApplicationformPolicy extends AppPolicy
         $user = $this->getValidUser($identity);
         if (
             $user === null
-            || !$this->canView($identity, $applicationform)
+            || !$this->permissions->allows(
+                $user,
+                'applicationforms.reset_validation',
+                PermissionResolver::SCOPE_UNSCOPED,
+            )
+            || !$this->canViewHistorically($identity, $applicationform)
             || (
                 (int)$user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN
                 && !$user->get(User::FIELD_ISSUPERUSER)
@@ -228,7 +256,27 @@ class ApplicationformPolicy extends AppPolicy
         $user = $this->getValidUser($identity);
 
         return $user !== null
-            && $this->canView($identity, $applicationform)
+            && $this->permissions->allows(
+                $user,
+                'applicationforms.remind_validation',
+                PermissionResolver::SCOPE_UNSCOPED,
+            )
+            && $this->canViewHistorically($identity, $applicationform)
+            && ($user->hasRole(User::ROLE_ADMIN) || $user->isSuperUser());
+    }
+
+    /** Seul un administrateur visible et habilité peut voter par procuration. */
+    public function canOverrideValidation(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        $user = $this->getValidUser($identity);
+
+        return $user !== null
+            && $this->permissions->allows(
+                $user,
+                'applicationforms.override_validation',
+                PermissionResolver::SCOPE_UNSCOPED,
+            )
+            && $this->canViewHistorically($identity, $applicationform)
             && ($user->hasRole(User::ROLE_ADMIN) || $user->isSuperUser());
     }
 
@@ -236,7 +284,11 @@ class ApplicationformPolicy extends AppPolicy
     public function canArchive(IdentityInterface $identity, Applicationform $applicationform): bool
     {
         $user = $this->getValidUser($identity);
-        if ($user === null || !$this->canView($identity, $applicationform)) {
+        if (
+            $user === null
+            || !$this->permissions->allows($user, 'applicationforms.archive', PermissionResolver::SCOPE_UNSCOPED)
+            || !$this->canViewHistorically($identity, $applicationform)
+        ) {
             return false;
         }
         if (
@@ -262,7 +314,11 @@ class ApplicationformPolicy extends AppPolicy
     /** Le service réévalue ensuite le rôle courant, l'échéance et la suppléance. */
     public function canVoteValidation(IdentityInterface $identity, Applicationform $applicationform): bool
     {
-        return $this->canView($identity, $applicationform);
+        $user = $this->getValidUser($identity);
+
+        return $user !== null
+            && $this->permissions->allows($user, 'applicationforms.vote', PermissionResolver::SCOPE_UNSCOPED)
+            && $this->canViewHistorically($identity, $applicationform);
     }
 
     /**
@@ -283,7 +339,8 @@ class ApplicationformPolicy extends AppPolicy
             return true;
         }
 
-        return !$this->hasWorkflow($applicationform)
+        return $this->permissions->allowsApplicationform($user, 'applicationforms.delete', $applicationform)
+            && !$this->hasWorkflow($applicationform)
             && $applicationform->get(Applicationform::FIELD_USER_ID) === $user->get(User::FIELD_ID);
     }
 
@@ -472,9 +529,10 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        return $user->isSuperUser() || in_array($user->get(User::FIELD_ROLE_ID), [
-            User::ROLE_DEMANDEUR,
-            User::ROLE_ADMIN,
-        ], true);
+        return $this->permissions->allows($user, 'applicationforms.create', PermissionResolver::SCOPE_SELF)
+            && ($user->isSuperUser() || in_array($user->get(User::FIELD_ROLE_ID), [
+                User::ROLE_DEMANDEUR,
+                User::ROLE_ADMIN,
+            ], true));
     }
 }

@@ -10,6 +10,7 @@ use Cake\Datasource\ConnectionManager;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 /**
  * @link \App\Controller\Api\ApplicationformsController
@@ -1165,6 +1166,164 @@ class ApplicationformsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('"recipients":1');
+    }
+
+    /** @return array<string, array{string, string}> */
+    public static function workflowPermissionEndpoints(): array
+    {
+        return [
+            'lancement' => ['applicationforms.launch_validation', 'validation/start'],
+            'réinitialisation' => ['applicationforms.reset_validation', 'validation/reset'],
+            'relance' => ['applicationforms.remind_validation', 'validation/remind'],
+            'archivage' => ['applicationforms.archive', 'archive'],
+            'vote par procuration' => ['applicationforms.override_validation', 'validation/vote'],
+        ];
+    }
+
+    #[DataProvider('workflowPermissionEndpoints')]
+    public function testChaqueMutationWorkflowRefuseUnePermissionAbsenteSansChangerLEtat(
+        string $code,
+        string $endpoint,
+    ): void {
+        if (in_array($endpoint, ['validation/start', 'archive'], true)) {
+            $this->configureStartableWorkflow();
+        } else {
+            $this->configureVisibilityWorkflow();
+        }
+        $connection = ConnectionManager::get('test');
+        $connection->update('contracttypes', ['code' => 'PIGE'], ['id' => 1]);
+        $connection->update('applicationforms', ['archived' => null], ['id' => 1]);
+        $connection->update('applicationvalidationsteps', [
+            'activated_at' => '2026-09-10 10:00:00',
+        ], ['applicationform_id' => 1]);
+        $before = $this->workflowSnapshot();
+
+        $this->withoutWorkflowPermission($code, function () use ($endpoint): void {
+            $this->session(['Auth' => new User(['id' => 1, 'role_id' => User::ROLE_ADMIN, 'issuperuser' => false])]);
+            $this->enableCsrfToken();
+            $this->post('/api/applicationforms/1/' . $endpoint . '.json', [
+                'step_id' => self::WORKFLOW_TEST_ID,
+                'decision' => 'accepter',
+                'override' => true,
+            ]);
+
+            $this->assertResponseCode(403);
+        });
+
+        $this->assertSame($before, $this->workflowSnapshot());
+    }
+
+    public function testUnAdministrateurHabilitePeutVoterParProcurationEtCloreLeCycle(): void
+    {
+        $this->configureVotableWorkflow();
+        $stepId = $this->startVotableWorkflow();
+        $this->session(['Auth' => new User([
+            'id' => 1, 'role_id' => User::ROLE_ADMIN, 'issuperuser' => false,
+            'email' => 'admin@example.test',
+        ])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/1/validation/vote.json', [
+            'step_id' => $stepId, 'decision' => 'accepter', 'override' => true,
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('"final":true');
+        $connection = ConnectionManager::get('test');
+        $this->assertSame('acceptee', $connection->execute(
+            'SELECT state FROM validation_workflow_runs WHERE applicationform_id = 1',
+        )->fetchColumn(0));
+        $this->assertSame(1, (int)$connection->execute(
+            'SELECT is_proxy FROM validations WHERE applicationvalidationstep_id = ' . $stepId,
+        )->fetchColumn(0));
+    }
+
+    public function testLaPermissionDeRelanceNeDonnePasCelleDOutrepasser(): void
+    {
+        $this->configureVisibilityWorkflow();
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationvalidationsteps', ['role_id' => User::ROLE_ADMIN], ['id' => self::WORKFLOW_TEST_ID]);
+        $connection->update('applicationvalidationsteps', [
+            'activated_at' => '2026-09-10 10:00:00',
+        ], ['applicationform_id' => 1]);
+        $this->withoutWorkflowPermission('applicationforms.override_validation', function (): void {
+            $this->session(['Auth' => new User(['id' => 1, 'role_id' => User::ROLE_ADMIN, 'issuperuser' => false])]);
+
+            $this->get('/api/applicationforms/1/validation.json');
+
+            $this->assertResponseOk();
+            $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertCount(1, $body['steps']);
+            $this->assertSame(self::WORKFLOW_TEST_ID, $body['steps'][0]['id']);
+            $this->assertFalse($body['steps'][0]['can_override']);
+
+            $this->get('/api/applicationforms/blocked-validations.json');
+
+            $this->assertResponseOk();
+            $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertCount(1, $body['data']);
+            $this->assertSame([
+                'overrideValidation' => false,
+                'resendValidation' => true,
+            ], $body['data'][0]['grid_rights']['actions']);
+        });
+    }
+
+    public function testLaPermissionDOverrideNeDonnePasCelleDeRelance(): void
+    {
+        $this->configureVisibilityWorkflow();
+        ConnectionManager::get('test')->update('applicationvalidationsteps', [
+            'activated_at' => '2026-09-10 10:00:00',
+        ], ['applicationform_id' => 1]);
+        $this->withoutWorkflowPermission('applicationforms.remind_validation', function (): void {
+            $this->session(['Auth' => new User(['id' => 1, 'role_id' => User::ROLE_ADMIN, 'issuperuser' => false])]);
+
+            $this->get('/api/applicationforms/blocked-validations.json');
+
+            $this->assertResponseOk();
+            $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertCount(1, $body['data']);
+            $this->assertSame([
+                'overrideValidation' => true,
+                'resendValidation' => false,
+            ], $body['data'][0]['grid_rights']['actions']);
+        });
+    }
+
+    /** Retire uniquement l'attribution ciblée, puis la restaure même en cas d'échec. */
+    private function withoutWorkflowPermission(string $code, callable $callback): void
+    {
+        [, $action] = explode('.', $code, 2);
+        $permission = $this->getTableLocator()->get('Permissions')->find()
+            ->where(['resource' => 'applicationforms', 'action' => $action])
+            ->firstOrFail();
+        $connection = ConnectionManager::get('test');
+        $conditions = ['role_id' => User::ROLE_ADMIN, 'permission_id' => $permission->get('id')];
+        $grants = $connection->selectQuery()->select('*')->from('role_permissions')->where($conditions)->execute()->fetchAll('assoc');
+        $this->assertNotEmpty($grants);
+        $connection->delete('role_permissions', $conditions);
+        try {
+            $callback();
+        } finally {
+            foreach ($grants as $grant) {
+                $connection->insert('role_permissions', $grant);
+            }
+        }
+    }
+
+    /** @return array<string, array<mixed>> État persistant attendu inchangé lors d'un refus. */
+    private function workflowSnapshot(): array
+    {
+        $connection = ConnectionManager::get('test');
+        $snapshot = [];
+        foreach (['validation_workflow_runs', 'applicationvalidationsteps', 'validations'] as $table) {
+            $snapshot[$table] = $connection->selectQuery()->select('*')->from($table)
+                ->where(['applicationform_id' => 1])->orderBy(['id' => 'ASC'])->execute()->fetchAll('assoc');
+        }
+        $snapshot['applicationforms'] = $connection->selectQuery()->select(['archived'])->from('applicationforms')
+            ->where(['id' => 1])->execute()->fetchAll('assoc');
+
+        return $snapshot;
     }
 
     /** Prépare une demande, une séquence et un validateur actifs pour le lancement. */

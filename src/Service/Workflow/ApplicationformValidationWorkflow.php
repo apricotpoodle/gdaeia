@@ -10,6 +10,7 @@ use App\Model\Entity\Validationsequence;
 use App\Model\Entity\ValidationWorkflowRun;
 use App\Model\Entity\WorkflowSetting;
 use App\Policy\ApplicationformPolicy;
+use App\Service\Security\PermissionResolver;
 use Cake\I18n\DateTime;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
@@ -30,7 +31,7 @@ final class ApplicationformValidationWorkflow
     private Table $applicationforms;
 
     /** Initialise les tables utilisées par le workflow. */
-    public function __construct()
+    public function __construct(private readonly PermissionResolver $permissions = new PermissionResolver())
     {
         $locator = TableRegistry::getTableLocator();
         $this->runs = $locator->get('ValidationWorkflowRuns');
@@ -556,6 +557,11 @@ final class ApplicationformValidationWorkflow
         User $user,
     ): bool {
         return ($user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN))
+            && $this->permissions->allows(
+                $user,
+                'applicationforms.override_validation',
+                PermissionResolver::SCOPE_UNSCOPED,
+            )
             && in_array($step->state, ['en_attente', 'a_venir'], true);
     }
 

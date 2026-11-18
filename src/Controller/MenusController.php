@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Entity\User;
+use App\Service\Security\PermissionResolver;
 use Cake\Event\EventInterface;
 use Cake\Http\Response;
 use Exception;
@@ -16,14 +17,17 @@ use Exception;
  */
 class MenusController extends AppController
 {
-    /** Redirige les administrateurs non techniques hors de l'administration des menus. */
+    /** Redirige les opérateurs sans permission d’administration des menus. */
     public function beforeFilter(EventInterface $event): void
     {
         parent::beforeFilter($event);
 
         $identity = $this->getRequest()->getAttribute('identity');
         $user = $identity?->getOriginalData();
-        if ($user instanceof User && !$user->get(User::FIELD_ISSUPERUSER)) {
+        if (
+            $user instanceof User
+            && !(new PermissionResolver())->allows($user, 'menus.manage', PermissionResolver::SCOPE_UNSCOPED)
+        ) {
             $this->Authorization->skipAuthorization();
             $this->Flash->error(__('Vous n’êtes pas autorisé à administrer les menus.'));
             $event->setResult($this->redirect('/'));

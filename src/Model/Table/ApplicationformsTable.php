@@ -9,6 +9,7 @@ use App\Model\Entity\Period;
 use App\Model\Entity\User;
 use App\Service\ApplicationformDuplicationResult;
 use App\Service\SalaryCalculationService;
+use App\Service\Security\PermissionResolver;
 use App\Service\ValidationErrorPresenter;
 use App\Service\WorkingDaysService;
 use ArrayObject;
@@ -757,9 +758,8 @@ class ApplicationformsTable extends Table
 
     /**
      * Custom finder : Restreint la liste des demandes à celles visibles par l'opérateur.
-     * - Les Super Admins voient tout.
-     * - Les autres ne voient que les demandes liées à un département qu'ils gèrent/observent,
-     *   ou les demandes dont ils sont les créateurs.
+     * Combine les périmètres accordés de applicationforms.read (self, assigned, all).
+     * Le super-administrateur conserve son contournement explicite.
      *
      * Utilisation : ->find('visibleTo', user: $currentUser)
      *
@@ -769,23 +769,22 @@ class ApplicationformsTable extends Table
      */
     public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
-        // 1. Le Super Admin a une vision globale (pas de filtre)
-        if ($user->get(User::FIELD_ISSUPERUSER)) {
+        $permissions = new PermissionResolver();
+        if ($permissions->allows($user, 'applicationforms.read', PermissionResolver::SCOPE_ALL)) {
             return $query;
         }
 
-        // 2. Récupération du périmètre des départements de l'utilisateur
-        // On s'appuie sur la table de liaison UserDepartments
-        $userDepartmentsTable = TableRegistry::getTableLocator()->get('UserDepartments');
-        $myDepartmentIds = $userDepartmentsTable->find('departmentsOf', user: $user);
+        $conditions = [];
+        if ($permissions->allows($user, 'applicationforms.read', PermissionResolver::SCOPE_SELF)) {
+            $conditions[] = ['Applicationforms.user_id' => $user->id];
+        }
+        if ($permissions->allows($user, 'applicationforms.read', PermissionResolver::SCOPE_ASSIGNED)) {
+            $userDepartments = TableRegistry::getTableLocator()->get('UserDepartments');
+            $departmentIds = $userDepartments->find('departmentsOf', user: $user);
+            $conditions[] = ['Applicationforms.department_id IN' => $departmentIds];
+        }
 
-        // 3. Application du filtre strict (Créateur OU Appartient à mon département)
-        return $query->where([
-            'OR' => [
-                'Applicationforms.user_id' => $user->id,
-                'Applicationforms.department_id IN' => $myDepartmentIds,
-            ],
-        ]);
+        return $query->where($conditions === [] ? ['1 = 0'] : ['OR' => $conditions]);
     }
 
     /**

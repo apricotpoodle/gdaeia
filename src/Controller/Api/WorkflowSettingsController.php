@@ -31,7 +31,10 @@ class WorkflowSettingsController extends AppController
         $this->request->allowMethod(['get', 'post']);
         /** @var \App\Model\Table\WorkflowSettingsTable $settings */
         $settings = $this->fetchTable('WorkflowSettings');
-        $this->Authorization->authorize($settings->newEmptyEntity(), 'manage');
+        $this->Authorization->authorize(
+            $settings->newEmptyEntity(),
+            $this->request->is('get') ? 'index' : 'manage',
+        );
         /** @var \App\Model\Entity\WorkflowSetting|null $setting */
         $setting = $settings->find()->where(['name' => 'validation.default_due_hours'])->first();
         if ($this->request->is('get')) {
@@ -57,7 +60,10 @@ class WorkflowSettingsController extends AppController
     {
         $this->request->allowMethod(['get', 'post']);
         $settings = $this->fetchTable('WorkflowSettings');
-        $this->Authorization->authorize($settings->newEmptyEntity(), 'manage');
+        $this->Authorization->authorize(
+            $settings->newEmptyEntity(),
+            $this->request->is('get') ? 'index' : 'manage',
+        );
         $name = 'validation.blocked_after_business_days';
         $setting = $settings->find()->where(['name' => $name])->first();
         if ($this->request->is('get')) {
@@ -85,7 +91,10 @@ class WorkflowSettingsController extends AppController
         $this->request->allowMethod(['get', 'post']);
         /** @var \App\Model\Table\WorkflowSettingsTable $settings */
         $settings = $this->fetchTable('WorkflowSettings');
-        $this->Authorization->authorize($settings->newEmptyEntity(), 'manage');
+        $this->Authorization->authorize(
+            $settings->newEmptyEntity(),
+            $this->request->is('get') ? 'index' : 'manage',
+        );
         $defaults = [
             'accepter' => false,
             'refuser' => true,
@@ -128,7 +137,10 @@ class WorkflowSettingsController extends AppController
     {
         $this->request->allowMethod(['get', 'post']);
         $settings = $this->fetchTable('WorkflowSettings');
-        $this->Authorization->authorize($settings->newEmptyEntity(), 'manage');
+        $this->Authorization->authorize(
+            $settings->newEmptyEntity(),
+            $this->request->is('get') ? 'index' : 'manage',
+        );
         $name = 'salary.k_coefficient';
         $setting = $settings->find()->where(['name' => $name])->first();
         $coefficient = (float)($setting?->get(WorkflowSetting::FIELD_VALUE) ?? 17.46);
@@ -154,7 +166,10 @@ class WorkflowSettingsController extends AppController
     {
         $this->request->allowMethod(['get', 'post']);
         $settings = $this->fetchTable('WorkflowSettings');
-        $this->Authorization->authorize($settings->newEmptyEntity(), 'manage');
+        $this->Authorization->authorize(
+            $settings->newEmptyEntity(),
+            $this->request->is('get') ? 'index' : 'manage',
+        );
         if ($this->request->is('get')) {
             return $this->jsonSuccess([
                 'fields' => ApplicationformsTable::DUPLICATION_RESET_FIELDS,

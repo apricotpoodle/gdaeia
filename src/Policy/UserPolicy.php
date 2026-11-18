@@ -8,6 +8,7 @@ declare(strict_types=1);
 namespace App\Policy;
 
 use App\Model\Entity\User;
+use App\Service\Security\PermissionResolver;
 use Authorization\IdentityInterface;
 use Cake\ORM\TableRegistry;
 
@@ -16,6 +17,11 @@ use Cake\ORM\TableRegistry;
  */
 class UserPolicy extends AppPolicy
 {
+    /** Construit la Policy avec le résolveur commun. */
+    public function __construct(private readonly PermissionResolver $permissions = new PermissionResolver())
+    {
+    }
+
     /**
      * Check if $user can list Users
      *
@@ -30,7 +36,7 @@ class UserPolicy extends AppPolicy
             return false; // Par sécurité, on bloque si ce n'est pas un User valide
         }
 
-        return true;
+        return $this->permissions->allowsEntry($user, 'users.read');
     }
 
     /**
@@ -48,9 +54,8 @@ class UserPolicy extends AppPolicy
             return false; // Par sécurité, on bloque si ce n'est pas un User valide
         }
 
-        // Règle métier : Seul un Super Admin ou un profil "Staff/RH" (par exemple, le rôle ID 1 ou 2)
-        // a le droit d'accéder au formulaire de création.
-        return $user->isSuperUser() || $user->hasRole(user::ALLOWED_ROLES_FOR_CREATE);
+        return $this->permissions->allows($user, 'users.create', PermissionResolver::SCOPE_UNSCOPED)
+            && ($user->isSuperUser() || $user->hasRole(User::ALLOWED_ROLES_FOR_CREATE));
     }
 
     /**
@@ -74,7 +79,9 @@ class UserPolicy extends AppPolicy
         }
 
         // 2. Condition standard : Seul un Super Admin peut usurper un utilisateur non Super Admin
-        return $user->isSuperUser() && ($user->id != $target->id);
+        return $this->permissions->allows($user, 'users.impersonate', PermissionResolver::SCOPE_UNSCOPED)
+            && $user->isSuperUser()
+            && ($user->id != $target->id);
     }
 
     /**
@@ -91,9 +98,10 @@ class UserPolicy extends AppPolicy
             return false; // Par sécurité, on bloque si ce n'est pas un User valide
         }
 
-        return $user->isSuperUser()
-            || $user->id === $target->id
-            || ($user->hasRole($user::ALLOWED_ROLES_FOR_EDIT) && $this->isManageable($user, $target));
+        return $this->permissions->allowsUser($user, 'users.update', $target)
+            && ($user->isSuperUser()
+                || $user->id === $target->id
+                || ($user->hasRole($user::ALLOWED_ROLES_FOR_EDIT) && $this->isManageable($user, $target)));
     }
 
     /**
@@ -110,7 +118,9 @@ class UserPolicy extends AppPolicy
             return false;
         }
 
-        return ($user->id !== $target->id) && ($user->isSuperUser() || $user->hasRole($user::ALLOWED_ROLES_FOR_DELETE));
+        return $this->permissions->allows($user, 'users.delete', PermissionResolver::SCOPE_UNSCOPED)
+            && ($user->id !== $target->id)
+            && ($user->isSuperUser() || $user->hasRole($user::ALLOWED_ROLES_FOR_DELETE));
     }
 
     /**
@@ -127,7 +137,8 @@ class UserPolicy extends AppPolicy
             return false;
         }
 
-        return $user->isSuperUser() || $user->id == $target->id || $user->hasRole($user::ALLOWED_ROLES_FOR_VIEW);
+        return $this->permissions->allowsUser($user, 'users.read', $target)
+            && ($user->isSuperUser() || $user->id == $target->id || $user->hasRole($user::ALLOWED_ROLES_FOR_VIEW));
     }
 
     /** Autorise l’association d’un responsable actif à un département autorisé. */
@@ -142,8 +153,13 @@ class UserPolicy extends AppPolicy
             return false;
         }
 
-        return $user->isSuperUser()
-            || ($user->hasRole(User::ROLE_ADMIN) && $this->isManageable($user, $target));
+        return $this->permissions->allows(
+            $user,
+            'users.associate_departments',
+            PermissionResolver::SCOPE_ASSIGNED,
+        ) && ($user->isSuperUser()
+            || ($user->hasRole(User::ROLE_ADMIN)
+                && ($target->isNew() || $this->isManageable($user, $target))));
     }
 
     /**
@@ -160,8 +176,16 @@ class UserPolicy extends AppPolicy
             return false;
         }
 
+        if (!$this->permissions->allows($user, 'users.change_role', PermissionResolver::SCOPE_UNSCOPED)) {
+            return false;
+        }
+
         if ($user->isSuperUser()) {
             return true;
+        }
+
+        if (!$user->hasRole(User::ROLE_ADMIN)) {
+            return false;
         }
 
         if ($target->isNew()) {

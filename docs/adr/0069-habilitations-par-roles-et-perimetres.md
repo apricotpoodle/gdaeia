@@ -164,12 +164,92 @@ n'est inscrite dans `permission_scopes` qu'après décision et tests.
 | `menus.manage` | Sans objet. | Sans objet. | `unscoped` : Policy d'administration. |
 | `applicationforms.vote` | Aucun filtre générique suffisant. | Aucun filtre générique suffisant. | `unscoped` : rôle et état de l'étape, éligibilité déterminée par le workflow. |
 
-Les autres actions, notamment création, suppression et suppléance, sont
-définies individuellement avant leur activation. La permission de lecture
-n'accorde jamais implicitement la modification ou le vote. Le vote conserve
+Les actions supplémentaires et leurs attributions sont fixées par la matrice
+ci-dessous. La permission de lecture n'accorde jamais implicitement la
+modification ou le vote. Le vote conserve
 les règles de l'ADR 0055 : être créateur d'une demande peut rendre éligible à
 l'étape « demandeur », mais pas à toute étape ultérieure. Une évolution des
 droits de suppléance de l'ADR 0063 demande une décision explicite.
+
+### Matrice retenue au point 5 du ticket 0007 — 18 novembre 2026
+
+La matrice conserve le socle du point 4 et ajoute les actions utilisateurs,
+le workflow des DAE et les capacités d’administration. Elle décrit
+**42 permissions**, **52 périmètres admissibles** et **76 attributions**.
+Les rôles 1 à 7 sont respectivement Admin, Demandeur et les cinq rôles de
+validation. Aucun rôle ordinaire ne reçoit `all` dans cette reprise.
+
+| Permission | Périmètres admissibles | Attributions ordinaires retenues |
+|---|---|---|
+| `applicationforms.create` | `self` | Rôles 1 et 2 : `self` |
+| `applicationforms.read`, `applicationforms.update` | `self`, `assigned`, `all` | Rôle 1 et rôles 3–7 : `self`, `assigned` ; rôle 2 : `self` |
+| `applicationforms.delete` | `self` | Rôles 1–7 : `self` |
+| `applicationforms.vote` | `unscoped` | Rôles 1–7 |
+| `applicationforms.launch_validation` | `unscoped` | Rôles 1–7 |
+| `applicationforms.reset_validation`, `applicationforms.remind_validation`, `applicationforms.override_validation` | `unscoped` | Rôle 1 |
+| `applicationforms.archive` | `unscoped` | Rôles 1 et 7 |
+| `users.read` | `self`, `assigned`, `all` | Rôles 1–7 : `self` ; rôle 1 : aussi `assigned` |
+| `users.update` | `self`, `assigned` | Rôles 1–7 : `self` ; rôle 1 : aussi `assigned` |
+| `users.create`, `users.delete`, `users.change_role` | `unscoped` | Rôle 1 |
+| `users.associate_departments` | `assigned` | Rôle 1 |
+| `users.impersonate` | `unscoped` | Aucune |
+| `departments.read`, `departments.manage` | `assigned`, `all` | Rôle 1 : `assigned` |
+| `references.read`, `references.create`, `references.update`, `references.delete` | `unscoped` | Aucune |
+| `roles.read`, `roles.create`, `roles.update`, `roles.delete` | `unscoped` | Aucune |
+| `fieldauthorizations.read`, `fieldauthorizations.create`, `fieldauthorizations.update`, `fieldauthorizations.delete` | `unscoped` | Aucune |
+| `workflowsettings.read`, `workflowsettings.update` | `unscoped` | Aucune |
+| `validationcommenttemplates.read`, `validationcommenttemplates.create`, `validationcommenttemplates.update`, `validationcommenttemplates.delete` | `unscoped` | Aucune |
+| `validationsequences.read` | `assigned`, `all` | Aucune |
+| `validationsequences.create`, `validationsequences.update`, `validationsequences.delete` | `assigned` | Aucune |
+| `menus.manage` | `unscoped` | Aucune |
+
+`unscoped` impose un contrôle explicite dans la Policy ou le service métier.
+Les utilisateurs conservent les contrôles du rôle Admin, de gérabilité, des
+rôles fonctionnels, des champs et des départements réellement modifiés.
+L’usurpation reste réservée au super-administrateur, sans cascade ; seule
+l’identité effective est évaluée. Le lancement, la réinitialisation, la
+relance, l’archivage et l’outrepassement des DAE conservent les contrôles
+historiques de visibilité, de créateur, de rôle, de contrat et d’état du
+workflow. L’outrepassement effectif vérifie aussi sa permission dans le
+service transactionnel.
+
+Les Policies des références communes, des rôles, des autorisations de champs,
+du paramétrage global et des commentaires prédéfinis consultent désormais
+leur permission par action. Sans attribution ordinaire, leur accès reste
+réservé au contournement du super-administrateur ; une attribution
+exceptionnelle explicite peut ouvrir l’action concernée. Les références et
+rôles socles restent non supprimables, y compris par un super-administrateur.
+Les codes CGR conservent les contrôles actif/système et leur règle distincte
+`canAssociate`. Les exceptions existantes `MenuPolicy` et `PermissionPolicy`
+utilisent toujours `menus.manage` ; la gestion spécialisée des circuits de
+validation et de leurs gestionnaires locaux reste inchangée.
+
+Pour les séquences, les lectures utilisent `validationsequences.read` et ses
+périmètres directs ou `all`. Les écritures utilisent respectivement `create`,
+`update` et `delete`, exclusivement sur `assigned`, puis contrôlent chaque
+département concret. Un ancien périmètre `all` non admissible ne permet pas
+de contourner ce contrôle. L’API distingue l’affectation (`add`), l’ordre et
+le délai (`edit`), et le retrait (`delete`). La sélection des rôles actifs
+n’impose pas `menus.manage`. Les GET du paramétrage global utilisent
+`workflowsettings.read` ; les POST utilisent `workflowsettings.update`.
+
+La migration distincte `20261118150000_GeneralizeDomainPermissions.php`
+complète le catalogue, les périmètres et les attributions manquants par
+`INSERT ... WHERE NOT EXISTS`. Elle ne remplace ni ne supprime de libellé,
+de périmètre ou d’attribution préexistants. Elle signale les libellés
+inattendus, périmètres hors matrice et attributions divergentes, notamment
+les attributions ordinaires des permissions qui doivent rester sans droit.
+Son `down()` ne retire aucune donnée et ne défait aucune migration antérieure.
+La migration du point 4 `ResumeGenericPermissions` reste séparée et intacte.
+Les trois fixtures de permissions reprennent la matrice complète.
+
+Vérification sans base : 125 tests ciblés de Policies et services réussis
+(639 assertions) avec `phpunit.unit.xml`, après les échecs RED attendus ;
+syntaxe valide sur les 53 fichiers PHP ajoutés ou modifiés du checkout et
+`git diff --check` sans erreur. Les nouveaux scénarios HTTP/API sont
+préparés mais non exécutés : leur bootstrap appliquerait les migrations.
+**Aucune migration n’a été appliquée à `daetf2_test` ni à `daetf`.** La
+validation sur base et la comparaison des accès restent aux points 6 et 7.
 
 ### Menu général et accès direct
 

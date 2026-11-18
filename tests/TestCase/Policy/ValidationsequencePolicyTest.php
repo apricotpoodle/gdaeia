@@ -6,13 +6,14 @@ namespace App\Test\TestCase\Policy;
 use App\Model\Entity\User;
 use App\Model\Entity\Validationsequence;
 use App\Policy\ValidationsequencePolicy;
+use App\Service\Security\PermissionResolver;
 use Cake\TestSuite\TestCase;
 
 class ValidationsequencePolicyTest extends TestCase
 {
     public function testLaGestionEstReserveeAuSuperUtilisateur(): void
     {
-        $policy = new ValidationsequencePolicy();
+        $policy = new ValidationsequencePolicy(new PermissionResolver([]));
         $sequence = new Validationsequence();
 
         $this->assertTrue($policy->canIndex(new User(['issuperuser' => true])));

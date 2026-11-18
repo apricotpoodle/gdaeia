@@ -15,18 +15,46 @@ final class UserDepartmentAuthorizationService
      * Vérifie qu'une mutation conserve toutes les associations dans le périmètre de l'opérateur.
      *
      * @param \App\Model\Entity\User $operator Opérateur courant.
-     * @param \App\Model\Entity\User $before État persistant avant mutation.
+     * @param list<int> $beforeDepartmentIds Identifiants instantanés avant mutation.
      * @param \App\Model\Entity\User $after État hydraté après mutation.
      * @return void
      */
-    public function assertMutationAllowed(User $operator, User $before, User $after): void
+    public function assertMutationAllowed(User $operator, array $beforeDepartmentIds, User $after): void
     {
         $departmentIds = array_values(array_unique(array_merge(
-            $this->departmentIds($before),
+            $beforeDepartmentIds,
             $this->departmentIds($after),
         )));
 
         $this->assertDepartmentIdsAllowed($operator, $departmentIds);
+    }
+
+    /**
+     * Capture les identifiants sans conserver de références aux entités associées.
+     *
+     * @param \App\Model\Entity\User $user Utilisateur inspecté.
+     * @return list<int>
+     */
+    public function snapshotDepartmentIds(User $user): array
+    {
+        return $this->departmentIds($user);
+    }
+
+    /**
+     * Indique si l’ensemble des départements change depuis un snapshot immuable.
+     *
+     * @param list<int> $beforeDepartmentIds Identifiants instantanés avant mutation.
+     * @param \App\Model\Entity\User $after État hydraté après mutation.
+     * @return bool
+     */
+    public function hasAssociationChanges(array $beforeDepartmentIds, User $after): bool
+    {
+        $beforeDepartmentIds = array_values(array_unique(array_map('intval', $beforeDepartmentIds)));
+        $afterDepartmentIds = $this->departmentIds($after);
+        sort($beforeDepartmentIds);
+        sort($afterDepartmentIds);
+
+        return $beforeDepartmentIds !== $afterDepartmentIds;
     }
 
     /**

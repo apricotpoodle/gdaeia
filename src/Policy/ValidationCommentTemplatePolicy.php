@@ -7,35 +7,35 @@ use App\Model\Entity\ValidationCommentTemplate;
 use Authorization\IdentityInterface;
 
 /** Politique du catalogue des commentaires prédéfinis de validation. */
-class ValidationCommentTemplatePolicy extends AppPolicy
+class ValidationCommentTemplatePolicy extends AdministrationPolicy
 {
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\ValidationCommentTemplate $template @return bool */
     public function canView(IdentityInterface $identity, ValidationCommentTemplate $template): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'validationcommenttemplates.read');
     }
 
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\ValidationCommentTemplate $template @return bool */
     public function canIndex(IdentityInterface $identity, ValidationCommentTemplate $template): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'validationcommenttemplates.read');
     }
 
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\ValidationCommentTemplate $template @return bool */
     public function canAdd(IdentityInterface $identity, ValidationCommentTemplate $template): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'validationcommenttemplates.create');
     }
 
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\ValidationCommentTemplate $template @return bool */
     public function canEdit(IdentityInterface $identity, ValidationCommentTemplate $template): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'validationcommenttemplates.update');
     }
 
     /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\ValidationCommentTemplate $template @return bool */
     public function canDelete(IdentityInterface $identity, ValidationCommentTemplate $template): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'validationcommenttemplates.delete');
     }
 }

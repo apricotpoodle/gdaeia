@@ -11,7 +11,7 @@ use Authorization\IdentityInterface;
  *
  * Politiques d'accès pour la gestion de la sécurité des champs.
  */
-class FieldAuthorizationPolicy extends AppPolicy
+class FieldAuthorizationPolicy extends AdministrationPolicy
 {
     /**
      * Autorisation pour la liste (index)
@@ -21,7 +21,7 @@ class FieldAuthorizationPolicy extends AppPolicy
      */
     public function canIndex(IdentityInterface $identity): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'fieldauthorizations.read');
     }
 
     /**
@@ -33,7 +33,7 @@ class FieldAuthorizationPolicy extends AppPolicy
      */
     public function canView(IdentityInterface $identity, FieldAuthorization $record): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'fieldauthorizations.read');
     }
 
     /**
@@ -44,7 +44,7 @@ class FieldAuthorizationPolicy extends AppPolicy
      */
     public function canAdd(IdentityInterface $identity): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'fieldauthorizations.create');
     }
 
     /**
@@ -56,7 +56,7 @@ class FieldAuthorizationPolicy extends AppPolicy
      */
     public function canEdit(IdentityInterface $identity, FieldAuthorization $record): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'fieldauthorizations.update');
     }
 
     /**
@@ -68,6 +68,6 @@ class FieldAuthorizationPolicy extends AppPolicy
      */
     public function canDelete(IdentityInterface $identity, FieldAuthorization $record): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'fieldauthorizations.delete');
     }
 }

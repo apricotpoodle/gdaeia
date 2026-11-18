@@ -16,6 +16,11 @@ class WorkflowSettingsControllerTest extends TestCase
      * @var array<string>
      */
     protected array $fixtures = [
+        'app.Users',
+        'app.Roles',
+        'app.Permissions',
+        'app.PermissionScopes',
+        'app.RolePermissions',
         'app.FieldDefinitions',
         'app.WorkflowSettings',
         'app.ValidationCommentTemplates',
@@ -164,5 +169,40 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->assertResponseCode(422);
         $this->assertResponseContains('"success":false');
         $this->assertResponseContains('liste est désormais versionnée');
+    }
+    public function testLaPermissionDeLectureAutoriseTousLesGetSansAutoriserLaModification(): void
+    {
+        $this->grant('read');
+        $this->session(['Auth' => new User(['id' => 1, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        foreach (['default-due-hours', 'blocked-after-business-days', 'comment-requirements',
+            'k-coefficient', 'duplicate-reset-fields'] as $action) {
+            $this->get('/api/workflow-settings/' . $action . '.json');
+            $this->assertResponseOk();
+        }
+        $settings = $this->getTableLocator()->get('WorkflowSettings');
+        $before = $settings->find()->disableHydration()->orderByAsc('id')->all()->toList();
+        $this->post('/api/workflow-settings/default-due-hours.json', ['default_due_hours' => 48]);
+        $this->assertResponseCode(403);
+        $this->assertSame($before, $settings->find()->disableHydration()->orderByAsc('id')->all()->toList());
+    }
+
+    public function testLaPermissionDeModificationNeDonnePasImplicitementLaLecture(): void
+    {
+        $this->grant('update');
+        $this->session(['Auth' => new User(['id' => 1, 'role_id' => 1])]);
+        $this->get('/api/workflow-settings/default-due-hours.json');
+        $this->assertResponseCode(403);
+    }
+
+    private function grant(string $action): void
+    {
+        $permission = $this->getTableLocator()->get('Permissions')->find()
+            ->where(['resource' => 'workflowsettings', 'action' => $action])->firstOrFail();
+        $grants = $this->getTableLocator()->get('RolePermissions');
+        $grants->saveOrFail($grants->newEntity([
+            'role_id' => 1, 'permission_id' => $permission->get('id'), 'scope_type' => 'unscoped',
+        ]));
     }
 }

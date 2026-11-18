@@ -8,6 +8,7 @@ use App\Model\Entity\Menu;
 use App\Model\Entity\Role;
 use App\Model\Entity\User;
 use App\Service\DataGrid\TabulatorAdapter;
+use App\Service\Security\MenuAccessService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Event\EventInterface;
 use Cake\Http\Exception\BadRequestException;
@@ -498,7 +499,7 @@ class MenusController extends AppController
             }
         }
 
-        $menus = $query->all()->toList();
+        $menus = (new MenuAccessService())->filter($query->all(), $user);
         $blockedValidationCount = 0;
         if ($user !== null && ($user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN))) {
             $blockedValidationCount = (new ApplicationformValidationWorkflow())->countBlockedCycles($user);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Model\Entity\User;
+use App\Service\Security\PermissionResolver;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
@@ -143,14 +144,50 @@ class UsersTable extends Table
      */
     public function findVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
-        if ($user->get(User::FIELD_ISSUPERUSER)) {
+        $permissions = new PermissionResolver();
+        if ($user->isSuperUser()) {
+            return $query;
+        }
+        // La Policy conserve aussi les restrictions historiques de consultation.
+        $conditions = [];
+        if ($permissions->allowsUser($user, 'users.read', $user)) {
+            $conditions[] = ['Users.id' => $user->id];
+        }
+        if ($user->hasRole(User::ALLOWED_ROLES_FOR_VIEW)) {
+            if ($permissions->allows($user, 'users.read', PermissionResolver::SCOPE_ALL)) {
+                return $query;
+            }
+            if ($permissions->allows($user, 'users.read', PermissionResolver::SCOPE_ASSIGNED)) {
+                $myDepartmentIds = $this->UserDepartments->find('departmentsOf', user: $user);
+                $sharedUserIds = $this->UserDepartments->find()->select(['user_id'])
+                    ->where(['department_id IN' => $myDepartmentIds]);
+                $conditions[] = ['Users.id IN' => $sharedUserIds];
+            }
+        }
+
+        return $query->where($conditions === [] ? ['1 = 0'] : ['OR' => $conditions]);
+    }
+
+    /**
+     * Conserve le périmètre historique des candidats aux associations.
+     * Les permissions de lecture ne doivent pas étendre les cibles de gestion.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête à filtrer.
+     * @param \App\Model\Entity\User $user Opérateur courant.
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
+     */
+    public function findAssociationVisibleTo(SelectQuery $query, User $user): SelectQuery
+    {
+        if ($user->isSuperUser()) {
             return $query;
         }
 
-        $myDepartmentIds = $this->UserDepartments->find('departmentsOf', user: $user);
+        $departmentIds = $this->UserDepartments->find('departmentsOf', user: $user);
 
-        return $query->innerJoinWith('UserDepartments', function ($q) use ($myDepartmentIds) {
-            return $q->where(['UserDepartments.department_id IN' => $myDepartmentIds]);
+        return $query->innerJoinWith('UserDepartments', static function (SelectQuery $associationQuery) use (
+            $departmentIds,
+        ): SelectQuery {
+            return $associationQuery->where(['UserDepartments.department_id IN' => $departmentIds]);
         })->distinct(['Users.id']);
     }
 
@@ -196,7 +233,7 @@ class UsersTable extends Table
             return $query;
         }
 
-        $query = $this->findVisibleTo($query, $user);
+        $query = $this->findAssociationVisibleTo($query, $user);
         $departments = TableRegistry::getTableLocator()->get('Departments');
         $departmentIds = $this->UserDepartments->find('departmentsOf', user: $user);
         $roots = $departments->find()
@@ -233,7 +270,7 @@ class UsersTable extends Table
      */
     public function findAssociatedWithDepartments(SelectQuery $query, array $departmentIds, User $user): SelectQuery
     {
-        return $this->findVisibleTo($query, $user)
+        return $this->findAssociationVisibleTo($query, $user)
             ->innerJoinWith('UserDepartments', function (
                 SelectQuery $associationQuery,
             ) use ($departmentIds): SelectQuery {
@@ -258,6 +295,6 @@ class UsersTable extends Table
             departmentIds: $departmentIds,
         );
 
-        return $this->findVisibleTo($query, $user)->where(['Users.id NOT IN' => $associatedUserIds]);
+        return $this->findAssociationVisibleTo($query, $user)->where(['Users.id NOT IN' => $associatedUserIds]);
     }
 }

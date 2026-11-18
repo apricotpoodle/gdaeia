@@ -101,7 +101,9 @@ class UsersController extends AppController
         $this->request->allowMethod(['post']);
         $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
 
-        $user = $this->Users->newEmptyEntity();
+        $before = $this->Users->newEmptyEntity();
+        $beforeDepartmentIds = $this->userDepartmentAuthorization->snapshotDepartmentIds($before);
+        $user = clone $before;
         $rawParams = $this->request->getData();
 
         // 💡 FIX : Maintien du tableau user_departments s'il est transmis
@@ -117,10 +119,13 @@ class UsersController extends AppController
         /** @var \App\Model\Entity\User $user */
 
         $operator = $this->request->getAttribute('identity')->getOriginalData();
-        $this->userDepartmentAuthorization->assertMutationAllowed($operator, $this->Users->newEmptyEntity(), $user);
+        $this->userDepartmentAuthorization->assertMutationAllowed($operator, $beforeDepartmentIds, $user);
+        if ($this->userDepartmentAuthorization->hasAssociationChanges($beforeDepartmentIds, $user)) {
+            $this->Authorization->authorize($user, 'associate');
+        }
         $this->userRoleAuthorization->assertMutationAllowed(
             $operator,
-            $this->Users->newEmptyEntity(),
+            $before,
             $user,
         );
         $this->Authorization->authorize($user, 'changeRole');
@@ -146,6 +151,7 @@ class UsersController extends AppController
         $user = $this->Users->get($id, contain: ['UserDepartments']);
         $this->Authorization->authorize($user, 'edit');
         $before = clone $user;
+        $beforeDepartmentIds = $this->userDepartmentAuthorization->snapshotDepartmentIds($user);
 
         $rawParams = $this->request->getData();
         // ==============================================================
@@ -158,7 +164,11 @@ class UsersController extends AppController
         );
 
         // 💡 FIX : Forcer la présence du tableau vide si tous les départements ont été décochés
-        if (!isset($rawParams['user_departments']) || $rawParams['user_departments'] === '') {
+        if (
+            array_key_exists(User::FIELD_USER_DEPARTMENTS, $rawParams)
+            && ($rawParams[User::FIELD_USER_DEPARTMENTS] === null
+                || $rawParams[User::FIELD_USER_DEPARTMENTS] === '')
+        ) {
             $rawParams['user_departments'] = [];
         }
 
@@ -174,7 +184,10 @@ class UsersController extends AppController
         /** @var \App\Model\Entity\User $user */
 
         $operator = $this->request->getAttribute('identity')->getOriginalData();
-        $this->userDepartmentAuthorization->assertMutationAllowed($operator, $before, $user);
+        $this->userDepartmentAuthorization->assertMutationAllowed($operator, $beforeDepartmentIds, $user);
+        if ($this->userDepartmentAuthorization->hasAssociationChanges($beforeDepartmentIds, $user)) {
+            $this->Authorization->authorize($user, 'associate');
+        }
         $this->userRoleAuthorization->assertMutationAllowed($operator, $before, $user);
         if (
             $before->get(User::FIELD_ROLE_ID) !== $user->get(User::FIELD_ROLE_ID)
@@ -230,6 +243,7 @@ class UsersController extends AppController
     public function bulkDepartments(): Response
     {
         $this->request->allowMethod(['post']);
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'associate');
 
         $rawParams = $this->request->getData();
         $userIds = $this->normalizePositiveIntegerList($rawParams['user_ids'] ?? null, 'user_ids');
@@ -298,7 +312,7 @@ class UsersController extends AppController
     public function bulkDepartmentsTree(): void
     {
         $this->request->allowMethod(['get']);
-        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'associate');
 
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
@@ -313,7 +327,7 @@ class UsersController extends AppController
     public function bulkDepartmentsUsers(): void
     {
         $this->request->allowMethod(['get']);
-        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'associate');
 
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
@@ -324,7 +338,7 @@ class UsersController extends AppController
                 departmentIds: $this->resolveAuthorizedDepartmentIds($selectedDepartmentIds, $currentUser),
                 user: $currentUser,
             )
-            : $this->Users->find('visibleTo', user: $currentUser);
+            : $this->Users->find('associationVisibleTo', user: $currentUser);
         $this->renderBulkDepartmentUsers($users
             ->contain(['Roles'])
             ->orderBy(['Users.lastname' => 'ASC', 'Users.firstname' => 'ASC']), $currentUser);
@@ -334,7 +348,7 @@ class UsersController extends AppController
     public function bulkDepartmentsAssignedUsers(): void
     {
         $this->request->allowMethod(['get']);
-        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'associate');
 
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();
@@ -345,7 +359,7 @@ class UsersController extends AppController
                 departmentIds: $this->resolveAuthorizedDepartmentIds($selectedDepartmentIds, $currentUser),
                 user: $currentUser,
             )
-            : $this->Users->find('visibleTo', user: $currentUser)->where(['Users.id IS' => null]);
+            : $this->Users->find('associationVisibleTo', user: $currentUser)->where(['Users.id IS' => null]);
         $this->renderBulkDepartmentUsers($users
             ->contain(['Roles'])
             ->orderBy(['Users.lastname' => 'ASC', 'Users.firstname' => 'ASC']), $currentUser);
@@ -462,7 +476,7 @@ class UsersController extends AppController
     private function updateBulkDepartmentAccess(bool $remove): Response
     {
         $this->request->allowMethod(['post']);
-        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'add');
+        $this->Authorization->authorize($this->Users->newEmptyEntity(), 'associate');
 
         /** @var \App\Model\Entity\User $currentUser */
         $currentUser = $this->request->getAttribute('identity')->getOriginalData();

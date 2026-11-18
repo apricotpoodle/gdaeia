@@ -6,13 +6,14 @@ namespace App\Test\TestCase\Policy;
 use App\Model\Entity\Role;
 use App\Model\Entity\User;
 use App\Policy\RolePolicy;
+use App\Service\Security\PermissionResolver;
 use Cake\TestSuite\TestCase;
 
 class RolePolicyTest extends TestCase
 {
     public function testSeulLeSuperAdministrateurGereLesRoles(): void
     {
-        $policy = new RolePolicy();
+        $policy = new RolePolicy(new PermissionResolver([]));
         $role = new Role(['base' => false]);
 
         $this->assertFalse($policy->canIndex(new User(['role_id' => User::ROLE_ADMIN])));
@@ -22,7 +23,7 @@ class RolePolicyTest extends TestCase
 
     public function testLeSuperAdministrateurPeutEditerUnRoleSocleSansLeSupprimer(): void
     {
-        $policy = new RolePolicy();
+        $policy = new RolePolicy(new PermissionResolver([]));
         $superAdministrator = new User(['issuperuser' => true]);
         $baseRole = new Role(['base' => true]);
 
@@ -33,7 +34,7 @@ class RolePolicyTest extends TestCase
 
     public function testToutesLesActionsSontRefuseesSansSuperUtilisateur(): void
     {
-        $policy = new RolePolicy();
+        $policy = new RolePolicy(new PermissionResolver([]));
         $role = new Role(['base' => false]);
         $operator = new User(['issuperuser' => false]);
 

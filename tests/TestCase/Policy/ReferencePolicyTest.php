@@ -12,6 +12,7 @@ use App\Policy\PeriodPolicy;
 use App\Policy\ProfessionalcategoryPolicy;
 use App\Policy\WorktimePolicy;
 use App\Policy\YesnoPolicy;
+use App\Service\Security\PermissionResolver;
 use Cake\TestSuite\TestCase;
 
 /** Vérifie la politique commune aux sept nomenclatures. */
@@ -19,7 +20,7 @@ class ReferencePolicyTest extends TestCase
 {
     public function testLeSuperAdministrateurGereUneReferenceNonSocle(): void
     {
-        $policy = new ContracttypePolicy();
+        $policy = new ContracttypePolicy(new PermissionResolver([]));
         $reference = new Contracttype(['base' => false]);
         $superAdministrator = new User(['issuperuser' => true]);
 
@@ -32,7 +33,7 @@ class ReferencePolicyTest extends TestCase
 
     public function testLesLignesSoclesEtLesOperateursSontProteges(): void
     {
-        $policy = new ContracttypePolicy();
+        $policy = new ContracttypePolicy(new PermissionResolver([]));
         $baseReference = new Contracttype(['base' => true]);
         $operator = new User(['issuperuser' => false]);
 
@@ -49,13 +50,13 @@ class ReferencePolicyTest extends TestCase
     {
         $superAdministrator = new User(['issuperuser' => true]);
         $policies = [
-            new ContracttypePolicy(),
-            new HiringreasonPolicy(),
-            new ProfessionalcategoryPolicy(),
-            new WorktimePolicy(),
-            new PeriodPolicy(),
-            new BudgetfeaturePolicy(),
-            new YesnoPolicy(),
+            new ContracttypePolicy(new PermissionResolver([])),
+            new HiringreasonPolicy(new PermissionResolver([])),
+            new ProfessionalcategoryPolicy(new PermissionResolver([])),
+            new WorktimePolicy(new PermissionResolver([])),
+            new PeriodPolicy(new PermissionResolver([])),
+            new BudgetfeaturePolicy(new PermissionResolver([])),
+            new YesnoPolicy(new PermissionResolver([])),
         ];
 
         foreach ($policies as $policy) {

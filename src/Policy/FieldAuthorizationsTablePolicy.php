@@ -12,7 +12,7 @@ use Authorization\IdentityInterface;
  * Cette policy reste distincte des capacités métier des demandes
  * implémentées par ApplicationformPolicy.
  */
-class FieldAuthorizationsTablePolicy extends AppPolicy
+class FieldAuthorizationsTablePolicy extends AdministrationPolicy
 {
     /**
      * Détermine si l'utilisateur peut lister les éléments (action index)
@@ -23,6 +23,6 @@ class FieldAuthorizationsTablePolicy extends AppPolicy
      */
     public function canIndex(IdentityInterface $identity, FieldAuthorizationsTable $table): bool
     {
-        return $this->isSuperUser($identity);
+        return $this->allowsAdministration($identity, 'fieldauthorizations.read');
     }
 }

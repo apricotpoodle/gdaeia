@@ -5,6 +5,7 @@ namespace App\Model\Table;
 
 use App\Model\Entity\Menu;
 use App\Model\Entity\User;
+use App\Service\Security\PermissionResolver;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
 use Cake\Validation\Validator;
@@ -123,8 +124,8 @@ class MenusTable extends AppTable
 
     /**
      * Limite les options administrables dans l'écran d'accès aux rôles.
-     * Le périmètre est volontairement identique à MenuPolicy : seuls les
-     * super-administrateurs et le rôle administrateur administrent les menus.
+     * Le périmètre reprend MenuPolicy : permission menus.manage et
+     * contournement explicite du super-administrateur.
      *
      * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête à filtrer.
      * @param \App\Model\Entity\User $user Opérateur connecté.
@@ -133,7 +134,7 @@ class MenusTable extends AppTable
     public function findRoleAccessVisibleTo(SelectQuery $query, User $user): SelectQuery
     {
         $query->where(['Menus.active' => true]);
-        if (!$user->get(User::FIELD_ISSUPERUSER) && $user->get(User::FIELD_ROLE_ID) !== User::ROLE_ADMIN) {
+        if (!(new PermissionResolver())->allows($user, 'menus.manage', PermissionResolver::SCOPE_UNSCOPED)) {
             $query->where(['1 = 0']);
         }
 

@@ -92,7 +92,8 @@ class ApplicationformsController extends AppController
         $cycles = (new ApplicationformValidationWorkflow())->findBlockedCycles($viewer);
         $size = max(1, (int)($this->request->getQuery('size') ?? 20));
         $page = max(1, (int)($this->request->getQuery('page') ?? 1));
-        $rows = array_map(static function (BlockedValidationCycle $cycle): array {
+        $authorization = $this->Authorization;
+        $rows = array_map(static function (BlockedValidationCycle $cycle) use ($authorization): array {
             return [
                 'id' => $cycle->applicationformNumber,
                 'number' => $cycle->applicationformNumber,
@@ -109,8 +110,8 @@ class ApplicationformsController extends AppController
                 'override_url' => $cycle->url,
                 'grid_rights' => [
                     'actions' => [
-                        'overrideValidation' => true,
-                        'resendValidation' => true,
+                        'overrideValidation' => $authorization->can($cycle->applicationform, 'overrideValidation'),
+                        'resendValidation' => $authorization->can($cycle->applicationform, 'remindValidation'),
                     ],
                 ],
             ];
@@ -143,11 +144,14 @@ class ApplicationformsController extends AppController
         if ($stepId === false || $stepId < 1) {
             return $this->workflowResponse(false, __('Étape de validation invalide.'), [], 422);
         }
-        $workflow = new ApplicationformValidationWorkflow();
         $isProxy = filter_var(
             $this->request->getData('override', false),
             FILTER_VALIDATE_BOOLEAN,
         );
+        if ($isProxy) {
+            $this->Authorization->authorize($applicationform, 'overrideValidation');
+        }
+        $workflow = new ApplicationformValidationWorkflow();
         $comment = (string)$this->request->getData('comment');
         try {
             $result = $workflow->vote(

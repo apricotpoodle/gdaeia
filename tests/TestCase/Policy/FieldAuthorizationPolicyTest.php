@@ -6,13 +6,14 @@ namespace App\Test\TestCase\Policy;
 use App\Model\Entity\FieldAuthorization;
 use App\Model\Entity\User;
 use App\Policy\FieldAuthorizationPolicy;
+use App\Service\Security\PermissionResolver;
 use Cake\TestSuite\TestCase;
 
 class FieldAuthorizationPolicyTest extends TestCase
 {
     public function testToutesLesActionsSontReserveesAuSuperUtilisateur(): void
     {
-        $policy = new FieldAuthorizationPolicy();
+        $policy = new FieldAuthorizationPolicy(new PermissionResolver([]));
         $record = new FieldAuthorization();
         $superUser = new User(['issuperuser' => true]);
         $operator = new User(['issuperuser' => false]);
