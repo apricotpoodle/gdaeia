@@ -1,6 +1,6 @@
 # 0028 — Améliorer l'IHM des autorisations de champs
 
-**Statut :** Partiel — code livré, tests d'acceptation à compléter
+**Statut :** Terminé — tests d'acceptation exécutés le 18 novembre 2026
 
 **Priorité :** Haute — fiabilité du paramétrage des habilitations
 
@@ -96,13 +96,13 @@ des doublons.
 
 ### Tests et documentation
 
-- [ ] Tester l'API de consultation des ressources, champs et sections actifs.
-- [ ] Tester la validation ORM des champs et sections inconnus, inactifs et
+- [x] Tester l'API de consultation des ressources, champs et sections actifs.
+- [x] Tester la validation ORM des champs et sections inconnus, inactifs et
   valides.
-- [ ] Tester l'ajout et l'édition Web avec changement de type et de ressource.
-- [ ] Tester le refus d'une requête fabriquée contenant une cible d'un autre
+- [x] Tester l'ajout et l'édition Web avec changement de type et de ressource.
+- [x] Tester le refus d'une requête fabriquée contenant une cible d'un autre
   type ou d'une autre ressource.
-- [ ] Tester la migration et la consultation des autorisations historiques
+- [x] Tester la migration et la consultation des autorisations historiques
   contenant des valeurs comme `job_section` et `rh_section`.
 - [x] Documenter le fonctionnement du référentiel dans le README local du
   domaine sécurité.
@@ -128,24 +128,23 @@ des doublons.
 
 ## Vérifications
 
-Exécuter les commandes adaptées via le Makefile racine :
+Commandes exécutées via le Makefile racine le 18 novembre 2026 :
 
-- `make test.api` pour les endpoints et formulaires Web ;
-- `make test.unit` pour les règles ORM et services de métadonnées ;
-- `make test.integration` pour les migrations et référentiels SQL ;
-- `make test.style` pour les tests ajoutés ;
-- `make cs.check` et `make stan` si du PHP est modifié.
+- `make test.unit` — 121 tests réussis ;
+- `make test.api` — 237 tests réussis ;
+- `make test.integration` — 183 tests et 624 assertions réussis ;
+- `make test.all` — 621 tests et 2 282 assertions réussis, migration historique incluse ;
+- `make test.style`, `make cs.check` et `make stan` — réussis ;
+- `node --test tests/js/field-authorizations-form.test.mjs` — 1 test réussi.
 
 ## Références
 
-L’implémentation introduit la migration `20261106100000`, le référentiel
+L’implémentation introduit la migration `20261106110000`, le référentiel
 `authorization_targets`, le catalogue JSON `get-form-schema.json` et le
-sélecteur partagé des formulaires d’ajout et d’édition. Les règles historiques
-restent éditables, tandis que les nouvelles cibles doivent être actives. Les
-tests présents couvrent le formulaire d'ajout, une cible inconnue et l'affichage
-d'un libellé de cible ; les tests d'acceptation des sections, cibles inactives,
-changements de formulaire, requêtes incohérentes et migration historique restent
-à ajouter.
+sélecteur partagé des formulaires d’ajout et d’édition. Les tests d’acceptation
+confirment que les cibles actives sont utilisables, que les nouvelles règles
+refusent les cibles inconnues ou inactives, et que les règles historiques
+restent consultables et modifiables sans changer leur identité.
 
 - `src/Controller/FieldAuthorizationsController.php`
 - `src/Controller/Api/FieldAuthorizationsController.php`

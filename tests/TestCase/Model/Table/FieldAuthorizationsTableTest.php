@@ -141,4 +141,161 @@ class FieldAuthorizationsTableTest extends TestCase
         $this->assertFalse($this->FieldAuthorizations->save($authorization));
         $this->assertArrayHasKey('target', $authorization->getErrors());
     }
+
+    public function testUnChampOrmActifEstAccepte(): void
+    {
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => 1,
+            'resource' => 'Applicationforms',
+            'target_type' => 'field',
+            'target' => 'department_id',
+            'access_level' => 'EDIT',
+        ]);
+
+        $savedAuthorization = $this->FieldAuthorizations->save($authorization);
+
+        $this->assertNotFalse($savedAuthorization);
+        $this->assertSame('department_id', $savedAuthorization->target);
+    }
+
+    public function testUneSectionFonctionnelleActiveEstAcceptee(): void
+    {
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => 1,
+            'resource' => 'Applicationforms',
+            'target_type' => 'section',
+            'target' => 'job_section',
+            'access_level' => 'EDIT',
+        ]);
+
+        $savedAuthorization = $this->FieldAuthorizations->save($authorization);
+
+        $this->assertNotFalse($savedAuthorization);
+        $this->assertSame('job_section', $savedAuthorization->target);
+    }
+
+    public function testUneSectionFonctionnelleInconnueEstRefusee(): void
+    {
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => 1,
+            'resource' => 'Applicationforms',
+            'target_type' => 'section',
+            'target' => 'unknown_section',
+            'access_level' => 'EDIT',
+        ]);
+
+        $this->assertFalse($this->FieldAuthorizations->save($authorization));
+        $this->assertArrayHasKey('target', $authorization->getErrors());
+    }
+
+    public function testUnChampOrmInactifEstRefusePourUneNouvelleAutorisation(): void
+    {
+        $fieldDefinitions = $this->getTableLocator()->get('FieldDefinitions');
+        $fieldDefinitions->updateAll(['active' => false], ['field' => 'department_id']);
+
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => 1,
+            'resource' => 'Applicationforms',
+            'target_type' => 'field',
+            'target' => 'department_id',
+            'access_level' => 'EDIT',
+        ]);
+
+        $this->assertFalse($this->FieldAuthorizations->save($authorization));
+        $this->assertArrayHasKey('target', $authorization->getErrors());
+    }
+
+    public function testUneSectionFonctionnelleInactiveEstRefuseePourUneNouvelleAutorisation(): void
+    {
+        $authorizationTargets = $this->getTableLocator()->get('AuthorizationTargets');
+        $authorizationTargets->updateAll(['active' => false], ['target' => 'job_section']);
+
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => 1,
+            'resource' => 'Applicationforms',
+            'target_type' => 'section',
+            'target' => 'job_section',
+            'access_level' => 'EDIT',
+        ]);
+
+        $this->assertFalse($this->FieldAuthorizations->save($authorization));
+        $this->assertArrayHasKey('target', $authorization->getErrors());
+    }
+
+    public function testUneAutorisationDeChampExistanteResteModifiableApresDesactivation(): void
+    {
+        $fieldDefinitions = $this->getTableLocator()->get('FieldDefinitions');
+        $fieldDefinitions->updateAll(['active' => false], ['field' => 'jobtitle']);
+        $authorization = $this->FieldAuthorizations->get(1);
+        $this->assertSame('jobtitle', $authorization->target);
+        $this->assertSame('field', $authorization->target_type);
+        $this->FieldAuthorizations->patchEntity($authorization, ['access_level' => 'EDIT']);
+
+        $savedAuthorization = $this->FieldAuthorizations->save($authorization);
+
+        $this->assertNotFalse($savedAuthorization);
+        $this->assertSame('EDIT', $savedAuthorization->access_level);
+    }
+
+    public function testModificationVersUnChampInactifEstRefusee(): void
+    {
+        $fieldDefinitions = $this->getTableLocator()->get('FieldDefinitions');
+        $fieldDefinitions->updateAll(
+            ['active' => false],
+            ['resource' => 'Applicationforms', 'field' => 'working_days'],
+        );
+        $authorization = $this->FieldAuthorizations->get(1);
+        $this->assertSame('jobtitle', $authorization->target);
+        $this->assertSame('field', $authorization->target_type);
+        $this->FieldAuthorizations->patchEntity($authorization, ['target' => 'working_days']);
+
+        $savedAuthorization = $this->FieldAuthorizations->save($authorization);
+
+        $this->assertFalse($savedAuthorization);
+        $this->assertArrayHasKey('target', $authorization->getErrors());
+    }
+
+    public function testUneAutorisationDeSectionExistanteResteModifiableApresDesactivation(): void
+    {
+        $authorization = $this->FieldAuthorizations->newEntity([
+            'role_id' => 1,
+            'resource' => 'Applicationforms',
+            'target_type' => 'section',
+            'target' => 'job_section',
+            'access_level' => 'EDIT',
+        ]);
+        $savedAuthorization = $this->FieldAuthorizations->save($authorization);
+        $this->assertNotFalse($savedAuthorization);
+
+        $authorizationTargets = $this->getTableLocator()->get('AuthorizationTargets');
+        $authorizationTargets->updateAll(['active' => false], ['target' => 'job_section']);
+        $inactiveSection = $authorizationTargets->find()->where([
+            'resource' => 'Applicationforms',
+            'target_type' => 'section',
+            'target' => 'job_section',
+        ])->first();
+        $this->assertNotNull($inactiveSection);
+        $this->assertFalse($inactiveSection->active);
+        $authorization = $this->FieldAuthorizations->get($savedAuthorization->id);
+        $this->assertFalse($authorization->isNew());
+        $this->assertSame('Applicationforms', $authorization->resource);
+        $this->assertSame('job_section', $authorization->target);
+        $this->assertSame('section', $authorization->target_type);
+        $this->assertSame('Applicationforms', $authorization->getOriginal('resource'));
+        $this->assertSame('section', $authorization->getOriginal('target_type'));
+        $this->assertSame('job_section', $authorization->getOriginal('target'));
+        $this->FieldAuthorizations->patchEntity($authorization, ['access_level' => 'VIEW']);
+        $this->assertFalse($authorization->isNew());
+        $this->assertSame('Applicationforms', $authorization->resource);
+        $this->assertSame('section', $authorization->target_type);
+        $this->assertSame('job_section', $authorization->target);
+        $this->assertSame('Applicationforms', $authorization->getOriginal('resource'));
+        $this->assertSame('section', $authorization->getOriginal('target_type'));
+        $this->assertSame('job_section', $authorization->getOriginal('target'));
+
+        $savedAuthorization = $this->FieldAuthorizations->save($authorization);
+
+        $this->assertNotFalse($savedAuthorization);
+        $this->assertSame('VIEW', $savedAuthorization->access_level);
+    }
 }

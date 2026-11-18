@@ -49,6 +49,6 @@ final class CreateAuthorizationTargetsAndNormalizeFieldAuthorizations extends Ba
             ->removeColumn('target_type')
             ->addIndex(['role_id', 'resource', 'field'], ['unique' => true, 'name' => 'role_id'])
             ->update();
-        $this->table('authorization_targets')->drop();
+        $this->table('authorization_targets')->drop()->save();
     }
 }

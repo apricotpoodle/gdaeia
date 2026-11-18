@@ -71,7 +71,10 @@ class FieldAuthorizationsTable extends Table
         if (!isset($data[FieldAuthorization::FIELD_TARGET]) && isset($data['field'])) {
             $data[FieldAuthorization::FIELD_TARGET] = $data['field'];
         }
-        if (!isset($data[FieldAuthorization::FIELD_TARGET_TYPE])) {
+        if (
+            !isset($data[FieldAuthorization::FIELD_TARGET_TYPE])
+            && (isset($data[FieldAuthorization::FIELD_TARGET]) || isset($data['field']))
+        ) {
             $data[FieldAuthorization::FIELD_TARGET_TYPE] = FieldAuthorization::TARGET_TYPE_FIELD;
         }
         $value = $data[FieldAuthorization::FIELD_ACCESS_LEVEL] ?? null;
@@ -162,7 +165,14 @@ class FieldAuthorizationsTable extends Table
                 return false;
             }
 
-            return (bool)$definition->get('active') || !$entity->isNew();
+            if ((bool)$definition->get('active')) {
+                return true;
+            }
+
+            return !$entity->isNew()
+                && $resource === (string)$entity->getOriginal(FieldAuthorization::FIELD_RESOURCE)
+                && $type === (string)$entity->getOriginal(FieldAuthorization::FIELD_TARGET_TYPE)
+                && $target === (string)$entity->getOriginal(FieldAuthorization::FIELD_TARGET);
         }, [
             'errorField' => FieldAuthorization::FIELD_TARGET,
             'message' => __('La cible sélectionnée est inconnue ou inactive.'),
