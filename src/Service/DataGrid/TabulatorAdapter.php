@@ -30,7 +30,7 @@ class TabulatorAdapter
      * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query La requête ORM initiale.
      * @param array<string, string> $fieldMap Correspondance entre champs JSON et champs ORM.
      * @param array<string, string> $sortFieldMap Correspondance spécifique aux tris.
-     * @param array<string, callable> $filterResolvers Résolution métier optionnelle des filtres.
+     * @param array<string, callable(mixed, string): array{0: string, 1: mixed, 2?: string}> $filterResolvers Résolution métier optionnelle des filtres.
      * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> La requête ORM modifiée.
      */
     public function adaptRequest(
@@ -87,10 +87,14 @@ class TabulatorAdapter
                     // Conserver ce test même si c'est censé être traité dans le front end
                     // Car on peut craindre un petit malin modifiant l'url = en like
                     $filterValue = $value;
+                    $filterOperator = $type;
                     if (isset($filterResolvers[$field])) {
                         $resolvedFilter = $filterResolvers[$field]($value, $type);
                         $ormField = $resolvedFilter[0];
                         $filterValue = $resolvedFilter[1];
+                        if (isset($resolvedFilter[2])) {
+                            $filterOperator = strtolower($resolvedFilter[2]);
+                        }
                     }
 
                     if (in_array(strtolower($field), ['id', 'level', 'validation_status'], true)) {
@@ -99,7 +103,7 @@ class TabulatorAdapter
                     }
 
                     // Traduction de l'opérateur Tabulator vers la clause ORM
-                    switch ($type) {
+                    switch ($filterOperator) {
                         case 'like':
                             $query->where([$ormField . ' LIKE' => '%' . $filterValue . '%']);
                             break;
@@ -109,7 +113,7 @@ class TabulatorAdapter
                         case '<=':
                         case '>':
                         case '>=':
-                            $query->where([$ormField . ' ' . $type => $filterValue]);
+                            $query->where([$ormField . ' ' . $filterOperator => $filterValue]);
                             break;
                         default:
                             $query->where([$ormField => $filterValue]);

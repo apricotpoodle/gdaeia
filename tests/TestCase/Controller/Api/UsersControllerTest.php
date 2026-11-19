@@ -48,6 +48,54 @@ class UsersControllerTest extends TestCase
         $this->assertTrue($body['data'][0]['is_manageable']);
     }
 
+    public function testLeFiltreAdminOuiRetourneUniquementLesSuperadministrateurs(): void
+    {
+        $this->getTableLocator()->get('Users')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $filters = http_build_query(['filters' => [[
+            'field' => 'issuperuser',
+            'type' => 'like',
+            'value' => 'true',
+        ]]]);
+
+        $this->get('/api/users.json?' . $filters);
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame([1], array_column($body['data'], 'id'));
+    }
+
+    public function testLeFiltreAdminNonRetourneUniquementLesUtilisateursOrdinaires(): void
+    {
+        $this->getTableLocator()->get('Users')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $filters = http_build_query(['filters' => [[
+            'field' => 'issuperuser',
+            'type' => 'like',
+            'value' => 'false',
+        ]]]);
+
+        $this->get('/api/users.json?' . $filters);
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame([2], array_column($body['data'], 'id'));
+    }
+
+    public function testLeFiltreAdminRefuseUneValeurBooleenneInvalide(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $filters = http_build_query(['filters' => [[
+            'field' => 'issuperuser',
+            'type' => 'like',
+            'value' => 'invalide',
+        ]]]);
+
+        $this->get('/api/users.json?' . $filters);
+
+        $this->assertResponseCode(422);
+    }
+
     public function testLesListesMassivesExposentLeStatutDeLectureSeule(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);

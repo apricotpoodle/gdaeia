@@ -128,6 +128,37 @@ class TabulatorAdapterTest extends TestCase
         );
     }
 
+    public function testLaRequetePeutImposerUnOperateurDepuisLeResolveurDeFiltre(): void
+    {
+        $query = $this->queryForAlias('Users');
+        $query->expects($this->once())->method('where')
+            ->with(['Users.issuperuser =' => false])
+            ->willReturnSelf();
+        $request = new ServerRequest([
+            'query' => [
+                'filters' => [[
+                    'field' => 'issuperuser',
+                    'type' => 'like',
+                    'value' => 'false',
+                ]],
+            ],
+        ]);
+
+        (new TabulatorAdapter())->adaptRequest(
+            $request,
+            $query,
+            [],
+            [],
+            [
+                'issuperuser' => static fn(mixed $value): array => [
+                    'Users.issuperuser',
+                    $value === 'false' ? false : true,
+                    '=',
+                ],
+            ],
+        );
+    }
+
     public function testLaRequeteTraduitUneBorneInferieureDePlageDeDates(): void
     {
         $query = $this->queryForAlias('Users');

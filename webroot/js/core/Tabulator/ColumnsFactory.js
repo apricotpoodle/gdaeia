@@ -103,7 +103,8 @@ export class ColumnsFactory {
             .setOptions({
                 width: 70,
                 widthGrow: 0,  // Un Id n'a pas besoin de s'étirer.
-                ...overrides
+                ...overrides,
+                headerFilterFunc: "=",
             })
             .build();
     }

@@ -13,6 +13,7 @@ use Cake\Event\EventInterface;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Exception\ForbiddenException;
 use Cake\Http\Exception\NotFoundException;
+use Cake\Http\Exception\UnprocessableContentException;
 use Cake\Http\Response;
 use Cake\Log\Log;
 use Cake\ORM\Query\SelectQuery;
@@ -396,7 +397,25 @@ class UsersController extends AppController
         $query = $this->Users->find('visibleTo', user: $currentUser)
             ->contain(['Roles', 'UserDepartments' => ['Departments']]);
 
-        $query = $adapter->adaptRequest($this->request, $query);
+        $query = $adapter->adaptRequest(
+            $this->request,
+            $query,
+            filterResolvers: [
+                User::FIELD_ISSUPERUSER => static function (mixed $value): array {
+                    if ($value === true || $value === 'true') {
+                        $normalizedValue = true;
+                    } elseif ($value === false || $value === 'false') {
+                        $normalizedValue = false;
+                    } else {
+                        throw new UnprocessableContentException(
+                            __('La valeur du filtre « Admin. » doit être « true » ou « false ».'),
+                        );
+                    }
+
+                    return ['Users.' . User::FIELD_ISSUPERUSER, $normalizedValue, '='];
+                },
+            ],
+        );
 
         try {
             $paginatedData = $this->paginate($query, [
