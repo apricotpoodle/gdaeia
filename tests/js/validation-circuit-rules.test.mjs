@@ -173,7 +173,7 @@ test('les listes de choix exposent les libellés échappés et les valeurs des o
     assert.equal(select.children[1].textContent, '<b>SGR</b>');
 });
 
-test('configure les deux grilles avec pagination, tri et filtres distants et texte sûr', () => {
+test('configure la pagination des règles et le défilement continu des habilitations avec tri et filtres distants', () => {
     const previousDocument = globalThis.document;
     const previousWindow = globalThis.window;
     const originalBuild = TabulatorBuilder.prototype.build;
@@ -183,12 +183,18 @@ test('configure les deux grilles avec pagination, tri et filtres distants et tex
     try {
         const rules = TabulatorFactory.createValidationCircuitRulesGrid();
         const managers = TabulatorFactory.createValidationCircuitManagersGrid();
+        assert.equal(rules.pagination, true);
+        assert.equal(rules.paginationMode, 'remote');
+        assert.equal(rules.sortMode, 'remote');
+        assert.equal(rules.filterMode, 'remote');
+        assert.equal(rules.progressiveLoad, undefined);
+        assert.equal(managers.pagination, undefined);
+        assert.equal(managers.paginationMode, 'remote');
+        assert.equal(managers.sortMode, 'remote');
+        assert.equal(managers.filterMode, 'remote');
+        assert.equal(managers.paginationSize, 20);
+        assert.equal(managers.progressiveLoad, 'scroll');
         for (const config of [rules, managers]) {
-            assert.equal(config.pagination, true);
-            assert.equal(config.paginationMode, 'remote');
-            assert.equal(config.sortMode, 'remote');
-            assert.equal(config.filterMode, 'remote');
-            assert.equal(config.progressiveLoad, undefined);
             assert.ok(config.columns.filter((column) => column.field !== 'configuration_issues')
                 .every((column) => column.formatter === 'plaintext'));
         }

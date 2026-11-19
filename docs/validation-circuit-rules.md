@@ -2,7 +2,10 @@
 
 La page **Règles locales de circuit** est accessible depuis la navigation aux
 opérateurs autorisés, ainsi que depuis les séquences pour les
-super-administrateurs. Les séquences et délais restent dans
+super-administrateurs. Elle présente deux onglets : **Règles locales**, actif
+à l’ouverture, regroupe la saisie, l’aperçu et les règles enregistrées ;
+**Habilitations** permet aux seuls opérateurs autorisés de gérer les rôles et
+départements habilités. Les séquences et délais restent dans
 `/validationsequences` ; les paramètres globaux dans `/workflow-settings`.
 
 ## Déployer
@@ -16,7 +19,9 @@ des habilitations locales. Elle a été validée sur `daetf2_test` ; elle n’a 
 ## Préparer les accès
 
 1. Un super-administrateur ouvre la section des habilitations locales.
-2. Il choisit un rôle gestionnaire et les départements exacts autorisés.
+2. Il choisit d'abord le rôle gestionnaire, puis les départements exacts
+   autorisés, avant de cliquer sur **Habiliter le rôle pour la sélection**,
+   placé en haut du formulaire.
 3. Il vérifie les rattachements explicites de l'opérateur dans
    `user_departments`. Une habilitation seule ne suffit pas.
 

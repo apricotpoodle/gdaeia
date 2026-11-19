@@ -243,9 +243,11 @@ Pour abandonner la barre de pagination classique au profit d'un défilement inin
 
 ## Grilles des circuits locaux
 
-Les fabriques des règles et des gestionnaires conservent pagination, tri et
-filtres distants. La colonne `configuration_issues` affiche les diagnostics
-comme texte DOM, sans interpréter de HTML ni proposer de tri/filtre calculé.
-Les modules de page dans `views/ValidationCircuitRules/` réutilisent le client
-de mutation, les métadonnées d'actions et deux sélections explicites distinctes
-pour les règles et les habilitations. Aucun descendant futur n'est implicite.
+La grille des règles locales conserve la pagination, le tri et les filtres
+distants. La grille des habilitations charge les données au défilement continu
+par lots de 20 lignes, avec le tri et les filtres distants. La colonne
+`configuration_issues` affiche les diagnostics comme texte DOM, sans
+interpréter de HTML ni proposer de tri/filtre calculé. Les modules de page dans
+`views/ValidationCircuitRules/` réutilisent le client de mutation, les
+métadonnées d'actions et deux sélections explicites distinctes pour les règles
+et les habilitations. Aucun descendant futur n'est implicite.

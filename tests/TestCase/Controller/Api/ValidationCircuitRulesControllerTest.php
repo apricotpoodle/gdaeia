@@ -6,6 +6,8 @@ namespace App\Test\TestCase\Controller\Api;
 use App\Model\Entity\User;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use DOMDocument;
+use DOMXPath;
 
 /** Vérifie les périmètres locaux et l'atomicité de l'administration HTTP. */
 final class ValidationCircuitRulesControllerTest extends TestCase
@@ -121,7 +123,46 @@ final class ValidationCircuitRulesControllerTest extends TestCase
         $this->login(true);
         $this->get('/validation-circuit-rules');
         $this->assertResponseOk();
-        $this->assertResponseContains('id="validation-circuit-manager-form"');
+        $xpath = $this->responseXPath();
+        $this->assertHtmlNodeCount($xpath, '//*[@role="tab"]', 2);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-rules-tab" and @aria-selected="true"]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-rules-panel"]//*[@id="validation-circuit-rule-form"]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-rules-card"]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-editor-column" and contains(concat(" ", normalize-space(@class), " "), " col-12 ") and contains(concat(" ", normalize-space(@class), " "), " col-lg-6 ")]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-rules-grid-column" and contains(concat(" ", normalize-space(@class), " "), " col-12 ") and contains(concat(" ", normalize-space(@class), " "), " col-lg-6 ")]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-rules-card"]//*[@id="validation-circuit-editor-column"]//*[@id="validation-circuit-rule-form"]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-rules-card"]//*[@id="validation-circuit-rules-grid-column"]//*[@id="validation-circuit-rules-grid"]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-departments-column" and contains(concat(" ", normalize-space(@class), " "), " col-12 ")]//*[@id="validation-circuit-departments"]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-contracttype-column" and contains(concat(" ", normalize-space(@class), " "), " col-md-6 ")]/ancestor::div[contains(concat(" ", normalize-space(@class), " "), " row ")][1]//*[@id="validation-circuit-final-role-column" and contains(concat(" ", normalize-space(@class), " "), " col-md-6 ")]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-editor-column"]//*[@id="validation-circuit-preview"]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-managers-panel"]//*[@id="validation-circuit-manager-form"]', 1);
+        $this->assertHtmlNodeCount(
+            $xpath,
+            '//*[@id="validation-circuit-manager-form-column"]//button[@id="assign-validation-circuit-managers"]',
+            1,
+        );
+        $this->assertHtmlNodeCount(
+            $xpath,
+            '//*[@id="assign-validation-circuit-managers"]/following::select[@id="validation-circuit-manager-role"]'
+                . '[ancestor::*[@id="validation-circuit-manager-form-column"]]',
+            1,
+        );
+        $this->assertHtmlNodeCount(
+            $xpath,
+            '//*[@id="validation-circuit-manager-role"]/following::*[@id="validation-circuit-manager-departments"]'
+                . '[ancestor::*[@id="validation-circuit-manager-form-column"]]',
+            1,
+        );
+        $this->assertHtmlNodeCount(
+            $xpath,
+            '//*[@id="validation-circuit-managers-grid-column"]//h4[@id="validation-circuit-managers-grid-title"]',
+            1,
+        );
+        $this->assertHtmlNodeCount(
+            $xpath,
+            '//*[@id="validation-circuit-managers-grid-column"]//*[@id="validation-circuit-managers-grid"]',
+            1,
+        );
         $this->post('/api/validation-circuit-rules/managers/assign.json', ['department_ids' => [2], 'role_id' => 1]);
         $this->assertResponseOk();
         $this->get('/api/validation-circuit-rules/managers.json?size=1');
@@ -211,8 +252,13 @@ final class ValidationCircuitRulesControllerTest extends TestCase
         $this->session(['Auth' => new User(['id' => 1, 'role_id' => 2, 'issuperuser' => false])]);
         $this->get('/validation-circuit-rules');
         $this->assertResponseOk();
-        $this->assertResponseContains('id="validation-circuit-rule-form"');
-        $this->assertResponseNotContains('id="validation-circuit-manager-form"');
+        $xpath = $this->responseXPath();
+        $this->assertHtmlNodeCount($xpath, '//*[@role="tab"]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-rules-tab" and @aria-selected="true"]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-rules-panel"]//*[@id="validation-circuit-rule-form"]', 1);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-managers-tab"]', 0);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-managers-panel"]', 0);
+        $this->assertHtmlNodeCount($xpath, '//*[@id="validation-circuit-manager-form"]', 0);
         $this->post('/api/validation-circuit-rules/add.json', $this->ruleData([2]));
         $this->assertResponseOk();
         $this->get('/api/validation-circuit-rules.json');
@@ -238,6 +284,27 @@ final class ValidationCircuitRulesControllerTest extends TestCase
                 'created' => '2026-11-06 10:00:00', 'modified' => '2026-11-06 10:00:00',
             ],
         );
+    }
+
+    private function assertHtmlNodeCount(DOMXPath $xpath, string $query, int $expected): void
+    {
+        $nodes = $xpath->query($query);
+        $this->assertNotFalse($nodes);
+        $this->assertSame($expected, $nodes->length);
+    }
+
+    private function responseXPath(): DOMXPath
+    {
+        $document = new DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        try {
+            $this->assertTrue($document->loadHTML((string)$this->_response->getBody()));
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+        }
+
+        return new DOMXPath($document);
     }
 
     /** @param list<int> $departmentIds @return array<string, mixed> */

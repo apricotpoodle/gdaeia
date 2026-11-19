@@ -578,8 +578,8 @@ export class TabulatorFactory {
         return this._createActionGrid(selector)
             .setAjaxSource('/api/validation-circuit-rules/managers.json')
             .setController('validation-circuit-rules')
-            .setRemotePagination()
-            .setHeight('300px')
+            .setContinuousScroll(20)
+            .setHeight('800px')
             .addOptions({ persistence: false })
             .setColumns([
                 ColumnsFactory.text('department.name', 'Département', { formatter: 'plaintext' }),
