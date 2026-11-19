@@ -173,7 +173,7 @@ test('les listes de choix exposent les libellés échappés et les valeurs des o
     assert.equal(select.children[1].textContent, '<b>SGR</b>');
 });
 
-test('configure la pagination des règles et le défilement continu des habilitations avec tri et filtres distants', () => {
+test('configure le défilement continu des règles et habilitations avec tri et filtres distants', () => {
     const previousDocument = globalThis.document;
     const previousWindow = globalThis.window;
     const originalBuild = TabulatorBuilder.prototype.build;
@@ -183,11 +183,13 @@ test('configure la pagination des règles et le défilement continu des habilita
     try {
         const rules = TabulatorFactory.createValidationCircuitRulesGrid();
         const managers = TabulatorFactory.createValidationCircuitManagersGrid();
-        assert.equal(rules.pagination, true);
+        assert.equal(rules.pagination, undefined);
         assert.equal(rules.paginationMode, 'remote');
         assert.equal(rules.sortMode, 'remote');
         assert.equal(rules.filterMode, 'remote');
-        assert.equal(rules.progressiveLoad, undefined);
+        assert.equal(rules.paginationSize, 40);
+        assert.equal(rules.progressiveLoad, 'scroll');
+        assert.equal(rules.height, '800px');
         assert.equal(managers.pagination, undefined);
         assert.equal(managers.paginationMode, 'remote');
         assert.equal(managers.sortMode, 'remote');
