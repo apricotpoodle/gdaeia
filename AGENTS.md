@@ -1,5 +1,10 @@
 # Instructions pour les contributeurs et les agents
 
+## Langue des échanges
+
+- Répondre en français dans tous les échanges, quelle que soit la langue de la demande, y compris pendant la planification, les mises à jour intermédiaires et la réponse finale.
+- Ne passer à une autre langue que si l’utilisateur le demande explicitement. Si un livrable est demandé dans une autre langue, le rédiger dans cette langue et garder les explications en français.
+
 ## Isolation par branche Git
 
 Avant de modifier un fichier :
@@ -65,12 +70,12 @@ Utiliser le format suivant :
 ```text
 <type>(<scope>): <description française à l'infinitif>
 
-<corps facultatif : problème, décision et effets de bord>
+<corps obligatoire: quoi, pourquoi, problème, décision et effets de bord>
 
 <pied facultatif : BREAKING CHANGE, Fixes #…, Refs #…>
 ```
 
-Le corps est recommandé pour un changement complexe. Il explique le quoi et
+Le corps est obligatoire. Il explique le quoi et
 le pourquoi, et ses lignes ne dépassent pas 72 caractères. Le pied permet de
 référencer des tickets ou une rupture de compatibilité.
 
