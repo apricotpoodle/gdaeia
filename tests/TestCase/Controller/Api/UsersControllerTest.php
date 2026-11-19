@@ -24,6 +24,9 @@ class UsersControllerTest extends TestCase
         'app.Roles',
         'app.Departments',
         'app.UserDepartments',
+        'app.Permissions',
+        'app.PermissionScopes',
+        'app.Role1Permissions',
     ];
 
     public function testLApiDesUtilisateursSignaleUnePerteDeSessionEnJson(): void
@@ -210,7 +213,14 @@ class UsersControllerTest extends TestCase
 
     public function testLeLienDAssociationDesDepartementsEstMasqueSansDroitDeCreation(): void
     {
-        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
+        $permission = $this->getTableLocator()->get('Permissions')->find()
+            ->where(['resource' => 'users', 'action' => 'create'])
+            ->firstOrFail();
+        $this->getTableLocator()->get('RolePermissions')->deleteAll([
+            'role_id' => User::ROLE_ADMIN,
+            'permission_id' => $permission->get('id'),
+        ]);
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_ADMIN])]);
 
         $this->get('/users');
 

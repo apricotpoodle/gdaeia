@@ -18,6 +18,8 @@ class ApplicationformPolicyTest extends TestCase
         'app.ValidationWorkflowRuns',
         'app.Applicationforms',
         'app.Users',
+        'app.Permissions',
+        'app.ApplicationformPolicyRolePermissions',
         'app.Roles',
     ];
 
@@ -33,7 +35,10 @@ class ApplicationformPolicyTest extends TestCase
     {
         $applicationform = new Applicationform(['id' => 42, 'user_id' => 10]);
 
-        $this->assertTrue($this->policy->canEdit(new User(['id' => 10]), $applicationform));
+        $this->assertTrue($this->policy->canEdit(new User([
+            'id' => 10,
+            'role_id' => User::ROLE_DEMANDEUR,
+        ]), $applicationform));
         $this->assertFalse($this->policy->canEdit(new User(['id' => 11, 'role_id' => User::ROLE_ADMIN]), $applicationform));
         $this->assertTrue($this->policy->canEdit(new User(['id' => 11, 'issuperuser' => true]), $applicationform));
     }

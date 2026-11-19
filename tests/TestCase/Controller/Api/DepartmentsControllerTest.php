@@ -14,6 +14,7 @@ final class DepartmentsControllerTest extends TestCase
 
     protected array $fixtures = [
         'app.Users',
+        'app.Roles',
         'app.Departments',
         'app.CgrCodes',
         'app.DepartmentCgrCodes',
@@ -24,7 +25,7 @@ final class DepartmentsControllerTest extends TestCase
         'app.Validationsequences',
         'app.Permissions',
         'app.PermissionScopes',
-        'app.RolePermissions',
+        'app.Role1Permissions',
     ];
 
     public function testUnOperateurNePeutPasAccederAAdministrationDesDepartements(): void

@@ -2,8 +2,9 @@
 
 Cette synthèse combine l'état des tickets racine relevé le 5 novembre 2026,
 un audit ciblé effectué le **17 novembre 2026** sur les tickets 0017 à 0021,
-0027 à 0029 et l'étape 6 du ticket 0026, et la clôture vérifiée des tickets
-0027 et 0028 le **18 novembre 2026**. Les statuts décrivent le travail restant.
+0027 à 0029 et l'étape 6 du ticket 0026, la clôture vérifiée des tickets 0027
+et 0028 le **18 novembre 2026**, et l'audit partiel du point 7 du ticket 0007
+effectué le **19 novembre 2026**. Les statuts décrivent le travail restant.
 
 ## Vue d'ensemble
 
@@ -27,7 +28,7 @@ Le ticket 0040 est un bonus facultatif et n'entre pas dans ces totaux.
 |---|---|---|
 | [0001 — Gestionnaire de tickets](0001-mettre-en-place-un-gestionnaire-de-tickets.md) | À faire | Choisir et mettre en service l'outil, migrer les fiches actives et décider du sort de `docs/backlog/`. |
 | [0002 — Couverture de tests](0002-etendre-la-couverture-de-tests.md) | Partiel | Mesurer la couverture cible, décider de l'automatisation des seuils et traiter l'écart restant. PCOV et les rapports Clover/HTML existent déjà. |
-| [0007 — Accès menus et permissions](0007-separer-acces-menus-et-permissions-administration.md) | Prêt | Réaliser la feuille de route en sept étapes : inventaire, matrice, migration répétable, transition des menus, généralisation par domaine, complément de `daetf` par migration et API protégée, puis comparaison des accès et clôture. Le vertical départements livré par 0021 ne clôt pas ce ticket. |
+| [0007 — Accès menus et permissions](0007-separer-acces-menus-et-permissions-administration.md) | Terminé | L'audit en lecture seule couvre les 93 comptes actifs retenus comme référence ; l'estimation initiale de 95 était erronée. Seuls les refus attendus sur les menus 7, 8 et 15 sont constatés, sans accès ajouté. Les 22 menus sans permission requise restent filtrés par `role_menus` jusqu'à une migration distincte. |
 | [0017 — Circuits courts locaux](0017-implementer-les-circuits-courts-locaux.md) | Implémenté, configuration à faire | Saisir les règles et rattachements SEM retenus dans l'environnement convenu ; aucune règle métier n'est créée automatiquement. L'ADR 0074 reste proposé. |
 | [0027 — Création par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) | Terminé | Parcours HTTP d'affichage et de création réussie par un demandeur couvert, avec attribution automatique de `user_id` ; `make test.api` réussit avec 238 tests et 1 015 assertions. |
 | [0028 — IHM des autorisations de champs](0028-ameliorer-ihm-autorisations-champs.md) | Terminé | Tests ORM, API/Web et migration historique exécutés ; `make test.all` réussit avec 621 tests et 2 282 assertions sur `daetf2_test`. |

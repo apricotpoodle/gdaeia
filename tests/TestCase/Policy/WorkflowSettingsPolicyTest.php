@@ -6,8 +6,8 @@ namespace App\Test\TestCase\Policy;
 use App\Model\Entity\User;
 use App\Model\Entity\WorkflowSetting;
 use App\Policy\WorkflowSettingPolicy;
-use Authorization\IdentityInterface;
 use App\Service\Security\PermissionResolver;
+use Authorization\IdentityInterface;
 use Cake\TestSuite\TestCase;
 
 /** Vérifie les droits de paramétrage global du workflow. */

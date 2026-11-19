@@ -35,7 +35,7 @@ class DepartmentsTableTest extends TestCase
         'app.Applicationforms',
         'app.Permissions',
         'app.PermissionScopes',
-        'app.RolePermissions',
+        'app.DepartmentFinderRolePermissions',
     ];
 
     /**

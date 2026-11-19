@@ -39,7 +39,7 @@ final class MenuAccessService
             }
         }
 
-        return $this->filterTree($menus, $user, array_map('intval', $allowedIds), $codes);
+        return $this->filterTree($menus, $user, array_values(array_map('intval', $allowedIds)), $codes);
     }
 
     /**

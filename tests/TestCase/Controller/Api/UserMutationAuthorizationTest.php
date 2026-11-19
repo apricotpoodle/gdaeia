@@ -17,6 +17,9 @@ final class UserMutationAuthorizationTest extends TestCase
         'app.Roles',
         'app.Departments',
         'app.UserDepartments',
+        'app.Permissions',
+        'app.PermissionScopes',
+        'app.Role1Permissions',
     ];
 
     protected function setUp(): void
@@ -311,6 +314,7 @@ final class UserMutationAuthorizationTest extends TestCase
                     $this->getTableLocator()->get('UserDepartments')->find()
                         ->select(['department_id'])
                         ->where(['user_id' => 2])
+                        ->all()
                         ->extract('department_id')
                         ->map(static fn(mixed $id): int => (int)$id)
                         ->toList(),

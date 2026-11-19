@@ -16,7 +16,7 @@ final class PermissionsControllerTest extends TestCase
         'app.Roles',
         'app.Permissions',
         'app.PermissionScopes',
-        'app.RolePermissions',
+        'app.Role1Permissions',
     ];
 
     public function testLeCatalogueEstAccessibleAuSuperAdministrateur(): void

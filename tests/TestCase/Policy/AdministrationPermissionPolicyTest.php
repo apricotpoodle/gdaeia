@@ -44,17 +44,19 @@ final class AdministrationPermissionPolicyTest extends TestCase
                 yield $policy . $method => [$policy, Contracttype::class, $method, 'references.' . $action];
             }
         }
-        foreach ([
-            [CgrCodePolicy::class, CgrCode::class, 'references', $crud + ['canDeactivate' => 'delete']],
-            [RolePolicy::class, Role::class, 'roles', $crud],
-            [FieldAuthorizationPolicy::class, FieldAuthorization::class, 'fieldauthorizations', $crud],
-            [FieldAuthorizationsTablePolicy::class, FieldAuthorizationsTable::class,
-                'fieldauthorizations', ['canIndex' => 'read']],
-            [ValidationCommentTemplatePolicy::class, ValidationCommentTemplate::class,
-                'validationcommenttemplates', $crud],
-            [WorkflowSettingPolicy::class, WorkflowSetting::class,
-                'workflowsettings', ['canIndex' => 'read', 'canManage' => 'update']],
-        ] as [$policy, $entity, $resource, $actions]) {
+        foreach (
+            [
+                [CgrCodePolicy::class, CgrCode::class, 'references', $crud + ['canDeactivate' => 'delete']],
+                [RolePolicy::class, Role::class, 'roles', $crud],
+                [FieldAuthorizationPolicy::class, FieldAuthorization::class, 'fieldauthorizations', $crud],
+                [FieldAuthorizationsTablePolicy::class, FieldAuthorizationsTable::class,
+                    'fieldauthorizations', ['canIndex' => 'read']],
+                [ValidationCommentTemplatePolicy::class, ValidationCommentTemplate::class,
+                    'validationcommenttemplates', $crud],
+                [WorkflowSettingPolicy::class, WorkflowSetting::class,
+                    'workflowsettings', ['canIndex' => 'read', 'canManage' => 'update']],
+            ] as [$policy, $entity, $resource, $actions]
+        ) {
             foreach ($actions as $method => $action) {
                 yield $policy . $method => [$policy, $entity, $method, $resource . '.' . $action];
             }

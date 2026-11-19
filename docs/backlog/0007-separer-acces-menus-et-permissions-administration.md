@@ -1,6 +1,6 @@
 # 0007 — Séparer les accès aux menus des permissions d'administration
 
-**Statut :** Prêt
+**Statut :** Terminé
 
 **Priorité :** Haute
 
@@ -190,16 +190,15 @@ Le point de départ connu de la base de développement `daetf` est de
 **3 permissions**, **5 périmètres admissibles**, **2 attributions de rôle** et
 **28 associations `role_menus`**. La colonne `menus.required_permission_id`
 n'existe pas encore. Ces constats ne constituent pas une reprise complète.
-Les étapes suivantes restent à réaliser ; leur décomposition rend le ticket
-prêt, sans démarrer son implémentation.
+Les sept points sont réalisés et documentés ci-dessous.
 
 - [x] **1. Inventorier l'existant.** Relever les permissions et règles dans les Policies, finders et routes Web/API ; comparer le comportement au catalogue, aux périmètres et attributions de `daetf` et aux 28 associations `role_menus`. Examiner séparément `department_id` et les destinations partagées ; distinguer les droits déductibles des exceptions à arbitrer.
 - [x] **2. Fixer la matrice des permissions.** Définir pour chaque capacité son code, ses périmètres admissibles et ses attributions aux rôles, conformément à l'ADR 0069. Préserver le refus d'administration des menus pour l'Admin ordinaire du ticket 0006 et l'exception explicite du super-administrateur.
 - [x] **3. Automatiser la reprise des données.** Écrire une migration répétable qui préserve les lignes existantes et complète le catalogue `permissions`, les périmètres admissibles `permission_scopes` et les attributions déterminables `role_permissions`. Ajouter `menus.required_permission_id` et les liens menu déductibles sans ambiguïté ; signaler les autres. Ne pas attribuer `menus.manage` à l'Admin ordinaire.
 - [x] **4. Sécuriser la transition des menus.** Vérifier les mêmes permissions pour la visibilité et l'entrée directe par URL/API, avec les Policies et périmètres applicables. Traiter les rubriques sans destination et les associations non migrables automatiquement. Garder `role_menus` jusqu'à validation de la comparaison des droits avant/après.
 - [x] **5. Généraliser par domaine.** Avancer par volets indépendamment vérifiables : utilisateurs et périmètres ; DAE et règles de workflow ; puis références et autres fonctions d'administration. Conserver les invariants métier et du workflow dans leurs Policies et services, ainsi que les protections de champs et d'usurpation.
-- [ ] **6. Compléter la base de développement.** Valider la migration sur `daetf2_test`, vérifier explicitement la connexion cible, puis l'appliquer à `daetf`. Configurer uniquement les attributions exceptionnelles non déductibles avec l'API protégée existante et les consigner ; ne pas utiliser de SQL manuel. La page Web du catalogue reste en lecture seule, sans nouvelle interface de gestion.
-- [ ] **7. Vérifier et clôturer.** Comparer les accès avant/après pour les comptes et périmètres repris, documenter les écarts et exceptions validés, puis actualiser les critères d'acceptation et le statut pour clôturer le ticket. Prévoir les vérifications unitaires, d'intégration et HTTP/API ci-dessous, puis `make test.all` sur `daetf2_test`.
+- [x] **6. Compléter la base de développement.** Valider les migrations sur `daetf2_test`, vérifier explicitement la cible par défaut, puis les appliquer à `daetf`. La reprise ajoute uniquement les attributions de la matrice : aucune attribution exceptionnelle supplémentaire n'est approuvée pour ce point. Le catalogue Web reste en lecture seule, sans nouvelle interface de gestion.
+- [x] **7. Vérifier et clôturer.** Comparer les accès avant/après pour les comptes et périmètres repris, documenter les écarts et exceptions validés, puis actualiser les critères d'acceptation et le statut pour clôturer le ticket. Prévoir les vérifications unitaires, d'intégration et HTTP/API ci-dessous, puis `make test.all` sur `daetf2_test`.
 
 ### Résultats du point 1 — 18 novembre 2026
 
@@ -552,6 +551,93 @@ fixtures ne sont pas exécutés, car leur bootstrap appliquerait les migrations.
 unitaire ; l’application et les contrôles sur base restent au point 6, et
 la comparaison fonctionnelle ainsi que la clôture restent au point 7. Ces
 deux étapes restent ouvertes.
+
+### Résultats du point 6 — 19 novembre 2026
+
+`make test.database.check` a confirmé que la connexion de test cible
+`daetf2_test`. `make test.integration` a réussi avec **183 tests et 624
+assertions**. Les migrations `20261118140000_ResumeGenericPermissions` et
+`20261118150000_GeneralizeDomainPermissions` sont en état `up` sur cette base,
+dans `cake_migrations`.
+
+La connexion par défaut a été vérifiée sur `daetf`. `make db.migrate` a
+appliqué les deux migrations dans l'historique `phinxlog` existant, sans le
+convertir. Elles sont toutes deux en état `up`. Les migrations n'ont signalé
+aucune exception préexistante à la matrice. L'inventaire confirme **42
+permissions**, **52 périmètres admissibles** et **76 attributions**, réparties
+entre les rôles 1 à 7 selon les comptes 22, 8, 9, 9, 9, 9 et 10. Les rôles 90
+et 91 n'ont aucune attribution.
+
+La reprise a laissé **22 options de menu** sans permission requise, car leur
+destination n'est pas couverte par la correspondance univoque : identifiants
+1, 5, 6, 9, 10, 11, 14, 16, 17, 19, 21, 22, 23, 24, 26, 27, 28, 29, 30, 31,
+32 et 33. `role_menus` n'a pas été modifié. Aucune attribution n'a été créée
+via l'API et aucune mutation SQL manuelle n'a été effectuée. Le point 7 reste
+ouvert pour comparer les accès avant/après et traiter les options non liées.
+
+Vérifications complémentaires : `make test.unit` réussit (**214 tests**),
+`make test.style` et `make cs.check` réussissent. `make stan` signale deux
+erreurs préexistantes dans `ValidationsequencesController::readDepartmentConditions()`
+et `MenuAccessService::filter()` ; ces classes n'ont pas été modifiées au
+point 6.
+
+### Résultats du point 7 — 19 novembre 2026
+
+L'audit est resté en lecture seule sur la base par défaut `daetf`. Les deux
+migrations de permissions, `20261118140000_ResumeGenericPermissions` et
+`20261118150000_GeneralizeDomainPermissions`, sont en état `up` dans l'historique
+`phinxlog`, qui reste le mécanisme historique de cette base. Les agrégats
+confirment 42 permissions, 52 périmètres, 76 attributions, 33 menus et
+28 associations `role_menus`. Les 22 menus sans permission requise conservent
+le filtrage historique ; aucune table ni attribution n'a été modifiée, aucune
+attribution n'a été créée via l'API ni par SQL manuel.
+
+Le plan initial mentionnait **95 comptes actifs**, mais le décompte vérifié
+retient **93 comptes actifs** selon le critère `users.deleted IS NULL`.
+L'estimation de 95 était erronée ; l'audit couvre les 93 comptes présents dans
+la population de référence retenue. Parmi eux, **3 sont super-administrateurs**
+(`issuperuser = 1`, deux du rôle 1 et un du rôle 2). Aucun nom ni identifiant
+de compte n'est consigné.
+
+Répartition agrégée par rôle, statut de super-administrateur et nombre exact
+de départements associés (le nombre après `→` indique les comptes) :
+
+| Rôle | Super-administrateur | Départements associés → comptes |
+|---:|---|---|
+| 1 | Non | 1 → 1 ; 2 → 1 ; 4 → 3 ; 51 → 1 ; 66 → 1 |
+| 1 | Oui | 0 → 1 ; 4 → 1 |
+| 2 | Non | 0 → 5 ; 1 → 39 ; 2 → 7 ; 3 → 5 ; 4 → 6 ; 5 → 4 ; 7 → 1 ; 13 → 2 ; 14 → 2 ; 16 → 1 ; 50 → 1 |
+| 2 | Oui | 0 → 1 |
+| 3 | Non | 6 → 1 ; 10 → 1 ; 51 → 1 |
+| 4 | Non | 4 → 1 ; 52 → 1 |
+| 5 | Non | 52 → 1 |
+| 6 | Non | 4 → 1 ; 52 → 1 |
+| 7 | Non | 72 → 2 |
+
+La comparaison de la navigation confirme uniquement les refus prévus par la
+matrice. Aucun accès n'est ajouté :
+
+| Menu | Permission requise | Accès refusé après filtrage |
+|---:|---|---|
+| 7 | `applicationforms.create` | 10 comptes : rôle 3 (3), rôle 4 (2), rôle 5 (1), rôle 6 (2), rôle 7 (2) |
+| 8 | `menus.manage` | 7 comptes Admin ordinaires (rôle 1, `issuperuser = 0`) |
+| 15 | `validationsequences.read` | 7 comptes Admin ordinaires (rôle 1, `issuperuser = 0`) |
+
+Les trois super-administrateurs conservent le contournement prévu par l'ADR
+0069. Les 22 menus sans permission requise restent une exception de transition
+filtrée par `role_menus` ; leur retrait nécessitera une comparaison et une
+migration distinctes. La référence de 93 comptes est retenue et le point 7 est
+clôturé ; `role_menus` reste en service jusqu'à une migration distincte.
+
+Vérifications du point 7 : `make test.database.check` confirme
+`daetf2_test` ; `make test.unit` réussit (**214 tests**),
+`make test.integration` réussit (**183 tests, 624 assertions**),
+`make test.api` réussit (**267 tests, 1 107 assertions**) et
+`make test.all` réussit (**744 tests, 2 867 assertions**). Le test isolé de
+`ApplicationformPolicyTest` réussit (**15 tests, 67 assertions**) après ajout
+de fixtures ciblées aux rôles utilisés. `make test.style`, `make cs.check`,
+`make stan` et `git diff --check` réussissent. Le fichier
+`config/Migrations/schema-dump-default.lock` n'a pas été modifié.
 
 ## Décisions à préparer
 

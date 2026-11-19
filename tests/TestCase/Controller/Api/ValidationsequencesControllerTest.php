@@ -23,7 +23,7 @@ class ValidationsequencesControllerTest extends TestCase
         'app.UserDepartments',
         'app.Permissions',
         'app.PermissionScopes',
-        'app.RolePermissions',
+        'app.Role1Permissions',
         'app.Departments',
         'app.Roles',
         'app.Validationsequences',
@@ -176,6 +176,7 @@ class ValidationsequencesControllerTest extends TestCase
         $this->assertSame(900, (int)$sequence['id']);
         $this->assertNull($sequence['deleted']);
     }
+
     /** @return array<string, array{string, string}> */
     public static function mutationPermissions(): array
     {
@@ -208,13 +209,15 @@ class ValidationsequencesControllerTest extends TestCase
         $this->enableCsrfToken();
         $this->configRequest(['headers' => ['Accept' => 'application/json']]);
         $sequences = $this->getTableLocator()->get('Validationsequences');
-        $before = $sequences->find()->disableHydration()->orderByAsc('id')->all()->toList();
+        $connection = $sequences->getConnection();
+        $before = $connection->execute('SELECT * FROM validationsequences ORDER BY id')->fetchAll('assoc');
 
         $this->post('/api/validationsequences/' . $route . '.json', [
             'department_ids' => [1], 'role_id' => 1, 'sequence' => 1, 'reminder_delay_hours' => 24,
         ]);
 
         $this->assertResponseCode(403);
-        $this->assertSame($before, $sequences->find()->disableHydration()->orderByAsc('id')->all()->toList());
+        $after = $connection->execute('SELECT * FROM validationsequences ORDER BY id')->fetchAll('assoc');
+        $this->assertSame($before, $after);
     }
 }

@@ -41,7 +41,7 @@ class ApplicationformsControllerTest extends TestCase
         'app.DepartmentManagers',
         'app.Permissions',
         'app.PermissionScopes',
-        'app.RolePermissions',
+        'app.Role1Permissions',
         'app.Roles',
         'app.Validationsequences',
         'app.Validationstatuses',
@@ -144,7 +144,7 @@ class ApplicationformsControllerTest extends TestCase
         $this->session(['Auth' => new User([
             'id' => 2,
             'issuperuser' => false,
-            'role_id' => User::ROLE_DEMANDEUR,
+            'role_id' => User::ROLE_ADMIN,
         ])]);
 
         $this->get('/api/applicationforms/assistants-for-department.json?department_id=2');
@@ -592,6 +592,7 @@ class ApplicationformsControllerTest extends TestCase
 
     public function testUnOperateurSansDepartementNeVoitAucuneDemande(): void
     {
+        $this->grantPermissionForRole(User::ROLE_DEMANDEUR, 'applicationforms', 'read', 'self');
         $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
         $this->get('/api/applicationforms.json');
 
@@ -601,6 +602,8 @@ class ApplicationformsControllerTest extends TestCase
 
     public function testLeLienDeCreationEstRenduParLaCommandeDeDomaine(): void
     {
+        $this->grantPermissionForRole(User::ROLE_DEMANDEUR, 'applicationforms', 'read', 'self');
+        $this->grantPermissionForRole(User::ROLE_DEMANDEUR, 'applicationforms', 'create', 'self');
         $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
 
         $this->get('/');
@@ -1357,6 +1360,9 @@ class ApplicationformsControllerTest extends TestCase
             'created' => $now,
             'modified' => $now,
         ]);
+        $this->grantPermissionForRole(2, 'applicationforms', 'read', 'assigned');
+        $this->grantPermissionForRole(2, 'applicationforms', 'update', 'assigned');
+        $this->grantPermissionForRole(2, 'applicationforms', 'vote', 'unscoped');
         $connection->update('users', ['role_id' => 2, 'deleted' => null], ['id' => 2]);
         $connection->insert('user_departments', [
             'id' => 2,
@@ -1525,6 +1531,8 @@ class ApplicationformsControllerTest extends TestCase
             'created' => '2026-07-03 09:01:32',
             'modified' => '2026-07-03 09:01:32',
         ]);
+        $this->grantPermissionForRole(User::ROLE_DEMANDEUR, 'applicationforms', 'read', 'self');
+        $this->grantPermissionForRole(User::ROLE_DEMANDEUR, 'applicationforms', 'create', 'self');
         foreach ([3, 4] as $id) {
             $connection->insert('users', [
                 'id' => $id,
@@ -1574,6 +1582,33 @@ class ApplicationformsControllerTest extends TestCase
         $table->saveOrFail($table->newEntity([
             'department_id' => $departmentId,
             'user_id' => $userId,
+        ]));
+    }
+
+    private function grantPermissionForRole(int $roleId, string $resource, string $action, string $scope): void
+    {
+        $connection = ConnectionManager::get('test');
+        $roles = $this->getTableLocator()->get('Roles');
+        if (!$roles->exists(['id' => $roleId])) {
+            $connection->insert('roles', [
+                'id' => $roleId,
+                'base' => 0,
+                'code' => 'TEST_ROLE_' . $roleId,
+                'name' => 'Rôle de test ' . $roleId,
+                'sort' => (string)$roleId,
+                'deleted' => null,
+                'created' => '2026-11-19 10:00:00',
+                'modified' => '2026-11-19 10:00:00',
+            ]);
+        }
+        $permission = $this->getTableLocator()->get('Permissions')->find()
+            ->where(['resource' => $resource, 'action' => $action])
+            ->firstOrFail();
+        $rolePermissions = $this->getTableLocator()->get('RolePermissions');
+        $rolePermissions->saveOrFail($rolePermissions->newEntity([
+            'role_id' => $roleId,
+            'permission_id' => $permission->get('id'),
+            'scope_type' => $scope,
         ]));
     }
 }

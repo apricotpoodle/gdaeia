@@ -20,7 +20,7 @@ class WorkflowSettingsControllerTest extends TestCase
         'app.Roles',
         'app.Permissions',
         'app.PermissionScopes',
-        'app.RolePermissions',
+        'app.Role1Permissions',
         'app.FieldDefinitions',
         'app.WorkflowSettings',
         'app.ValidationCommentTemplates',
@@ -170,22 +170,27 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->assertResponseContains('"success":false');
         $this->assertResponseContains('liste est désormais versionnée');
     }
+
     public function testLaPermissionDeLectureAutoriseTousLesGetSansAutoriserLaModification(): void
     {
         $this->grant('read');
         $this->session(['Auth' => new User(['id' => 1, 'role_id' => 1])]);
         $this->enableCsrfToken();
         $this->configRequest(['headers' => ['Accept' => 'application/json']]);
-        foreach (['default-due-hours', 'blocked-after-business-days', 'comment-requirements',
-            'k-coefficient', 'duplicate-reset-fields'] as $action) {
+        foreach (
+            ['default-due-hours', 'blocked-after-business-days', 'comment-requirements',
+                'k-coefficient', 'duplicate-reset-fields'] as $action
+        ) {
             $this->get('/api/workflow-settings/' . $action . '.json');
             $this->assertResponseOk();
         }
         $settings = $this->getTableLocator()->get('WorkflowSettings');
-        $before = $settings->find()->disableHydration()->orderByAsc('id')->all()->toList();
+        $connection = $settings->getConnection();
+        $before = $connection->execute('SELECT * FROM workflow_settings ORDER BY id')->fetchAll('assoc');
         $this->post('/api/workflow-settings/default-due-hours.json', ['default_due_hours' => 48]);
         $this->assertResponseCode(403);
-        $this->assertSame($before, $settings->find()->disableHydration()->orderByAsc('id')->all()->toList());
+        $after = $connection->execute('SELECT * FROM workflow_settings ORDER BY id')->fetchAll('assoc');
+        $this->assertSame($before, $after);
     }
 
     public function testLaPermissionDeModificationNeDonnePasImplicitementLaLecture(): void

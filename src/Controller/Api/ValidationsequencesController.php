@@ -333,7 +333,7 @@ class ValidationsequencesController extends AppController
     /**
      * Limite les lectures aux départements directs, indépendamment de departments.read.
      *
-     * @return array<string, mixed>
+     * @return array<array-key, mixed>
      */
     private function readDepartmentConditions(): array
     {

@@ -6,8 +6,8 @@ namespace App\Test\TestCase\Policy;
 use App\Model\Entity\User;
 use App\Model\Table\FieldAuthorizationsTable;
 use App\Policy\FieldAuthorizationsTablePolicy;
-use Authorization\IdentityInterface;
 use App\Service\Security\PermissionResolver;
+use Authorization\IdentityInterface;
 use Cake\TestSuite\TestCase;
 
 class FieldAuthorizationsTablePolicyTest extends TestCase

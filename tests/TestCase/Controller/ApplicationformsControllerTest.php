@@ -27,6 +27,9 @@ class ApplicationformsControllerTest extends TestCase
         'app.Yesnos',
         'app.UserDepartments',
         'app.Roles',
+        'app.Permissions',
+        'app.PermissionScopes',
+        'app.Role1Permissions',
         'app.ValidationWorkflowRuns',
         'app.Applicationvalidationsteps',
         'app.Validations',
@@ -64,6 +67,7 @@ class ApplicationformsControllerTest extends TestCase
 
     public function testLaZoneReserveeNestPasExposeeSansDroitDeConsultation(): void
     {
+        $this->grantPermission(User::ROLE_DEMANDEUR, 'applicationforms', 'read', 'self');
         $this->session(['Auth' => new User([
             'id' => 1,
             'issuperuser' => false,
@@ -189,6 +193,7 @@ class ApplicationformsControllerTest extends TestCase
             'created' => $now,
             'modified' => $now,
         ]);
+        $this->grantPermission(User::ROLE_DEMANDEUR, 'applicationforms', 'create', 'self');
         $connection->update('users', ['role_id' => User::ROLE_DEMANDEUR], ['id' => 2]);
         $connection->insert('user_departments', [
             'id' => 2,
@@ -317,6 +322,8 @@ class ApplicationformsControllerTest extends TestCase
     public function testUnValidateurPeutEditerSansDroitDeCreationEtConserverLeCgr(): void
     {
         $this->seedActiveValidatorForEdit();
+        $this->grantPermission(User::ROLE_1_VALIDEUR_POLE, 'applicationforms', 'read', 'assigned');
+        $this->grantPermission(User::ROLE_1_VALIDEUR_POLE, 'applicationforms', 'update', 'assigned');
         $this->session(['Auth' => new User([
             'id' => 2,
             'issuperuser' => false,
@@ -598,5 +605,32 @@ class ApplicationformsControllerTest extends TestCase
             ['user_id' => 2, 'department_id' => 2],
             ['user_id' => 3, 'department_id' => 3],
         ]));
+    }
+
+    private function grantPermission(int $roleId, string $resource, string $action, string $scope): void
+    {
+        $connection = ConnectionManager::get('test');
+        if (!$this->getTableLocator()->get('Roles')->exists(['id' => $roleId])) {
+            $connection->insert('roles', [
+                'id' => $roleId,
+                'base' => 0,
+                'code' => 'TEST_ROLE_' . $roleId,
+                'name' => 'Rôle de test ' . $roleId,
+                'sort' => (string)$roleId,
+                'deleted' => null,
+                'created' => '2026-11-19 10:00:00',
+                'modified' => '2026-11-19 10:00:00',
+            ]);
+        }
+        $permission = $this->getTableLocator()->get('Permissions')->find()
+            ->where(['resource' => $resource, 'action' => $action])
+            ->firstOrFail();
+        $this->getTableLocator()->get('RolePermissions')->saveOrFail(
+            $this->getTableLocator()->get('RolePermissions')->newEntity([
+                'role_id' => $roleId,
+                'permission_id' => $permission->get('id'),
+                'scope_type' => $scope,
+            ]),
+        );
     }
 }
