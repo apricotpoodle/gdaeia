@@ -56,6 +56,25 @@ périmètre prévue pour ces mutations séparées.
 * [ADR 0064 : Administration de l'arbre des départements](../../docs/adr/0064-administration-arbre-departements.md)
 * [ADR 0065 : ACL automatique des mutations Web et API](../../docs/adr/0065-acl-automatique-des-mutations-web-api.md)
 
+## Catalogue des permissions par rôle
+
+`GET /api/permissions.json` est soumis à `PermissionPolicy::canIndex()` et
+retourne `{success: true, data}`. `data` contient le catalogue complet avec les
+champs historiques (`id`, `resource`, `action`, `code`, `label`,
+`permission_scopes`). `permission_scopes` contient les périmètres admissibles
+pour chaque permission.
+
+- `role_permissions` contient les attributions pour le rôle sélectionné par
+  `?role_id=<id>`. La liste est vide si le rôle n’a aucune attribution pour
+  cette permission ou si `role_id` est omis.
+- `menus` contient toutes les options liées à la permission via
+  `menus.required_permission_id`, chacune avec `id`, `name` et `url`. La liste
+  est vide en l’absence de lien. Les attributions historiques de `role_menus`
+  n’interviennent pas dans cette liste.
+
+Un `role_id` fourni doit être un entier positif qui désigne un rôle existant.
+Une valeur invalide retourne HTTP 422 et `{success: false, message, errors}`.
+
 ## Administration des circuits locaux
 
 `ValidationCircuitRulesController` expose les règles paginées, leurs diagnostics

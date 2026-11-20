@@ -58,6 +58,7 @@ class Menu extends Entity
     public const FIELD_LEVEL = 'level';
     public const FIELD_NAME = 'name';
     public const FIELD_URL = 'url';
+    public const FIELD_REQUIRED_PERMISSION_ID = 'required_permission_id';
     public const FIELD_ACTIVE = 'active';
     public const FIELD_DISABLED = 'disabled';
     public const FIELD_DIVIDOR_BEFORE = 'dividor_before';

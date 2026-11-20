@@ -4,6 +4,8 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Controller\AppController;
+use App\Model\Entity\Permission;
+use App\Model\Entity\Role;
 use App\Model\Entity\RolePermission;
 use App\Service\Security\PermissionResolver;
 use Cake\Http\Response;
@@ -18,15 +20,32 @@ final class PermissionsController extends AppController
         $this->viewBuilder()->setClassName('Json');
     }
 
-    /** Retourne le catalogue des permissions et ses périmètres. */
-    public function index(): void
+    /** Retourne le catalogue des permissions, enrichi pour le rôle demandé. */
+    public function index(): ?Response
     {
         $this->request->allowMethod(['get']);
-        $permission = $this->fetchTable('Permissions')->newEmptyEntity();
-        $this->Authorization->authorize($permission, 'index');
-        $data = $this->fetchTable('Permissions')->find()->contain(['PermissionScopes'])->all()->toList();
+        $permissions = $this->fetchTable('Permissions');
+        $this->Authorization->authorize($permissions->newEmptyEntity(), 'index');
+
+        $roleId = null;
+        $roleParameter = $this->request->getQuery(RolePermission::FIELD_ROLE_ID);
+        if ($roleParameter !== null) {
+            $roleId = filter_var($roleParameter, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+            if ($roleId === false || !$this->fetchTable('Roles')->exists([Role::FIELD_ID => $roleId])) {
+                return $this->jsonError(__('Le rôle sélectionné est invalide.'));
+            }
+        }
+
+        $data = $permissions->find('catalog', roleId: $roleId)->all()->toList();
+        if ($roleId === null) {
+            foreach ($data as $permission) {
+                $permission->set(Permission::FIELD_ROLE_PERMISSIONS, []);
+            }
+        }
         $this->set(['success' => true, 'data' => $data]);
         $this->viewBuilder()->setOption('serialize', ['success', 'data']);
+
+        return null;
     }
 
     /** Attribue un périmètre admissible à un rôle. */

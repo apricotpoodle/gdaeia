@@ -40,7 +40,7 @@ vérifiée avant de commencer la suivante.
 1. [ ] Vérifier le contrat existant et inventorier les rôles, permissions,
    périmètres admissibles, attributions et URLs de menu associées, sans
    modifier les attributions initiales.
-2. [ ] Étendre l'API de lecture pour exposer, selon le rôle choisi, le
+2. [x] Étendre l'API de lecture pour exposer, selon le rôle choisi, le
    catalogue complet, les périmètres admissibles, les attributions du rôle et
    les URLs associées.
 3. [ ] Afficher le sélecteur de rôle et une grille Tabulator distante qui
