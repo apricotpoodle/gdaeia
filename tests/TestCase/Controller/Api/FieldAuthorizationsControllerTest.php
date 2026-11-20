@@ -85,6 +85,60 @@ class FieldAuthorizationsControllerTest extends TestCase
         $this->assertSame('Intitulé du poste', $payload['data'][0]['target_label']);
     }
 
+    public function testLeFiltreDeCibleRechercheLesLibellesEtLesClesAvantLaPagination(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $definitions = $this->getTableLocator()->get('FieldDefinitions');
+        $authorizations = $this->getTableLocator()->get('FieldAuthorizations');
+        foreach (['applicantname' => 'Nom du candidat', 'candidate_name' => 'Candidat / collaborateur'] as $key => $label) {
+            $definitions->saveOrFail($definitions->newEntity([
+                'resource' => 'Applicationforms',
+                'field' => $key,
+                'label' => $label,
+                'active' => true,
+                'position' => 100,
+            ]));
+            $authorizations->saveOrFail($authorizations->newEntity([
+                'role_id' => 1,
+                'resource' => 'Applicationforms',
+                'target_type' => 'field',
+                'target' => $key,
+                'access_level' => 'VIEW',
+            ]));
+        }
+        $authorizations->saveOrFail($authorizations->newEntity([
+            'role_id' => 1,
+            'resource' => 'Applicationforms',
+            'target_type' => 'section',
+            'target' => 'job_section',
+            'access_level' => 'VIEW',
+        ]));
+
+        $cases = [
+            ['cand', 1, 2, 'applicantname', 'Nom du candidat'],
+            ['cand', 2, 2, 'candidate_name', 'Candidat / collaborateur'],
+            ['applicantname', 1, 1, 'applicantname', 'Nom du candidat'],
+            ['métier', 1, 1, 'job_section', 'Zone métier'],
+        ];
+        foreach ($cases as [$value, $page, $lastPage, $key, $label]) {
+            $parameters = http_build_query([
+                'page' => $page,
+                'size' => 1,
+                'filters' => [['field' => 'target', 'type' => 'like', 'value' => $value]],
+                'sorters' => [['field' => 'id', 'dir' => 'asc']],
+            ]);
+
+            $this->get('/api/field-authorizations.json?' . $parameters);
+
+            $this->assertResponseOk();
+            $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertSame($lastPage, $payload['last_page'], 'Nombre de pages pour le filtre « ' . $value . ' ».');
+            $this->assertSame([$key], array_column($payload['data'], 'target'));
+            $this->assertSame([$label], array_column($payload['data'], 'target_label'));
+        }
+    }
+
     public function testLApiDesAutorisationsRefuseUnOperateurNonSuperAdmin(): void
     {
         $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);

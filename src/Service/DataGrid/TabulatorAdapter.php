@@ -30,7 +30,7 @@ class TabulatorAdapter
      * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query La requête ORM initiale.
      * @param array<string, string> $fieldMap Correspondance entre champs JSON et champs ORM.
      * @param array<string, string> $sortFieldMap Correspondance spécifique aux tris.
-     * @param array<string, callable(mixed, string): array{0: string, 1: mixed, 2?: string}> $filterResolvers Résolution métier optionnelle des filtres.
+     * @param array<string, callable(mixed, string): (array{0: string, 1: mixed, 2?: string}|\Cake\Database\Expression\QueryExpression|null)> $filterResolvers Résolution métier optionnelle des filtres. Une valeur nulle conserve le filtre standard.
      * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> La requête ORM modifiée.
      */
     public function adaptRequest(
@@ -80,16 +80,10 @@ class TabulatorAdapter
                         continue; // On passe au filtre suivant
                     }
 
-                    // SÉCURITÉ & NORMALISATION DES TYPES numériques
-                    // Si on filtre sur l'ID, on force une égalité stricte, peu importe
-                    // ce que demande le front.
-                    //
-                    // Conserver ce test même si c'est censé être traité dans le front end
-                    // Car on peut craindre un petit malin modifiant l'url = en like
                     $filterValue = $value;
                     $filterOperator = $type;
-                    if (isset($filterResolvers[$field])) {
-                        $resolvedFilter = $filterResolvers[$field]($value, $type);
+                    $resolvedFilter = isset($filterResolvers[$field]) ? $filterResolvers[$field]($value, $type) : null;
+                    if (is_array($resolvedFilter)) {
                         $ormField = $resolvedFilter[0];
                         $filterValue = $resolvedFilter[1];
                         if (isset($resolvedFilter[2])) {
@@ -97,9 +91,15 @@ class TabulatorAdapter
                         }
                     }
 
+                    // Les champs numériques imposent l’égalité, quel que soit l’opérateur demandé.
                     if (in_array(strtolower($field), ['id', 'level', 'validation_status'], true)) {
                         $query->where([$ormField => (int)$filterValue]);
                         continue; // On passe au filtre suivant
+                    }
+
+                    if ($resolvedFilter instanceof QueryExpression) {
+                        $query->where($resolvedFilter);
+                        continue;
                     }
 
                     // Traduction de l'opérateur Tabulator vers la clause ORM

@@ -59,7 +59,11 @@ class FieldAuthorizationsController extends AppController
             ->contain(['Roles']);
 
         // 3. Traduction des filtres/tris Tabulator
-        $query = $adapter->adaptRequest($this->request, $query);
+        $query = $adapter->adaptRequest(
+            $this->request,
+            $query,
+            filterResolvers: [FieldAuthorization::FIELD_TARGET => $this->FieldAuthorizations->resolveTargetFilter(...)],
+        );
 
         // 4. Pagination
         $paginatedData = $this->paginate($query, [

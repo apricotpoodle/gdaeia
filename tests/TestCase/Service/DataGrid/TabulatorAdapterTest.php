@@ -69,6 +69,23 @@ class TabulatorAdapterTest extends TestCase
         ]);
     }
 
+    public function testUnResolveurDExpressionPreserveLEgaliteNumeriqueDeLIdentifiant(): void
+    {
+        $query = $this->queryForAlias('Users');
+        $query->expects($this->once())->method('where')
+            ->with($this->identicalTo(['Users.id' => 12]))
+            ->willReturnSelf();
+        $request = new ServerRequest([
+            'query' => ['filters' => [['field' => 'id', 'type' => 'like', 'value' => '12']]],
+        ]);
+
+        (new TabulatorAdapter())->adaptRequest(
+            $request,
+            $query,
+            filterResolvers: ['id' => static fn() => (new QueryExpression())->like('Users.id', '%12%')],
+        );
+    }
+
     public function testLaRequetePeutUtiliserUnMappingDistinctPourLeTri(): void
     {
         $query = $this->queryForAlias('Applicationforms');

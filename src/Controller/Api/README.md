@@ -21,6 +21,11 @@ requête, de droit et de règle métier gardent leurs réponses propres.
 * **ApplicationformsController** : L'endpoint POST `/applicationforms/{id}/validation/remind.json` relance uniquement les validateurs éligibles aux étapes bloquées du cycle, après contrôle de la Policy administrateur. Les endpoints GET `/applicationforms/assistants-for-department.json?department_id=…` et `/applicationforms/managers-for-department.json?department_id=…` retournent les options ou responsables d'un département visible pour un opérateur autorisé à créer une DAE. L'endpoint GET `/applicationforms/getCgrConfig/{departmentId}.json` retourne la configuration CGR d'un département visible pour un opérateur autorisé à créer une DAE. Un identifiant invalide renvoie HTTP 422 ; un département absent ou hors périmètre renvoie HTTP 404.
 * **`DepartmentsController`** : Arbre lazy des départements, fiche, CRUD, calcul d'impact et désactivation logique. Sans filtre, seules les racines sont chargées et les descendants le sont à la demande ; avec filtre, l'arbre complet des branches correspondantes est renvoyé et déployé, avec conservation des ancêtres nécessaires et exclusion des branches sans correspondance. La désactivation accepte un plan de nettoyage explicite réservé au super-administrateur, retourne les opérations effectuées et le bilan des courriels. Les codes CGR sont gérés par des routes imbriquées ; les mutations sont autorisées par `DepartmentPolicy` et `CgrCodePolicy`. La fiche expose aussi les grilles distantes disponibles/associées des responsables et des CGR, avec association ou dissociation immédiate.
 
+Dans `GET /api/field-authorizations.json`, le filtre Tabulator `like` sur
+`target` recherche à la fois la clé technique et le libellé affiché de la cible.
+Les libellés des champs viennent de `field_definitions` et ceux des sections
+de `authorization_targets`. La recherche s’applique avant le calcul des pages.
+
 Pour les départements, les payloads utilisent `manager_ids` et `cgr_code_ids`.
 Le catalogue CGR reste global ; ses associations départementales sont gérées
 par les routes imbriquées (`available`, `associated`, `add` et `remove`) et les

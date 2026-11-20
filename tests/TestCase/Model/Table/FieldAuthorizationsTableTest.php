@@ -174,6 +174,62 @@ class FieldAuthorizationsTableTest extends TestCase
         $this->assertSame('job_section', $savedAuthorization->target);
     }
 
+    public function testLeFiltreDeCibleDistingueLesRessourcesEtLesTypesAvecUneMemeCle(): void
+    {
+        $definitions = $this->getTableLocator()->get('FieldDefinitions');
+        $definitions->saveOrFail($definitions->newEntity([
+            'resource' => 'Applicationforms',
+            'field' => 'job_section',
+            'label' => 'Détail du poste',
+            'active' => true,
+            'position' => 100,
+        ]));
+        $sections = $this->getTableLocator()->get('AuthorizationTargets');
+        $sections->saveOrFail($sections->newEntity([
+            'resource' => 'Roles',
+            'target_type' => 'section',
+            'target' => 'job_section',
+            'label' => 'Zone des rôles',
+            'active' => true,
+            'position' => 100,
+        ]));
+
+        $targets = [
+            ['Roles', 'field', 'name'],
+            ['Menus', 'field', 'name'],
+            ['Applicationforms', 'field', 'job_section'],
+            ['Applicationforms', 'section', 'job_section'],
+            ['Roles', 'section', 'job_section'],
+        ];
+        foreach ($targets as [$resource, $type, $target]) {
+            $this->FieldAuthorizations->saveOrFail($this->FieldAuthorizations->newEntity([
+                'role_id' => 1,
+                'resource' => $resource,
+                'target_type' => $type,
+                'target' => $target,
+                'access_level' => 'VIEW',
+            ]));
+        }
+
+        $expectedMatches = [
+            'menu' => ['resource' => 'Menus', 'target_type' => 'field', 'target' => 'name'],
+            'métier' => ['resource' => 'Applicationforms', 'target_type' => 'section', 'target' => 'job_section'],
+            'rôles' => ['resource' => 'Roles', 'target_type' => 'section', 'target' => 'job_section'],
+            'Détail' => ['resource' => 'Applicationforms', 'target_type' => 'field', 'target' => 'job_section'],
+        ];
+        foreach ($expectedMatches as $term => $expectedMatch) {
+            $condition = $this->FieldAuthorizations->resolveTargetFilter($term, 'like');
+            $this->assertNotNull($condition);
+            $matches = $this->FieldAuthorizations->find()
+                ->select(['resource', 'target_type', 'target'])
+                ->where($condition)
+                ->disableHydration()
+                ->toArray();
+
+            $this->assertSame([$expectedMatch], $matches, 'Résultat du filtre « ' . $term . ' ».');
+        }
+    }
+
     public function testUneSectionFonctionnelleInconnueEstRefusee(): void
     {
         $authorization = $this->FieldAuthorizations->newEntity([

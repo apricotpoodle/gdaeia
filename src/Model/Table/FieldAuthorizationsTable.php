@@ -6,6 +6,7 @@ namespace App\Model\Table;
 use App\Model\Entity\AuthorizationTarget;
 use App\Model\Entity\FieldAuthorization;
 use ArrayObject;
+use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\EntityInterface;
 use Cake\Event\EventInterface;
 use Cake\ORM\RulesChecker;
@@ -56,6 +57,45 @@ class FieldAuthorizationsTable extends Table
             'foreignKey' => FieldAuthorization::FIELD_ROLE_ID,
             'joinType' => 'INNER',
         ]);
+    }
+
+    /**
+     * Recherche une cible par sa clé technique ou par le libellé de son référentiel.
+     *
+     * @param mixed $value Terme recherché.
+     * @param string $operator Opérateur du filtre.
+     * @return \Cake\Database\Expression\QueryExpression|null Condition composée pour la recherche textuelle.
+     */
+    public function resolveTargetFilter(mixed $value, string $operator): ?QueryExpression
+    {
+        if ($operator !== 'like' || !is_string($value)) {
+            return null;
+        }
+
+        $pattern = '%' . $value . '%';
+        $resource = $this->aliasField(FieldAuthorization::FIELD_RESOURCE);
+        $type = $this->aliasField(FieldAuthorization::FIELD_TARGET_TYPE);
+        $target = $this->aliasField(FieldAuthorization::FIELD_TARGET);
+        $locator = TableRegistry::getTableLocator();
+
+        // Les libellés des cibles historiques restent visibles, y compris lorsque la cible a été désactivée.
+        $fields = $locator->get('FieldDefinitions')->find()
+            ->where(static fn(QueryExpression $expression): QueryExpression => $expression
+                ->notEq($type, AuthorizationTarget::TYPE_SECTION, 'string')
+                ->equalFields('FieldDefinitions.resource', $resource)
+                ->equalFields('FieldDefinitions.field', $target)
+                ->like('FieldDefinitions.label', $pattern));
+        $sections = $locator->get('AuthorizationTargets')->find()
+            ->where(static fn(QueryExpression $expression): QueryExpression => $expression
+                ->eq($type, AuthorizationTarget::TYPE_SECTION, 'string')
+                ->eq('AuthorizationTargets.target_type', AuthorizationTarget::TYPE_SECTION)
+                ->equalFields('AuthorizationTargets.resource', $resource)
+                ->equalFields('AuthorizationTargets.target', $target)
+                ->like('AuthorizationTargets.label', $pattern));
+
+        return (new QueryExpression())->or([$target . ' LIKE' => $pattern])
+            ->exists($fields)
+            ->exists($sections);
     }
 
     /**
