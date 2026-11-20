@@ -1,23 +1,25 @@
 <?php
 declare(strict_types=1);
 
-use App\Model\Entity\Permission;
-
-/** @var list<\App\Model\Entity\Permission> $permissions */
+/**
+ * @var \App\View\AppView $this
+ * @var array<int, string> $roles
+ */
 $this->assign('title', __('Catalogue des permissions'));
+$this->Html->script('views/Permissions/index.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1 class="h3 mb-0"><?= __('Catalogue des permissions') ?></h1>
+<div class="content flex-grow-1 overflow-y-auto">
+    <h1 class="h3 mb-3"><?= __('Catalogue des permissions') ?></h1>
+    <div class="row mb-3">
+        <div class="col-md-6 col-xl-4">
+            <label class="form-label" for="permissions-role"><?= __('Rôle') ?></label>
+            <?= $this->Form->select('role_id', $roles, [
+                'id' => 'permissions-role',
+                'class' => 'form-select',
+                'empty' => __('Sélectionner un rôle'),
+                'autocomplete' => 'off',
+            ]) ?>
+        </div>
+    </div>
+    <div id="permissions-catalog" aria-label="<?= h(__('Permissions du rôle')) ?>" hidden></div>
 </div>
-<table class="table table-striped" data-testid="permissions-catalog">
-    <thead><tr><th><?= __('Code') ?></th><th><?= __('Libellé') ?></th><th><?= __('Périmètres admissibles') ?></th></tr></thead>
-    <tbody>
-    <?php foreach ($permissions as $permission): ?>
-        <tr>
-            <td><?= h($permission->get(Permission::FIELD_CODE)) ?></td>
-            <td><?= h($permission->get(Permission::FIELD_LABEL)) ?></td>
-            <td><?= h(implode(', ', array_map(static fn($scope): string => (string)$scope->get('scope_type'), $permission->get('permission_scopes') ?? []))) ?></td>
-        </tr>
-    <?php endforeach; ?>
-    </tbody>
-</table>

@@ -129,6 +129,41 @@ export class TabulatorFactory {
             .build();
     }
 
+    /**
+     * Construit la grille en lecture seule pour le rôle sélectionné.
+     * @param {string} selector Sélecteur CSS cible.
+     * @param {string} roleId Identifiant du rôle sélectionné.
+     * @returns {Tabulator} Instance Tabulator configurée.
+     */
+    static createPermissionsGrid(selector, roleId) {
+        const relatedColumn = (field, title, property, empty = '') => ColumnsFactory.text(field, title, {
+            headerSort: false,
+            tooltip: false,
+            cssClass: 'text-wrap text-break',
+            variableHeight: true,
+            formatter(cell) {
+                const values = (cell.getValue() ?? []).map((item) => item[property]).filter(Boolean);
+                const text = document.createElement('span');
+                text.textContent = values.join(', ') || empty;
+                return text;
+            },
+        });
+
+        return new TabulatorBuilder(selector)
+            .setAjaxSource(`/api/permissions.json?${new URLSearchParams({ role_id: roleId })}`)
+            .setRemotePagination()
+            .setHeight('calc(100vh - 240px)')
+            .setColumnDefaults({ widthGrow: 1 })
+            .setColumns([
+                ColumnsFactory.text('code', 'Code'),
+                ColumnsFactory.text('label', 'Libellé'),
+                relatedColumn('permission_scopes', 'Périmètres admissibles', 'scope_type'),
+                relatedColumn('role_permissions', 'Périmètres attribués', 'scope_type', 'Non attribuée'),
+                relatedColumn('menus', 'URLs des menus', 'url'),
+            ])
+            .build();
+    }
+
     /** Fabrique la grille arborescente lazy des départements. */
     static createDepartmentsGrid(selector = '#departments-table') {
         return this._createActionGrid(selector)

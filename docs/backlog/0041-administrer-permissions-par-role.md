@@ -43,7 +43,7 @@ vérifiée avant de commencer la suivante.
 2. [x] Étendre l'API de lecture pour exposer, selon le rôle choisi, le
    catalogue complet, les périmètres admissibles, les attributions du rôle et
    les URLs associées.
-3. [ ] Afficher le sélecteur de rôle et une grille Tabulator distante qui
+3. [x] Afficher le sélecteur de rôle et une grille Tabulator distante qui
    présente aussi les permissions sans attribution.
 4. [ ] Permettre l'ajout et le retrait des seules attributions admissibles,
    avec autorisation et validation côté serveur, et des erreurs conformes au

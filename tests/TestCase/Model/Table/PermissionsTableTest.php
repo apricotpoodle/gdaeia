@@ -54,6 +54,39 @@ final class PermissionsTableTest extends TestCase
         self::assertSame([], $catalogue[1]['menus']);
     }
 
+    public function testLesFiltresLiesPreserventLaCardinaliteDuCatalogueEtIsolentLeRole(): void
+    {
+        /** @var \App\Model\Table\PermissionsTable $permissions */
+        $permissions = $this->getTableLocator()->get('Permissions');
+        $connection = $permissions->getConnection();
+        $connection->insert('roles', ['id' => 2, 'code' => 'dem', 'name' => 'Demandeur', 'sort' => '2']);
+        $connection->insert('role_permissions', ['role_id' => 2, 'permission_id' => 5, 'scope_type' => 'self']);
+        $this->ajouterLeMenuDesDemandes($connection);
+        $connection->insert('menus', [
+            'id' => 3,
+            'lft' => 5,
+            'rght' => 6,
+            'name' => 'Archives',
+            'url' => '/applicationforms/archives',
+            'required_permission_id' => 5,
+        ]);
+
+        $query = $permissions->find('catalog', roleId: 2)
+            ->where($permissions->resolveCatalogRelationFilter('Menus', '/applicationforms', 'like'))
+            ->where($permissions->resolveCatalogRelationFilter('PermissionScopes', 's', 'like'));
+
+        $catalogue = (clone $query)
+            ->where($permissions->resolveCatalogRelationFilter('RolePermissions', 'self', '=', 2))
+            ->all()
+            ->toList();
+
+        self::assertSame([5], array_column($catalogue, 'id'));
+        self::assertEqualsCanonicalizing([2, 3], array_column($catalogue[0]->get('menus'), 'id'));
+        self::assertSame(0, $query
+            ->where($permissions->resolveCatalogRelationFilter('RolePermissions', 'assigned', '=', 2))
+            ->count());
+    }
+
     /** Ajoute une option liée à la permission de consultation des demandes. */
     private function ajouterLeMenuDesDemandes(Connection $connection): void
     {

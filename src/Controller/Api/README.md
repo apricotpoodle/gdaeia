@@ -75,6 +75,16 @@ pour chaque permission.
 Un `role_id` fourni doit être un entier positif qui désigne un rôle existant.
 Une valeur invalide retourne HTTP 422 et `{success: false, message, errors}`.
 
+La présence de `page` ou `size` active le mode Tabulator et ajoute `last_page`
+à la réponse. La première page contient 20 lignes par défaut et `size` est
+limité à 100. `sorters` accepte les champs `code` et `label`. `filters` accepte
+ces deux champs ainsi que `permission_scopes`, `role_permissions` et `menus`,
+avec les opérateurs `=` et `like`. Un filtre de relation retient une permission
+dès qu’un périmètre ou une URL correspond, puis renvoie toutes ses relations.
+Le filtre `role_permissions` s’applique aux attributions du seul `role_id`
+sélectionné. Les filtres et les tris distants s’appliquent avant la pagination.
+Quand aucun `page` ni `size` n’est fourni, la réponse historique s’applique.
+
 ## Administration des circuits locaux
 
 `ValidationCircuitRulesController` expose les règles paginées, leurs diagnostics

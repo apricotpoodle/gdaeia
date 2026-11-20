@@ -7,6 +7,8 @@ use App\Model\Entity\User;
 use Cake\Datasource\ConnectionManager;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use DOMDocument;
+use DOMXPath;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class PermissionsControllerTest extends TestCase
@@ -33,6 +35,7 @@ final class PermissionsControllerTest extends TestCase
         $this->assertResponseOk();
         $payload = (array)json_decode((string)$this->_response->getBody(), true);
         self::assertTrue($payload['success']);
+        self::assertArrayNotHasKey('last_page', $payload);
         self::assertEqualsCanonicalizing(range(1, 42), array_column($payload['data'], 'id'));
         $permission = array_column($payload['data'], null, 'code')['applicationforms.read'];
         self::assertSame('applicationforms', $permission['resource']);
@@ -64,7 +67,122 @@ final class PermissionsControllerTest extends TestCase
             'sans rôle' => [''],
             'avec un rôle existant' => ['?role_id=1'],
             'avec un rôle inconnu' => ['?role_id=9999'],
+            'avec pagination' => ['?role_id=1&page=1&size=20'],
         ];
+    }
+
+    public function testLeCataloguePagineTrieEtFiltreLesPermissionsSansOmettreLesNonAttribuees(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        ConnectionManager::get('test')->insert('roles', ['id' => 2, 'code' => 'dem', 'name' => 'Demandeur', 'sort' => '2']);
+
+        $this->get('/api/permissions.json?' . http_build_query([
+            'role_id' => 2,
+            'page' => 2,
+            'size' => 1,
+            'sorters' => [['field' => 'code', 'dir' => 'desc']],
+            'filters' => [['field' => 'label', 'type' => 'like', 'value' => 'Administrer les']],
+        ]));
+
+        $this->assertResponseOk();
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        self::assertTrue($payload['success']);
+        self::assertSame(2, $payload['last_page'] ?? null);
+        self::assertSame(['departments.manage'], array_column($payload['data'], 'code'));
+        self::assertSame([], $payload['data'][0]['role_permissions']);
+    }
+
+    #[DataProvider('parametresPaginationIsoles')]
+    public function testUnSeulParametreActiveLaPagination(
+        string $query,
+        int $lastPage,
+        int $rowCount,
+        int $firstId,
+    ): void {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/api/permissions.json' . $query);
+
+        $this->assertResponseOk();
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        self::assertSame($lastPage, $payload['last_page'] ?? null);
+        self::assertCount($rowCount, $payload['data']);
+        self::assertSame($firstId, $payload['data'][0]['id']);
+    }
+
+    /** @return array<string, array{string, int, int, int}> */
+    public static function parametresPaginationIsoles(): array
+    {
+        return [
+            'page seule, taille de 20 par défaut' => ['?page=2', 3, 20, 21],
+            'taille seule, première page par défaut' => ['?size=4', 11, 4, 1],
+        ];
+    }
+
+    public function testLesFiltresLiesConserventUneLigneParPermissionEtToutesSesRelations(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->ajouterLesMenusLiesAuxDemandes();
+
+        $this->get('/api/permissions.json?' . http_build_query([
+            'role_id' => 1,
+            'size' => 1,
+            'filters' => [
+                ['field' => 'permission_scopes', 'type' => '=', 'value' => 'all'],
+                ['field' => 'role_permissions', 'type' => 'like', 'value' => 'assigned'],
+                ['field' => 'menus', 'type' => 'like', 'value' => '/applicationforms'],
+            ],
+        ]));
+
+        $this->assertResponseOk();
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        self::assertSame(1, $payload['last_page'] ?? null);
+        self::assertSame(['applicationforms.read'], array_column($payload['data'], 'code'));
+        $permission = $payload['data'][0];
+        self::assertEqualsCanonicalizing(['self', 'assigned', 'all'], array_column($permission['permission_scopes'], 'scope_type'));
+        self::assertEqualsCanonicalizing(['self', 'assigned'], array_column($permission['role_permissions'], 'scope_type'));
+        self::assertEqualsCanonicalizing(['/applicationforms', '/applicationforms/archives'], array_column($permission['menus'], 'url'));
+    }
+
+    public function testLeFiltreDesAttributionsIgnoreLesAutresRoles(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $connection = ConnectionManager::get('test');
+        $connection->insert('roles', ['id' => 2, 'code' => 'dem', 'name' => 'Demandeur', 'sort' => '2']);
+        $connection->insert('role_permissions', ['role_id' => 2, 'permission_id' => 5, 'scope_type' => 'self']);
+
+        $this->get('/api/permissions.json?' . http_build_query([
+            'role_id' => 2,
+            'page' => 1,
+            'filters' => [['field' => 'role_permissions', 'type' => '=', 'value' => 'assigned']],
+        ]));
+
+        $this->assertResponseOk();
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        self::assertSame(1, $payload['last_page'] ?? null);
+        self::assertSame([], $payload['data']);
+    }
+
+    public function testLeCataloguePagineIgnoreLesChampsInconnusEtLesFiltresMalFormes(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/api/permissions.json?' . http_build_query([
+            'size' => 1,
+            'limit' => 4,
+            'sort' => ['label'],
+            'sorters' => [['field' => 'inconnu', 'dir' => 'asc'], ['field' => 'label', 'dir' => ['asc']]],
+            'filters' => [
+                ['field' => 'inconnu', 'type' => '=', 'value' => 'a'],
+                ['field' => 'menus', 'type' => 'like', 'value' => ['start' => '2026-11-20']],
+            ],
+        ]));
+
+        $this->assertResponseOk();
+        $payload = (array)json_decode((string)$this->_response->getBody(), true);
+        self::assertSame(42, $payload['last_page'] ?? null);
+        self::assertCount(1, $payload['data']);
+        self::assertSame([], $payload['data'][0]['role_permissions']);
     }
 
     public function testLeCatalogueExposeLesAttributionsDuRoleChoisiEtLesMenusLies(): void
@@ -122,6 +240,7 @@ final class PermissionsControllerTest extends TestCase
     {
         return [
             'rôle inconnu' => ['?role_id=9999'],
+            'rôle inconnu avec pagination' => ['?role_id=9999&page=1&size=20'],
             'valeur vide' => ['?role_id='],
             'identifiant nul' => ['?role_id=0'],
             'valeur non entière' => ['?role_id=1.5'],
@@ -129,14 +248,43 @@ final class PermissionsControllerTest extends TestCase
         ];
     }
 
-    public function testLeCatalogueWebEstVisibleAuSuperAdministrateur(): void
+    public function testLeCatalogueWebProposeLesRolesActifsParNomSansSelectionInitiale(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $connection = ConnectionManager::get('test');
+        $connection->insert('roles', ['id' => 2, 'code' => 'zed', 'name' => 'Zèbre', 'sort' => '1']);
+        $connection->insert('roles', ['id' => 3, 'code' => 'adm', 'name' => 'Administrateur', 'sort' => '2']);
 
         $this->get('/permissions');
 
         $this->assertResponseOk();
-        $this->assertResponseContains('permissions-catalog');
+        $document = new DOMDocument();
+        $previous = libxml_use_internal_errors(true);
+        try {
+            self::assertTrue($document->loadHTML((string)$this->_response->getBody()));
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previous);
+        }
+        $xpath = new DOMXPath($document);
+        $options = $xpath->query('//select[@id="permissions-role"]/option');
+        self::assertNotFalse($options);
+        $values = [];
+        foreach ($options as $option) {
+            $values[] = $option->attributes?->getNamedItem('value')?->nodeValue;
+        }
+        self::assertSame(['', '3', '2'], $values);
+        self::assertSame(0.0, $xpath->evaluate('count(//select[@id="permissions-role"]/option[@selected and @value!=""])'));
+        self::assertSame(1.0, $xpath->evaluate('count(//div[@id="permissions-catalog" and @hidden])'));
+    }
+
+    public function testUnOperateurNePeutPasAfficherLeCatalogueWeb(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_DEMANDEUR])]);
+
+        $this->get('/permissions');
+
+        $this->assertResponseCode(403);
     }
 
     public function testLeSuperAdministrateurPeutAttribuerUnPerimetreAdmissible(): void

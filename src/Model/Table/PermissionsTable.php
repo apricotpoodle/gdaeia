@@ -8,6 +8,7 @@ use App\Model\Entity\Permission;
 use App\Model\Entity\PermissionScope;
 use App\Model\Entity\RolePermission;
 use Cake\Collection\CollectionInterface;
+use Cake\Database\Expression\QueryExpression;
 use Cake\Datasource\EntityInterface;
 use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\RulesChecker;
@@ -70,6 +71,37 @@ class PermissionsTable extends AppTable
                 return $permission;
             },
         ));
+    }
+
+    /**
+     * Résout un filtre de la grille sur une relation sans multiplier les lignes du catalogue.
+     *
+     * @param string $relation Alias d’une association du catalogue.
+     * @param string $value Valeur recherchée.
+     * @param string $operator Opérateur de recherche textuelle.
+     * @param int|null $roleId Rôle choisi pour les attributions.
+     * @return \Cake\Database\Expression\QueryExpression Condition d’existence de la relation filtrée.
+     */
+    public function resolveCatalogRelationFilter(
+        string $relation,
+        string $value,
+        string $operator,
+        ?int $roleId = null,
+    ): QueryExpression {
+        $association = $this->getAssociation($relation);
+        $foreignKey = $relation === 'Menus' ? Menu::FIELD_REQUIRED_PERMISSION_ID : PermissionScope::FIELD_PERMISSION_ID;
+        $field = $relation . '.' . ($relation === 'Menus' ? Menu::FIELD_URL : PermissionScope::FIELD_SCOPE_TYPE);
+        $related = $association->getTarget()->find()
+            ->select([$relation . '.' . $foreignKey])
+            ->where(fn(QueryExpression $expression): QueryExpression => $expression
+                ->equalFields($relation . '.' . $foreignKey, $this->aliasField(Permission::FIELD_ID)));
+
+        if ($relation === 'RolePermissions') {
+            $related->where([$relation . '.' . RolePermission::FIELD_ROLE_ID . ' IS' => $roleId]);
+        }
+        $related->where($operator === 'like' ? [$field . ' LIKE' => '%' . $value . '%'] : [$field => $value]);
+
+        return (new QueryExpression())->exists($related);
     }
 
     /** Valide la nomenclature et le libellé de la permission. */

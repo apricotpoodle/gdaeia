@@ -7,7 +7,13 @@ use App\Controller\AppController;
 use App\Model\Entity\Permission;
 use App\Model\Entity\Role;
 use App\Model\Entity\RolePermission;
+use App\Model\Table\PermissionsTable;
+use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\Security\PermissionResolver;
+use Cake\Database\Expression\QueryExpression;
+use Cake\Datasource\Paging\Exception\PageOutOfBoundsException;
+use Cake\Datasource\Paging\NumericPaginator;
+use Cake\Http\Exception\NotFoundException;
 use Cake\Http\Response;
 
 /** API d’audit et d’attribution du catalogue des permissions. */
@@ -24,6 +30,7 @@ final class PermissionsController extends AppController
     public function index(): ?Response
     {
         $this->request->allowMethod(['get']);
+        /** @var \App\Model\Table\PermissionsTable $permissions */
         $permissions = $this->fetchTable('Permissions');
         $this->Authorization->authorize($permissions->newEmptyEntity(), 'index');
 
@@ -36,16 +43,81 @@ final class PermissionsController extends AppController
             }
         }
 
-        $data = $permissions->find('catalog', roleId: $roleId)->all()->toList();
+        $output = ['success' => true];
+        $params = $this->request->getQueryParams();
+        if (array_key_exists('page', $params) || array_key_exists('size', $params)) {
+            $output += $this->paginateCatalog($permissions, $roleId);
+        } else {
+            $output['data'] = $permissions->find('catalog', roleId: $roleId)->all()->toList();
+        }
         if ($roleId === null) {
-            foreach ($data as $permission) {
+            foreach ($output['data'] as $permission) {
                 $permission->set(Permission::FIELD_ROLE_PERMISSIONS, []);
             }
         }
-        $this->set(['success' => true, 'data' => $data]);
-        $this->viewBuilder()->setOption('serialize', ['success', 'data']);
+        $this->set($output);
+        $this->viewBuilder()->setOption('serialize', array_keys($output));
 
         return null;
+    }
+
+    /**
+     * Pagine le catalogue avec les champs et opérateurs textuels de la grille.
+     *
+     * @return array{data: list<\Cake\Datasource\EntityInterface>, last_page: int}
+     */
+    private function paginateCatalog(PermissionsTable $permissions, ?int $roleId): array
+    {
+        $sortFields = [Permission::FIELD_CODE => 'Permissions.code', Permission::FIELD_LABEL => 'Permissions.label'];
+        $relations = [
+            Permission::FIELD_PERMISSION_SCOPES => 'PermissionScopes',
+            Permission::FIELD_ROLE_PERMISSIONS => 'RolePermissions',
+            'menus' => 'Menus',
+        ];
+        $filterResolvers = [];
+        foreach ($relations as $field => $relation) {
+            $filterResolvers[$field] = static fn(mixed $value, string $operator): QueryExpression => $permissions
+                ->resolveCatalogRelationFilter($relation, (string)$value, $operator, $roleId);
+        }
+
+        $params = $this->request->getQueryParams();
+        $filterFields = $sortFields + $filterResolvers;
+        $params['sorters'] = array_values(array_filter(
+            (array)($params['sorters'] ?? []),
+            static fn($item): bool => is_array($item)
+                && is_string($item['field'] ?? null) && isset($sortFields[$item['field']])
+                && is_string($item['dir'] ?? null),
+        ));
+        $params['filters'] = array_values(array_filter(
+            (array)($params['filters'] ?? []),
+            static fn($item): bool => is_array($item)
+                && is_string($item['field'] ?? null) && isset($filterFields[$item['field']])
+                && in_array($item['type'] ?? '=', ['=', 'like'], true)
+                && is_string($item['value'] ?? null),
+        ));
+
+        $adapter = new TabulatorAdapter();
+        $query = $adapter->adaptRequest(
+            $this->request->withQueryParams($params),
+            $permissions->find('catalog', roleId: $roleId),
+            $sortFields,
+            filterResolvers: $filterResolvers,
+        );
+        $query->orderByAsc('Permissions.id');
+
+        $page = filter_var($params['page'] ?? 1, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?: 1;
+        $size = filter_var($params['size'] ?? 20, FILTER_VALIDATE_INT) ?: 20;
+        try {
+            $paginated = (new NumericPaginator())->paginate($query, ['page' => $page], [
+                'limit' => $size,
+                'maxLimit' => 100,
+                'sortableFields' => [],
+            ]);
+        } catch (PageOutOfBoundsException $exception) {
+            throw new NotFoundException(null, null, $exception);
+        }
+
+        return $adapter->adaptResponse($paginated);
     }
 
     /** Attribue un périmètre admissible à un rôle. */
