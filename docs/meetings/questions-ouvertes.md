@@ -3,7 +3,7 @@
 Ce tableau prépare les prochaines réunions métier. Pendant la réunion,
 l'opérateur humain complète uniquement les colonnes **Réponse métier du
 client** et **Exemple métier donné par le client**, sans interpréter la
-réponse.
+réponse. Il met aussi à jour la colonne **Statut** selon le cycle ci-dessous.
 
 Les questions sont regroupées par ticket. Les questions Q-0018-02 à
 Q-0018-04, encore ouvertes après la livraison technique du ticket 0018, sont
@@ -14,12 +14,31 @@ Le code décrit dans les tickets terminés ne remplace pas une réponse métier.
 Les tickets principaux 0018 à 0023 et les tickets du sous-workflow
 validation-applicationform à partir de 0018 restent couverts.
 
+## Cycle de statut
+
+- **À poser** : la question reste à aborder et aucune réponse n'est consignée.
+- **À clarifier** : la réponse consignée est partielle ou ambiguë, ou la
+  décision est reportée. La question reste à trancher.
+- **Répondu** : la réponse et tout exemple donné sont consignés, et la décision
+  métier est complète.
+- **Répercuté** : la décision complète a été reportée dans les documents ou
+  tickets concernés, ou sa présence dans ceux-ci a été vérifiée. Ce statut ne
+  signifie pas que le code est livré.
+
+Pendant la réunion, passer à **Répondu** lorsque la décision est complète.
+Une réponse partielle, ambiguë ou reportée reste **À clarifier**. Après la
+réunion, passer à **Répercuté** une fois la décision reportée ou sa présence
+vérifiée dans les documents ou tickets concernés.
+
+Les questions et leurs réponses sont conservées comme historique : ne
+supprimer aucune ligne du tableau.
+
 | ID | Ticket | Statut | Question | Réponse métier du client | Exemple métier donné par le client |
 |---|---|---|---|---|---|
 | Q-0018-01 | 0018 | Répondu | Pour quels types de contrat le champ « Nombre de jours ouvrés » doit-il être visible ? | Le champ est visible dès que les dates de début et de fin sont valides et que la date de fin n'est pas désactivée. Seul le code `cdi` n'a pas de date de fin ; les codes `cdd`, `interim`, `appr.`, `stage`, `pige` et `fact` en ont une. Stage, pige et facture suivent la même règle de jours travaillés que les autres contrats à durée déterminée. |  |
 | Q-0018-02 | 0018 | À poser | Une personne peut-elle saisir manuellement 0 jour ouvré pour une période qui contient des jours de semaine ? |  |  |
 | Q-0018-03 | 0018 | À poser | Le nombre de jours proposé automatiquement suffit-il pour envoyer la DAE en validation, ou la personne doit-elle le vérifier et le corriger si nécessaire ? Exemple à présenter : du 2 au 31 mars 2026, le système propose 22 jours. Peut-on envoyer la DAE avec cette valeur, ou faut-il vérifier le nombre réel de jours travaillés et le corriger si besoin ? |  |  |
-| Q-0018-04 | 0018 | À poser | Les jours fériés doivent-ils être exclus du calcul des jours ouvrés ? | La décision est reportée. En attendant, le calcul continue à compter les jours fériés qui tombent en semaine. |  |
+| Q-0018-04 | 0018 | À clarifier | Les jours fériés doivent-ils être exclus du calcul des jours ouvrés ? | La décision est reportée. En attendant, le calcul continue à compter les jours fériés qui tombent en semaine. |  |
 | Q-0018-05 | 0018 | Répondu | Une période composée uniquement d'un samedi et d'un dimanche doit-elle être refusée ? | Non, une telle période est acceptée. Toute valeur de zéro jour ouvré déclenche un avertissement visuel avant l'enregistrement. Le courriel est envoyé uniquement après l'enregistrement réussi, à l'auteur de la saisie, à tous les responsables associés au service et à tout rôle ADMIN qui voit ce service. |  |
 | Q-0018-06 | 0018 | Répondu | Que doit-il se passer lorsque les dates changent après la saisie du nombre de jours ouvrés ? | Avertir l'opérateur en indiquant la valeur actuelle du nombre de jours ouvrés et le nouveau calcul. L'opérateur décide de l'action à mener. |  |
 | Q-0019-01 | 0019 | À poser | Quelles sont les quatre zones qui doivent apparaître dans la vue de consultation d'une DAE ? |  |  |
@@ -44,7 +63,7 @@ validation-applicationform à partir de 0018 restent couverts.
 | Q-0023-04 | 0023 | À poser | Quels contrôles métier doivent être réalisés avant d'autoriser la reprise de l'application ? |  |  |
 | Q-0030-01 | 0030 | À poser | Le taux €/heure doit-il être conservé ? Si oui, le salaire de base doit-il rester un taux horaire ou être converti en montant mensuel ? En cas de conversion, quel nombre d'heures faut-il utiliser : une valeur fixe ou celle du temps de travail choisi ? Proposition à discuter : supprimer €/heure si cette unité n'est pas utilisée. Exemple : pour 12 €/h, quelle valeur le salaire de base doit-il afficher ? |  |  |
 | Q-0030-02 | 0030 | À poser | Faut-il développer une action dédiée pour récupérer une DAE transmise, ou les mécanismes existants suffisent-ils : annuler et réinitialiser le cycle, puis le relancer, et faire outrepasser par un administrateur habilité les étapes en attente ou à venir pour retrouver un état intermédiaire ? Proposition à discuter : utiliser les mécanismes existants si le métier accepte que la réinitialisation supprime les votes et les étapes du cycle, sans en garder la piste d'audit applicative. La DAE et ses données métier restent conservées. |  |  |
-| Q-0030-03 | 0030 | À poser | L'archivage est-il déclenché manuellement ou automatiquement, et après quel délai ? Quelle durée de conservation appliquer ? Quels rôles et périmètres peuvent rechercher ou consulter les archives ? Proposition à discuter : réserver la colonne « Archivé » et l'accès aux DAE archivées aux superusers et aux utilisateurs ADMIN dans leur périmètre ; les autres rôles ne verraient que les DAE non archivées. Cette solution convient-elle ? | L'archivage concerne tous les types de DAE, individuellement ou en masse, et doit être réversible. La liste affiche les DAE non archivées par défaut, avec une possibilité de rechercher parmi toutes les DAE, dans le respect des droits d'accès. Pour le moment, seuls un superuser et un utilisateur de rôle ADMIN qui voit le service de la DAE peuvent archiver ou désarchiver. |  |
+| Q-0030-03 | 0030 | À clarifier | L'archivage est-il déclenché manuellement ou automatiquement, et après quel délai ? Quelle durée de conservation appliquer ? Quels rôles et périmètres peuvent rechercher ou consulter les archives ? Proposition à discuter : réserver la colonne « Archivé » et l'accès aux DAE archivées aux superusers et aux utilisateurs ADMIN dans leur périmètre ; les autres rôles ne verraient que les DAE non archivées. Cette solution convient-elle ? | L'archivage concerne tous les types de DAE, individuellement ou en masse, et doit être réversible. La liste affiche les DAE non archivées par défaut, avec une possibilité de rechercher parmi toutes les DAE, dans le respect des droits d'accès. Pour le moment, seuls un superuser et un utilisateur de rôle ADMIN qui voit le service de la DAE peuvent archiver ou désarchiver. |  |
 | Q-0030-04 | 0030 | Répondu | Qui reçoit les notifications de validation, les rappels quotidiens, les notifications de DAE acceptée et la synthèse hebdomadaire ? Quelles commandes l'application fournit-elle pour les envois récurrents ? | Tout changement d'état du cycle de validation déclenche une notification en temps réel aux rôles concernés. Pour une DAE bloquée, les rôles pouvant outrepasser le blocage sont également notifiés. La liste quotidienne des demandes en attente est adressée aux rôles concernés par l'étape ; le rappel quotidien est prévu à 07 h 00. À la fin du cycle, une DAE acceptée (« signée ») déclenche une notification à l'assistante qui l'a saisie, à tous les responsables du service et à tout rôle ADMIN qui voit le service ; ces ADMIN sont considérés comme des responsables du service. La synthèse hebdomadaire des DAE entièrement validées est adressée à tout rôle ADMIN qui voit le service des DAE concernées. L'application fournit une commande CLI et une commande Make pour lancer les envois récurrents ; Airflow planifie les traitements CLI au moyen de DAG. Le jour et l'heure de la synthèse hebdomadaire sont configurés dans Airflow, hors du périmètre de l'application. |  |
 | Q-0030-05 | 0030 | Répondu | Quelles résolutions, tailles de fenêtre et facteurs de zoom définissent l'objectif « voir l'ensemble des champs sans ascenseur » ? | Écran de référence : 1680 × 1050. Contrôle dans une fenêtre non maximisée, avec une zone de page de 1440 × 900 et un contrôle complémentaire de 1366 × 768. Zoom navigateur : 100 % pour les deux tailles. |  |
 | Q-0030-06 | 0030 | Répondu | Le champ `manager_id` de l'Applicationform doit-il rester en base, être utilisé par l'application ou être migré ? Comment l'articuler avec les associations multiples de responsables des départements ? | Ne pas modifier la structure de la table ni les valeurs existantes de `applicationforms.manager_id` ; elles sont conservées sans migration et le champ est ignoré par l'application. Les responsables sont déterminés à partir des associations multiples du service. Le nom `current_manager_id` désigne l'ancienne colonne de `departments`, distincte de `applicationforms.manager_id`. |  |
@@ -64,8 +83,8 @@ validation-applicationform à partir de 0018 restent couverts.
 - Ne pas reformuler la réponse du client.
 - Reproduire les termes métier employés pendant la réunion.
 - Ajouter les exemples concrets dans la colonne dédiée.
-- Si la réponse est ambiguë, écrire la réponse telle quelle et conserver le
-  statut « À clarifier ».
+- Si la réponse est partielle, ambiguë ou reportée, la consigner telle quelle
+  et conserver le statut « À clarifier ».
 - Ne pas remplir la colonne « Statut » avec une décision technique.
 - Toute interprétation ou proposition de ticket doit être produite dans un
   document séparé après la réunion.
