@@ -18,6 +18,30 @@ Reprendre les données des départements à partir d'une source métier validée
 avec une procédure contrôlée, traçable et reproductible, en ciblant d'abord
 les enfants de `SEM/Rédac`.
 
+## État de l'existant
+
+Une base technique d'import est déjà disponible dans
+`MigrationImportDepartmentsCommand` et `DepartmentImportService` :
+
+- lecture des exports historiques de sociétés, services et codes CGR, avec
+  préparation d'un plan déterministe ;
+- simulation sans accès à la base avec `--dry-run` et rapport CSV des services
+  non rapprochés avec `--report-dir` ;
+- application transactionnelle des sociétés, services et associations CGR
+  avec `--apply` ;
+- rapprochement des départements par code, conservation de l'identifiant
+  lorsqu'un code existe déjà et refus si son parent diffère ;
+- tests du plan d'import, des doublons et de la simulation sans base.
+
+Cette commande est un point de départ, pas une reprise complète du référentiel
+visé par ce ticket. Elle ne produit pas le rapport détaillé avant/après exigé,
+ne traite pas les changements de code, déplacements ou désactivations, et ne
+met pas à jour les affectations `user_departments` ni les associations de
+responsables. Ses tests ne vérifient pas l'application transactionnelle ni
+l'intégrité de l'arbre après import. Aucun export métier ni liste cible
+validée de SEM/Rédac n'est présent dans le dépôt. Les questions
+Q-0022-01 à Q-0022-04 restent à poser ; le statut demeure donc `À planifier`.
+
 ## Travail attendu
 
 - [ ] Identifier et faire valider la source de vérité du nouvel arbre et la
@@ -28,15 +52,20 @@ les enfants de `SEM/Rédac`.
   parents, responsables, stratégies CGR et affectations utilisateurs.
 - [ ] Définir le traitement des créations, renommages, déplacements,
   désactivations et doublons sans se baser uniquement sur le libellé.
-- [ ] Réutiliser ou étendre la procédure d'import existante avec un mode
-  `dry-run`, un rapport d'anomalies et une transaction d'application.
+- [ ] Compléter la procédure d'import existante pour le référentiel validé :
+  mode `dry-run` détaillant les ajouts, modifications, déplacements et
+  désactivations, rapport des anomalies et comparaison avant/après, puis
+  application transactionnelle. La commande historique décrite dans l'état de
+  l'existant ne couvre qu'une partie de ce besoin.
 - [ ] Préserver les identifiants et les relations lorsqu'une correspondance
   fiable existe ; documenter toute rupture nécessaire.
 - [ ] Vérifier l'intégrité de l'arbre, l'absence de boucle et les références
   aux utilisateurs, CGR, DAE et workflows.
 - [ ] Mettre à jour les associations `user_departments` et les responsables
   uniquement à partir de la source validée.
-- [ ] Ajouter les tests d'import et les contrôles de non-régression.
+- [ ] Compléter les tests d'import pour couvrir l'application transactionnelle,
+  l'intégrité de l'arbre et les contrôles de non-régression ; les tests
+  existants couvrent la préparation des CSV et le mode simulation.
 
 ## Critères d'acceptation
 
