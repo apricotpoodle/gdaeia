@@ -16,6 +16,128 @@ final class FieldAuthorizationMigrationIntegrationTest extends TestCase
 
     private const TARGET_MIGRATION = 20261106110000;
 
+    private const PREVIOUS_MIGRATION = 20261118150000;
+
+    private const APPLICANT_NAME_MIGRATION = 20261120100000;
+
+    /** Vérifie le catalogue et l'héritage des droits des noms de candidat. */
+    public function testLesChampsNomEtPrenomReprennentLesDroitsDuNomHistorique(): void
+    {
+        $connection = $this->assertUsesDedicatedTestDatabase();
+        $migrations = new Migrations();
+        $migrations->migrate(['connection' => 'test']);
+
+        $originalFieldAuthorizations = $this->snapshotTable($connection, 'field_authorizations');
+        $originalFieldDefinitions = $this->snapshotTable($connection, 'field_definitions');
+        $originalRoleAutoIncrement = $this->getAutoIncrement($connection, 'roles');
+        $migrationTables = $connection->getSchemaCollection()->listTables();
+        $legacyMigrationTables = Configure::read('Migrations.legacyTables');
+        $migrationTable = $legacyMigrationTables === true
+            || ($legacyMigrationTables !== false && in_array('phinxlog', $migrationTables, true))
+            ? 'phinxlog'
+            : 'cake_migrations';
+        $originalMigrationHistory = $connection->execute(
+            sprintf('SELECT * FROM `%s`', $migrationTable),
+        )->fetchAll('assoc');
+        $roleId = null;
+
+        try {
+            $migrations->rollback([
+                'connection' => 'test',
+                'target' => self::PREVIOUS_MIGRATION,
+            ]);
+
+            $roleId = $this->createMigrationTestRole($connection);
+            $this->insertApplicantNameAuthorizations($connection, $roleId);
+
+            $roleIds = array_column(
+                $connection->execute('SELECT id FROM roles')->fetchAll('assoc'),
+                'id',
+            );
+            $sourceAccessLevels = [];
+            foreach (
+                $connection->execute(
+                    "SELECT role_id, access_level FROM field_authorizations
+                     WHERE resource = 'Applicationforms'
+                       AND target_type = 'field'
+                       AND target = 'applicantname'",
+                )->fetchAll('assoc') as $authorization
+            ) {
+                $sourceAccessLevels[$authorization['role_id']] = $authorization['access_level'];
+            }
+            $managedAccessLevels = [];
+            foreach (
+                $connection->execute(
+                    "SELECT role_id, target, access_level FROM field_authorizations
+                     WHERE resource = 'Applicationforms'
+                       AND target_type = 'field'
+                       AND target IN ('applicant_first_name', 'applicant_last_name')",
+                )->fetchAll('assoc') as $authorization
+            ) {
+                $managedAccessLevels[$authorization['role_id']][$authorization['target']] =
+                    $authorization['access_level'];
+            }
+
+            $migrations->migrate([
+                'connection' => 'test',
+                'target' => self::APPLICANT_NAME_MIGRATION,
+            ]);
+
+            $definitions = $connection->execute(
+                "SELECT field FROM field_definitions
+                 WHERE resource = 'Applicationforms'
+                   AND field IN ('applicant_first_name', 'applicant_last_name')
+                 ORDER BY field",
+            )->fetchAll('assoc');
+            $this->assertSame(
+                ['applicant_first_name', 'applicant_last_name'],
+                array_column($definitions, 'field'),
+            );
+
+            $authorizations = $connection->execute(
+                "SELECT role_id, target, access_level FROM field_authorizations
+                 WHERE resource = 'Applicationforms'
+                   AND target_type = 'field'
+                   AND target IN ('applicant_first_name', 'applicant_last_name')
+                 ORDER BY role_id, target",
+            )->fetchAll('assoc');
+            $this->assertCount(count($roleIds) * 2, $authorizations);
+            $actualAccessLevels = [];
+            foreach ($authorizations as $authorization) {
+                $actualAccessLevels[$authorization['role_id']][$authorization['target']] =
+                    $authorization['access_level'];
+            }
+
+            foreach ($roleIds as $currentRoleId) {
+                $expectedAccessLevel = $sourceAccessLevels[$currentRoleId] ?? 'NONE';
+                foreach (['applicant_first_name', 'applicant_last_name'] as $field) {
+                    $expected = $managedAccessLevels[$currentRoleId][$field] ?? $expectedAccessLevel;
+                    $this->assertSame(
+                        $expected,
+                        $actualAccessLevels[$currentRoleId][$field] ?? null,
+                        sprintf('Le champ %s doit suivre le droit de applicantname pour le rôle %s.', $field, $currentRoleId),
+                    );
+                }
+            }
+        } finally {
+            try {
+                $migrations->rollback([
+                    'connection' => 'test',
+                    'target' => self::PREVIOUS_MIGRATION,
+                ]);
+            } finally {
+                if ($roleId !== null) {
+                    $connection->delete('field_authorizations', ['role_id' => $roleId]);
+                    $connection->delete('roles', ['id' => $roleId]);
+                }
+                $this->restoreTable($connection, $originalFieldAuthorizations);
+                $this->restoreTable($connection, $originalFieldDefinitions);
+                $this->restoreMigrationHistory($connection, $migrationTable, $originalMigrationHistory);
+                $this->restoreAutoIncrement($connection, 'roles', $originalRoleAutoIncrement);
+            }
+        }
+    }
+
     /** Vérifie la conversion des zones et la conservation des droits existants. */
     public function testLesAutorisationsHistoriquesSontConvertiesSansPerteDeDonnees(): void
     {
@@ -190,6 +312,26 @@ final class FieldAuthorizationMigrationIntegrationTest extends TestCase
                     'access_level' => $authorization['access_level'],
                 ],
             );
+        }
+    }
+
+    /** Prépare un droit de référence et un droit administré à préserver. */
+    private function insertApplicantNameAuthorizations(Connection $connection, int $roleId): void
+    {
+        foreach (
+            [
+                ['target' => 'applicantname', 'access_level' => 'VIEW'],
+                ['target' => 'applicant_first_name', 'access_level' => 'NONE'],
+            ] as $authorization
+        ) {
+            $connection->insert('field_authorizations', [
+                'role_id' => $roleId,
+                'resource' => 'Applicationforms',
+                'target_type' => 'field',
+                'target' => $authorization['target'],
+                'access_level' => $authorization['access_level'],
+                'created' => '2026-11-20 09:00:00',
+            ]);
         }
     }
 

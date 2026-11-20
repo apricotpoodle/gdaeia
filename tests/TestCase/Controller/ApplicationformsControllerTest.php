@@ -179,7 +179,7 @@ class ApplicationformsControllerTest extends TestCase
         }
     }
 
-    public function testUnDemandeurPeutCreerUneDemandeSansInjecterLeCreateurNiLesChampsReserves(): void
+    public function testUnDemandeurPeutCreerEtModifierLeNomDuCandidat(): void
     {
         $connection = ConnectionManager::get('test');
         $now = '2026-11-18 10:00:00';
@@ -194,6 +194,8 @@ class ApplicationformsControllerTest extends TestCase
             'modified' => $now,
         ]);
         $this->grantPermission(User::ROLE_DEMANDEUR, 'applicationforms', 'create', 'self');
+        $this->grantPermission(User::ROLE_DEMANDEUR, 'applicationforms', 'read', 'self');
+        $this->grantPermission(User::ROLE_DEMANDEUR, 'applicationforms', 'update', 'self');
         $connection->update('users', ['role_id' => User::ROLE_DEMANDEUR], ['id' => 2]);
         $connection->insert('user_departments', [
             'id' => 2,
@@ -214,7 +216,9 @@ class ApplicationformsControllerTest extends TestCase
             'worktime_id' => 1,
             'grossremuneration' => '2500.00',
             'period_id' => 1,
-            'applicantname' => 'Camille Martin',
+            'applicantname' => '',
+            'applicant_first_name' => 'Camille',
+            'applicant_last_name' => 'Martin',
         ];
         $authorizationIds = [];
         try {
@@ -265,6 +269,8 @@ class ApplicationformsControllerTest extends TestCase
                 ->firstOrFail();
             $this->assertSame(2, (int)$created->get('user_id'));
             $this->assertSame(2, (int)$created->get('department_id'));
+            $this->assertSame('Camille', $created->get('applicant_first_name'));
+            $this->assertSame('Martin', $created->get('applicant_last_name'));
             $this->assertSame('Camille Martin', $created->get('applicantname'));
             $this->assertNull($created->get('hr_description'));
             $this->assertNull($created->get('control_management_validation'));
@@ -272,6 +278,41 @@ class ApplicationformsControllerTest extends TestCase
             $this->assertNull($created->get('budgetfeature_id'));
             $this->assertNull($created->get('yesno_id'));
             $this->assertNull($created->get('qualification'));
+
+            $createdId = (int)$created->get('id');
+            $this->post('/applicationforms/edit/' . $createdId, [
+                'applicantname' => '',
+                'applicant_first_name' => 'Alice',
+                'applicant_last_name' => 'Bernard',
+            ]);
+
+            $this->assertRedirect(['controller' => 'Applicationforms', 'action' => 'index']);
+            $edited = $applicationforms->get($createdId);
+            $this->assertSame('Alice', $edited->get('applicant_first_name'));
+            $this->assertSame('Bernard', $edited->get('applicant_last_name'));
+            $this->assertSame('Alice Bernard', $edited->get('applicantname'));
+
+            $connection->update(
+                'field_authorizations',
+                ['access_level' => 'VIEW'],
+                [
+                    'role_id' => User::ROLE_DEMANDEUR,
+                    'resource' => 'Applicationforms',
+                    'target_type' => 'field',
+                    'target IN' => ['applicantname', 'applicant_first_name', 'applicant_last_name'],
+                ],
+            );
+            $this->post('/applicationforms/edit/' . $createdId, [
+                'applicantname' => 'Nom falsifié',
+                'applicant_first_name' => 'Nom',
+                'applicant_last_name' => 'Falsifié',
+            ]);
+
+            $this->assertRedirect(['controller' => 'Applicationforms', 'action' => 'index']);
+            $unchanged = $applicationforms->get($createdId);
+            $this->assertSame('Alice', $unchanged->get('applicant_first_name'));
+            $this->assertSame('Bernard', $unchanged->get('applicant_last_name'));
+            $this->assertSame('Alice Bernard', $unchanged->get('applicantname'));
         } finally {
             if ($authorizationIds !== []) {
                 $connection->delete('field_authorizations', ['id IN' => $authorizationIds]);
