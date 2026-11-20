@@ -36,6 +36,22 @@ test('configure le message de chargement Tabulator par défaut en français', ()
     assert.equal(builder.config.dataLoaderLoading, 'Chargement en cours...');
 });
 
+test('compile une colonne Actions qui ne se replie jamais en mode responsive', () => {
+    const previousDocument = globalThis.document;
+    globalThis.document = { querySelector: () => null };
+
+    try {
+        const builder = new TabulatorBuilder('#comments-grid').setWithActions(['edit']);
+        builder._compileActionColumn();
+
+        const actionsColumn = builder.config.columns.find(column => column.field === '_actions');
+        assert.ok(actionsColumn);
+        assert.equal(actionsColumn.responsive, 0);
+    } finally {
+        globalThis.document = previousDocument;
+    }
+});
+
 test('la pagination distante désactive le chargement progressif', () => {
     const builder = new TabulatorBuilder('#comments-grid');
     builder.config.progressiveLoad = 'scroll';

@@ -65,6 +65,12 @@ La méthode `.setWithActions()` du `TabulatorBuilder` applique par défaut les b
 * `edit` (Update / Bouton Primary Bleu)
 * `delete` (Delete / Bouton Danger Rouge)
 
+La colonne `_actions` utilise la priorité responsive `0` de Tabulator et ne se
+replie donc pas, même sur une grille étroite ou sans données. Les autres colonnes
+conservent le repli adaptatif. Le `TabulatorObserver`, le `TabulatorBuilder` et
+la `TabulatorFactory` sont chargés par les imports ES modules des scripts de
+page ; le layout ne charge que le script fournisseur Tabulator.
+
 Le bouton `create` (Create / Bouton Success Vert) est quant à lui inclus de base et géré de manière centralisée dans l'en-tête via le menu engrenage.
 
 **Usage standard (KISS) :**

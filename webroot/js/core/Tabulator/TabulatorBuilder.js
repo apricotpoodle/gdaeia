@@ -421,6 +421,7 @@ export class TabulatorBuilder {
             field: "_actions",
             headerSort: false,
             headerFilter: false,
+            responsive: 0,
             hozAlign: "right",
             headerHozAlign: "right",
             // 💡 2. VERROU STRICT : Interdit à Tabulator d'étirer ou d'écraser cette colonne

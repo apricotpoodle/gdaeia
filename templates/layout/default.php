@@ -48,12 +48,6 @@ $applicationTimezone = (string)\Cake\Core\Configure::read('App.defaultTimezone',
     <?= $this->Html->script('/assets/tabulator/js/tabulator.min.js') ?>
     <?= $this->Html->script('views/Users/user-departments-tree.js', ['type' => 'module', 'block' => 'scriptBottom']) ?>
 
-    <!-- Infrastructure Tabulator (ADR ES6 Modules) -->
-    <!-- Ajout indispensable de 'type' => 'module' -->
-    <?= $this->Html->script('core/Tabulator/TabulatorObserver.js', ['type' => 'module']) ?>
-    <?= $this->Html->script('core/Tabulator/TabulatorBuilder.js', ['type' => 'module']) ?>
-    <?= $this->Html->script('core/Tabulator/TabulatorFactory.js', ['type' => 'module']) ?>
-
     <!-- Blocs dynamiques CakePHP -->
     <?= $this->fetch('meta') ?>
     <?= $this->fetch('css') ?>

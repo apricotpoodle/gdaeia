@@ -8,7 +8,7 @@ import {
     createDepartmentSelector,
 } from '../../webroot/js/views/ValidationCircuitRules/circuit-rules.js';
 import { TabulatorFactory } from '../../webroot/js/core/Tabulator/TabulatorFactory.js';
-import { TabulatorBuilder } from '../../webroot/js/core/Tabulator/TabulatorBuilder.js?v=20261030120000';
+import { TabulatorBuilder } from '../../webroot/js/core/Tabulator/TabulatorBuilder.js?v=20261120120000';
 
 const tree = [{ id: 1, name: 'Rédaction', children: [
     { id: 2, name: 'Service A', children: [{ id: 3, name: 'Équipe' }] },

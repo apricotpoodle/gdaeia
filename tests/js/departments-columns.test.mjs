@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { TabulatorFactory } from '../../webroot/js/core/Tabulator/TabulatorFactory.js';
-import { TabulatorBuilder } from '../../webroot/js/core/Tabulator/TabulatorBuilder.js?v=20261030120000';
+import { TabulatorBuilder } from '../../webroot/js/core/Tabulator/TabulatorBuilder.js?v=20261120120000';
 import { refreshAssociationTables } from '../../webroot/js/views/Departments/association-refresh.js';
 import { refreshDepartmentSummary, renderDepartmentSummary } from '../../webroot/js/views/Departments/department-summary.js';
 
