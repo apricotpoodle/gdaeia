@@ -24,6 +24,7 @@ manifestes des sous-workflows sont leur source de vérité opérationnelle.
 - [0017 — Implémenter les circuits courts locaux de validation](0017-implementer-les-circuits-courts-locaux.md) — implémenté selon l’ADR 0070 ; configuration métier manuelle à effectuer.
 - [0022 — Mettre à jour le référentiel des départements](0022-mettre-a-jour-le-referentiel-des-departements.md) — priorité moyenne ; actualiser principalement les fils de SEM/Rédac avec une procédure contrôlée.
 - [0023 — Migrer la base de données vers une nouvelle instance](0023-migrer-la-base-de-donnees.md) — priorité moyenne ; documenter une exportation/restauration reproductible et vérifiable.
+- [0041 — Administrer les permissions par rôle](0041-administrer-permissions-par-role.md) — priorité haute ; gestion séquentielle des attributions du catalogue, sans changement de la matrice initiale.
 
 ## Tickets terminés
 
