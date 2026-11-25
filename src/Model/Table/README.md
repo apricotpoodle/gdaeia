@@ -64,3 +64,8 @@ références ; la validité opérationnelle est contrôlée par le service parta
 `Applicationforms::isCircuitLocked()` et le contrôle `beforeSave` interdisent
 un changement de département ou de contrat dès qu'un cycle existe, quel que
 soit son état. Seule sa remise à zéro autorisée lève ce verrou.
+La Policy n'autorise cette remise à zéro qu'avant l'ouverture de la dernière
+séquence de l'instantané, y compris pour les circuits courts. La mutation
+verrouille l'exécution comme le vote, revérifie la limite, puis supprime les
+étapes et votes du cycle dans la transaction. Les validations étrangères au
+cycle et les données de la DAE restent intactes.

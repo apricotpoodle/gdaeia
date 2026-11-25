@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace App\Test\TestCase\Policy;
 
 use App\Model\Entity\Applicationform;
+use App\Model\Entity\Applicationvalidationstep;
 use App\Model\Entity\Contracttype;
 use App\Model\Entity\User;
 use App\Model\Entity\ValidationWorkflowRun;
@@ -13,6 +14,7 @@ use Cake\ORM\Query\SelectQuery;
 use Cake\ORM\Table;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
+use DateTimeImmutable;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 /** Vérifie les permissions de workflow sans fixtures ni migration. */
@@ -20,14 +22,32 @@ final class ApplicationformWorkflowPermissionsTest extends TestCase
 {
     private int $runCount = 0;
     private string $contractCode = 'PIGE';
+    private bool $lastSequenceActivated = false;
 
     protected function setUp(): void
     {
         parent::setUp();
         $runs = $this->createStub(SelectQuery::class);
+        $runs->method('select')->willReturnSelf();
         $runs->method('where')->willReturnSelf();
         $runs->method('count')->willReturnCallback(fn(): int => $this->runCount);
+        $runs->method('first')->willReturnCallback(fn(): ?ValidationWorkflowRun => $this->runCount === 1
+            ? new ValidationWorkflowRun(['id' => 42])
+            : null);
         $this->registerQuery('ValidationWorkflowRuns', $runs);
+
+        $steps = $this->createStub(SelectQuery::class);
+        $steps->method('select')->willReturnSelf();
+        $steps->method('where')->willReturnSelf();
+        $steps->method('orderByDesc')->willReturnSelf();
+        $steps->method('first')->willReturnCallback(fn(): Applicationvalidationstep => new Applicationvalidationstep([
+            'sequence_number' => 2,
+            'activated_at' => $this->lastSequenceActivated ? new DateTimeImmutable() : null,
+        ]));
+        $stepsTable = $this->createStub(Table::class);
+        $stepsTable->method('find')->willReturn($steps);
+        $stepsTable->method('exists')->willReturnCallback(fn(): bool => $this->lastSequenceActivated);
+        TableRegistry::getTableLocator()->set('Applicationvalidationsteps', $stepsTable);
 
         $contracts = $this->createStub(SelectQuery::class);
         $contracts->method('select')->willReturnSelf();
@@ -41,6 +61,7 @@ final class ApplicationformWorkflowPermissionsTest extends TestCase
     protected function tearDown(): void
     {
         TableRegistry::getTableLocator()->remove('ValidationWorkflowRuns');
+        TableRegistry::getTableLocator()->remove('Applicationvalidationsteps');
         TableRegistry::getTableLocator()->remove('Contracttypes');
         parent::tearDown();
     }
@@ -113,6 +134,8 @@ final class ApplicationformWorkflowPermissionsTest extends TestCase
         $this->assertFalse($policy->canResetValidation($administrator, $form));
         $this->runCount = 1;
         $this->assertTrue($policy->canResetValidation($administrator, $form));
+        $this->lastSequenceActivated = true;
+        $this->assertFalse($policy->canResetValidation($administrator, $form));
         $this->assertFalse($policy->canResetValidation(new User(['id' => 10, 'role_id' => 2]), $form));
     }
 

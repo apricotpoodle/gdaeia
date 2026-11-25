@@ -243,11 +243,7 @@ class ApplicationformPolicy extends AppPolicy
             return false;
         }
 
-        return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
-            ->where([
-                ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID),
-            ])
-            ->count() === 1;
+        return (new ApplicationformValidationWorkflow())->canReset($applicationform);
     }
 
     /** Seul un administrateur visible peut relancer un cycle bloqué. */

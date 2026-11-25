@@ -2,7 +2,7 @@
 
 **Date :** 25 novembre 2026
 
-**Statut :** Proposé
+**Statut :** Accepté
 
 **Dépendances :** [ADR 0055](./0055-workflow-validation-applicationforms.md),
 [ADR 0056](./0056-remise-a-zero-cycle-validation.md),
@@ -14,11 +14,13 @@
 L'ADR 0056 autorise un administrateur habilité à remettre à zéro un cycle
 existant et l'ADR 0057 expose cette opération sur la grille et la fiche. Le
 plan GDAE V3 retient ce mécanisme suivi d'une relance et limite la remise à
-zéro à la période qui précède la dernière séquence du cycle. La confirmation
-métier sur la suffisance du mécanisme et ses effets reste ouverte dans le
-[registre des questions](../meetings/questions-ouvertes.md), à Q-0030-02.
+zéro à la période qui précède la dernière séquence du cycle. Le métier a
+confirmé la suffisance de ce mécanisme et accepté la suppression des votes et
+étapes sans piste d'audit applicative, avec conservation de la DAE et de ses
+données. Cette réponse est consignée à Q-0030-02 dans le
+[registre des questions](../meetings/questions-ouvertes.md).
 
-## Décision proposée
+## Décision
 
 Amender la condition d'éligibilité de l'ADR 0056. Un administrateur habilité
 peut remettre à zéro un cycle existant tant que celui-ci n'a pas atteint sa
@@ -67,9 +69,10 @@ modifications ultérieures de paramétrage.
   commentaires. Le cycle supprimé n'est plus disponible comme piste d'audit
   applicative.
 
-## Vérifications prévues
+## Vérifications
 
 Le [ticket 0033](../backlog/0033-reprendre-une-dae-pendant-son-circuit.md)
-prévoit de vérifier la remise à zéro avant la limite et son refus dès la
-dernière séquence, y compris avec un circuit court, une séquence unique et
-une progression concurrente.
+vérifie l'éligibilité sur l'instantané du cycle, le refus dès l'ouverture de
+la dernière séquence et la revalidation par la mutation après progression.
+Les scénarios couvrent un circuit court, une séquence unique, des rôles
+parallèles dans la dernière séquence et une étape étrangère au cycle.

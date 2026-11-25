@@ -84,7 +84,7 @@ Ce répertoire centralise les décisions d'architecture (ADR) structurant l'appl
 | **ADR 0073** | Distinction entre visibilité et gérabilité des utilisateurs | **Accepté** | [`0073-visibilite-et-manageabilite-des-utilisateurs.md`](./0073-visibilite-et-manageabilite-des-utilisateurs.md) |
 | **ADR 0074** | Articulation des habilitations locales des circuits courts | **Proposé** | [`0074-articulation-habilitations-locales-circuits-courts.md`](./0074-articulation-habilitations-locales-circuits-courts.md) |
 | **ADR 0075** | Protection des références socles | **Proposé** | [`0075-protection-references-socles.md`](./0075-protection-references-socles.md) |
-| **ADR 0076** | Limiter la remise à zéro avant la dernière séquence du cycle | **Proposé** | [`0076-limiter-remise-a-zero-avant-derniere-sequence.md`](./0076-limiter-remise-a-zero-avant-derniere-sequence.md) |
+| **ADR 0076** | Limiter la remise à zéro avant la dernière séquence du cycle | **Accepté** | [`0076-limiter-remise-a-zero-avant-derniere-sequence.md`](./0076-limiter-remise-a-zero-avant-derniere-sequence.md) |
 
 ---
 

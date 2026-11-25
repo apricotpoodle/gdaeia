@@ -53,7 +53,7 @@ supprimé. Il reste à vérifier avec le métier si ces mécanismes suffisent.
 - Retirer €/heure des nouvelles saisies et conserver l'historique.
 - Réutiliser la remise à zéro et la relance existantes. La remise à zéro
   est réservée aux cycles qui n'ont pas atteint leur dernière séquence
-  configurée, selon l'ADR 0076 proposé.
+  configurée, selon l'ADR 0076.
 - Archiver manuellement, avec restauration possible, en excluant les
   cycles actifs. Appliquer les droits habituels de lecture et conserver
   les données sans purge automatique.
@@ -135,8 +135,10 @@ réconciliée. Le ticket 0030 est terminé. À cette clôture, les questions
 Q-0018-02 à Q-0018-04, Q-0030-01 à Q-0030-03 et Q-0030-07 restaient ouvertes.
 Les réponses Q-0018-02 à Q-0018-04 et le cadrage de Q-0030-01 sont depuis
 consignés et appliqués au ticket 0031. Q-0030-02, Q-0030-03 et Q-0030-07
-bloquent respectivement les tickets 0033, 0034 et 0037. L'ADR 0075 demeure
-`Proposé`. Les réponses à Q-0030-04, Q-0030-05 et
+bloquaient respectivement les tickets 0033, 0034 et 0037. Le métier a depuis
+confirmé Q-0030-02; le ticket 0033 est terminé. Q-0030-03 et Q-0030-07
+bloquent toujours les tickets 0034 et 0037. L'ADR 0075 demeure `Proposé`.
+Les réponses à Q-0030-04, Q-0030-05 et
 Q-0030-06 sont consignées ; la réalisation des commandes et notifications
 reste couverte par le ticket 0035.
 
@@ -146,4 +148,4 @@ reste couverte par le ticket 0035.
 - [Questions métier ouvertes](../meetings/questions-ouvertes.md)
 - [ADR 0048 — Découpage de l'IHM Applicationform](../adr/0048-decoupage-ihm-zones-applicationform.md)
 - [ADR 0072 — Associations multiples de départements et CGR](../adr/0072-associations-multiples-departements-cgr.md)
-- [ADR 0076 proposé — Limiter la remise à zéro avant la dernière séquence](../adr/0076-limiter-remise-a-zero-avant-derniere-sequence.md)
+- [ADR 0076 accepté — Limiter la remise à zéro avant la dernière séquence](../adr/0076-limiter-remise-a-zero-avant-derniere-sequence.md)

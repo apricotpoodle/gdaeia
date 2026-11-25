@@ -29,7 +29,6 @@ class ApplicationformsControllerTest extends TestCase
     private bool $capturePrepared = false;
 
     private const WORKFLOW_TEST_ID = 900_001;
-    private const RESET_TEST_RUN_ID = 900_002;
 
     protected array $fixtures = [
         'app.FieldDefinitions',
@@ -1384,29 +1383,42 @@ class ApplicationformsControllerTest extends TestCase
 
     public function testUnAdministrateurPeutRemettreAZeroUnCycleExistant(): void
     {
+        $this->configureVisibilityWorkflow();
         $connection = ConnectionManager::get('test');
         $now = '2026-09-17 12:00:00';
-        $connection->insert('validation_workflow_runs', [
-            'id' => self::RESET_TEST_RUN_ID,
-            'applicationform_id' => 1,
-            'started_by_user_id' => 1,
-            'state' => 'en_attente',
-            'started_at' => $now,
-            'created' => $now,
-            'modified' => $now,
-        ]);
+        $connection->update('applicationvalidationsteps', [
+            'state' => 'a_venir',
+            'activated_at' => null,
+        ], ['id' => self::WORKFLOW_TEST_ID + 1]);
+        $connection->update('applicationvalidationsteps', [
+            'activated_at' => $now,
+        ], ['id' => self::WORKFLOW_TEST_ID]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
 
-        try {
-            $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
-            $this->enableCsrfToken();
-            $this->post('/api/applicationforms/1/validation/reset.json');
+        $this->post('/api/applicationforms/1/validation/reset.json');
 
-            $this->assertResponseOk();
-            $this->assertResponseContains('"success":true');
-            $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM validation_workflow_runs WHERE id = ' . self::RESET_TEST_RUN_ID)->fetchColumn(0));
-        } finally {
-            $connection->delete('validation_workflow_runs', ['id' => self::RESET_TEST_RUN_ID]);
-        }
+        $this->assertResponseOk();
+        $this->assertResponseContains('"success":true');
+        $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM validation_workflow_runs WHERE id = ' . self::WORKFLOW_TEST_ID)->fetchColumn(0));
+        $this->assertSame(0, (int)$connection->execute('SELECT COUNT(*) FROM applicationvalidationsteps WHERE validation_workflow_run_id = ' . self::WORKFLOW_TEST_ID)->fetchColumn(0));
+    }
+
+    public function testUnAdministrateurNePeutPasRemettreAZeroUnCycleASequenceUnique(): void
+    {
+        $this->configureActiveWorkflowForEdit();
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationvalidationsteps', [
+            'activated_at' => '2026-09-17 12:00:00',
+        ], ['id' => self::WORKFLOW_TEST_ID]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/1/validation/reset.json');
+
+        $this->assertResponseCode(403);
+        $this->assertSame(1, (int)$connection->execute('SELECT COUNT(*) FROM validation_workflow_runs WHERE id = ' . self::WORKFLOW_TEST_ID)->fetchColumn(0));
+        $this->assertSame(1, (int)$connection->execute('SELECT COUNT(*) FROM applicationvalidationsteps WHERE id = ' . self::WORKFLOW_TEST_ID)->fetchColumn(0));
     }
 
     /** Vérifie qu'un opérateur ordinaire ne peut pas déclencher une relance. */

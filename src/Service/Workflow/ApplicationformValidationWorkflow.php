@@ -315,8 +315,40 @@ final class ApplicationformValidationWorkflow
     public function reset(Applicationform $applicationform): array
     {
         return $this->runs->getConnection()->transactional(function () use ($applicationform): array {
+            /** @var \App\Model\Entity\ValidationWorkflowRun|null $run */
+            $run = $this->runs->find()
+                ->select(['id'])
+                ->where(['applicationform_id' => $applicationform->id])
+                ->epilog('FOR UPDATE')
+                ->first();
+            if ($run === null) {
+                throw new RuntimeException(__('Aucun cycle de validation ne peut être remis à zéro.'));
+            }
+            if (!$this->isBeforeFinalSequence((int)$run->id)) {
+                throw new RuntimeException(
+                    __('La remise à zéro est refusée, car la dernière séquence du cycle est ouverte.'),
+                );
+            }
+
             return $this->purgeRun($applicationform, true);
         });
+    }
+
+    /**
+     * Indique si un cycle existe sans avoir ouvert sa dernière séquence.
+     *
+     * @param \App\Model\Entity\Applicationform $applicationform Demande à vérifier.
+     * @return bool Résultat de l'éligibilité métier.
+     */
+    public function canReset(Applicationform $applicationform): bool
+    {
+        /** @var \App\Model\Entity\ValidationWorkflowRun|null $run */
+        $run = $this->runs->find()
+            ->select(['id'])
+            ->where(['applicationform_id' => $applicationform->id])
+            ->first();
+
+        return $run !== null && $this->isBeforeFinalSequence((int)$run->id);
     }
 
     /**
@@ -385,6 +417,26 @@ final class ApplicationformValidationWorkflow
         ];
     }
 
+    /** Une remise à zéro est permise tant qu'aucune étape finale n'est ouverte. */
+    private function isBeforeFinalSequence(int $runId): bool
+    {
+        /** @var \App\Model\Entity\Applicationvalidationstep|null $lastStep */
+        $lastStep = $this->steps->find()
+            ->select(['sequence_number'])
+            ->where(['validation_workflow_run_id' => $runId])
+            ->orderByDesc('sequence_number')
+            ->first();
+        if ($lastStep === null || $lastStep->sequence_number === null) {
+            return false;
+        }
+
+        return !$this->steps->exists([
+            'validation_workflow_run_id' => $runId,
+            'sequence_number' => $lastStep->sequence_number,
+            'activated_at IS NOT' => null,
+        ]);
+    }
+
     /** @return array{state: string, nextRecipients: list<\App\Model\Entity\User>, final: bool, comment: string} */
     public function vote(
         Applicationform $applicationform,
@@ -402,10 +454,17 @@ final class ApplicationformValidationWorkflow
             $comment,
             $isProxy,
         ) {
+            // Le verrou de l'exécution est partagé avec la remise à zéro afin
+            // qu'aucune progression ne puisse dépasser son contrôle métier.
+            /** @var \App\Model\Entity\ValidationWorkflowRun|null $run */
+            $run = $this->runs->find()->where([
+                'applicationform_id' => $applicationform->id,
+            ])->epilog('FOR UPDATE')->first();
+            if ($run === null) {
+                throw new RuntimeException(__('Aucun cycle actif ne permet ce vote.'));
+            }
+
             /** @var \App\Model\Entity\Applicationvalidationstep|null $step */
-            // Verrouiller l'étape avant toute décision garantit qu'un second
-            // vote concurrent observe le premier vote une fois la transaction
-            // précédente validée.
             $step = $this->steps->find()
                 ->where(['id' => $stepId, 'applicationform_id' => $applicationform->id])
                 ->epilog('FOR UPDATE')
@@ -416,12 +475,7 @@ final class ApplicationformValidationWorkflow
             if ($hasVote) {
                 throw new RuntimeException(__('Votre collègue a déjà voté pour cette étape de validation.'));
             }
-            /** @var \App\Model\Entity\ValidationWorkflowRun|null $run */
-            $run = $this->runs->find()->where([
-                'applicationform_id' => $applicationform->id,
-                'state' => ValidationWorkflowRun::STATE_PENDING,
-            ])->first();
-            if ($run === null) {
+            if ($run->state !== ValidationWorkflowRun::STATE_PENDING) {
                 throw new RuntimeException(__('Aucun cycle actif ne permet ce vote.'));
             }
             if (

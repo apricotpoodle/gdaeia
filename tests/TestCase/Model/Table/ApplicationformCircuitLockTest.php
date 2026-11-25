@@ -47,7 +47,16 @@ class ApplicationformCircuitLockTest extends TestCase
 
     public function testLaRemiseAZeroLibereLeContratEtLeDepartement(): void
     {
-        $this->createRun('acceptee');
+        $runId = $this->createRun('acceptee');
+        ConnectionManager::get('test')->insert('applicationvalidationsteps', [
+            'applicationform_id' => 1,
+            'validation_workflow_run_id' => $runId,
+            'validationsequence_id' => 1,
+            'role_id' => 2,
+            'sequence_number' => 2,
+            'state' => 'a_venir',
+            'reminder_count' => 0,
+        ]);
         ConnectionManager::get('test')->insert('contracttypes', [
             'id' => 2, 'base' => 1, 'code' => 'AUTRE', 'name' => 'Autre contrat', 'sort' => 'Autre contrat',
             'created' => '2026-11-06 10:00:00', 'modified' => '2026-11-06 10:00:00',
@@ -76,12 +85,28 @@ class ApplicationformCircuitLockTest extends TestCase
         $this->assertSame('Poste corrigé', $table->get(1)->jobtitle);
     }
 
-    private function createRun(string $state): void
+    private function createRun(string $state): int
     {
-        ConnectionManager::get('test')->insert('validation_workflow_runs', [
+        $connection = ConnectionManager::get('test');
+        $connection->insert('validation_workflow_runs', [
             'applicationform_id' => 1, 'started_by_user_id' => 1, 'state' => $state,
             'started_at' => '2026-11-06 10:00:00', 'created' => '2026-11-06 10:00:00',
             'modified' => '2026-11-06 10:00:00',
         ]);
+        $runId = (int)$connection->execute(
+            'SELECT id FROM validation_workflow_runs WHERE applicationform_id = 1',
+        )->fetchColumn(0);
+        $connection->insert('applicationvalidationsteps', [
+            'applicationform_id' => 1,
+            'validation_workflow_run_id' => $runId,
+            'validationsequence_id' => 1,
+            'role_id' => 1,
+            'sequence_number' => 1,
+            'state' => $state,
+            'activated_at' => '2026-11-06 10:00:00',
+            'reminder_count' => 0,
+        ]);
+
+        return $runId;
     }
 }

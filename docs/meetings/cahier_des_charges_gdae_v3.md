@@ -66,7 +66,7 @@ Le système doit appliquer les règles suivantes au calcul du "Salaire de base" 
 ## 4. Administration et Paramétrage
 
 * **Administration locale.** Les utilisateurs de rôle ADMIN peuvent gérer les affectations d'utilisateurs et de codes CGR existants aux services qu'ils voient. Les comptes, les rôles, les services et le catalogue CGR global sont hors du périmètre de cette administration locale.
-* **Reprise d'une DAE.** Le plan retient la remise à zéro et la relance existantes pour les administrateurs habilités. La remise à zéro est réservée aux cycles qui n'ont pas atteint leur dernière séquence configurée. La confirmation métier sur les effets de la remise à zéro reste attendue (Q-0030-02). Voir l'[ADR 0076 proposé](../adr/0076-limiter-remise-a-zero-avant-derniere-sequence.md).
+* **Reprise d'une DAE.** Le métier confirme que la remise à zéro et la relance existantes suffisent pour les administrateurs habilités, et accepte la suppression des votes et des étapes sans piste d'audit applicative. La remise à zéro est réservée aux cycles qui n'ont pas atteint leur dernière séquence configurée. Voir l'[ADR 0076 accepté](../adr/0076-limiter-remise-a-zero-avant-derniere-sequence.md).
 * **Gestion multi-chefs :** Possibilité d'associer plusieurs chefs de service à un même department.
 
 ---
