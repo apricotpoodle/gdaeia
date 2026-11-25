@@ -4,15 +4,77 @@
 // Standard : Module ES6 & Event-Driven (Miroir de Users/index.js)
 // ==============================================================================
 
-import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js?v=20261029180000';
+import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js?v=20261125160000';
 import { globalTabulatorObserver } from '../../core/Tabulator/TabulatorObserver.js';
 import { FlashManager } from '../../core/FlashManager.js';
-import { getApplicationformColumns } from './applicationform-columns.js?v=20261029170000';
 
 const tableSelector = "#applicationforms-table";
+const isArchivePage = window.location.pathname.replace(/\/$/, '') === '/applicationforms/archives';
+const includeArchivedCheckbox = document.querySelector('#include-archived');
+const includeArchivedInitially = new URLSearchParams(window.location.search).get('include_archived') === '1';
+if (includeArchivedCheckbox) includeArchivedCheckbox.checked = includeArchivedInitially;
 
-// 1. Instanciation directe de la grille via la Factory (identique à Users)
-const applicationformsTable = TabulatorFactory.createApplicationformsGrid(tableSelector);
+// 1. Instanciation de la grille du domaine, avec le filtre d'archive de la page.
+const applicationformsTable = TabulatorFactory.createApplicationformsGrid(tableSelector, {
+    archiveMode: isArchivePage ? 'archives' : 'current',
+    includeArchived: includeArchivedInitially,
+});
+
+async function postArchiveTransition(url, ids = null) {
+    const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
+    if (!csrfToken) throw new Error('Jeton CSRF manquant.');
+    const payload = { _csrfToken: csrfToken };
+    if (Array.isArray(ids)) payload.ids = ids;
+
+    const response = await fetch(url, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+            'X-CSRF-Token': csrfToken,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok || !result.success) {
+        throw new Error(result.message || 'La modification de l’archive a échoué.');
+    }
+
+    FlashManager.success(result.message);
+    await applicationformsTable.replaceData();
+}
+
+function selectedApplicationformIds() {
+    return applicationformsTable.getSelectedData().map((row) => Number(row.id));
+}
+
+async function transitionSelected(action) {
+    const ids = selectedApplicationformIds();
+    if (ids.length === 0) {
+        FlashManager.error('Sélectionnez au moins une demande.');
+        return;
+    }
+    const archive = action === 'archive';
+    const verb = archive ? 'archiver' : 'restaurer';
+    if (!confirm(`Confirmez-vous l’action « ${verb} » sur ${ids.length} demande(s) ?`)) return;
+
+    try {
+        await postArchiveTransition(`/api/applicationforms/${archive ? 'archive' : 'restore'}-bulk.json`, ids);
+    } catch (error) {
+        FlashManager.error(`<strong>Action refusée :</strong> ${error.message}`);
+    }
+}
+
+includeArchivedCheckbox?.addEventListener('change', () => {
+    applicationformsTable.setData('/api/applicationforms.json', {
+        include_archived: includeArchivedCheckbox.checked ? '1' : undefined,
+    });
+});
+
+document.querySelector('#archive-selected')?.addEventListener('click', () => transitionSelected('archive'));
+document.querySelector('#restore-selected')?.addEventListener('click', () => transitionSelected('restore'));
 
 // 2. Écouteurs d'événements Pub/Sub sur le bus global
 if (globalTabulatorObserver) {
@@ -47,6 +109,24 @@ if (globalTabulatorObserver) {
             if (!response.ok || !payload.success) throw new Error(payload.message || 'La duplication a échoué.');
             FlashManager.success(payload.message);
             window.location.href = `/applicationforms/edit/${payload.details?.id ?? payload.data?.id ?? ''}`;
+        } catch (error) {
+            FlashManager.error(`<strong>Action refusée :</strong> ${error.message}`);
+        }
+    });
+
+    globalTabulatorObserver.subscribe(`${tableSelector}:action:archive`, async (demande) => {
+        if (!confirm(`Archiver la demande n° ${demande.id} ?`)) return;
+        try {
+            await postArchiveTransition(`/api/applicationforms/${demande.id}/archive.json`);
+        } catch (error) {
+            FlashManager.error(`<strong>Action refusée :</strong> ${error.message}`);
+        }
+    });
+
+    globalTabulatorObserver.subscribe(`${tableSelector}:action:restore`, async (demande) => {
+        if (!confirm(`Restaurer la demande n° ${demande.id} ?`)) return;
+        try {
+            await postArchiveTransition(`/api/applicationforms/${demande.id}/restore.json`);
         } catch (error) {
             FlashManager.error(`<strong>Action refusée :</strong> ${error.message}`);
         }

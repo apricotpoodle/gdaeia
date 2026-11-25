@@ -5,7 +5,7 @@
     {"id":"0031","path":"../0031-aligner-dates-jours-travailles-remuneration.md","status":"Terminé","dependsOn":["0030"]},
     {"id":"0032","path":"../0032-habiliter-administration-locale-par-service.md","status":"À planifier","dependsOn":["0031"]},
     {"id":"0033","path":"../0033-reprendre-une-dae-pendant-son-circuit.md","status":"À planifier","dependsOn":["0032"]},
-    {"id":"0034","path":"../0034-finaliser-archivage-et-acces-archives.md","status":"À planifier","dependsOn":["0033"]},
+    {"id":"0034","path":"../0034-finaliser-archivage-et-acces-archives.md","status":"Terminé","dependsOn":["0033"]},
     {"id":"0035","path":"../0035-completer-notifications-gdae.md","status":"À planifier","dependsOn":["0034"]},
     {"id":"0036","path":"../0036-ajouter-compteur-demandes-a-valider.md","status":"À planifier","dependsOn":["0035"]},
     {"id":"0037","path":"../0037-completer-donnees-imprimees-pdf.md","status":"À planifier","dependsOn":["0036"]},

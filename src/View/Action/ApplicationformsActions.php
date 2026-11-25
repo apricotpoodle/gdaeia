@@ -182,4 +182,46 @@ final class ApplicationformsActions
             ['class' => $class],
         );
     }
+
+    /** Lien vers la liste des DAE archivées, protégé par le droit de lecture. */
+    public static function archives(): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_LINK,
+            __('Archives'),
+            'fa-box-archive',
+            ['action' => 'archives'],
+            'index',
+            'Applicationforms',
+            ['class' => 'btn btn-outline-secondary'],
+        );
+    }
+
+    /** Commande groupée d'archivage, affichée selon la Policy. */
+    public static function archiveSelected(): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_BUTTON,
+            __('Archiver la sélection'),
+            'fa-box-archive',
+            '#',
+            'archiveBulk',
+            'Applicationforms',
+            ['id' => 'archive-selected', 'class' => 'btn btn-outline-warning'],
+        );
+    }
+
+    /** Commande groupée de restauration, affichée selon la Policy. */
+    public static function restoreSelected(): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_BUTTON,
+            __('Restaurer la sélection'),
+            'fa-box-open',
+            '#',
+            'restoreBulk',
+            'Applicationforms',
+            ['id' => 'restore-selected', 'class' => 'btn btn-outline-success'],
+        );
+    }
 }

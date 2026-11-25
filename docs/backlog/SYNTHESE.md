@@ -59,7 +59,7 @@ et met à jour les questions métier avant tout développement dépendant.
 | [0031](0031-aligner-dates-jours-travailles-remuneration.md) | Dates, jours travaillés et rémunération | Terminé |
 | [0032](0032-habiliter-administration-locale-par-service.md) | Administration des références métier par les rôles ADMIN dans leur périmètre | À planifier |
 | [0033](0033-reprendre-une-dae-pendant-son-circuit.md) | Reprise d'une DAE en cours de circuit | À planifier |
-| [0034](0034-finaliser-archivage-et-acces-archives.md) | Archivage et accès aux archives | À planifier |
+| [0034](0034-finaliser-archivage-et-acces-archives.md) | Archivage et accès aux archives | Terminé |
 | [0035](0035-completer-notifications-gdae.md) | Notifications quotidiennes et hebdomadaires | À planifier |
 | [0036](0036-ajouter-compteur-demandes-a-valider.md) | Compteur et filtre des DAE à valider | À planifier |
 | [0037](0037-completer-donnees-imprimees-pdf.md) | Données imprimées du PDF | À planifier |

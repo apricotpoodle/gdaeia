@@ -5,7 +5,6 @@ namespace App\Test\TestCase\Policy;
 
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\Applicationvalidationstep;
-use App\Model\Entity\Contracttype;
 use App\Model\Entity\User;
 use App\Model\Entity\ValidationWorkflowRun;
 use App\Policy\ApplicationformPolicy;
@@ -21,7 +20,6 @@ use PHPUnit\Framework\Attributes\DataProvider;
 final class ApplicationformWorkflowPermissionsTest extends TestCase
 {
     private int $runCount = 0;
-    private string $contractCode = 'PIGE';
     private bool $lastSequenceActivated = false;
 
     protected function setUp(): void
@@ -48,21 +46,12 @@ final class ApplicationformWorkflowPermissionsTest extends TestCase
         $stepsTable->method('find')->willReturn($steps);
         $stepsTable->method('exists')->willReturnCallback(fn(): bool => $this->lastSequenceActivated);
         TableRegistry::getTableLocator()->set('Applicationvalidationsteps', $stepsTable);
-
-        $contracts = $this->createStub(SelectQuery::class);
-        $contracts->method('select')->willReturnSelf();
-        $contracts->method('where')->willReturnSelf();
-        $contracts->method('first')->willReturnCallback(fn(): Contracttype => new Contracttype([
-            'code' => $this->contractCode,
-        ]));
-        $this->registerQuery('Contracttypes', $contracts);
     }
 
     protected function tearDown(): void
     {
         TableRegistry::getTableLocator()->remove('ValidationWorkflowRuns');
         TableRegistry::getTableLocator()->remove('Applicationvalidationsteps');
-        TableRegistry::getTableLocator()->remove('Contracttypes');
         parent::tearDown();
     }
 
@@ -86,12 +75,13 @@ final class ApplicationformWorkflowPermissionsTest extends TestCase
         $form = new Applicationform(['id' => 42, 'user_id' => 10, 'contracttype_id' => 1]);
 
         $this->assertFalse((new ApplicationformPolicy(new PermissionResolver([])))->$method($administrator, $form));
-        $this->assertFalse((new ApplicationformPolicy(new PermissionResolver([
-            $code => ['all'],
-        ])))->$method($administrator, $form));
-        $this->assertTrue((new ApplicationformPolicy(new PermissionResolver([
-            $code => ['unscoped'],
-        ])))->$method($administrator, $form));
+        $grants = [$code => ['all']];
+        if ($method === 'canArchive') {
+            $grants['applicationforms.read'] = ['self'];
+        }
+        $this->assertFalse((new ApplicationformPolicy(new PermissionResolver($grants)))->$method($administrator, $form));
+        $grants[$code] = ['unscoped'];
+        $this->assertTrue((new ApplicationformPolicy(new PermissionResolver($grants)))->$method($administrator, $form));
     }
 
     #[DataProvider('workflowActions')]
@@ -153,22 +143,59 @@ final class ApplicationformWorkflowPermissionsTest extends TestCase
         }
     }
 
-    public function testLArchivageConserveLeContratEtLesRolesAutorises(): void
+    public function testLArchivageSuitLesDroitsHabituelsDeLectureEtAccepteToutContrat(): void
     {
         $policy = new ApplicationformPolicy(new PermissionResolver([
             'applicationforms.archive' => ['unscoped'],
+            'applicationforms.read' => ['all'],
         ]));
-        $form = new Applicationform(['id' => 42, 'user_id' => 10, 'contracttype_id' => 1]);
-        $director = new User(['id' => 10, 'role_id' => User::ROLE_5_VALIDEUR_DIR]);
+        $form = new Applicationform(['id' => 42, 'user_id' => 12, 'contracttype_id' => 1]);
+        $administrator = new User(['id' => 10, 'role_id' => User::ROLE_ADMIN]);
 
-        $this->assertTrue($policy->canArchive($director, $form));
-        $this->contractCode = 'FACTURE';
-        $this->assertTrue($policy->canArchive($director, $form));
-        $this->contractCode = 'CDI';
-        $this->assertFalse($policy->canArchive($director, $form));
-        $this->contractCode = 'PIGE';
+        $this->assertTrue($policy->canArchive($administrator, $form));
+        $this->assertFalse($policy->canArchive(new User(['id' => 10, 'role_id' => User::ROLE_5_VALIDEUR_DIR]), $form));
         $this->assertFalse($policy->canArchive(new User(['id' => 10, 'role_id' => 2]), $form));
-        $this->assertFalse($policy->canArchive(new User(['id' => 11, 'role_id' => User::ROLE_ADMIN]), $form));
+    }
+
+    public function testLArchivageEstRefuseSansDroitDeLectureOuPendantUnCycleActif(): void
+    {
+        $form = new Applicationform(['id' => 42, 'user_id' => 10, 'contracttype_id' => 1]);
+        $administrator = new User(['id' => 10, 'role_id' => User::ROLE_ADMIN]);
+        $archiveOnly = new ApplicationformPolicy(new PermissionResolver([
+            'applicationforms.archive' => ['unscoped'],
+        ]));
+        $archiveAndRead = new ApplicationformPolicy(new PermissionResolver([
+            'applicationforms.archive' => ['unscoped'],
+            'applicationforms.read' => ['self'],
+        ]));
+
+        $this->runCount = 0;
+        $this->assertFalse($archiveOnly->canArchive($administrator, $form));
+
+        $this->runCount = 1;
+        $this->assertFalse($archiveAndRead->canArchive($administrator, $form));
+    }
+
+    public function testUneDaeArchiveeEstEnLectureSeuleMaisPeutEtreRestauree(): void
+    {
+        $policy = new ApplicationformPolicy(new PermissionResolver([
+            'applicationforms.archive' => ['unscoped'],
+            'applicationforms.read' => ['self'],
+        ]));
+        $form = new Applicationform([
+            'id' => 42,
+            'user_id' => 10,
+            'archived' => '2026-01-01 10:00:00',
+        ]);
+        $administrator = new User(['id' => 10, 'role_id' => User::ROLE_ADMIN]);
+
+        $this->assertTrue($policy->canView($administrator, $form));
+        $this->assertFalse($policy->canEdit($administrator, $form));
+        $this->assertTrue($policy->canRestore($administrator, $form));
+        $this->assertFalse($policy->canRestore(
+            new User(['id' => 11, 'role_id' => User::ROLE_ADMIN]),
+            $form,
+        ));
     }
 
     private function registerQuery(string $alias, SelectQuery $query): void

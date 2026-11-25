@@ -57,6 +57,10 @@ return function (RouteBuilder $routes): void {
          */
         // $builder->connect('/', ['controller' => 'Pages', 'action' => 'display', 'home']);
         $builder->connect('/', ['controller' => 'Applicationforms', 'action' => 'index']);
+        $builder->connect('/applicationforms/archives', [
+            'controller' => 'Applicationforms',
+            'action' => 'archives',
+        ]);
 
         // Export PDF protégé par ApplicationformPolicy::canViewpdf().
         $builder->connect('/applicationforms/viewpdf/{id}', [
@@ -171,6 +175,9 @@ return function (RouteBuilder $routes): void {
         ], ['methods' => ['GET']]);
         $builder->connect('/applicationforms/{id}/duplicate', ['controller' => 'Applicationforms', 'action' => 'duplicate', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/archive', ['controller' => 'Applicationforms', 'action' => 'archive', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/applicationforms/{id}/restore', ['controller' => 'Applicationforms', 'action' => 'restore', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/applicationforms/archive-bulk', ['controller' => 'Applicationforms', 'action' => 'archiveBulk', '_ext' => 'json']);
+        $builder->connect('/applicationforms/restore-bulk', ['controller' => 'Applicationforms', 'action' => 'restoreBulk', '_ext' => 'json']);
 
         $builder->resources('Users'); // Crée automatiquement les routes RESTful (GET /api/users)
         $builder->resources('Departments');

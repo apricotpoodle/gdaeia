@@ -34,6 +34,15 @@ class ApplicationformsController extends AppController
     public function index(): void
     {
         $this->Authorization->authorize($this->Applicationforms->newEmptyEntity(), 'index');
+        $this->set('archivePage', false);
+    }
+
+    /** Affiche les DAE archivées avec les mêmes droits de lecture que la liste. */
+    public function archives(): void
+    {
+        $this->Authorization->authorize($this->Applicationforms->newEmptyEntity(), 'index');
+        $this->set('archivePage', true);
+        $this->render('index');
     }
 
     /** Affiche les cycles de validation dont une étape dépasse le délai ouvré. */

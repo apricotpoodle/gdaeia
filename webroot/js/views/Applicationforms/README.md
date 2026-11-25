@@ -1,5 +1,13 @@
 # Scripts JavaScript des formulaires de DAE
 
+`index.js` pilote les listes des demandes et des archives. La liste courante
+masque les DAE archivées par défaut ; sa case « Inclure les demandes archivées
+dans la recherche » demande au serveur toutes les DAE visibles. La page
+`/applicationforms/archives` ne montre que les DAE archivées. Les deux vues
+utilisent la même grille distante, les commandes de ligne de `ButtonFactory`
+et les commandes groupées rendues par `ApplicationformsActions`. Les mutations
+passent par les endpoints API et leurs Policies serveur.
+
 `applicationform-treeselect.js` initialise l'arbre des départements. Il
 actualise les assistantes et les responsables après sélection d'un département.
 Les responsables sont lus depuis leurs associations directes au département ;

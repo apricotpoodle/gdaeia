@@ -12,6 +12,7 @@ use App\Model\Entity\Role;
 use App\Model\Entity\User;
 use App\Model\Entity\ValidationCommentTemplate;
 use App\Model\Entity\ValidationWorkflowRun;
+use App\Service\ApplicationformArchivalService;
 use App\Service\ApplicationformDuplicationResult;
 use App\Service\ApplicationformZeroWorkingDaysNotifier;
 use App\Service\CgrResolverService;
@@ -762,22 +763,100 @@ class ApplicationformsController extends AppController
         );
     }
 
-    /** Archive logiquement une pige ou une facture sans supprimer son historique. */
+    /** Archive une demande après contrôle de son état et de sa Policy. */
     public function archive(string $id): Response
     {
         $this->request->allowMethod(['post']);
-        $applicationform = $this->Applicationforms->get($id);
-        $this->Authorization->authorize($applicationform, 'archive');
-        if ($applicationform->get(Applicationform::FIELD_ARCHIVED) !== null) {
-            return $this->workflowResponse(true, __('La demande est déjà archivée.'), []);
+
+        return $this->transitionArchive([(int)$id], true);
+    }
+
+    /** Restaure une demande précédemment archivée. */
+    public function restore(string $id): Response
+    {
+        $this->request->allowMethod(['post']);
+
+        return $this->transitionArchive([(int)$id], false);
+    }
+
+    /** Archive atomiquement les demandes sélectionnées. */
+    public function archiveBulk(): Response
+    {
+        $this->request->allowMethod(['post']);
+
+        try {
+            return $this->transitionArchive($this->selectedApplicationformIds(), true);
+        } catch (UnprocessableContentException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 422);
+        }
+    }
+
+    /** Restaure atomiquement les demandes sélectionnées. */
+    public function restoreBulk(): Response
+    {
+        $this->request->allowMethod(['post']);
+
+        try {
+            return $this->transitionArchive($this->selectedApplicationformIds(), false);
+        } catch (UnprocessableContentException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 422);
+        }
+    }
+
+    /**
+     * Vérifie chaque Policy avant de déléguer la transition transactionnelle.
+     *
+     * @param list<int> $ids Identifiants de demandes ciblées.
+     * @param bool $archive Vrai pour archiver, faux pour restaurer.
+     * @return \Cake\Http\Response Réponse JSON du changement d'état.
+     */
+    private function transitionArchive(array $ids, bool $archive): Response
+    {
+        $ids = array_values(array_unique($ids));
+        if ($ids === []) {
+            return $this->workflowResponse(false, __('Sélectionnez au moins une demande.'), ['ids' => []], 422);
         }
 
-        $applicationform->set(Applicationform::FIELD_ARCHIVED, DateTime::now());
-        if (!$this->Applicationforms->save($applicationform, ['checkRules' => false])) {
-            return $this->workflowResponse(false, __('La demande ne peut pas être archivée.'), [], 422);
+        $policyAction = $archive ? 'archive' : 'restore';
+        foreach ($ids as $id) {
+            $applicationform = $this->Applicationforms->get((string)$id);
+            $this->Authorization->authorize($applicationform, $policyAction);
         }
 
-        return $this->workflowResponse(true, __('La demande a été archivée.'), []);
+        try {
+            $service = new ApplicationformArchivalService();
+            $count = $archive ? $service->archive($ids) : $service->restore($ids);
+        } catch (RuntimeException $exception) {
+            return $this->workflowResponse(false, $exception->getMessage(), [], 409);
+        }
+
+        $message = $archive
+            ? ($count === 1 ? __('La demande a été archivée.') : __('{0} demandes ont été archivées.', $count))
+            : ($count === 1 ? __('La demande a été restaurée.') : __('{0} demandes ont été restaurées.', $count));
+
+        return $this->workflowResponse(true, $message, ['count' => $count]);
+    }
+
+    /** @return list<int> Identifiants uniques reçus pour une mutation groupée. */
+    private function selectedApplicationformIds(): array
+    {
+        $values = $this->request->getData('ids');
+        if (!is_array($values) || $values === []) {
+            throw new UnprocessableContentException(__('Sélectionnez au moins une demande.'));
+        }
+
+        $ids = [];
+        foreach ($values as $value) {
+            if (
+                (!is_int($value) && (!is_string($value) || !ctype_digit($value)))
+                || (int)$value < 1
+            ) {
+                throw new UnprocessableContentException(__('La sélection de demandes est invalide.'));
+            }
+            $ids[] = (int)$value;
+        }
+
+        return array_values(array_unique($ids));
     }
 
     /**
@@ -898,7 +977,9 @@ class ApplicationformsController extends AppController
                     . '+ COALESCE(Applicationformstatuses.valid_percentage, 0)',
                 ),
             ]);
-        if (!$this->request->getQuery('include_archived')) {
+        if ($this->request->getQuery('archived_only') === '1') {
+            $query->where(['Applicationforms.archived IS NOT' => null]);
+        } elseif ($this->request->getQuery('include_archived') !== '1') {
             $query->where(['Applicationforms.archived IS' => null]);
         }
         $this->applyApplicationformSearchFilters($query);
@@ -947,6 +1028,8 @@ class ApplicationformsController extends AppController
             'resetValidation',
             'viewpdf',
             'duplicate',
+            'archive',
+            'restore',
         ]);
 
         // 5. Rendu structuré pour Tabulator

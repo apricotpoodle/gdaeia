@@ -3,7 +3,7 @@
 // Rôle : Centralisation de l'instanciation des composants grilles métiers
 // ==============================================================================
 
-import { TabulatorBuilder } from './TabulatorBuilder.js?v=20261120120000';
+import { TabulatorBuilder } from './TabulatorBuilder.js?v=20261125160000';
 import { ColumnsFactory } from './ColumnsFactory.js'; // inutile à terme car définitions des colonnes déléguée *-columns.js
 import { getApplicationformColumns } from '../../views/Applicationforms/applicationform-columns.js?v=20261029170000';
 import { getMenusColumns } from '../../views/Menus/menus-columns.js';
@@ -391,6 +391,12 @@ export class TabulatorFactory {
      */
     static createApplicationformsGrid(selector = "#applicationforms-table", options = {}) {
         const metadata = JSON.parse(document.querySelector(selector)?.dataset.fieldMetadata || '{}');
+        const ajaxParams = {};
+        if (options.archiveMode === 'archives') {
+            ajaxParams.archived_only = '1';
+        } else if (options.includeArchived) {
+            ajaxParams.include_archived = '1';
+        }
         const builder = this._createActionGrid(selector)
             .setAjaxSource('/api/applicationforms.json')
             // 💡 SUPPRESSION DE fitColumns : On autorise le comportement fitDataFill
@@ -398,7 +404,24 @@ export class TabulatorFactory {
             .setController('applicationforms')
             .setHeight("calc(100vh - 180px)")
             .setColumns(getApplicationformColumns(metadata))
-            .setWithActions(['view', 'viewpdf', 'edit', 'duplicate', 'launchValidation', 'resetValidation', 'delete']);
+            .setWithActions([
+                'view', 'viewpdf', 'edit', 'duplicate', 'launchValidation', 'resetValidation',
+                'archive', 'restore', 'delete',
+            ])
+            .setOptions({
+                ajaxParams,
+                selectableRows: true,
+                rowHeader: {
+                    formatter: 'rowSelection',
+                    titleFormatter: 'rowSelection',
+                    headerSort: false,
+                    resizable: false,
+                    frozen: true,
+                    headerHozAlign: 'center',
+                    hozAlign: 'center',
+                    width: 40,
+                },
+            });
 
         if (options.cellEditHandler) builder.setCellEditHandler(options.cellEditHandler);
 

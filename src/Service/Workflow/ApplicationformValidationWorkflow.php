@@ -258,6 +258,17 @@ final class ApplicationformValidationWorkflow
         $now = DateTime::now();
         $run = $this->runs->getConnection()->transactional(
             function () use ($applicationform, $actor, $sequences, $now): ValidationWorkflowRun {
+                $lockedApplicationform = $this->applicationforms->find()
+                    ->select(['id', Applicationform::FIELD_ARCHIVED])
+                    ->where(['id' => $applicationform->id])
+                    ->epilog('FOR UPDATE')
+                    ->first();
+                if (
+                    $lockedApplicationform === null
+                    || $lockedApplicationform->get(Applicationform::FIELD_ARCHIVED) !== null
+                ) {
+                    throw new RuntimeException(__('Une demande archivée ne peut pas démarrer un cycle.'));
+                }
                 if ($this->runs->find()->where(['applicationform_id' => $applicationform->id])->count() !== 0) {
                     throw new RuntimeException(__('Le cycle de validation a déjà été lancé.'));
                 }

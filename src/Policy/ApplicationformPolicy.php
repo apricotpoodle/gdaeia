@@ -146,7 +146,7 @@ class ApplicationformPolicy extends AppPolicy
     public function canEdit(IdentityInterface $identity, Applicationform $applicationform): bool
     {
         $user = $this->getValidUser($identity);
-        if (!$user) {
+        if (!$user || $this->isArchived($applicationform)) {
             return false;
         }
 
@@ -198,6 +198,7 @@ class ApplicationformPolicy extends AppPolicy
         $user = $this->getValidUser($identity);
         if (
             $user === null
+            || $this->isArchived($applicationform)
             || !$this->permissions->allows(
                 $user,
                 'applicationforms.launch_validation',
@@ -229,6 +230,7 @@ class ApplicationformPolicy extends AppPolicy
         $user = $this->getValidUser($identity);
         if (
             $user === null
+            || $this->isArchived($applicationform)
             || !$this->permissions->allows(
                 $user,
                 'applicationforms.reset_validation',
@@ -252,6 +254,7 @@ class ApplicationformPolicy extends AppPolicy
         $user = $this->getValidUser($identity);
 
         return $user !== null
+            && !$this->isArchived($applicationform)
             && $this->permissions->allows(
                 $user,
                 'applicationforms.remind_validation',
@@ -267,6 +270,7 @@ class ApplicationformPolicy extends AppPolicy
         $user = $this->getValidUser($identity);
 
         return $user !== null
+            && !$this->isArchived($applicationform)
             && $this->permissions->allows(
                 $user,
                 'applicationforms.override_validation',
@@ -276,35 +280,53 @@ class ApplicationformPolicy extends AppPolicy
             && ($user->hasRole(User::ROLE_ADMIN) || $user->isSuperUser());
     }
 
-    /** Autorise l'archivage des factures et piges par les administrateurs concernés. */
+    /** Autorise l'archivage des demandes lisibles par un ADMIN ou un superuser. */
     public function canArchive(IdentityInterface $identity, Applicationform $applicationform): bool
     {
         $user = $this->getValidUser($identity);
         if (
             $user === null
             || !$this->permissions->allows($user, 'applicationforms.archive', PermissionResolver::SCOPE_UNSCOPED)
-            || !$this->canViewHistorically($identity, $applicationform)
+            || !$this->canView($identity, $applicationform)
+            || $this->isArchived($applicationform)
+            || $this->hasActiveWorkflow($applicationform)
         ) {
             return false;
         }
+
+        return $user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN);
+    }
+
+    /** Autorise la restauration d'une demande archivée et lisible. */
+    public function canRestore(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        $user = $this->getValidUser($identity);
         if (
-            !$user->isSuperUser()
-            && !in_array((int)$user->get(User::FIELD_ROLE_ID), [User::ROLE_ADMIN, User::ROLE_5_VALIDEUR_DIR], true)
+            $user === null
+            || !$this->permissions->allows($user, 'applicationforms.archive', PermissionResolver::SCOPE_UNSCOPED)
+            || !$this->canView($identity, $applicationform)
+            || !$this->isArchived($applicationform)
         ) {
             return false;
         }
 
-        $contract = TableRegistry::getTableLocator()->get('Contracttypes')->find()
-            ->select(['code'])
-            ->where(['id' => $applicationform->get(Applicationform::FIELD_CONTRACTTYPE_ID)])
-            ->first();
+        return $user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN);
+    }
 
-        return $contract !== null
-            && in_array(
-                strtoupper(trim((string)$contract->get('code'))),
-                ['PIGE', 'FACTURE'],
-                true,
-            );
+    /** Autorise l'affichage des commandes d'archivage groupées de la grille. */
+    public function canArchiveBulk(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        $user = $this->getValidUser($identity);
+
+        return $user !== null
+            && $this->permissions->allows($user, 'applicationforms.archive', PermissionResolver::SCOPE_UNSCOPED)
+            && ($user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN));
+    }
+
+    /** Autorise l'affichage des commandes de restauration groupées de la grille. */
+    public function canRestoreBulk(IdentityInterface $identity, Applicationform $applicationform): bool
+    {
+        return $this->canArchiveBulk($identity, $applicationform);
     }
 
     /** Le service réévalue ensuite le rôle courant, l'échéance et la suppléance. */
@@ -313,8 +335,26 @@ class ApplicationformPolicy extends AppPolicy
         $user = $this->getValidUser($identity);
 
         return $user !== null
+            && !$this->isArchived($applicationform)
             && $this->permissions->allows($user, 'applicationforms.vote', PermissionResolver::SCOPE_UNSCOPED)
             && $this->canViewHistorically($identity, $applicationform);
+    }
+
+    /** Indique si la DAE porte déjà un horodatage d'archivage. */
+    private function isArchived(Applicationform $applicationform): bool
+    {
+        return $applicationform->get(Applicationform::FIELD_ARCHIVED) !== null;
+    }
+
+    /** Indique si un cycle en attente empêche l'archivage. */
+    private function hasActiveWorkflow(Applicationform $applicationform): bool
+    {
+        return TableRegistry::getTableLocator()->get('ValidationWorkflowRuns')->find()
+            ->where([
+                ValidationWorkflowRun::FIELD_APPLICATIONFORM_ID => $applicationform->get(Applicationform::FIELD_ID),
+                ValidationWorkflowRun::FIELD_STATE => ValidationWorkflowRun::STATE_PENDING,
+            ])
+            ->count() > 0;
     }
 
     /**

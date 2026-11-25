@@ -5,14 +5,17 @@ namespace App\Test\TestCase\Controller\Api;
 
 use App\Model\Entity\Period;
 use App\Model\Entity\User;
+use App\Service\ApplicationformArchivalService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Datasource\ConnectionManager;
+use Cake\I18n\DateTime;
 use Cake\Mailer\Mailer;
 use Cake\Mailer\TransportFactory;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
 use PHPUnit\Framework\Attributes\DataProvider;
+use RuntimeException;
 
 /**
  * @link \App\Controller\Api\ApplicationformsController
@@ -963,9 +966,9 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseOk();
     }
 
-    public function testUnAdministrateurArchiveUnePigeOuUneFacture(): void
+    public function testUnAdministrateurArchiveToutTypeDeDaeVisible(): void
     {
-        ConnectionManager::get('test')->update('contracttypes', ['code' => 'PIGE'], ['id' => 1]);
+        ConnectionManager::get('test')->update('contracttypes', ['code' => 'cdi'], ['id' => 1]);
         ConnectionManager::get('test')->update('applicationforms', ['archived' => null], ['id' => 1]);
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => false, 'role_id' => User::ROLE_ADMIN])]);
         $this->enableCsrfToken();
@@ -978,6 +981,155 @@ class ApplicationformsControllerTest extends TestCase
             'SELECT archived FROM applicationforms WHERE id = 1',
         )->fetchColumn(0);
         $this->assertNotNull($archived);
+    }
+
+    public function testUnSuperuserRestaureUneDaeEtRetireSonHorodatage(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationforms', ['archived' => '2026-01-01 10:00:00', 'deleted' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/1/restore.json');
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('La demande a été restaurée.', $payload['message']);
+        $archived = $connection->execute(
+            'SELECT archived FROM applicationforms WHERE id = 1',
+        )->fetchColumn(0);
+        $this->assertFalse($archived);
+    }
+
+    public function testLArchivageRefuseUneDaeDontLeCycleEstActif(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationforms', ['archived' => null, 'deleted' => null], ['id' => 1]);
+        $runs = TableRegistry::getTableLocator()->get('ValidationWorkflowRuns');
+        $run = $runs->newEntity([
+            'applicationform_id' => 1,
+            'started_by_user_id' => 1,
+            'state' => 'en_attente',
+            'started_at' => new DateTime('2026-01-01 10:00:00'),
+        ]);
+        $runs->saveOrFail($run);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/1/archive.json');
+
+        $this->assertResponseCode(403);
+        $archived = $connection->execute(
+            'SELECT archived FROM applicationforms WHERE id = 1',
+        )->fetchColumn(0);
+        $this->assertFalse($archived);
+    }
+
+    public function testLeServiceReverifieLeCycleActifDansSaTransaction(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationforms', ['archived' => null, 'deleted' => null], ['id' => 1]);
+        $runs = TableRegistry::getTableLocator()->get('ValidationWorkflowRuns');
+        $runs->saveOrFail($runs->newEntity([
+            'applicationform_id' => 1,
+            'started_by_user_id' => 1,
+            'state' => 'en_attente',
+            'started_at' => new DateTime('2026-01-01 10:00:00'),
+        ]));
+
+        try {
+            (new ApplicationformArchivalService())->archive([1]);
+            self::fail('Le service doit refuser un cycle actif même si la Policy est contournée.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame('Un cycle de validation actif empêche l’archivage.', $exception->getMessage());
+        }
+
+        $archived = $connection->execute(
+            'SELECT archived FROM applicationforms WHERE id = 1',
+        )->fetchColumn(0);
+        $this->assertFalse($archived);
+    }
+
+    public function testArchivageEtRestaurationGroupeesSontReversibles(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationforms', ['archived' => null, 'deleted' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/archive-bulk.json', ['ids' => [1]]);
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('La demande a été archivée.', $payload['message']);
+        $archived = $connection->execute(
+            'SELECT archived FROM applicationforms WHERE id = 1',
+        )->fetchColumn(0);
+        $this->assertNotFalse($archived);
+
+        $this->post('/api/applicationforms/restore-bulk.json', ['ids' => [1]]);
+
+        $this->assertResponseOk();
+        $payload = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame('La demande a été restaurée.', $payload['message']);
+        $archived = $connection->execute(
+            'SELECT archived FROM applicationforms WHERE id = 1',
+        )->fetchColumn(0);
+        $this->assertFalse($archived);
+    }
+
+    public function testLaListeExclutLesArchivesParDefautEtPeutLesInclureDansLaRecherche(): void
+    {
+        ConnectionManager::get('test')->update(
+            'applicationforms',
+            ['archived' => '2026-01-01 10:00:00', 'deleted' => null],
+            ['id' => 1],
+        );
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/api/applicationforms.json');
+
+        $this->assertResponseOk();
+        $defaultList = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame([], $defaultList['data']);
+
+        $this->get('/api/applicationforms.json?include_archived=1');
+
+        $this->assertResponseOk();
+        $allList = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame([1], array_map('intval', array_column($allList['data'], 'id')));
+
+        $this->get('/api/applicationforms.json?archived_only=1');
+
+        $this->assertResponseOk();
+        $archives = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame([1], array_map('intval', array_column($archives['data'], 'id')));
+    }
+
+    public function testLaPageArchivesReutiliseLaLectureHabituelle(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+
+        $this->get('/applicationforms/archives');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Archives des demandes');
+    }
+
+    public function testArchivageGroupeRefuseUnIdentifiantHorsPerimetre(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationforms', ['archived' => null, 'deleted' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_DEMANDEUR])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/archive-bulk.json', ['ids' => [1]]);
+
+        $this->assertResponseCode(403);
+        $archived = $connection->execute(
+            'SELECT archived FROM applicationforms WHERE id = 1',
+        )->fetchColumn(0);
+        $this->assertFalse($archived);
     }
 
     /** Vérifie qu'une duplication crée une DAE brouillon sans réutiliser la source. */

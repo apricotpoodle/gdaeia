@@ -10,7 +10,7 @@
  */
 import { globalTabulatorObserver } from './TabulatorObserver.js';
 import { FlashManager } from '../FlashManager.js';
-import { ButtonFactory } from './ButtonFactory.js';
+import { ButtonFactory } from './ButtonFactory.js?v=20261125160000';
 
 /**
  * Extrait l’action d’un bouton du menu global d’une grille.
