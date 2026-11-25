@@ -98,6 +98,8 @@ class ApplicationformValidationWorkflowServiceTest extends TestCase
 
         $this->assertSame('acceptee', $voted['state']);
         $this->assertTrue($voted['final']);
+        $this->assertSame((int)$started['run']->id, $voted['run_id']);
+        $this->assertSame((int)$step->id, $voted['step_id']);
         $this->assertSame(1, TableRegistry::getTableLocator()->get('Validations')->find()
             ->where(['applicationvalidationstep_id' => $step->id, 'validationstatus_id' => 3])
             ->count());
@@ -193,7 +195,7 @@ class ApplicationformValidationWorkflowServiceTest extends TestCase
     }
 
     /** Vérifie qu'une étape échue est relancée une seule fois par période de vingt-quatre heures. */
-    public function testLesRelancesDesEtapesEchuesSontIdempotentesPendantVingtQuatreHeures(): void
+    public function testLaCollecteDesRelancesNAvancePasLHistoriqueAvantLeSucces(): void
     {
         [$applicationform, $actor, $workflow] = $this->workflowContext();
         $started = $workflow->start($applicationform, $actor);
@@ -208,10 +210,11 @@ class ApplicationformValidationWorkflowServiceTest extends TestCase
 
         $this->assertCount(1, $firstRun);
         $this->assertSame(2, (int)$firstRun[0]['recipients'][0]->id);
-        $this->assertSame([], $secondRun);
+        $this->assertCount(1, $secondRun);
+        $this->assertSame($firstRun[0]['step_id'], $secondRun[0]['step_id']);
         $persistedStep = TableRegistry::getTableLocator()->get('Applicationvalidationsteps')->get($step->id);
-        $this->assertSame(1, (int)$persistedStep->reminder_count);
-        $this->assertNotNull($persistedStep->last_reminded_at);
+        $this->assertSame(0, (int)$persistedStep->reminder_count);
+        $this->assertNull($persistedStep->last_reminded_at);
     }
 
     /** Vérifie que la relance d'un cycle cible tous ses validateurs sans doublon. */

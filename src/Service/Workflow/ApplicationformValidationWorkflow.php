@@ -64,9 +64,10 @@ final class ApplicationformValidationWorkflow
     /**
      * Détecte les cycles bloqués, regroupés par DAE et filtrés par le périmètre de consultation.
      *
+     * @param bool $requireOverride Limite les résultats aux cycles outrepassables.
      * @return list<\App\Service\Workflow\BlockedValidationCycle>
      */
-    public function findBlockedCycles(User $viewer): array
+    public function findBlockedCycles(User $viewer, bool $requireOverride = false): array
     {
         $now = DateTime::now();
         $threshold = $this->blockedAfterBusinessDays();
@@ -84,7 +85,7 @@ final class ApplicationformValidationWorkflow
             ->orderByAsc('Applicationforms.id')
             ->all()->toList();
 
-        $policy = new ApplicationformPolicy();
+        $policy = new ApplicationformPolicy($this->permissions);
         /** @var array<int, list<\App\Service\Workflow\BlockedValidationStep>> $groupedSteps */
         $groupedSteps = [];
         /** @var array<int, \App\Model\Entity\Applicationform> $forms */
@@ -92,6 +93,9 @@ final class ApplicationformValidationWorkflow
         foreach ($steps as $step) {
             $applicationform = $step->applicationform;
             if (!$policy->canView($viewer, $applicationform)) {
+                continue;
+            }
+            if ($requireOverride && !$this->canOverrideStep($step, $viewer)) {
                 continue;
             }
             $activatedAt = $step->activated_at;
@@ -448,7 +452,16 @@ final class ApplicationformValidationWorkflow
         ]);
     }
 
-    /** @return array{state: string, nextRecipients: list<\App\Model\Entity\User>, final: bool, comment: string} */
+    /**
+     * @return array{
+     *     state: string,
+     *     nextRecipients: list<\App\Model\Entity\User>,
+     *     final: bool,
+     *     comment: string,
+     *     run_id: int,
+     *     step_id: int
+     * }
+     */
     public function vote(
         Applicationform $applicationform,
         User $actor,
@@ -539,7 +552,14 @@ final class ApplicationformValidationWorkflow
                     'state IN' => ['en_attente', 'a_venir'],
                 ]);
 
-                return ['state' => $run->state, 'nextRecipients' => [], 'final' => true, 'comment' => $finalComment];
+                return [
+                    'state' => $run->state,
+                    'nextRecipients' => [],
+                    'final' => true,
+                    'comment' => $finalComment,
+                    'run_id' => (int)$run->get(ValidationWorkflowRun::FIELD_ID),
+                    'step_id' => (int)$step->get(Applicationvalidationstep::FIELD_ID),
+                ];
             }
             $sequence = (int)$step->sequence_number;
             if (
@@ -549,7 +569,14 @@ final class ApplicationformValidationWorkflow
                 'state IN' => ['en_attente', 'a_venir'],
                 ])->count() > 0
             ) {
-                return ['state' => $run->state, 'nextRecipients' => [], 'final' => false, 'comment' => $finalComment];
+                return [
+                    'state' => $run->state,
+                    'nextRecipients' => [],
+                    'final' => false,
+                    'comment' => $finalComment,
+                    'run_id' => (int)$run->get(ValidationWorkflowRun::FIELD_ID),
+                    'step_id' => (int)$step->get(Applicationvalidationstep::FIELD_ID),
+                ];
             }
             if (
                 $this->steps->find()->where([
@@ -558,7 +585,14 @@ final class ApplicationformValidationWorkflow
                     'state IN' => ['en_attente', 'a_venir'],
                 ])->count() > 0
             ) {
-                return ['state' => $run->state, 'nextRecipients' => [], 'final' => false, 'comment' => $finalComment];
+                return [
+                    'state' => $run->state,
+                    'nextRecipients' => [],
+                    'final' => false,
+                    'comment' => $finalComment,
+                    'run_id' => (int)$run->get(ValidationWorkflowRun::FIELD_ID),
+                    'step_id' => (int)$step->get(Applicationvalidationstep::FIELD_ID),
+                ];
             }
             /** @var \App\Model\Entity\Applicationvalidationstep|null $next */
             $next = $this->steps->find()->where([
@@ -570,7 +604,14 @@ final class ApplicationformValidationWorkflow
                 $run->finished_at = DateTime::now();
                 $this->runs->saveOrFail($run);
 
-                return ['state' => $run->state, 'nextRecipients' => [], 'final' => true, 'comment' => $finalComment];
+                return [
+                    'state' => $run->state,
+                    'nextRecipients' => [],
+                    'final' => true,
+                    'comment' => $finalComment,
+                    'run_id' => (int)$run->get(ValidationWorkflowRun::FIELD_ID),
+                    'step_id' => (int)$step->get(Applicationvalidationstep::FIELD_ID),
+                ];
             }
             /** @var \App\Model\Entity\Validationsequence $nextSequence */
             $nextSequence = $this->sequences->get($next->validationsequence_id);
@@ -590,6 +631,8 @@ final class ApplicationformValidationWorkflow
                 'nextRecipients' => $this->recipientsForCurrentRun($run),
                 'final' => false,
                 'comment' => $finalComment,
+                'run_id' => (int)$run->get(ValidationWorkflowRun::FIELD_ID),
+                'step_id' => (int)$step->get(Applicationvalidationstep::FIELD_ID),
             ];
         });
     }
@@ -674,7 +717,11 @@ final class ApplicationformValidationWorkflow
         return array_values($recipients);
     }
 
-    /** @return list<array{applicationform: \App\Model\Entity\Applicationform, recipients: list<\App\Model\Entity\User>}> */
+    /**
+     * Collecte les étapes échues sans modifier leur historique de relance.
+     *
+     * @return list<array{step_id: int, reminder_count: int, applicationform: \App\Model\Entity\Applicationform, recipients: list<\App\Model\Entity\User>}>
+     */
     public function collectDueReminders(): array
     {
         $now = DateTime::now();
@@ -691,16 +738,49 @@ final class ApplicationformValidationWorkflow
                 continue;
             }
             $recipients = $this->eligibleUsers($step->applicationform, (int)$step->role_id);
-            if ($recipients === []) {
-                continue;
-            }
-            $step->last_reminded_at = $now;
-            $step->reminder_count = (int)$step->reminder_count + 1;
-            $this->steps->saveOrFail($step);
-            $result[] = ['applicationform' => $step->applicationform, 'recipients' => $recipients];
+            $result[] = [
+                'step_id' => (int)$step->get(Applicationvalidationstep::FIELD_ID),
+                'reminder_count' => (int)$step->get(Applicationvalidationstep::FIELD_REMINDER_COUNT),
+                'applicationform' => $step->applicationform,
+                'recipients' => $recipients,
+            ];
         }
 
         return $result;
+    }
+
+    /** Avance l’historique après le succès confirmé de tous les destinataires. */
+    public function markReminderSent(int $stepId, int $nextReminderCount): bool
+    {
+        if ($nextReminderCount < 1) {
+            return false;
+        }
+        $now = DateTime::now();
+        $updated = $this->steps->updateAll(
+            [
+                Applicationvalidationstep::FIELD_LAST_REMINDED_AT => $now,
+                Applicationvalidationstep::FIELD_REMINDER_COUNT => $nextReminderCount,
+                Applicationvalidationstep::FIELD_MODIFIED => $now,
+            ],
+            [
+                Applicationvalidationstep::FIELD_ID => $stepId,
+                Applicationvalidationstep::FIELD_STATE => 'en_attente',
+                Applicationvalidationstep::FIELD_REMINDER_COUNT => $nextReminderCount - 1,
+            ],
+        );
+
+        if ($updated > 0) {
+            return true;
+        }
+
+        /** @var \App\Model\Entity\Applicationvalidationstep|null $step */
+        $step = $this->steps->find()->select([
+            Applicationvalidationstep::FIELD_STATE,
+            Applicationvalidationstep::FIELD_REMINDER_COUNT,
+        ])->where([Applicationvalidationstep::FIELD_ID => $stepId])->first();
+
+        return $step !== null
+            && (int)$step->get(Applicationvalidationstep::FIELD_REMINDER_COUNT) >= $nextReminderCount;
     }
 
     /**
@@ -712,15 +792,18 @@ final class ApplicationformValidationWorkflow
     {
         /** @var list<\App\Model\Entity\Applicationvalidationstep> $steps */
         $steps = $this->steps->find()->contain(['Applicationforms'])
-            ->where(['Applicationvalidationsteps.state' => 'en_attente'])
+            ->where([
+                'Applicationvalidationsteps.state' => 'en_attente',
+                'Applicationforms.deleted IS' => null,
+            ])
             ->orderByAsc('Applicationforms.begin_at')
             ->orderByAsc('Applicationforms.id')->all()->toList();
         $grouped = [];
         foreach ($steps as $step) {
             foreach ($this->eligibleUsers($step->applicationform, (int)$step->role_id) as $recipient) {
-                $grouped[(int)$recipient->id]['recipient'] = $recipient;
-                $grouped[(int)$recipient->id]['applicationforms'][(int)$step->applicationform->id]
-                    = $step->applicationform;
+                $key = $this->notificationRecipientKey($recipient);
+                $grouped[$key]['recipient'] ??= $recipient;
+                $grouped[$key]['applicationforms'][(int)$step->applicationform->id] = $step->applicationform;
             }
         }
         foreach ($grouped as &$entry) {
@@ -729,6 +812,74 @@ final class ApplicationformValidationWorkflow
         unset($entry);
 
         return array_values($grouped);
+    }
+
+    /**
+     * Collecte les DAE acceptées par semaine pour chaque Admin autorisé à les lire.
+     *
+     * @return list<array{recipient: \App\Model\Entity\User, applicationforms: list<\App\Model\Entity\Applicationform>}>
+     */
+    public function collectAcceptedDigest(DateTime $from, DateTime $to): array
+    {
+        if ($from >= $to) {
+            return [];
+        }
+
+        /** @var list<\App\Model\Entity\User> $administrators */
+        $administrators = $this->users->find()->where([
+            'Users.deleted IS' => null,
+            'OR' => [
+                'Users.role_id' => User::ROLE_ADMIN,
+                'Users.issuperuser' => true,
+            ],
+        ])->all()->toList();
+        /** @var list<\App\Model\Entity\ValidationWorkflowRun> $runs */
+        $runs = $this->runs->find()->contain(['Applicationforms'])
+            ->where([
+                'ValidationWorkflowRuns.state' => ValidationWorkflowRun::STATE_ACCEPTED,
+                'ValidationWorkflowRuns.finished_at >=' => $from,
+                'ValidationWorkflowRuns.finished_at <' => $to,
+                'Applicationforms.deleted IS' => null,
+            ])
+            ->orderByAsc('ValidationWorkflowRuns.finished_at')
+            ->orderByAsc('ValidationWorkflowRuns.applicationform_id')
+            ->all()->toList();
+
+        $policy = new ApplicationformPolicy($this->permissions);
+        $grouped = [];
+        foreach ($administrators as $administrator) {
+            $key = $this->notificationRecipientKey($administrator);
+            foreach ($runs as $run) {
+                $applicationform = $run->get('applicationform');
+                if (!$applicationform instanceof Applicationform) {
+                    continue;
+                }
+                if (!$policy->canView($administrator, $applicationform)) {
+                    continue;
+                }
+                $grouped[$key]['recipient'] ??= $administrator;
+                $grouped[$key]['applicationforms'][(int)$applicationform->get(Applicationform::FIELD_ID)]
+                    = $applicationform;
+            }
+        }
+
+        foreach ($grouped as &$entry) {
+            $entry['applicationforms'] = array_values($entry['applicationforms']);
+        }
+        unset($entry);
+
+        return array_values($grouped);
+    }
+
+    /** Produit une clé de regroupement sans dupliquer une adresse normalisée. */
+    private function notificationRecipientKey(User $recipient): string
+    {
+        $email = $recipient->get(User::FIELD_EMAIL);
+        $normalizedEmail = is_string($email) ? strtolower(trim($email)) : '';
+
+        return $normalizedEmail !== ''
+            ? 'email:' . $normalizedEmail
+            : 'user:' . (string)$recipient->get(User::FIELD_ID);
     }
 
     /**

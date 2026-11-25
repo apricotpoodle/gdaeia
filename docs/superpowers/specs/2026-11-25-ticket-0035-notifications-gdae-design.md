@@ -1,7 +1,7 @@
 # Spécification — Ticket 0035, notifications GDAE
 
 **Date :** 25 novembre 2026
-**Statut :** À relire avant le plan d’implémentation
+**Statut :** Conception approuvée
 **Périmètre :** ticket applicatif 0035 uniquement
 
 ## Contexte observé

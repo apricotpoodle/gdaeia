@@ -4,12 +4,13 @@ declare(strict_types=1);
 namespace App\Command;
 
 use App\Mailer\ValidationWorkflowMailer;
+use App\Model\Entity\User;
+use App\Service\NotificationDeliveryService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Command\Command;
 use Cake\Console\Arguments;
 use Cake\Console\CommandFactoryInterface;
 use Cake\Console\ConsoleIo;
-use Cake\Database\Exception\DatabaseException;
 use Cake\I18n\DateTime;
 use Cake\ORM\TableRegistry;
 use Closure;
@@ -21,16 +22,23 @@ final class ValidationPendingDigestCommand extends Command
      * @var \Closure(): list<array{recipient: \App\Model\Entity\User, applicationforms: list<\App\Model\Entity\Applicationform>}>
      */
     private readonly Closure $collect;
+
     /**
      * @var \Closure(\App\Model\Entity\User, list<\App\Model\Entity\Applicationform>): bool
      */
     private readonly Closure $send;
+
+    /**
+     * @var \Closure(string, string, \App\Model\Entity\User, \Closure): bool
+     */
+    private readonly Closure $sendOnce;
 
     /** Initialise les collecteurs et l'expéditeur injectables. */
     public function __construct(
         ?CommandFactoryInterface $factory = null,
         ?Closure $collect = null,
         ?Closure $send = null,
+        ?Closure $sendOnce = null,
     ) {
         parent::__construct($factory);
         $this->collect = $collect ?? static function (): array {
@@ -38,35 +46,57 @@ final class ValidationPendingDigestCommand extends Command
         };
         $this->send = $send ?? static fn($recipient, $forms): bool => (new ValidationWorkflowMailer())
             ->safeSend('pendingValidationDigest', [$recipient, $forms]);
+        $this->sendOnce = $sendOnce ?? static function (
+            string $type,
+            string $eventKey,
+            User $recipient,
+            Closure $send,
+        ): bool {
+            /** @var \App\Model\Table\NotificationDeliveriesTable $deliveries */
+            $deliveries = TableRegistry::getTableLocator()->get('NotificationDeliveries');
+
+            return (new NotificationDeliveryService($deliveries))->sendOnce($type, $eventKey, $recipient, $send);
+        };
     }
 
     /** Exécute la synthèse quotidienne. */
     public function execute(Arguments $args, ConsoleIo $io): int
     {
-        $settings = TableRegistry::getTableLocator()->get('WorkflowSettings');
-        $setting = null;
-        try {
-            $setting = $settings->find()->where(['name' => 'notification.pending.last_run'])->first();
-        } catch (DatabaseException) {
-            // Les environnements antérieurs à V3 n'ont pas encore le paramétrage.
-        }
-        if ($setting !== null && (string)$setting->get('value') === DateTime::now()->format('Y-m-d')) {
-            $io->success(__('La synthèse quotidienne a déjà été envoyée aujourd’hui.'));
-
-            return static::CODE_SUCCESS;
-        }
+        $day = DateTime::now()->setTimezone('Europe/Paris')->format('Y-m-d');
         $sent = 0;
+        $failed = 0;
+        $withoutAddress = 0;
         foreach (($this->collect)() as $digest) {
-            if (($this->send)($digest['recipient'], $digest['applicationforms'])) {
+            $recipient = $digest['recipient'];
+            $email = $recipient->get(User::FIELD_EMAIL);
+            if (!is_string($email) || trim($email) === '') {
+                $withoutAddress++;
+                continue;
+            }
+            $success = ($this->sendOnce)(
+                'pending_digest',
+                $day,
+                $recipient,
+                fn(): bool => ($this->send)($recipient, $digest['applicationforms']),
+            );
+            if ($success) {
                 $sent++;
+            } else {
+                $failed++;
             }
         }
-        if ($setting === null) {
-            $setting = $settings->newEntity(['name' => 'notification.pending.last_run']);
+        $message = __(
+            'Synthèse quotidienne : {0} réussite(s), {1} échec(s), {2} destinataire(s) sans adresse.',
+            $sent,
+            $failed,
+            $withoutAddress,
+        );
+        if ($failed > 0) {
+            $io->error($message);
+
+            return static::CODE_ERROR;
         }
-        $setting->set('value', DateTime::now()->format('Y-m-d'));
-        $settings->save($setting);
-        $io->success(__('{0} synthèse(s) quotidienne(s) envoyée(s).', $sent));
+        $io->success($message);
 
         return static::CODE_SUCCESS;
     }

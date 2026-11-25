@@ -59,6 +59,7 @@ class ApplicationformsControllerTest extends TestCase
         'app.ValidationWorkflowRuns',
         'app.Applicationvalidationsteps',
         'app.Validations',
+        'app.NotificationDeliveries',
         'app.Comments',
         'app.WorkflowSettings',
         'app.ValidationCommentTemplates',
@@ -1290,6 +1291,7 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('"success":true');
         $this->assertResponseContains('"final":true');
+        $this->assertResponseContains('"run_id":');
         $this->assertNotContains('ancien-responsable@example.test', ApplicationformNotificationCaptureTransport::$recipients);
     }
 

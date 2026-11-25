@@ -28,9 +28,21 @@ peuvent être configurées par `DEPARTMENT_DEACTIVATION_AUDIT_RECIPIENTS`.
 
 Les mailers sont appelés via `AppMailer::safeSend()`. Cette méthode journalise
 chaque succès et chaque échec dans `logs/email.log`, avec l'action, les
-destinataires et le sujet du message. Elle retourne `true` si le transport a
-accepté le courriel et `false` en cas d'échec SMTP, sans interrompre le
-traitement métier.
+destinataires et le sujet du message. Les messages GDAE expédiés par
+`ValidationWorkflowMailer` remplacent les adresses par leur empreinte SHA-256
+dans les journaux. Le mailer conserve l'usage de `safeSend()` et retourne
+`true` si le transport a accepté le courriel et `false` en cas d'échec SMTP,
+sans interrompre le traitement métier.
+
+## Notifications du workflow GDAE
+
+`ValidationWorkflowMailer` prépare les notifications d'étape, les résultats
+finaux, les rappels, les synthèses quotidiennes et la synthèse hebdomadaire.
+Le service `NotificationDeliveryService` suit chaque envoi par événement et
+destinataire : un succès confirmé n'est pas renvoyé, tandis qu'un échec connu
+peut être repris. Le registre conserve la clé, le type, l'empreinte du
+destinataire, l'état, le nombre de tentatives et les horodatages; il ne
+conserve ni adresse en clair ni contenu de DAE.
 
 ```php
 use App\Mailer\UserMailer;

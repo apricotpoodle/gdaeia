@@ -6,8 +6,10 @@ Ce répertoire contient les commandes en ligne de commande (CLI) accessibles via
 
 * **`bin/cake test_email <email>`** : Génère un utilisateur fictif et teste l'expédition d'un courriel transactionnel via `UserMailer` (s'appuie sur `AppMailer::safeSend()`).
 * **`bin/cake tree integrity check [--table departments|menus] [--format text|json]`** : Vérifie, sans modifier les données, les relations `parent_id`, les bornes `lft`/`rght` et le niveau lorsque celui-ci est géré par `TreeBehavior`. Un code de sortie non nul signale une incohérence et permet le branchement à une supervision.
-* **`bin/cake validation remind`** : Relance les validateurs des étapes échues, au plus une fois par étape et par période de vingt-quatre heures.
-* **`bin/cake validation notify-blocked`** : Envoie chaque matin le récapitulatif des cycles bloqués, avec le périmètre de consultation propre à chaque administrateur.
+* **`bin/cake validation remind`** : Relance les validateurs des étapes échues. L'historique n'avance qu'après le succès de tous les destinataires de l'étape.
+* **`bin/cake validation notify-blocked`** : Envoie le récapitulatif des cycles bloqués aux Admins et super-administrateurs autorisés à consulter et outrepasser chaque étape.
+* **`bin/cake validation notify-pending`** : Envoie la synthèse quotidienne des DAE en attente, regroupées par destinataire éligible.
+* **`bin/cake validation notify-accepted`** : Envoie la synthèse hebdomadaire des DAE acceptées aux Admins qui peuvent lire les demandes incluses.
 * **`bin/cake validation repair-orphaned-sequences [--apply]`** : Détecte les références de séquences orphelines et applique uniquement les réalignements uniques avec `--apply`.
 * **`bin/cake backlog next <workflow>`** : Recherche le manifeste du workflow dans `docs/backlog/` et affiche le premier ticket dont les dépendances sont terminées.
 
@@ -31,14 +33,32 @@ La commande est en lecture seule. Elle affiche `Aucun ticket exécutable.` si
 aucun ticket non terminé n'a toutes ses dépendances au statut `Terminé`, et
 signale en français un identifiant de workflow absent.
 
-## Relances de validation
+## Notifications GDAE récurrentes
 
-Planifiez la commande chaque heure : son idempotence évite les doublons de courriel sur une période de vingt-quatre heures.
+Exécutez le rappel des étapes échues et la synthèse des demandes en attente
+chaque jour à 07 h 00, heure `Europe/Paris`. Le récapitulatif des cycles
+bloqués est exécuté à 07 h 30. Le jour et l'heure de la synthèse hebdomadaire
+des demandes acceptées sont définis dans Airflow, hors de ce dépôt.
+
+Chaque commande poursuit les envois après un échec, ignore les succès déjà
+confirmés et retourne un code non nul si un envoi doit être repris. Les
+résumés n'affichent pas les adresses des destinataires.
 
 ```cron
-0 * * * * cd /chemin/vers/gdaetf2 && docker compose exec -T gdaetf bin/cake validation remind >> /var/log/gdaetf2-validation-remind.log 2>&1
+0 7 * * * cd /chemin/vers/gdaetf2 && docker compose exec -T gdaetf bin/cake validation remind >> /var/log/gdaetf2-validation-remind.log 2>&1
+0 7 * * * cd /chemin/vers/gdaetf2 && docker compose exec -T gdaetf bin/cake validation notify-pending >> /var/log/gdaetf2-validation-pending.log 2>&1
 30 7 * * * cd /chemin/vers/gdaetf2 && docker compose exec -T gdaetf bin/cake validation notify-blocked >> /var/log/gdaetf2-validation-blocked.log 2>&1
 ```
+
+Airflow appelle chaque commande CLI séparément; aucune définition de DAG
+n'est fournie ici. Pour un lancement manuel local des deux synthèses :
+
+```bash
+make gdae.notifications
+```
+
+Cette cible lance `validation notify-pending`, puis
+`validation notify-accepted`. Elle ne modifie aucun horaire Airflow.
 
 ## Surveillance automatisée des arbres
 

@@ -1,6 +1,6 @@
 # 0035 — Compléter les notifications GDAE
 
-**Statut :** À planifier
+**Statut :** Prêt à livrer — commits en attente de validation des messages
 
 **Priorité :** Haute — suivi des demandes
 
@@ -16,22 +16,22 @@ DAG.
 
 ## Travail attendu
 
-- [ ] Envoyer en temps réel une notification aux rôles concernés à chaque
+- [x] Envoyer en temps réel une notification aux rôles concernés à chaque
   changement d'état du cycle de validation ; inclure les rôles pouvant
   outrepasser le blocage lorsqu'une DAE est bloquée.
-- [ ] À l'acceptation finale d'une DAE, notifier l'assistante qui l'a saisie,
+- [x] À l'acceptation finale d'une DAE, notifier l'assistante qui l'a saisie,
   tous les responsables associés au service et tous les rôles ADMIN qui voient
   ce service.
-- [ ] Fournir le traitement CLI du rappel quotidien des demandes en attente,
+- [x] Fournir le traitement CLI du rappel quotidien des demandes en attente,
   adressé aux rôles concernés par l'étape ; le rappel est prévu à 07 h 00.
-- [ ] Fournir le traitement CLI de la synthèse hebdomadaire des DAE entièrement
+- [x] Fournir le traitement CLI de la synthèse hebdomadaire des DAE entièrement
   validées, adressé à tous les rôles ADMIN qui voient les services concernés.
-- [ ] Fournir une commande Make permettant de lancer manuellement les
+- [x] Fournir une commande Make permettant de lancer manuellement les
   traitements CLI ; la planification des DAG Airflow est hors du périmètre de
   l'application.
-- [ ] Gérer le fuseau horaire applicatif, les envois sans destinataire, les
+- [x] Gérer le fuseau horaire applicatif, les envois sans destinataire, les
   échecs et les relances sans doublons indus.
-- [ ] Documenter les commandes, destinataires, heures et planification
+- [x] Documenter les commandes, destinataires, heures et planification
   opératoire sans appliquer de configuration de production.
 
 ## Critères d'acceptation
@@ -53,6 +53,15 @@ DAG.
 - `make test.workflow` si les transitions ou vues SQL changent
 - `make test.style` si des tests sont modifiés
 - `make cs.check` et `make stan` si du PHP est modifié
+
+Résultats du ticket 0035 : `make test.unit` réussit (239 tests), `make
+test.workflow` réussit (9 tests, 45 assertions), `make cs.check`, `make stan`
+et `make test.style` réussissent. Les tests de notification passent dans
+`make test.integration` (203 tests au total); trois erreurs restent limitées
+à l'absence connue de `menus.required_permission_id` dans `daetf2_test`.
+`make test.api` confirme les tests d'autorisation du workflow; ses trois
+erreurs et quatre échecs restants concernent le même écart de schéma des
+permissions et menus. Aucun correctif de cet écart n'a été appliqué.
 
 ## Références
 

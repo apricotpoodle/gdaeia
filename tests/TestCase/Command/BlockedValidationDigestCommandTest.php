@@ -13,6 +13,7 @@ use App\Service\Workflow\BlockedValidationCycle;
 use App\Service\Workflow\BlockedValidationStep;
 use Cake\Console\Arguments;
 use Cake\I18n\DateTime;
+use Closure;
 
 /** Vérifie l'orchestration du récapitulatif quotidien des cycles bloqués. */
 class BlockedValidationDigestCommandTest extends CommandTestCase
@@ -52,6 +53,7 @@ class BlockedValidationDigestCommandTest extends CommandTestCase
 
                 return true;
             },
+            static fn(string $type, string $eventKey, User $recipient, Closure $send): bool => $send(),
         );
         $streams = $this->createIo();
 
@@ -69,6 +71,7 @@ class BlockedValidationDigestCommandTest extends CommandTestCase
             static fn(): array => [new User(['email' => 'admin@example.test'])],
             fn(User $user): array => [$cycle],
             static fn(): bool => false,
+            static fn(string $type, string $eventKey, User $recipient, Closure $send): bool => $send(),
         );
         $streams = $this->createIo();
 
@@ -76,6 +79,59 @@ class BlockedValidationDigestCommandTest extends CommandTestCase
 
         $this->assertSame(BlockedValidationDigestCommand::CODE_ERROR, $result);
         $this->assertStringContainsString('Échec', $this->streamContents($streams['err']));
+    }
+
+    public function testContinueApresUnEchecEtNeRenvoiePasLeSuccesConfirme(): void
+    {
+        $cycle = $this->createBlockedCycle();
+        $first = new User(['id' => 1, 'email' => 'premier@example.test']);
+        $second = new User(['id' => 2, 'email' => 'second@example.test']);
+        $attempts = [];
+        $confirmed = [];
+        $send = static function (User $user) use (&$attempts): bool {
+            $email = strtolower($user->email);
+            $attempts[$email] = ($attempts[$email] ?? 0) + 1;
+
+            return $email !== 'second@example.test' || $attempts[$email] > 1;
+        };
+        $deliveries = [];
+        $sendOnce = static function (string $type, string $eventKey, User $recipient, Closure $callback)
+ use (&$confirmed, &$deliveries): bool {
+                $deliveries[] = [$type, $eventKey];
+                $key = $type . ':' . $eventKey . ':' . strtolower(trim($recipient->email));
+            if (isset($confirmed[$key])) {
+                return true;
+            }
+            if (!$callback()) {
+                return false;
+            }
+                $confirmed[$key] = true;
+
+                return true;
+        };
+        $command = new BlockedValidationDigestCommand(
+            null,
+            static fn(): array => [$first, $second],
+            static fn(User $user): array => [$cycle],
+            static fn(User $user, array $cycles): bool => $send($user),
+            $sendOnce,
+        );
+        $firstStreams = $this->createIo();
+
+        $firstResult = $command->execute(new Arguments([], [], []), $firstStreams['io']);
+        $this->assertSame(BlockedValidationDigestCommand::CODE_ERROR, $firstResult);
+
+        $secondStreams = $this->createIo();
+        $secondResult = $command->execute(new Arguments([], [], []), $secondStreams['io']);
+
+        $this->assertSame(BlockedValidationDigestCommand::CODE_SUCCESS, $secondResult);
+        $this->assertSame([
+            'premier@example.test' => 1,
+            'second@example.test' => 2,
+        ], $attempts);
+        $this->assertSame(['blocked_digest'], array_values(array_unique(array_column($deliveries, 0))));
+        $this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}$/', $deliveries[0][1]);
+        $this->assertStringNotContainsString('example.test', $this->streamContents($secondStreams['out']));
     }
 
     /** Construit un cycle minimal conforme à l'invariant des étapes bloquées. */

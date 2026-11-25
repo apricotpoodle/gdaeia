@@ -52,7 +52,8 @@ class AppMailerTest extends TestCase
 
         $this->assertTrue($sent);
         $this->assertLogContains('Succès SMTP');
-        $this->assertLogContains('validateur@example.test');
+        $this->assertLogContains(hash('sha256', 'validateur@example.test'));
+        $this->assertLogDoesNotContain('validateur@example.test');
         $this->assertLogContains('Validation attendue');
     }
 
@@ -63,7 +64,7 @@ class AppMailerTest extends TestCase
             /** @param \Cake\Mailer\Message $message */
             public function send(Message $message): array
             {
-                throw new RuntimeException('Relais SMTP indisponible.');
+                throw new RuntimeException('Relais SMTP indisponible pour validateur@example.test.');
             }
         });
 
@@ -74,8 +75,9 @@ class AppMailerTest extends TestCase
 
         $this->assertFalse($sent);
         $this->assertLogContains('Échec SMTP');
-        $this->assertLogContains('validateur@example.test');
-        $this->assertLogContains('Relais SMTP indisponible.');
+        $this->assertLogContains(hash('sha256', 'validateur@example.test'));
+        $this->assertLogDoesNotContain('validateur@example.test');
+        $this->assertLogContains('Relais SMTP indisponible pour ' . hash('sha256', 'validateur@example.test'));
     }
 
     private function assertLogContains(string $expected): void
@@ -87,5 +89,12 @@ class AppMailerTest extends TestCase
             )) > 0,
             sprintf('Le journal email ne contient pas « %s ».', $expected),
         );
+    }
+
+    private function assertLogDoesNotContain(string $unexpected): void
+    {
+        foreach ($this->emailLogger->read() as $message) {
+            $this->assertStringNotContainsString($unexpected, $message);
+        }
     }
 }

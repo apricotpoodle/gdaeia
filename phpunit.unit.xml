@@ -20,6 +20,10 @@
             <file>tests/TestCase/Model/Table/CommentsValidationTest.php</file>
             <file>tests/TestCase/Model/Table/DepartmentsTreeSelectTest.php</file>
             <file>tests/TestCase/Command/MigrationImportDepartmentsCommandTest.php</file>
+            <file>tests/TestCase/Command/ValidationReminderCommandTest.php</file>
+            <file>tests/TestCase/Command/ValidationPendingDigestCommandTest.php</file>
+            <file>tests/TestCase/Command/ValidationAcceptedDigestCommandTest.php</file>
+            <file>tests/TestCase/Command/BlockedValidationDigestCommandTest.php</file>
             <file>tests/TestCase/View/Action/ValidationCircuitRulesActionsTest.php</file>
             <exclude>tests/TestCase/Policy/ApplicationformPolicyTest.php</exclude>
         </testsuite>

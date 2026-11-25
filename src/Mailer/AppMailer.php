@@ -21,6 +21,13 @@ class AppMailer extends Mailer
 
     private ?string $safeSendAction = null;
 
+    private bool $redactRecipients = false;
+
+    /**
+     * @var list<string>
+     */
+    private array $deliveryAddresses = [];
+
     /**
      * Contexte conservé pendant l'envoi avant la restauration CakePHP.
      *
@@ -52,11 +59,14 @@ class AppMailer extends Mailer
      *
      * @param string $action Le nom de la méthode à appeler dans le Mailer enfant.
      * @param list<mixed> $args Les arguments à passer à cette méthode (ex: [$user]).
+     * @param bool $redactRecipients Remplace les adresses par leurs empreintes dans les journaux.
      * @return bool True si l'envoi a réussi, False si le serveur SMTP a échoué.
      */
-    public function safeSend(string $action, array $args = []): bool
+    public function safeSend(string $action, array $args = [], bool $redactRecipients = false): bool
     {
         $this->safeSendAction = $action;
+        $this->redactRecipients = $redactRecipients;
+        $this->deliveryAddresses = [];
         $this->deliveryContext = null;
         try {
             // Appel à la méthode send() native de CakePHP
@@ -72,6 +82,8 @@ class AppMailer extends Mailer
             return false; // Étouffe l'exception pour ne pas faire crasher l'application
         } finally {
             $this->safeSendAction = null;
+            $this->redactRecipients = false;
+            $this->deliveryAddresses = [];
             $this->deliveryContext = null;
         }
     }
@@ -91,7 +103,8 @@ class AppMailer extends Mailer
     public function deliver(string $content = ''): array
     {
         $action = $this->safeSendAction ?? 'expédition directe';
-        $recipients = $this->formatRecipients();
+        $this->deliveryAddresses = array_keys($this->getTo());
+        $recipients = $this->formatRecipients($this->deliveryAddresses);
         $subject = $this->getSubject();
         $this->deliveryContext = [
             'action' => $action,
@@ -123,7 +136,7 @@ class AppMailer extends Mailer
     ): void {
         $this->traceEmail(
             $this->formatLogMessage('Échec SMTP', $action, $recipients, $subject)
-            . ': ' . $exception->getMessage(),
+            . ': ' . $this->formatExceptionMessage($exception),
             'error',
         );
     }
@@ -138,12 +151,37 @@ class AppMailer extends Mailer
         ];
     }
 
-    /** Retourne la liste des destinataires configurés pour le message courant. */
-    private function formatRecipients(): string
+    /** Retourne la liste des destinataires configurés pour le message courant.
+     *
+     * @param list<string>|null $addresses Adresses à journaliser.
+     */
+    private function formatRecipients(?array $addresses = null): string
     {
-        $recipients = array_keys($this->getTo());
+        $recipients = $addresses ?? array_keys($this->getTo());
+        if ($this->redactRecipients) {
+            $recipients = array_map(
+                static fn(string $email): string => 'sha256:' . hash('sha256', strtolower(trim($email))),
+                $recipients,
+            );
+        }
 
         return $recipients === [] ? 'destinataire non défini' : implode(', ', $recipients);
+    }
+
+    /** Masque les adresses présentes dans un message d’erreur SMTP. */
+    private function formatExceptionMessage(Throwable $exception): string
+    {
+        $message = $exception->getMessage();
+        if (!$this->redactRecipients) {
+            return $message;
+        }
+
+        foreach ($this->deliveryAddresses as $email) {
+            $fingerprint = 'sha256:' . hash('sha256', strtolower(trim($email)));
+            $message = str_ireplace($email, $fingerprint, $message);
+        }
+
+        return $message;
     }
 
     /** Construit un message de log homogène pour les succès et les échecs. */

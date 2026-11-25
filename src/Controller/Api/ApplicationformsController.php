@@ -22,6 +22,7 @@ use App\Service\Security\FieldAuthorizationService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use App\Service\Workflow\BlockedValidationCycle;
 use App\Service\Workflow\BlockedValidationStep;
+use App\Service\Workflow\ValidationWorkflowNotificationService;
 use App\Service\Workflow\WorkflowStartFailureException;
 use App\Service\WorkingDaysService;
 use Cake\Event\EventInterface;
@@ -70,9 +71,10 @@ class ApplicationformsController extends AppController
                     422,
                 );
             }
-            foreach ($result['recipients'] as $recipient) {
-                (new ValidationWorkflowMailer())->safeSend('validationStep', [$recipient, $applicationform]);
+            if (!$result['run'] instanceof ValidationWorkflowRun) {
+                throw new RuntimeException(__('Le cycle de validation créé est introuvable.'));
             }
+            (new ValidationWorkflowNotificationService())->notifyStart($applicationform, $result['run']);
 
             return $this->workflowResponse(true, __('Le cycle de validation est lancé.'), []);
         } catch (WorkflowStartFailureException $exception) {
@@ -164,16 +166,19 @@ class ApplicationformsController extends AppController
                 $comment,
                 $isProxy,
             );
-            foreach ($result['nextRecipients'] as $recipient) {
-                (new ValidationWorkflowMailer())->safeSend('validationStep', [$recipient, $applicationform]);
-            }
-            if ($result['final']) {
-                $this->sendFinalResult($applicationform, $result['state'], $result['comment']);
-            }
+            (new ValidationWorkflowNotificationService())->notifyVote(
+                $applicationform,
+                $result['run_id'],
+                $result['step_id'],
+                $result['state'],
+                $result['final'],
+                $result['comment'],
+            );
 
             return $this->workflowResponse(true, __('Votre vote a été enregistré.'), [
                 'state' => $result['state'],
                 'final' => $result['final'],
+                'run_id' => $result['run_id'],
             ]);
         } catch (RuntimeException $exception) {
             return $this->workflowResponse(false, $exception->getMessage(), [], 422);
@@ -384,52 +389,6 @@ class ApplicationformsController extends AppController
                 'details' => $success ? $details : [],
                 'errors' => $success ? [] : ($details === [] ? [$message] : $details),
             ]));
-    }
-
-    /**
-     * Envoie le résultat final du cycle aux destinataires concernés.
-     *
-     * @param \App\Model\Entity\Applicationform $applicationform Demande concernée.
-     * @param string $state État final du cycle.
-     * @param string|null $comment Commentaire associé au vote final.
-     */
-    private function sendFinalResult(Applicationform $applicationform, string $state, ?string $comment): void
-    {
-        $loaded = $this->Applicationforms->get(
-            $applicationform->get(Applicationform::FIELD_ID),
-            contain: ['Users', 'Departments' => ['Managers']],
-        );
-        $recipients = [$loaded->user];
-        foreach ($loaded->department->get('managers') ?? [] as $manager) {
-            $recipients[] = $manager;
-        }
-        /** @var \App\Model\Entity\Applicationvalidationstep|null $lastStep */
-        $lastStep = $this->fetchTable('Applicationvalidationsteps')->find()
-            ->where(['applicationform_id' => $loaded->id])
-            ->orderByDesc('sequence_number')->first();
-        if ($lastStep !== null) {
-            $sgrUsers = $this->fetchTable('Users')->find()
-                ->innerJoinWith('UserDepartments', function (SelectQuery $query) use ($loaded): SelectQuery {
-                    return $query->where(['UserDepartments.department_id' => $loaded->department_id]);
-                })
-                ->where([
-                    'Users.role_id' => $lastStep->get(Applicationvalidationstep::FIELD_ROLE_ID),
-                    'Users.deleted IS' => null,
-                ])->all();
-            /** @var iterable<\App\Model\Entity\User> $sgrUsers */
-            $sgrUsers = $sgrUsers;
-            foreach ($sgrUsers as $sgrUser) {
-                $recipients[] = $sgrUser;
-            }
-        }
-        $sent = [];
-        foreach ($recipients as $recipient) {
-            $email = $recipient?->get(User::FIELD_EMAIL);
-            if ($recipient !== null && is_string($email) && !isset($sent[$email])) {
-                $sent[$email] = true;
-                (new ValidationWorkflowMailer())->safeSend('finalResult', [$recipient, $loaded, $state, $comment]);
-            }
-        }
     }
 
     /**

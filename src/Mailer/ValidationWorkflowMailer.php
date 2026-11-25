@@ -10,6 +10,12 @@ use Cake\Core\Configure;
 /** Courriels transactionnels du cycle de validation. */
 final class ValidationWorkflowMailer extends AppMailer
 {
+    /** Les notifications GDAE ne journalisent jamais les adresses en clair. */
+    public function safeSend(string $action, array $args = [], bool $redactRecipients = true): bool
+    {
+        return parent::safeSend($action, $args, $redactRecipients);
+    }
+
     /**
      * Prépare le récapitulatif quotidien des cycles bloqués.
      *
