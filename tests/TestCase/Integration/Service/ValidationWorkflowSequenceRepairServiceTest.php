@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-namespace App\Test\TestCase\Service;
+namespace App\Test\TestCase\Integration\Service;
 
 use App\Service\ValidationWorkflowSequenceRepairService;
 use Cake\Datasource\ConnectionManager;

@@ -1507,7 +1507,7 @@ class Initial extends BaseMigration
         $this->execute("DROP VIEW IF EXISTS urds;");
         $this->execute("DROP VIEW IF EXISTS currentvalidationroles;");
         $this->execute("DROP VIEW IF EXISTS applicationformstatuses;");
-        
+
         $this->table('cgr_codes')
             ->dropForeignKey(
                 'department_id'
@@ -1566,7 +1566,7 @@ class Initial extends BaseMigration
         // 1. Vue : applicationformstatuses
         $this->execute("
             CREATE OR REPLACE
-            ALGORITHM = UNDEFINED VIEW `daetf`.`applicationformstatuses` AS
+            ALGORITHM = UNDEFINED VIEW `applicationformstatuses` AS
             select
                 `af`.`id` AS `applicationform_id`,
                 (case
@@ -1610,16 +1610,16 @@ class Initial extends BaseMigration
                     else false
                 end) AS `rejected`
             from
-                ((`daetf`.`applicationforms` `af`
-            left join `daetf`.`validations` `v` on
+                ((`applicationforms` `af`
+            left join `validations` `v` on
                 ((`af`.`id` = `v`.`applicationform_id`)))
-            left join `daetf`.`validationsequences` `vs` on
+            left join `validationsequences` `vs` on
                 (((`af`.`department_id` = `vs`.`department_id`)
                     and `vs`.`role_id` in (
                     select
                         `v1`.`role_id`
                     from
-                        `daetf`.`validations` `v1`
+                        `validations` `v1`
                     where
                         ((`v1`.`applicationform_id` = `af`.`id`)
                             and (`v1`.`validationstatus_id` in (4, 3)))) is false)))
@@ -1630,25 +1630,25 @@ class Initial extends BaseMigration
         // 2. Vue : currentvalidationroles
         $this->execute("
             CREATE OR REPLACE
-            ALGORITHM = UNDEFINED VIEW `daetf`.`currentvalidationroles` AS
+            ALGORITHM = UNDEFINED VIEW `currentvalidationroles` AS
             select
                 `a`.`id` AS `applicationform_id`,
                 `a`.`department_id` AS `department_id`,
                 `vs`.`role_id` AS `validator_role_id`,
                 `vs`.`sequence` AS `validation_sequence`,
                 `v`.`validationstatus_id` AS `validationstatus_id`,
-                `daetf`.`a2`.`en_cours` AS `en_cours`,
-                `daetf`.`a2`.`accepted` AS `accepted`,
-                `daetf`.`a2`.`rejected` AS `rejected`
+                `a2`.`en_cours` AS `en_cours`,
+                `a2`.`accepted` AS `accepted`,
+                `a2`.`rejected` AS `rejected`
             from
-                (((`daetf`.`applicationforms` `a`
-            join `daetf`.`validationsequences` `vs` on
+                (((`applicationforms` `a`
+            join `validationsequences` `vs` on
                 ((`vs`.`department_id` = `a`.`department_id`)))
-            join `daetf`.`applicationformstatuses` `a2` on
-                (((0 <> `daetf`.`a2`.`has_validations`)
-                    and (`a`.`id` = `daetf`.`a2`.`applicationform_id`)
-                        and (`vs`.`sequence` = `daetf`.`a2`.`current_sequence`))))
-            left join `daetf`.`validations` `v` on
+            join `applicationformstatuses` `a2` on
+                (((0 <> `a2`.`has_validations`)
+                    and (`a`.`id` = `a2`.`applicationform_id`)
+                        and (`vs`.`sequence` = `a2`.`current_sequence`))))
+            left join `validations` `v` on
                 (((`v`.`applicationform_id` = `a`.`id`)
                     and (`v`.`role_id` = `vs`.`role_id`))));
         ");
@@ -1656,21 +1656,21 @@ class Initial extends BaseMigration
         // 2. Vue : urds
         $this->execute("
             CREATE OR REPLACE
-            ALGORITHM = UNDEFINED VIEW `daetf`.`urds` AS
+            ALGORITHM = UNDEFINED VIEW `urds` AS
             select
                 `ud`.`user_id` AS `user_id`,
                 `u`.`role_id` AS `role_id`,
                 `ud`.`department_id` AS `department_id`
             from
-                (`daetf`.`user_departments` `ud`
-            join `daetf`.`users` `u` on
+                (`user_departments` `ud`
+            join `users` `u` on
                 ((`u`.`id` = `ud`.`user_id`)));
         ");
 
         // 2. Vue : validation_visas
         $this->execute("
             CREATE OR REPLACE
-            ALGORITHM = UNDEFINED VIEW `daetf`.`validation_visas` AS
+            ALGORITHM = UNDEFINED VIEW `validation_visas` AS
             select
                 `af`.`id` AS `applicationform_id`,
                 `vs`.`sequence` AS `sequence`,
@@ -1683,17 +1683,17 @@ class Initial extends BaseMigration
                 `s`.`name` AS `status_name`,
                 `v`.`modified` AS `validated_at`
             from
-                (((((`daetf`.`applicationforms` `af`
-            join `daetf`.`validationsequences` `vs` on
+                (((((`applicationforms` `af`
+            join `validationsequences` `vs` on
                 ((`vs`.`department_id` = `af`.`department_id`)))
-            join `daetf`.`roles` `r` on
+            join `roles` `r` on
                 ((`r`.`id` = `vs`.`role_id`)))
-            left join `daetf`.`validations` `v` on
+            left join `validations` `v` on
                 (((`v`.`applicationform_id` = `af`.`id`)
                     and (`v`.`role_id` = `vs`.`role_id`))))
-            left join `daetf`.`users` `u` on
+            left join `users` `u` on
                 ((`v`.`user_id` = `u`.`id`)))
-            left join `daetf`.`validationstatuses` `s` on
+            left join `validationstatuses` `s` on
                 ((`s`.`id` = `v`.`validationstatus_id`)))
             where
                 ((`af`.`deleted` is null)
