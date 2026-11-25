@@ -34,4 +34,15 @@ class WorkingDaysServiceTest extends TestCase
             ),
         );
     }
+
+    public function testCompteUnJourFerieEnSemaineCommeUnJourOuvre(): void
+    {
+        $this->assertSame(
+            1,
+            (new WorkingDaysService())->countWorkingDays(
+                new DateTimeImmutable('2026-05-01'),
+                new DateTimeImmutable('2026-05-01'),
+            ),
+        );
+    }
 }

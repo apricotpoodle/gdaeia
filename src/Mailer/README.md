@@ -13,6 +13,11 @@ relance des cycles bloqués. Le service de workflow détermine au préalable les
 validateurs concernés par les étapes bloquées et dédoublonne les destinataires ;
 le mailer ne reçoit donc jamais une liste de destinataires non autorisée.
 
+`ApplicationformZeroWorkingDaysNotifier` envoie, après sauvegarde réussie d'une
+DAE à zéro jour, une notification individuelle à son auteur, à ses responsables
+et aux ADMIN rattachés au département. Il dédoublonne les adresses avant
+d'appeler `ValidationWorkflowMailer::zeroWorkingDays()` via `safeSend()`.
+
 `DepartmentDeactivationMailer` envoie le compte rendu de chaque désactivation.
 Les responsables, administrateurs du périmètre et le super-administrateur
 exécutant reçoivent le rapport complet ; les utilisateurs détachés reçoivent

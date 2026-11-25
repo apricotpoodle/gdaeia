@@ -197,6 +197,15 @@ class ApplicationformsTable extends Table
             return;
         }
 
+        if (
+            $periodCode === Period::CODE_EUR_PER_HOUR
+            && !$entity->isNew()
+            && !$entity->isDirty(Applicationform::FIELD_PERIOD_ID)
+            && !$entity->isDirty(Applicationform::FIELD_GROSSREMUNERATION)
+        ) {
+            return;
+        }
+
         try {
             $workingDaysValue = $entity->get(Applicationform::FIELD_WORKING_DAYS);
             $workingDays = $workingDaysValue === null || $workingDaysValue === ''
@@ -505,15 +514,25 @@ class ApplicationformsTable extends Table
                         return true;
                     }
 
-                    $code = strtoupper(trim($contractType->code));
+                    $code = strtolower(trim($contractType->code));
 
                     // CDI : La date de fin DOIT être nulle
-                    if ($code === 'CDI' && !empty($value)) {
+                    if ($code === Contracttype::CODE_CDI && !empty($value)) {
                         return __('Un contrat de type CDI ne peut pas comporter de date de fin.');
                     }
 
                     // CDD : La date de fin est OBLIGATOIRE
-                    if (in_array($code, ['CDD', 'CTT', 'ALT']) && empty($value)) {
+                    if (
+                        in_array($code, [
+                            Contracttype::CODE_CDD,
+                            Contracttype::CODE_INTERIM,
+                            Contracttype::CODE_APPR,
+                            Contracttype::CODE_STAGE,
+                            Contracttype::CODE_PIGE,
+                            Contracttype::CODE_FACT,
+                        ], true)
+                        && empty($value)
+                    ) {
                         return __('La date de fin est obligatoire pour un contrat à durée déterminée.');
                     }
 
@@ -533,6 +552,22 @@ class ApplicationformsTable extends Table
         $validator
             ->integer(Applicationform::FIELD_WORKING_DAYS)
             ->greaterThanOrEqual(Applicationform::FIELD_WORKING_DAYS, 0)
+            ->add(Applicationform::FIELD_WORKING_DAYS, 'zeroWhenWeekdaysExist', [
+                'rule' => function ($value, array $context): bool|string {
+                    if ($value === null || $value === '' || (int)$value !== 0) {
+                        return true;
+                    }
+
+                    $begin = $this->validationDate($context['data'][Applicationform::FIELD_BEGIN_AT] ?? null);
+                    $end = $this->validationDate($context['data'][Applicationform::FIELD_END_AT] ?? null);
+                    if ($begin === null || $end === null || $end < $begin) {
+                        return true;
+                    }
+
+                    return (new WorkingDaysService())->countWorkingDays($begin, $end) === 0
+                        ?: __('Un nombre de jours nul n’est accepté que pour une période sans jour de semaine.');
+                },
+            ])
             ->add(Applicationform::FIELD_WORKING_DAYS, 'withinDateRange', [
                 'rule' => function ($value, array $context): bool|string {
                     if ($value === null || $value === '') {
@@ -657,6 +692,22 @@ class ApplicationformsTable extends Table
         $rules->add($rules->existsIn([Applicationform::FIELD_PERIOD_ID], 'Periods'), [
             'errorField' => Applicationform::FIELD_PERIOD_ID,
         ]);
+        $rules->add(
+            fn(Applicationform $applicationform): bool => $this->hourlyPeriodSelectionIsHistorical($applicationform),
+            [
+                'errorField' => Applicationform::FIELD_PERIOD_ID,
+                'message' => __('La périodicité €/heure ne peut plus être choisie pour une nouvelle demande.'),
+            ],
+        );
+        $rules->add(
+            fn(Applicationform $applicationform): bool => $this->hourlyRemunerationIsUnchanged($applicationform),
+            [
+                'errorField' => Applicationform::FIELD_GROSSREMUNERATION,
+                'message' => __(
+                    'Pour modifier une rémunération historique en €/heure, choisissez une périodicité prise en charge.',
+                ),
+            ],
+        );
         $rules->add($rules->existsIn([Applicationform::FIELD_YESNO_ID], 'Yesnos'), [
             'errorField' => Applicationform::FIELD_YESNO_ID,
         ]);
@@ -681,6 +732,40 @@ class ApplicationformsTable extends Table
 
         return $applicationform->isDirty(Applicationform::FIELD_ASSISTANT_ID)
             || $applicationform->isDirty(Applicationform::FIELD_DEPARTMENT_ID);
+    }
+
+    /** Autorise €/heure uniquement pour une demande historique qui conserve cette unité. */
+    private function hourlyPeriodSelectionIsHistorical(Applicationform $applicationform): bool
+    {
+        if (!$this->isHourlyPeriod($applicationform->get(Applicationform::FIELD_PERIOD_ID))) {
+            return true;
+        }
+
+        return !$applicationform->isNew()
+            && !$applicationform->isDirty(Applicationform::FIELD_PERIOD_ID);
+    }
+
+    /** Refuse de modifier un montant conservé en €/heure sans passer à une unité prise en charge. */
+    private function hourlyRemunerationIsUnchanged(Applicationform $applicationform): bool
+    {
+        return !$this->isHourlyPeriod($applicationform->get(Applicationform::FIELD_PERIOD_ID))
+            || !$applicationform->isDirty(Applicationform::FIELD_GROSSREMUNERATION);
+    }
+
+    /** Indique si un identifiant de périodicité désigne €/heure. */
+    private function isHourlyPeriod(mixed $periodId): bool
+    {
+        if (!is_int($periodId) && !(is_string($periodId) && ctype_digit($periodId))) {
+            return false;
+        }
+
+        $period = $this->Periods->find()
+            ->select([Period::FIELD_CODE])
+            ->where([Period::FIELD_ID => (int)$periodId])
+            ->first();
+
+        return $period instanceof Period
+            && strtoupper(trim((string)$period->get(Period::FIELD_CODE))) === Period::CODE_EUR_PER_HOUR;
     }
 
     /**

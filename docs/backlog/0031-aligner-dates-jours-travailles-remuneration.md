@@ -1,6 +1,6 @@
 # 0031 — Aligner dates, jours travaillés et rémunération
 
-**Statut :** Bloqué
+**Statut :** Terminé
 
 **Priorité :** Haute — cohérence des demandes
 
@@ -16,42 +16,40 @@ Le ticket 0018 couvre déjà le calcul hors week-ends, la saisie et les bornes
 serveur. Le nouveau travail porte sur les règles V3 décidées au 0030 et sur
 les écarts vérifiés, pas sur une réécriture de ces comportements existants.
 
-Le ticket 0030 est terminé. Ce ticket reste bloqué jusqu'aux réponses sur le
-caractère obligatoire de la saisie, l'acceptation d'un zéro saisi pour une
-période avec des jours de semaine, l'usage de la valeur automatique avant
-l'envoi et le traitement des jours fériés (Q-0018-02 à Q-0018-04). Les jours
-fériés en semaine sont comptés dans l'attente de cet arbitrage. Le retrait
-de €/heure pour les nouvelles saisies et la conservation des valeurs
-historiques sont cadrés par le plan approuvé; Q-0030-01 reste ouverte sur
-le maintien éventuel de l'unité, les modalités de calcul du salaire de base
-et la source des heures si l'unité s'applique à l'historique.
+Le ticket 0030 est terminé et les arbitrages Q-0018-02 à Q-0018-04 sont
+consignés. Le nombre de jours est facultatif et modifiable; zéro est refusé
+quand la période contient un jour de semaine, et les jours fériés en semaine
+restent comptés comme des jours de semaine. Pour €/jour sans nombre saisi, le
+salaire de base reste vide. Le cadrage approuvé retire €/heure des nouvelles
+saisies et demande une unité prise en charge pour modifier une rémunération
+historique.
 
 ## Travail attendu
 
-- [ ] Appliquer les règles de validation de `working_days` décidées au 0030 et
+- [x] Appliquer les règles de validation de `working_days` décidées au 0030 et
   conserver la visibilité décidée (dates valides, sauf date de fin désactivée
   pour un CDI) ; conserver une validation serveur.
-- [ ] Déclarer les codes de contrat comme constantes publiques dans l'entité
+- [x] Déclarer les codes de contrat comme constantes publiques dans l'entité
   `Contracttype` et n'utiliser que ces constantes dans les règles métier pour
   `cdi`, `cdd`, `interim`, `appr.`, `stage`, `pige` et `fact`.
-- [ ] Aligner les bornes de dates, les unités de durée et le nombre de jours
+- [x] Aligner les bornes de dates, les unités de durée et le nombre de jours
   sur les règles confirmées, y compris les périodes sans jour ouvré et les
   éventuelles corrections manuelles.
-- [ ] Lors d'un changement de dates, afficher la valeur actuelle de
+- [x] Lors d'un changement de dates, afficher la valeur actuelle de
   `working_days` et le nouveau calcul, puis laisser l'opérateur décider de la
   valeur à conserver.
-- [ ] Pour toute valeur de `working_days` égale à zéro, afficher un avertissement
+- [x] Pour toute valeur de `working_days` égale à zéro, afficher un avertissement
   avant l'enregistrement et envoyer le courriel à l'auteur, aux responsables
   associés au service et à tout rôle ADMIN qui voit ce service,
   uniquement après un enregistrement réussi.
-- [ ] Retirer l'unité €/heure des nouvelles saisies Web et API et préserver
+- [x] Retirer l'unité €/heure des nouvelles saisies Web et API et préserver
   les valeurs historiques en €/heure, conformément au cadrage du plan.
-- [ ] Rendre le coefficient global de k/mois modifiable par un
+- [x] Rendre le coefficient global de k/mois modifiable par un
   super-administrateur.
-- [ ] Garder le montant calculé cohérent après toute modification des dates,
+- [x] Garder le montant calculé cohérent après toute modification des dates,
   jours travaillés, période ou montant saisi.
-- [ ] Couvrir formulaire Web, validation ORM et mutations/calculs API.
-- [ ] Documenter les règles dans le README local Applicationforms.
+- [x] Couvrir formulaire Web, validation ORM et mutations/calculs API.
+- [x] Documenter les règles dans le README local Applicationforms.
 
 ## Critères d'acceptation
 

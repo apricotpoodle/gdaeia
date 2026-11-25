@@ -52,6 +52,14 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('48');
 
+        $this->post('/api/workflow-settings/k-coefficient.json', ['k_coefficient' => '18,25']);
+        $this->assertResponseOk();
+        $this->assertResponseContains('18.25');
+        $this->assertSame(
+            '18.2500',
+            $settings->find()->where(['name' => 'salary.k_coefficient'])->firstOrFail()->value,
+        );
+
         $this->post('/api/workflow-settings/comment-templates/create.json', [
             'decision' => 'refuser', 'label' => 'Budget', 'content' => 'Budget insuffisant.', 'position' => 1, 'active' => true,
         ]);
@@ -107,6 +115,7 @@ class WorkflowSettingsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('validation-comment-templates-grid');
+        $this->assertResponseContains('id="salary-k-coefficient"');
         $this->assertResponseContains('name="position"');
         $this->assertResponseContains('placeholder="Position"');
         $this->assertResponseContains('class="content workflow-settings-page flex-grow-1 overflow-y-auto" style="min-height: 0;"');
@@ -199,6 +208,27 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->session(['Auth' => new User(['id' => 1, 'role_id' => 1])]);
         $this->get('/api/workflow-settings/default-due-hours.json');
         $this->assertResponseCode(403);
+    }
+
+    public function testUnePermissionGeneriqueNePermetPasDeModifierLeCoefficientK(): void
+    {
+        $this->grant('update');
+        $this->session(['Auth' => new User([
+            'id' => 1,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->post('/api/workflow-settings/k-coefficient.json', ['k_coefficient' => 18.25]);
+
+        $this->assertResponseCode(403);
+        $this->assertSame(
+            0,
+            $this->getTableLocator()->get('WorkflowSettings')->find()
+                ->where(['name' => 'salary.k_coefficient'])->count(),
+        );
     }
 
     private function grant(string $action): void

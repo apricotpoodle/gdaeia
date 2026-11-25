@@ -56,7 +56,7 @@ et met à jour les questions métier avant tout développement dépendant.
 | Ticket | Sujet | État |
 |---|---|---|
 | [0030](0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md) | Arbitrer les règles métier et actualiser le périmètre | Terminé |
-| [0031](0031-aligner-dates-jours-travailles-remuneration.md) | Dates, jours travaillés et rémunération | Bloqué |
+| [0031](0031-aligner-dates-jours-travailles-remuneration.md) | Dates, jours travaillés et rémunération | Terminé |
 | [0032](0032-habiliter-administration-locale-par-service.md) | Administration des références métier par les rôles ADMIN dans leur périmètre | À planifier |
 | [0033](0033-reprendre-une-dae-pendant-son-circuit.md) | Reprise d'une DAE en cours de circuit | À planifier |
 | [0034](0034-finaliser-archivage-et-acces-archives.md) | Archivage et accès aux archives | À planifier |
@@ -70,19 +70,18 @@ Le ticket facultatif [0040](0040-parametrer-champs-reinitialises-duplication.md)
 est hors manifeste et ne sera examiné qu'après le 0039.
 
 Le [registre des questions](../meetings/questions-ouvertes.md) distingue
-les réponses métier du cadrage approuvé. Q-0018-02 à Q-0018-04 sur les jours
-travaillés, Q-0030-01 à Q-0030-03 sur €/heure, la reprise et la rétention,
-et Q-0030-07 sur les champs PDF additionnels restent ouverts. Le 0030 est
-terminé après leur consignation et la réconciliation documentaire. Le 0031
-est bloqué par Q-0018-02 à Q-0018-04; les tickets 0033, 0034 et 0037 gardent
-leurs bloqueurs Q-0030-02, Q-0030-03 et Q-0030-07. Les acceptations 0027 et
-0028 sont terminées et leur clôture ne fait plus partie de la recette 0039.
+les réponses métier du cadrage approuvé. Q-0018-02 à Q-0018-04 et Q-0030-01
+sont consignées et appliquées par le 0031. Q-0030-02 et Q-0030-03 sur la
+reprise et la rétention, ainsi que Q-0030-07 sur les champs PDF additionnels,
+restent ouverts et bloquent respectivement les tickets 0033, 0034 et 0037.
+Les acceptations 0027 et 0028 sont terminées et leur clôture ne fait plus
+partie de la recette 0039.
 
 ## Tickets historiques réconciliés
 
 | Ticket | État constaté | Éléments vérifiés |
 |---|---|---|
-| [0018 — Jours ouvrés](0018-securiser-la-saisie-des-jours-ouvres-dae.md) | Terminé pour son périmètre technique | Calcul hors week-ends, saisie et bornes serveur présents ; les règles métier V3 restent au 0030/0031. |
+| [0018 — Jours ouvrés](0018-securiser-la-saisie-des-jours-ouvres-dae.md) | Terminé | Calcul des jours de semaine sans exclusion des jours fériés; les arbitrages de saisie facultative et du zéro sont appliqués au 0031. |
 | [0019 — Vue en quatre zones](0019-reprendre-les-quatre-zones-dans-la-vue-dae.md) | Terminé | Vue en lecture seule, visibilité de la zone réservée et tests fonctionnels présents. |
 | [0020 — Duplication des DAE](0020-fiabiliser-la-duplication-des-dae.md) | Terminé | Liste canonique de champs réinitialisés et tests ORM/API présents. Le bonus de paramétrage 0040 n'est pas inclus dans ce ticket. |
 | [0021 — Habilitations génériques](0021-implementer-les-habilitations-generiques.md) | Terminé pour le vertical départements | Permissions, périmètres et interfaces de gestion avec tests présents. La généralisation du ticket 0007 reste distincte. |

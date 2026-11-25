@@ -34,6 +34,20 @@ final class WorkflowSettingsActions
         );
     }
 
+    /** Enregistre le coefficient global de k/mois. */
+    public static function saveKCoefficient(): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_BUTTON,
+            __('Enregistrer'),
+            'fa-floppy-disk',
+            '#',
+            'manageKCoefficient',
+            'WorkflowSettings',
+            ['class' => 'btn btn-primary', 'id' => 'save-salary-k-coefficient'],
+        );
+    }
+
     /** Enregistre les règles d'obligation de commentaire. */
     public static function saveCommentRequirements(): UiAction
     {

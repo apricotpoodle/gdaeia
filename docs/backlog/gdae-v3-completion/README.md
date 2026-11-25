@@ -7,9 +7,9 @@ peut afficher un ticket bloqué dont les dépendances sont satisfaites. Mettre
 à jour le statut dans le manifeste au fil du travail.
 
 Les tickets 0031 à 0039 forment une chaîne stricte. Le ticket 0030 recueille
-les directives du plan et réconcilie les documents, en laissant ouvertes les
-questions métier sans réponse. Il est `Terminé`. Le 0031 est `Bloqué` par
-Q-0018-02 à Q-0018-04; les tickets ultérieurs portent leurs bloqueurs propres.
+les directives du plan et réconcilie les documents; il est `Terminé`. Le 0031
+est `Terminé` après consignation et application des réponses Q-0018-02 à
+Q-0018-04. Les tickets ultérieurs portent leurs bloqueurs propres.
 
 Le ticket 0039 organise la recette dans Docker local isolé avec des données
 synthétiques et des séquences configurées par l'opérateur pour chaque service.

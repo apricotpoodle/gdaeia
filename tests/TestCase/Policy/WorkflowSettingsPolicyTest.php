@@ -22,6 +22,21 @@ class WorkflowSettingsPolicyTest extends TestCase
         $this->assertFalse($policy->canManage($this->identity(new User(['issuperuser' => false])), $setting));
     }
 
+    public function testLaModificationDuCoefficientEstReserveeAuSuperAdministrateur(): void
+    {
+        $policy = new WorkflowSettingPolicy(new PermissionResolver([]));
+        $setting = new WorkflowSetting();
+
+        $this->assertTrue($policy->canManageKCoefficient(
+            $this->identity(new User(['issuperuser' => true])),
+            $setting,
+        ));
+        $this->assertFalse($policy->canManageKCoefficient(
+            $this->identity(new User(['issuperuser' => false])),
+            $setting,
+        ));
+    }
+
     /** @param \App\Model\Entity\User $user Utilisateur représenté par l’identité. */
     private function identity(User $user): IdentityInterface
     {

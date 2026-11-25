@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Controller;
 
+use App\Model\Entity\Period;
 use App\Model\Entity\User;
 use Cake\Datasource\ConnectionManager;
 use Cake\TestSuite\IntegrationTestTrait;
@@ -145,6 +146,38 @@ class ApplicationformsControllerTest extends TestCase
             '/<select[^>]+name="assistant_id"[^>]*>.*<option(?=[^>]*value="1")(?=[^>]*selected)[^>]*>/s',
             $body,
         );
+    }
+
+    public function testLaCreationNeProposePasLaPeriodeHoraire(): void
+    {
+        ConnectionManager::get('test')->update('periods', [
+            'code' => Period::CODE_EUR_PER_HOUR,
+            'deleted' => null,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/add');
+
+        $this->assertResponseOk();
+        preg_match('/<select[^>]*id="period-id"[^>]*>(.*?)<\/select>/s', (string)$this->_response->getBody(), $matches);
+        $this->assertArrayHasKey(1, $matches);
+        $this->assertDoesNotMatchRegularExpression('/<option[^>]*value="1"/', $matches[1]);
+    }
+
+    public function testLEditionGardeLaPeriodeHoraireHistoriqueVisibleCommeTelle(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('periods', [
+            'code' => Period::CODE_EUR_PER_HOUR,
+            'deleted' => null,
+        ], ['id' => 1]);
+        $connection->update('applicationforms', ['period_id' => 1, 'deleted' => null], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('€/heure — historique, choisir une unité prise en charge pour modifier');
     }
 
     public function testLaCreationDesactiveUnChampAbsentDeLaMatriceAcl(): void

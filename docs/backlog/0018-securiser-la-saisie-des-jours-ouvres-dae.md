@@ -75,15 +75,10 @@ Exécuter les commandes adaptées via le Makefile racine :
 
 ## Limites métier et suite
 
-Le ticket couvre le calcul technique hors samedis et dimanches, la saisie
-manuelle et les bornes serveur. La visibilité du champ a depuis été décidée :
-il apparaît quand les dates sont valides, sauf pour un CDI dont la date de fin
-est désactivée. Une période sans jour ouvré est acceptée ; toute valeur zéro
-doit déclencher un avertissement visuel avant l'enregistrement et un courriel
-après son succès. Lors d'un changement de dates, l'opérateur doit voir la
-valeur actuelle et le nouveau calcul avant de décider quoi faire. L'usage de
-la valeur calculée avant envoi, l'exclusion des jours fériés et la saisie
-manuelle de zéro pour une période avec des jours de semaine restent à trancher.
-Les questions Q-0018-02 à Q-0018-04
-restent ouvertes et sont des prérequis du ticket
-[0030 — Arbitrer le périmètre GDAE V3](0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md).
+Le ticket couvrait le calcul hors samedis et dimanches, la saisie manuelle et
+les bornes serveur. La visibilité du champ a ensuite été fixée : il apparaît
+quand les dates sont valides, sauf pour un CDI dont la date de fin est
+désactivée. Les arbitrages Q-0018-02 à Q-0018-04 sont appliqués au
+[0031 — Aligner dates, jours travaillés et rémunération](0031-aligner-dates-jours-travailles-remuneration.md) :
+la saisie est facultative, le zéro est refusé si la période contient un jour
+de semaine et les jours fériés en semaine restent comptés.

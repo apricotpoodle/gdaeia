@@ -62,6 +62,29 @@ async function loadDefaultDueHours() {
     document.querySelector('#validation-default-due-hours').value = payload.data.default_due_hours;
 }
 
+async function saveKCoefficient() {
+    const input = document.querySelector('#salary-k-coefficient');
+    const coefficient = Number(input.value.trim().replace(',', '.'));
+    if (!Number.isFinite(coefficient) || coefficient <= 0) {
+        FlashManager.warning('Le coefficient k doit être un nombre strictement positif.');
+        return;
+    }
+    const payload = await readJson(await fetch('/api/workflow-settings/k-coefficient.json', {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
+        body: JSON.stringify({ k_coefficient: coefficient }),
+    }), 'Impossible d’enregistrer le coefficient k.');
+    input.value = String(payload.k_coefficient);
+    FlashManager.success('Coefficient k/mois enregistré.');
+}
+
+async function loadKCoefficient() {
+    const payload = await readJson(await fetch('/api/workflow-settings/k-coefficient.json', {
+        headers: { Accept: 'application/json' },
+    }), 'Impossible de charger le coefficient k.');
+    document.querySelector('#salary-k-coefficient').value = String(payload.k_coefficient);
+}
+
 async function saveBlockedAfterBusinessDays() {
     const input = document.querySelector('#validation-blocked-after-business-days');
     const days = Number(input.value);
@@ -151,6 +174,9 @@ document.querySelector('#save-validation-comment-template')?.addEventListener('c
 document.querySelector('#save-validation-default-due-hours')?.addEventListener('click', () => {
     saveDefaultDueHours().catch((error) => FlashManager.error(error.message));
 });
+document.querySelector('#save-salary-k-coefficient')?.addEventListener('click', () => {
+    saveKCoefficient().catch((error) => FlashManager.error(error.message));
+});
 document.querySelector('#save-validation-blocked-after-business-days')?.addEventListener('click', () => {
     saveBlockedAfterBusinessDays().catch((error) => FlashManager.error(error.message));
 });
@@ -159,5 +185,6 @@ document.querySelector('#save-validation-comment-requirements')?.addEventListene
 });
 document.querySelector('#cancel-validation-comment-template')?.addEventListener('click', resetForm);
 loadDefaultDueHours().catch((error) => FlashManager.error(error.message));
+loadKCoefficient().catch((error) => FlashManager.error(error.message));
 loadBlockedAfterBusinessDays().catch((error) => FlashManager.error(error.message));
 loadCommentRequirements().catch((error) => FlashManager.error(error.message));

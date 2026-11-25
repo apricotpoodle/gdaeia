@@ -18,15 +18,18 @@ final class SalaryCalculationService
      * @param string|float|int $amount Montant saisi, avec point ou virgule.
      * @param int|null $workingDays Nombre de jours travaillés pour une pige.
      * @param float $kCoefficient Coefficient de conversion des milliers mensuels.
-     * @return string Montant décimal prêt à être persisté.
+     * @return string|null Montant décimal prêt à être persisté, ou null si le nombre de jours manque.
      */
     public function calculateBaseSalary(
         string $unit,
         string|float|int $amount,
         ?int $workingDays = null,
         float $kCoefficient = self::DEFAULT_K_COEFFICIENT,
-    ): string {
+    ): ?string {
         $normalizedAmount = $this->decimalValue($amount);
+        if ($unit === Period::CODE_EUR_PER_DAY && $workingDays === null) {
+            return null;
+        }
 
         $baseSalary = match ($unit) {
             Period::CODE_EUR_PER_DAY => $this->calculatePerDay($normalizedAmount, $workingDays),
@@ -47,7 +50,7 @@ final class SalaryCalculationService
         string|float|int $amount,
         ?int $workingDays = null,
         float $kCoefficient = self::DEFAULT_K_COEFFICIENT,
-    ): string {
+    ): ?string {
         return $this->calculateBaseSalary($periodCode, $amount, $workingDays, $kCoefficient);
     }
 

@@ -13,6 +13,7 @@ use App\Model\Entity\User;
 use App\Model\Entity\ValidationCommentTemplate;
 use App\Model\Entity\ValidationWorkflowRun;
 use App\Service\ApplicationformDuplicationResult;
+use App\Service\ApplicationformZeroWorkingDaysNotifier;
 use App\Service\CgrResolverService;
 use App\Service\DataGrid\TabulatorAdapter;
 use App\Service\SalaryCalculationService;
@@ -527,6 +528,7 @@ class ApplicationformsController extends AppController
 
         $periods = $periodsTable
             ->find('visibleTo', user: $currentUser)
+            ->where(['Periods.code !=' => Period::CODE_EUR_PER_HOUR])
             ->find('list', keyField: Period::FIELD_ID, valueField: Period::FIELD_NAME)
             ->toArray();
 
@@ -723,6 +725,8 @@ class ApplicationformsController extends AppController
         $this->Applicationforms->validateAssistantVisibility($applicationform, $user);
 
         if ($this->Applicationforms->save($applicationform)) {
+            (new ApplicationformZeroWorkingDaysNotifier())->notify($applicationform);
+
             return $this->response->withType('application/json')
                 ->withStringBody((string)json_encode(['success' => true, 'id' => $applicationform->id]));
         }
@@ -804,6 +808,7 @@ class ApplicationformsController extends AppController
         $hasChanges = $applicationform->isDirty();
 
         if ($this->Applicationforms->save($applicationform)) {
+            (new ApplicationformZeroWorkingDaysNotifier())->notify($applicationform);
             if ($activeRun !== null && $hasChanges) {
                 $this->fetchTable('Comments')->saveOrFail($this->fetchTable('Comments')->newEntity([
                     'model' => 'Applicationforms',

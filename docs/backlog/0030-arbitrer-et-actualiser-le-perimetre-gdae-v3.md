@@ -28,8 +28,9 @@ constats techniques ne constituent pas des décisions métier.
 
 Les questions Q-0018-01 à Q-0018-06 de
 [`questions-ouvertes.md`](../meetings/questions-ouvertes.md) sont une
-entrée de ce ticket. Les réponses métier à Q-0018-01, Q-0018-05 et Q-0018-06
-sont consignées ; Q-0018-02 à Q-0018-04 restent ouvertes.
+entrée de ce ticket. À la clôture du 0030, les réponses métier à Q-0018-01,
+Q-0018-05 et Q-0018-06 étaient consignées; Q-0018-02 à Q-0018-04 restaient
+à arbitrer avant le ticket 0031.
 
 L'existant montre aussi des écarts à vérifier : une Policy et une API
 d'archivage sont présentes, avec des rôles qui ne recouvrent pas exactement
@@ -130,13 +131,11 @@ terminés dans leurs périmètres documentés. Les acceptations du 18 novembre
 (`make test.api`, 238 tests et 1 015 assertions) et
 [0028](0028-ameliorer-ihm-autorisations-champs.md) (`make test.all`, 621 tests
 et 2 282 assertions). Les deux tickets sont terminés. L'étape 6 de 0026 est
-réconciliée. Le ticket 0030 est terminé. Les questions Q-0018-02 à
-Q-0018-04, Q-0030-01 à Q-0030-03 et Q-0030-07 restent ouvertes. Les questions
-Q-0018-02 à Q-0018-04 bloquent le 0031; Q-0030-02, Q-0030-03 et Q-0030-07
-bloquent respectivement les tickets 0033, 0034 et 0037. La directive du plan
-sur les nouvelles saisies €/heure s'applique au 0031, tandis que la réponse
-métier à Q-0030-01 sur le maintien éventuel de l'unité, le salaire de base et
-la source des heures pour l'historique reste attendue. L'ADR 0075 demeure
+réconciliée. Le ticket 0030 est terminé. À cette clôture, les questions
+Q-0018-02 à Q-0018-04, Q-0030-01 à Q-0030-03 et Q-0030-07 restaient ouvertes.
+Les réponses Q-0018-02 à Q-0018-04 et le cadrage de Q-0030-01 sont depuis
+consignés et appliqués au ticket 0031. Q-0030-02, Q-0030-03 et Q-0030-07
+bloquent respectivement les tickets 0033, 0034 et 0037. L'ADR 0075 demeure
 `Proposé`. Les réponses à Q-0030-04, Q-0030-05 et
 Q-0030-06 sont consignées ; la réalisation des commandes et notifications
 reste couverte par le ticket 0035.

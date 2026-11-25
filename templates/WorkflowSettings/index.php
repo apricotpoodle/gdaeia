@@ -5,10 +5,12 @@ declare(strict_types=1);
  * @var \App\View\AppView $this
  */
 use App\View\Action\WorkflowSettingsActions;
+use App\Model\Entity\WorkflowSetting;
 
 /**
- * @var \App\View\AppView $this
+ * @var \Authorization\IdentityInterface|null $identity
  */
+$canManageKCoefficient = $identity?->can('manageKCoefficient', new WorkflowSetting()) ?? false;
 $this->assign('title', __('Paramétrage global du workflow'));
 $this->Html->script('views/WorkflowSettings/index.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>
@@ -20,6 +22,27 @@ $this->Html->script('views/WorkflowSettings/index.js', ['type' => 'module', 'blo
         </div>
         <?= $this->Action->render(WorkflowSettingsActions::validationSequences()) ?>
     </div>
+
+    <section class="card mb-4">
+        <div class="card-body">
+            <h4 class="h6"><?= __('Coefficient global k/mois') ?></h4>
+            <label class="form-label" for="salary-k-coefficient">
+                <?= __('Coefficient de conversion des milliers mensuels') ?>
+            </label>
+            <div class="input-group">
+                <input
+                    class="form-control"
+                    id="salary-k-coefficient"
+                    type="text"
+                    inputmode="decimal"
+                    required
+                    aria-label="<?= __('Coefficient de conversion des milliers mensuels') ?>"
+                    <?= $canManageKCoefficient ? '' : 'disabled' ?>
+                >
+                <?= $this->Action->render(WorkflowSettingsActions::saveKCoefficient()) ?>
+            </div>
+        </div>
+    </section>
 
     <section class="card mb-4">
         <div class="card-body">

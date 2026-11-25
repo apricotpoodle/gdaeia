@@ -49,7 +49,8 @@ Les fiches 0030 à 0039, à la racine de `docs/backlog/`, sont exécutées dans 
 `bin/cake backlog next gdae-v3-completion` pour identifier la prochaine fiche
 et consulter son statut. Le [ticket 0030](0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md)
 est `Terminé`; les réponses métier encore attendues sont suivies dans les
-tickets concernés. Le 0031 est `Bloqué` par les arbitrages Q-0018-02 à 04.
+tickets concernés. Le 0031 est `Terminé`; les arbitrages Q-0018-02 à 04 y sont
+consignés et appliqués.
 Le ticket 0040 est un bonus facultatif hors de cette séquence.
 
 ## Migration vers un gestionnaire de tickets

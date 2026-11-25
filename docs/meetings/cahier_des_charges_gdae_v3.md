@@ -31,12 +31,14 @@ règles encore ouvertes sont repérées par leur identifiant dans ce cahier.
 * **Date de début / Date de fin :** Date
   * *Règle métier :* Si CDI, blocage automatique du champ "Date de fin". Sinon, obligatoire et postérieure ou égale à la date de début.
 * **Nombre de jours travaillés.** Afficher le champ numérique quand les dates de début et de fin sont valides et que la date de fin est activée. Seul `cdi` a une date de fin désactivée. `cdd`, `interim`, `appr.`, `stage`, `pige` et `fact` suivent la même règle (Q-0018-01).
-  * Une période limitée au samedi et au dimanche est acceptée. Toute valeur de zéro déclenche un avertissement avant l'enregistrement, puis un courriel après la réussite de l'enregistrement à l'auteur de la saisie, à tous les responsables associés au service et à tout rôle ADMIN qui voit ce service (Q-0018-05).
+  * Le nombre est facultatif. La valeur calculée est préremplie et peut être corrigée ou omise. Sans nombre saisi pour une rémunération en €/jour, le salaire de base reste vide (Q-0018-03).
+  * Une période sans jour de semaine, comme un samedi et un dimanche, peut avoir zéro jour ouvré. Le zéro est refusé si la période contient un jour de semaine (Q-0018-02).
+  * Aucun calcul particulier des jours fériés n'est appliqué : un jour férié tombant en semaine compte comme un jour de semaine (Q-0018-04).
+  * Toute valeur de zéro déclenche un avertissement avant l'enregistrement, puis un courriel après la réussite de l'enregistrement à l'auteur, aux responsables associés au service et aux utilisateurs de rôle ADMIN qui voient ce service (Q-0018-05).
   * Quand les dates changent, présenter la valeur actuelle et le nouveau calcul pour laisser l'opérateur décider de la suite (Q-0018-06).
-  * Le caractère obligatoire de la saisie, l'acceptation d'un zéro saisi pour une période qui contient des jours de semaine et l'usage de la valeur automatique avant l'envoi restent à préciser (Q-0018-02 et Q-0018-03). Les jours fériés en semaine sont comptés en attendant l'arbitrage Q-0018-04.
 * **Motif RH :** Menu déroulant
 * **Descriptif :** Champ libre (Zone de texte) pour le motif RH
-* **Rémunération envisagée.** Le plan prévoit un menu déroulant avec €/jour, k/mois et €/mois pour les nouvelles saisies. Les valeurs historiques en €/heure sont conservées. La réponse métier à Q-0030-01 reste attendue.
+* **Rémunération envisagée.** Les nouvelles saisies proposent €/jour, k/mois et €/mois. Les valeurs historiques en €/heure sont conservées; leur modification doit passer par une unité prise en charge (cadrage approuvé pour Q-0030-01).
 
 ### 2.3 Section à remplir par le Secrétariat Général et les valideurs suivants
 * **Salaire de base :** Format décimal (gestion du "." et ","). une valeur précalculée est préremplie.
@@ -58,6 +60,7 @@ Le système doit appliquer les règles suivantes au calcul du "Salaire de base" 
 
 * **Formatage :** Le système doit accepter le point (`.`) ou la virgule (`,`) indifféremment pour les formats décimaux.
 * **Paramétrage.** Le coefficient global de k/mois (17,46) doit être modifiable par un super-administrateur, conformément au plan approuvé.
+* **Nombre de jours omis.** Pour une rémunération en €/jour sans nombre de jours saisi, le salaire de base reste vide.
 ---
 
 ## 4. Administration et Paramétrage

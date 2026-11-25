@@ -163,13 +163,109 @@ test('recalcule le salaire journalier après le calcul automatique des jours ouv
     onReady();
     beginAt.value = '2026-11-02';
     endAt.value = '2026-11-04';
-    endAt.dispatch('input');
+    endAt.dispatch('change');
     await new Promise(setImmediate);
 
     assert.equal(calculator.workingDays.value, '3');
     assert.equal(requests.length, 1);
     assert.equal(requests[0].working_days, '3');
     assert.equal(calculator.salaryBase.value, '300.0000');
+});
+
+test('un changement de dates laisse l’opérateur garder ou appliquer la nouvelle estimation', async t => {
+    const calculator = await initializeCalculator({
+        periodValue: 'eur-day',
+        daysValue: '2',
+        fetcher: async () => successfulResponse('300.0000'),
+    });
+    t.after(calculator.restore);
+    calculator.form.addEventListener = () => {};
+
+    const beginAt = makeElement({ value: '2026-11-02' });
+    const endAt = makeElement({ value: '2026-11-04' });
+    const workingDaysContainer = makeElement({ classNames: ['d-none'] });
+    let confirmResult = false;
+    const confirmations = [];
+    const previousConfirm = globalThis.confirm;
+    globalThis.confirm = message => {
+        confirmations.push(message);
+        return confirmResult;
+    };
+    t.after(() => {
+        if (previousConfirm === undefined) delete globalThis.confirm;
+        else globalThis.confirm = previousConfirm;
+    });
+
+    const elements = {
+        'applicationform-main-form': calculator.form,
+        'contracttype-id': null,
+        'begin-at': beginAt,
+        'begin-at-warning-text': null,
+        'end-at': endAt,
+        'end-at-required-asterisk': null,
+        'cdi-warning-text': null,
+        'container-working-days': workingDaysContainer,
+        'working-days': calculator.workingDays,
+    };
+    let onReady;
+    globalThis.document.getElementById = id => elements[id] ?? null;
+    globalThis.document.addEventListener = (_event, callback) => { onReady = callback; };
+
+    await importScript('../../webroot/js/views/Applicationforms/zone-contract.js');
+    onReady();
+    endAt.value = '2026-11-06';
+    await endAt.dispatch('change');
+
+    assert.match(confirmations[0], /2.*5/s);
+    assert.equal(calculator.workingDays.value, '2');
+
+    confirmResult = true;
+    endAt.value = '2026-11-05';
+    await endAt.dispatch('change');
+
+    assert.match(confirmations[1], /2.*4/s);
+    assert.equal(calculator.workingDays.value, '4');
+});
+
+test('un zéro avant enregistrement demande confirmation', async t => {
+    const calculator = await initializeCalculator({ daysValue: '0' });
+    t.after(calculator.restore);
+
+    const beginAt = makeElement({ value: '2026-11-07' });
+    const endAt = makeElement({ value: '2026-11-08' });
+    const workingDaysContainer = makeElement({ classNames: ['d-none'] });
+    let submitListener;
+    calculator.form.addEventListener = (event, callback) => {
+        if (event === 'submit') submitListener = callback;
+    };
+    const previousConfirm = globalThis.confirm;
+    globalThis.confirm = () => false;
+    t.after(() => {
+        if (previousConfirm === undefined) delete globalThis.confirm;
+        else globalThis.confirm = previousConfirm;
+    });
+
+    const elements = {
+        'applicationform-main-form': calculator.form,
+        'contracttype-id': null,
+        'begin-at': beginAt,
+        'begin-at-warning-text': null,
+        'end-at': endAt,
+        'end-at-required-asterisk': null,
+        'cdi-warning-text': null,
+        'container-working-days': workingDaysContainer,
+        'working-days': calculator.workingDays,
+    };
+    let onReady;
+    globalThis.document.getElementById = id => elements[id] ?? null;
+    globalThis.document.addEventListener = (_event, callback) => { onReady = callback; };
+
+    await importScript('../../webroot/js/views/Applicationforms/zone-contract.js');
+    onReady();
+    let prevented = false;
+    submitListener({ preventDefault: () => { prevented = true; } });
+
+    assert.equal(prevented, true);
 });
 
 test('recalcule le salaire journalier après un ajustement manuel des jours', async t => {

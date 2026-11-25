@@ -139,7 +139,7 @@ class WorkflowSettingsController extends AppController
         $settings = $this->fetchTable('WorkflowSettings');
         $this->Authorization->authorize(
             $settings->newEmptyEntity(),
-            $this->request->is('get') ? 'index' : 'manage',
+            $this->request->is('get') ? 'index' : 'manageKCoefficient',
         );
         $name = 'salary.k_coefficient';
         $setting = $settings->find()->where(['name' => $name])->first();

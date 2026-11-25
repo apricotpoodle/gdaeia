@@ -42,6 +42,20 @@ class ValidationWorkflowMailerTest extends TestCase
         $this->assertSame('validation_step', $mailer->viewBuilder()->getTemplate());
     }
 
+    public function testLeCourrielDeZeroJourEstAdresseAuDestinataire(): void
+    {
+        $mailer = new ValidationWorkflowMailer();
+        $mailer->zeroWorkingDays(
+            new User(['email' => 'responsable@example.test']),
+            new Applicationform(['id' => 42]),
+        );
+
+        $this->assertArrayHasKey('responsable@example.test', $mailer->getTo());
+        $this->assertSame('zero_working_days', $mailer->viewBuilder()->getTemplate());
+        $subject = iconv_mime_decode($mailer->getSubject(), ICONV_MIME_DECODE_CONTINUE_ON_ERROR, 'UTF-8');
+        $this->assertStringContainsString('0 jour', (string)$subject);
+    }
+
     /** Vérifie la composition du courriel de clôture par acceptation. */
     public function testLeCourrielFinalDAcceptationCibleLeDemandeur(): void
     {

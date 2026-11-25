@@ -7,6 +7,8 @@ use App\Model\Entity\Period;
 use App\Model\Entity\User;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Datasource\ConnectionManager;
+use Cake\Mailer\Mailer;
+use Cake\Mailer\TransportFactory;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\IntegrationTestTrait;
 use Cake\TestSuite\TestCase;
@@ -18,6 +20,13 @@ use PHPUnit\Framework\Attributes\DataProvider;
 class ApplicationformsControllerTest extends TestCase
 {
     use IntegrationTestTrait;
+
+    /**
+     * @var array<string, mixed>|null
+     */
+    private ?array $previousMailerConfig = null;
+
+    private bool $capturePrepared = false;
 
     private const WORKFLOW_TEST_ID = 900_001;
     private const RESET_TEST_RUN_ID = 900_002;
@@ -204,6 +213,207 @@ class ApplicationformsControllerTest extends TestCase
 
         $this->assertResponseCode(422);
         $this->assertResponseContains('"field":"assistant_id"');
+    }
+
+    public function testLaCreationApiRefuseLaPeriodeHorairePourUneNouvelleDae(): void
+    {
+        ConnectionManager::get('test')->update('periods', [
+            'code' => Period::CODE_EUR_PER_HOUR,
+            'deleted' => null,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/add.json', [
+            'department_id' => 1,
+            'contracttype_id' => 1,
+            'hiringreason_id' => 1,
+            'jobtitle' => 'Nouvelle demande',
+            'professionalcategory_id' => 1,
+            'worktime_id' => 1,
+            'grossremuneration' => '25.00',
+            'period_id' => 1,
+            'begin_at' => '2026-11-09',
+            'end_at' => '2026-11-10',
+            'working_days' => 2,
+        ]);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"field":"period_id"');
+    }
+
+    public function testLeSchemaApiNeProposePasLaPeriodeHoraire(): void
+    {
+        ConnectionManager::get('test')->update('periods', [
+            'code' => Period::CODE_EUR_PER_HOUR,
+            'deleted' => null,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/api/applicationforms/get-form-schema.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertArrayNotHasKey(1, $body['periods']);
+    }
+
+    public function testLEditionApiPreserveUneAncienneRemunerationHoraireSansLaModifier(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('periods', [
+            'code' => Period::CODE_EUR_PER_HOUR,
+            'deleted' => null,
+        ], ['id' => 1]);
+        $connection->update('applicationforms', [
+            'period_id' => 1,
+            'grossremuneration' => '25.0000',
+            'salary_base' => '25.0000',
+            'deleted' => null,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/edit/1.json', ['jobtitle' => 'Poste modifié']);
+
+        $this->assertResponseOk();
+        $saved = $connection->execute('SELECT period_id, grossremuneration, salary_base FROM applicationforms WHERE id = 1')
+            ->fetch('assoc');
+        $this->assertSame(1, (int)$saved['period_id']);
+        $this->assertSame('25.0000', $saved['grossremuneration']);
+        $this->assertSame('25.0000', $saved['salary_base']);
+    }
+
+    public function testLEditionApiRefuseLaModificationDuMontantHistoriqueEnPeriodeHoraire(): void
+    {
+        $connection = ConnectionManager::get('test');
+        $connection->update('periods', [
+            'code' => Period::CODE_EUR_PER_HOUR,
+            'deleted' => null,
+        ], ['id' => 1]);
+        $connection->update('applicationforms', [
+            'period_id' => 1,
+            'grossremuneration' => '25.0000',
+            'salary_base' => '25.0000',
+            'deleted' => null,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/edit/1.json', ['grossremuneration' => '30.0000']);
+
+        $this->assertResponseCode(422);
+        $this->assertResponseContains('"field":"grossremuneration"');
+    }
+
+    public function testLaCreationAvecZeroEnvoieUnCourrielAuxDestinatairesDuService(): void
+    {
+        $this->prepareCapturedEmails();
+        $connection = ConnectionManager::get('test');
+        $connection->update('users', ['email' => 'auteur@example.test', 'deleted' => null], ['id' => 1]);
+        $connection->update('users', ['email' => 'responsable@example.test', 'deleted' => null], ['id' => 2]);
+        $connection->insert('department_managers', ['department_id' => 1, 'user_id' => 2]);
+        $connection->insert('user_departments', [
+            'id' => 2,
+            'user_id' => 2,
+            'department_id' => 1,
+            'created' => '2026-11-25 10:00:00',
+            'modified' => '2026-11-25 10:00:00',
+        ]);
+        $connection->insert('users', [
+            'id' => 3,
+            'username' => 'admin-notification',
+            'email' => 'admin@example.test',
+            'password' => 'test',
+            'firstname' => 'Admin',
+            'lastname' => 'Notification',
+            'issuperuser' => 0,
+            'role_id' => User::ROLE_ADMIN,
+            'deleted' => null,
+            'created' => '2026-11-25 10:00:00',
+            'modified' => '2026-11-25 10:00:00',
+        ]);
+        $connection->insert('user_departments', [
+            'id' => 3,
+            'user_id' => 3,
+            'department_id' => 1,
+            'created' => '2026-11-25 10:00:00',
+            'modified' => '2026-11-25 10:00:00',
+        ]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/add.json', [
+            'department_id' => 1,
+            'contracttype_id' => 1,
+            'hiringreason_id' => 1,
+            'jobtitle' => 'Demande de week-end',
+            'professionalcategory_id' => 1,
+            'worktime_id' => 1,
+            'grossremuneration' => '25.00',
+            'period_id' => 1,
+            'begin_at' => '2026-11-07',
+            'end_at' => '2026-11-08',
+            'working_days' => 0,
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertEqualsCanonicalizing([
+            'auteur@example.test',
+            'responsable@example.test',
+            'admin@example.test',
+        ], ApplicationformNotificationCaptureTransport::$recipients);
+    }
+
+    public function testUneCreationRejeteeAvecZeroNEnvoiePasDeCourriel(): void
+    {
+        $this->prepareCapturedEmails();
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/add.json', [
+            'department_id' => 1,
+            'contracttype_id' => 1,
+            'hiringreason_id' => 1,
+            'jobtitle' => 'Demande invalide',
+            'professionalcategory_id' => 1,
+            'worktime_id' => 1,
+            'grossremuneration' => '25.00',
+            'period_id' => 1,
+            'begin_at' => '2026-11-09',
+            'end_at' => '2026-11-13',
+            'working_days' => 0,
+        ]);
+
+        $this->assertResponseCode(422);
+        $this->assertSame([], ApplicationformNotificationCaptureTransport::$recipients);
+    }
+
+    private function prepareCapturedEmails(): void
+    {
+        $this->capturePrepared = true;
+        $config = Mailer::getConfig('default');
+        $this->previousMailerConfig = is_array($config) ? $config : null;
+        Mailer::drop('default');
+        TransportFactory::setConfig('applicationform-capture', [
+            'className' => ApplicationformNotificationCaptureTransport::class,
+        ]);
+        Mailer::setConfig('default', [
+            'transport' => 'applicationform-capture',
+            'from' => 'notifications@example.test',
+        ]);
+        ApplicationformNotificationCaptureTransport::$recipients = [];
+    }
+
+    protected function tearDown(): void
+    {
+        if ($this->capturePrepared) {
+            Mailer::drop('default');
+            if ($this->previousMailerConfig !== null) {
+                Mailer::setConfig('default', $this->previousMailerConfig);
+            }
+            TransportFactory::drop('applicationform-capture');
+        }
+        parent::tearDown();
     }
 
     public function testLEndpointResponsablesRetourneLesAssociationsDirectesDuDepartementVisible(): void
@@ -679,6 +889,24 @@ class ApplicationformsControllerTest extends TestCase
             'success' => true,
             'message' => 'Salaire de base calculé.',
             'salary_base' => '502.0000',
+        ], json_decode((string)$this->_response->getBody(), true));
+    }
+
+    public function testLApiLaisseLeSalaireJournalierVideSansNombreDeJours(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+
+        $this->post('/api/applicationforms/calculate-salary.json', [
+            'period_code' => Period::CODE_EUR_PER_DAY,
+            'grossremuneration' => '125,50',
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertSame([
+            'success' => true,
+            'message' => 'Salaire de base calculé.',
+            'salary_base' => null,
         ], json_decode((string)$this->_response->getBody(), true));
     }
 

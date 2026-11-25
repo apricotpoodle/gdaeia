@@ -83,6 +83,19 @@ final class ValidationWorkflowMailer extends AppMailer
         );
     }
 
+    /** Prépare le courriel signalant une demande enregistrée avec zéro jour travaillé. */
+    public function zeroWorkingDays(User $recipient, Applicationform $applicationform): void
+    {
+        $this->setTo($recipient->get(User::FIELD_EMAIL))
+            ->setSubject(__('Demande n°{0} enregistrée avec 0 jour travaillé', $applicationform->id))
+            ->setViewVars([
+                'recipient' => $recipient,
+                'applicationform' => $applicationform,
+                'url' => $this->url($applicationform),
+            ])
+            ->viewBuilder()->setTemplate('zero_working_days');
+    }
+
     /**
      * Prépare le courriel annonçant le résultat final du cycle.
      *

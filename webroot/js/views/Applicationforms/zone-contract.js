@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const cdiWarning = document.getElementById('cdi-warning-text');
     const workingDaysContainer = document.getElementById('container-working-days');
     const workingDaysInput = document.getElementById('working-days');
+    const applicationformForm = document.getElementById('applicationform-main-form');
 
     /**
      * Convertit une date HTML en date locale sans décalage de fuseau.
@@ -97,10 +98,16 @@ document.addEventListener('DOMContentLoaded', function () {
         workingDaysInput.max = String(maximum);
         workingDaysContainer.classList.remove('d-none');
 
-        if (resetValue || workingDaysInput.value === '') {
-            setWorkingDays(String(workingDaysInclusive(begin, end)));
-        } else if (Number(workingDaysInput.value) > maximum) {
-            setWorkingDays(String(maximum));
+        const estimate = String(workingDaysInclusive(begin, end));
+        if (workingDaysInput.value === '') {
+            setWorkingDays(estimate);
+        } else if (resetValue && workingDaysInput.value !== estimate) {
+            const currentValue = workingDaysInput.value;
+            const accepted = globalThis.confirm(
+                `Le nombre de jours travaillés est actuellement ${currentValue}. `
+                + `Le nouveau calcul propose ${estimate}. Voulez-vous appliquer cette valeur ?`,
+            );
+            if (accepted) setWorkingDays(estimate);
         }
     }
 
@@ -155,16 +162,23 @@ document.addEventListener('DOMContentLoaded', function () {
             updateBeginDateNotice();
             updateWorkingDays(true);
         });
-        beginAtInput.addEventListener('input', () => {
-            updateBeginDateNotice();
-            updateWorkingDays(true);
-        });
+        beginAtInput.addEventListener('input', updateBeginDateNotice);
         updateBeginDateNotice();
     }
 
     if (endAtInput) {
         endAtInput.addEventListener('change', () => updateWorkingDays(true));
-        endAtInput.addEventListener('input', () => updateWorkingDays(true));
+    }
+
+    if (applicationformForm && workingDaysInput) {
+        applicationformForm.addEventListener('submit', (event) => {
+            if (workingDaysInput.value !== '0') return;
+
+            const accepted = globalThis.confirm(
+                'Le nombre de jours travaillés est nul. Confirmez-vous l’enregistrement ?',
+            );
+            if (!accepted) event.preventDefault();
+        });
     }
 
     if (contractTypeSelect) {

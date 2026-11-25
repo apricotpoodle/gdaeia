@@ -42,6 +42,12 @@ ORM : ce contrat ne les intercepte pas. Voir l'[ADR 0075 proposé](../../../docs
 
 Les Tables restent la source des règles de validation et d'intégrité. Leurs messages métier, notamment les refus de doublons pour les autorisations de champs, les associations rôle-menu, les séquences de validation et les départements d'un utilisateur, sont rédigés en français. `ValidationErrorPresenter` présente ces erreurs sans les définir à la place des Tables.
 
+`ApplicationformsTable` applique les arbitrages V3 sur les jours travaillés :
+le zéro est permis seulement si les dates ne couvrent aucun jour de semaine,
+et le calcul ne retire pas les jours fériés. €/heure reste valide uniquement
+pour une rémunération historique inchangée; sa modification doit utiliser une
+unité prise en charge.
+
 ## ADRs Associés
 * [ADR 0044 : Recherche FULLTEXT MySQL via Callback avec Search](../../docs/adr/0044-filtre-recherche-fulltext-search-plugin.md)
 * [ADR 0052 : Présentation unifiée des erreurs de validation Web et API](../../docs/adr/0052-presentation-unifiee-erreurs-validation-web-api.md)

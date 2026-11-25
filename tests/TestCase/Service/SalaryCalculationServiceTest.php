@@ -39,12 +39,11 @@ class SalaryCalculationServiceTest extends TestCase
         (new SalaryCalculationService())->calculateBaseSalary(Period::CODE_EUR_PER_HOUR, '25', 1);
     }
 
-    public function testRefuseUnePigeSansNombreDeJours(): void
+    public function testUnSalaireJournalierResteVideSansNombreDeJours(): void
     {
-        $this->expectException(InvalidArgumentException::class);
-        $this->expectExceptionMessage('Le nombre de jours travaillés est obligatoire.');
-
-        (new SalaryCalculationService())->calculateBaseSalary(Period::CODE_EUR_PER_DAY, '125', null);
+        $this->assertNull(
+            (new SalaryCalculationService())->calculateBaseSalary(Period::CODE_EUR_PER_DAY, '125', null),
+        );
     }
 
     public function testCalculeDepuisLeCodeDePeriodicite(): void

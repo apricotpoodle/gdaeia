@@ -4,7 +4,9 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Model\Entity\Applicationform;
+use App\Model\Entity\Period;
 use App\Model\Entity\User;
+use App\Service\ApplicationformZeroWorkingDaysNotifier;
 use App\Service\Pdf\ApplicationformPdfService;
 use App\Service\Workflow\ApplicationformValidationWorkflow;
 use Cake\Event\EventInterface;
@@ -139,6 +141,7 @@ class ApplicationformsController extends AppController
             $this->Applicationforms->validateAssistantVisibility($applicationform, $currentUser);
 
             if ($this->Applicationforms->save($applicationform)) {
+                (new ApplicationformZeroWorkingDaysNotifier())->notify($applicationform);
                 $this->Flash->success(__('La demande de recrutement a été créée avec succès.'));
 
                 return $this->redirect(['action' => 'index']);
@@ -159,7 +162,9 @@ class ApplicationformsController extends AppController
         $worktimes = $this->Applicationforms->Worktimes
             ->find('visibleTo', user: $currentUser)->find('list')->toArray();
         $periods = $this->Applicationforms->Periods
-            ->find('visibleTo', user: $currentUser)->find('list')->toArray();
+            ->find('visibleTo', user: $currentUser)
+            ->where(['Periods.code !=' => Period::CODE_EUR_PER_HOUR])
+            ->find('list')->toArray();
         $budgetfeatures = $this->Applicationforms->Budgetfeatures
             ->find('visibleTo', user: $currentUser)->find('list')->toArray();
         $yesnos = $this->Applicationforms->Yesnos
@@ -220,6 +225,7 @@ class ApplicationformsController extends AppController
             $this->Applicationforms->validateAssistantVisibility($applicationform, $currentUser);
 
             if ($this->Applicationforms->save($applicationform)) {
+                (new ApplicationformZeroWorkingDaysNotifier())->notify($applicationform);
                 $this->Flash->success(__(
                     'La demande de recrutement #{0} a été mise à jour avec succès.',
                     $applicationform->id,
@@ -247,6 +253,17 @@ class ApplicationformsController extends AppController
         $professionalcategories = $this->Applicationforms->Professionalcategories->getVisibleList($currentUser);
         $worktimes = $this->Applicationforms->Worktimes->getVisibleList($currentUser);
         $periods = $this->Applicationforms->Periods->getVisibleList($currentUser);
+        $periodId = (int)$applicationform->get(Applicationform::FIELD_PERIOD_ID);
+        $period = $this->Applicationforms->Periods->find()
+            ->select([Period::FIELD_ID, Period::FIELD_CODE])
+            ->where([Period::FIELD_ID => $periodId])
+            ->first();
+        if (
+            $period instanceof Period
+            && strtoupper(trim((string)$period->get(Period::FIELD_CODE))) === Period::CODE_EUR_PER_HOUR
+        ) {
+            $periods[$periodId] = __('€/heure — historique, choisir une unité prise en charge pour modifier');
+        }
         $budgetfeatures = $this->Applicationforms->Budgetfeatures->getVisibleList($currentUser);
         $yesnos = $this->Applicationforms->Yesnos->getVisibleList($currentUser);
 

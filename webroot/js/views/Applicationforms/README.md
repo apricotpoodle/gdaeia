@@ -33,11 +33,21 @@ Les anciennes demandes sans champs V3 gardent leur saisie unique du nom complet
 en édition.
 
 `salary-calculation.js` met à jour l'aperçu du salaire de base dès que la
-périodicité et la rémunération sont renseignées. Les unités mensuelles sont
-calculées sans nombre de jours; l'API valide les jours requis pour une
-rémunération journalière et son message apparaît sous l'aperçu. Le script
-`zone-contract.js` déclenche aussi ce calcul lorsque les dates modifient
-automatiquement le nombre de jours ouvrés. Un ajustement manuel des jours
-déclenche le même recalcul. La matrice ACL autorise la soumission de
-`working_days` et garde `salary_base` en lecture seule, car le modèle recalcule
-ce dernier à l'enregistrement.
+périodicité et la rémunération sont renseignées. Le nombre de jours est
+facultatif et prérempli avec le calcul des jours de semaine, sans traitement
+des jours fériés. Pour une rémunération en €/jour sans nombre saisi, le salaire
+de base reste vide. Les autres unités prises en charge sont calculées sans
+nombre de jours. €/heure n'est pas proposé à la création; les DAE historiques
+gardent leur unité et doivent passer à une unité prise en charge pour modifier
+leur rémunération.
+
+Le script `zone-contract.js` demande à l'opérateur de choisir entre le nombre
+actuel et la nouvelle estimation après un changement de dates. Le zéro demande
+confirmation avant l'enregistrement. L'ORM refuse le zéro lorsque la période
+contient un jour de semaine; après une sauvegarde réussie à zéro, le notifier
+envoie un courriel à l'auteur, aux responsables associés au service et aux
+ADMIN rattachés au département.
+
+Un ajustement manuel des jours déclenche le recalcul du salaire. La matrice ACL
+autorise la soumission de `working_days` et garde `salary_base` en lecture
+seule, car le modèle recalcule ce dernier à l'enregistrement.

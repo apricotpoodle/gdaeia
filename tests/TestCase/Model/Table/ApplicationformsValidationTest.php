@@ -97,6 +97,29 @@ class ApplicationformsValidationTest extends TestCase
         $this->assertArrayNotHasKey('working_days', $errors);
     }
 
+    public function testUnNombreDeJoursNulEstRefusePourUnePeriodeAvecUnJourDeSemaine(): void
+    {
+        $errors = $this->validator()->validate([
+            'begin_at' => '2026-10-05',
+            'end_at' => '2026-10-09',
+            'working_days' => 0,
+        ], true);
+
+        $this->assertArrayHasKey('working_days', $errors);
+        $this->assertArrayHasKey('zeroWhenWeekdaysExist', $errors['working_days']);
+    }
+
+    public function testUnNombreDeJoursNulResteAcceptePourUnWeekendUniquement(): void
+    {
+        $errors = $this->validator()->validate([
+            'begin_at' => '2026-10-10',
+            'end_at' => '2026-10-11',
+            'working_days' => 0,
+        ], true);
+
+        $this->assertArrayNotHasKey('working_days', $errors);
+    }
+
     private function validator(): Validator
     {
         return $this->table->validationDefault(new Validator());
