@@ -24,14 +24,13 @@ final class ApplicationformZeroWorkingDaysNotifier
         $applicationforms = TableRegistry::getTableLocator()->get('Applicationforms');
         $applicationform = $applicationforms->get(
             $savedApplicationform->get(Applicationform::FIELD_ID),
-            contain: ['Users', 'Managers', 'Departments' => ['Managers']],
+            contain: ['Users', 'Departments' => ['Managers']],
         );
 
         $recipients = [];
-        foreach ([$applicationform->get('user'), $applicationform->get('manager')] as $recipient) {
-            if ($recipient instanceof User) {
-                $recipients[] = $recipient;
-            }
+        $author = $applicationform->get('user');
+        if ($author instanceof User) {
+            $recipients[] = $author;
         }
 
         $department = $applicationform->get('department');

@@ -55,7 +55,11 @@ assistantes côté serveur.
 autorisés par `DepartmentPolicy`. Il présente l'arbre hiérarchique, le
 formulaire d'édition avec les responsables et codes CGR sélectionnables en
 multiple, ainsi que la sous-grille des codes CGR ; les mutations et le calcul
-d'impact sont délégués à l'API `DepartmentsController`.
+d'impact sont délégués à l'API `DepartmentsController`. Les ADMIN locaux
+peuvent ouvrir l'écran d'un service de leur périmètre pour gérer ses
+affectations de responsables et de CGR existants. Les champs structurels y
+restent en lecture seule ; création, modification de structure, désactivation
+et consultation des impacts restent réservées au superadministrateur.
 
 ## Redirections post-authentification
 

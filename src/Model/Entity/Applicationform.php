@@ -10,7 +10,6 @@ namespace App\Model\Entity;
  * @property int $department_id
  * @property int $user_id
  * @property int|null $assistant_id
- * @property int|null $manager_id
  * @property string|null $cgr
  * @property int $contracttype_id
  * @property int $hiringreason_id
@@ -43,7 +42,6 @@ namespace App\Model\Entity;
  * @property \App\Model\Entity\Department $department
  * @property \App\Model\Entity\User $user
  * @property \App\Model\Entity\User|null $assistant
- * @property \App\Model\Entity\User|null $manager
  * @property \App\Model\Entity\Contracttype $contracttype
  * @property \App\Model\Entity\Hiringreason $hiringreason
  * @property \App\Model\Entity\Budgetfeature $budgetfeature
@@ -98,7 +96,6 @@ class Applicationform extends AppEntity
         'department_id' => true,
         'user_id' => true,
         'assistant_id' => true,
-        'manager_id' => true,
         'cgr' => true,
         'contracttype_id' => true,
         'hiringreason_id' => true,
@@ -212,7 +209,6 @@ class Applicationform extends AppEntity
     public const FIELD_DEPARTMENT_ID = 'department_id';
     public const FIELD_USER_ID = 'user_id';
     public const FIELD_ASSISTANT_ID = 'assistant_id';
-    public const FIELD_MANAGER_ID = 'manager_id';
     public const FIELD_CGR = 'cgr';
     public const FIELD_CONTRACTTYPE_ID = 'contracttype_id';
     public const FIELD_HIRINGREASON_ID = 'hiringreason_id';

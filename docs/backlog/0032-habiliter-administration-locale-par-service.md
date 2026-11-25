@@ -1,6 +1,6 @@
 # 0032 — Habiliter l'administration des services par les rôles ADMIN
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Haute — administration métier
 
@@ -21,20 +21,20 @@ recrée pas ces fondations.
 
 ## Travail attendu
 
-- [ ] Définir les opérations d'administration accessibles au rôle ADMIN et
+- [x] Définir les opérations d'administration accessibles au rôle ADMIN et
   appliquer les périmètres de services visibles avec les custom finders
   existants.
-- [ ] Gérer les affectations d'utilisateurs et de CGR nécessaires à la saisie
+- [x] Gérer les affectations d'utilisateurs et de CGR nécessaires à la saisie
   des DAE, en respectant les associations multiples du service.
-- [ ] Conserver la structure et les valeurs existantes de
+- [x] Conserver la structure et les valeurs existantes de
   `applicationforms.manager_id` sans migration. Retirer tout usage
   applicatif du champ, y compris comme destinataire secondaire de courriel
   (Q-0030-06).
-- [ ] Appliquer les mêmes droits aux pages Web, listes API et mutations
+- [x] Appliquer les mêmes droits aux pages Web, listes API et mutations
   directes ; les contrôles d'interface seuls ne suffisent pas.
-- [ ] Garder les parcours du superadministrateur et les autres branches
+- [x] Garder les parcours du superadministrateur et les autres branches
   organisationnelles conformes aux Policies et à l'ADR 0069.
-- [ ] Documenter l'administration locale dans le README du domaine.
+- [x] Documenter l'administration locale dans le README du domaine.
 
 ## Critères d'acceptation
 
@@ -54,6 +54,14 @@ recrée pas ces fondations.
 - `make test.api` pour les Policies et mutations Web/API
 - `make test.style` si des tests sont modifiés
 - `make cs.check` et `make stan` si du PHP est modifié
+
+Résultats du ticket : `make test.unit`, `make test.style`, `make cs.check` et
+`make stan` réussissent. Les scénarios concernés de `make test.api` réussissent,
+mais la suite complète conserve des erreurs dans `PermissionsControllerTest` :
+la base `daetf2_test` n'a pas la colonne `menus.required_permission_id`.
+`make test.integration` conserve aussi trois erreurs liées à cette même
+colonne ; les autres scénarios, dont la duplication et les associations de
+départements, réussissent.
 
 ## Références
 

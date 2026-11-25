@@ -396,12 +396,9 @@ class ApplicationformsController extends AppController
     {
         $loaded = $this->Applicationforms->get(
             $applicationform->get(Applicationform::FIELD_ID),
-            contain: ['Users', 'Managers', 'Departments' => ['Managers']],
+            contain: ['Users', 'Departments' => ['Managers']],
         );
         $recipients = [$loaded->user];
-        if ($loaded->manager !== null) {
-            $recipients[] = $loaded->manager;
-        }
         foreach ($loaded->department->get('managers') ?? [] as $manager) {
             $recipients[] = $manager;
         }

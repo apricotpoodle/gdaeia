@@ -61,9 +61,9 @@ final class DepartmentsController extends AppController
             ->contain(['Managers', 'CgrCodes'])
             ->where(['id' => $id, 'deleted IS' => null])
             ->firstOrFail();
-        $this->Authorization->authorize($department, 'edit');
 
         if ($this->request->is(['post', 'put', 'patch'])) {
+            $this->Authorization->authorize($department, 'edit');
             try {
                 $saved = (new DepartmentManagementService())->save(
                     $department,
@@ -79,6 +79,8 @@ final class DepartmentsController extends AppController
             } catch (DomainException $exception) {
                 $this->Flash->error($exception->getMessage());
             }
+        } else {
+            $this->Authorization->authorize($department, 'manageAssociations');
         }
 
         $this->setFormData($department, 'edit');
@@ -107,6 +109,7 @@ final class DepartmentsController extends AppController
         $this->set([
             'department' => $department,
             'mode' => $mode,
+            'canEditStructure' => $this->Authorization->can($department, 'edit'),
             'fieldSchema' => $this->fieldAuthorizationSchema('Departments'),
             'strategies' => $this->fetchTable('CgrStrategies')->find('list')->toArray(),
             'managers' => $this->fetchTable('Users')->find('list', keyField: 'id', valueField: 'username')

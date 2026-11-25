@@ -11,6 +11,7 @@ declare(strict_types=1);
 use App\View\Action\DepartmentsActions;
 
 $isEdit = $mode === 'edit';
+$canEditStructure = (bool)$canEditStructure;
 $isBaseRecord = (bool)$department->get('base') || (bool)$department->getOriginal('base');
 $currentUser = $identity?->getOriginalData();
 $isSuperUser = $currentUser instanceof \App\Model\Entity\User
@@ -33,14 +34,19 @@ $cgrCodes = array_values(array_filter(array_map(
 )));
 $parentValue = $department->get('parent_id');
 
-$this->assign('title', $isEdit ? __('Modifier un département') : __('Nouveau département'));
+$pageTitle = !$isEdit
+    ? __('Nouveau département')
+    : ($canEditStructure ? __('Modifier un département') : __('Gérer les affectations du service'));
+$this->assign('title', $pageTitle);
 $this->Html->css('/assets/treeselectjs/treeselectjs.css', ['block' => true]);
 $this->Html->script('/assets/treeselectjs/treeselectjs.umd.js', ['block' => 'scriptBottom']);
 $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>
 <div class="content">
     <div class="d-flex justify-content-between align-items-center mb-3">
-        <h3 class="mb-0"><?= h($isEdit ? __('Modifier le département') : __('Nouveau département')) ?></h3>
+        <h3 class="mb-0"><?= h($isEdit
+            ? ($canEditStructure ? __('Modifier le département') : __('Gérer les affectations du service'))
+            : __('Nouveau département')) ?></h3>
         <?= $this->Action->render(DepartmentsActions::index()) ?>
     </div>
 
@@ -70,18 +76,18 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
             <div class="card mb-4">
                 <div class="card-body row g-3">
                     <div class="col-md-4">
-                        <?= $this->Form->control('code', ['label' => __('Code'), 'required' => true, 'readonly' => $isBaseRecord]) ?>
+                        <?= $this->Form->control('code', ['label' => __('Code'), 'required' => true, 'readonly' => !$canEditStructure || $isBaseRecord]) ?>
                     </div>
                     <div class="col-md-4">
-                        <?= $this->Form->control('name', ['label' => __('Nom'), 'required' => true, 'readonly' => $isBaseRecord]) ?>
+                        <?= $this->Form->control('name', ['label' => __('Nom'), 'required' => true, 'readonly' => !$canEditStructure || $isBaseRecord]) ?>
                     </div>
                     <div class="col-md-4">
-                        <?= $this->Form->control('sort', ['label' => __('Tri'), 'readonly' => $isBaseRecord]) ?>
+                        <?= $this->Form->control('sort', ['label' => __('Tri'), 'readonly' => !$canEditStructure || $isBaseRecord]) ?>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label" for="department-parent-tree"><?= __('Département parent') ?></label>
                         <div id="department-parent-tree" class="treeselect-target"></div>
-                        <?= $this->Form->hidden('parent_id', ['id' => 'department-parent-id', 'value' => $parentValue]) ?>
+                        <?= $this->Form->hidden('parent_id', ['id' => 'department-parent-id', 'value' => $parentValue, 'disabled' => !$canEditStructure || $isBaseRecord]) ?>
                         <script id="department-parent-options" type="application/json">
                             <?= json_encode(
                                 [
@@ -91,7 +97,7 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
                                         array_values($parents),
                                     ),
                                     'value' => $parentValue === null ? [] : [(int)$parentValue],
-                                    'readOnly' => $isBaseRecord,
+                                    'readOnly' => !$canEditStructure || $isBaseRecord,
                                 ],
                                 JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP,
                             ) ?>
@@ -102,7 +108,7 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
                             'label' => __('Stratégie CGR'),
                             'empty' => __('Aucune'),
                             'options' => $strategies,
-                            'disabled' => $isBaseRecord,
+                            'disabled' => !$canEditStructure || $isBaseRecord,
                         ]) ?>
                     </div>
                     <div class="col-md-6">
@@ -117,7 +123,10 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
                             <?= h($cgrCodes === [] ? __('Aucun CGR') : implode(', ', $cgrCodes)) ?>
                         </div>
                     </div>
-                    <?= $this->Form->hidden('department_type_id', ['value' => $department->get('department_type_id') ?: 1]) ?>
+                    <?= $this->Form->hidden('department_type_id', [
+                        'value' => $department->get('department_type_id') ?: 1,
+                        'disabled' => !$canEditStructure,
+                    ]) ?>
                     <?php if ($canEditBase): ?>
                         <div class="col-md-4">
                             <?= $this->Form->control('base', ['label' => __('Département socle'), 'type' => 'checkbox']) ?>
@@ -126,7 +135,9 @@ $this->Html->script('views/Departments/form.js', ['type' => 'module', 'block' =>
                 </div>
             </div>
             <div class="d-flex gap-2 mb-4">
-                <?= $this->Form->button(__('Enregistrer'), ['class' => 'btn btn-primary']) ?>
+                <?php if ($canEditStructure): ?>
+                    <?= $this->Form->button(__('Enregistrer'), ['class' => 'btn btn-primary']) ?>
+                <?php endif; ?>
                 <?= $this->Action->render(DepartmentsActions::index()) ?>
             </div>
         </div>

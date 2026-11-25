@@ -30,7 +30,19 @@ Pour les départements, les payloads utilisent `manager_ids` et `cgr_code_ids`.
 Le catalogue CGR reste global ; ses associations départementales sont gérées
 par les routes imbriquées (`available`, `associated`, `add` et `remove`) et les
 mutations passent par `DepartmentManagementService`, après contrôle des
-Policies et du périmètre visible des éléments.
+Policies et du périmètre visible des éléments. Les rôles ADMIN peuvent gérer
+les affectations de responsables et de CGR actifs dans les départements
+couverts par `departments.manage` sur le périmètre `assigned`. Les responsables
+cibles doivent aussi être gérables par l’opérateur. Les assistantes restent
+affectées aux départements via les routes de `/users/bulk-departments`, avec
+contrôle des associations utilisateur-département avant chaque mutation. Ces
+opérations ne créent ni ne modifient des comptes, des rôles, des départements
+ou des entrées du catalogue CGR.
+
+Le champ historique `applicationforms.manager_id` reste en base pour conserver
+les anciennes valeurs, mais l’ORM et les notifications ne le consultent ni ne
+l’acceptent en mutation. Les responsables notifiés sont déterminés par
+`department_managers`.
 
 Les mutations de champs reçues par les contrôleurs API passent par
 `AppController::authorizedRequestData()` avant `patchEntity()`. La matrice

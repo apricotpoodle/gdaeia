@@ -40,17 +40,22 @@ final class DepartmentPolicyTest extends TestCase
         $this->assertFalse($policy->canViewImpacts($operator, $department));
     }
 
-    public function testUnAdministrateurAvecLaPermissionGereLesDepartements(): void
+    public function testUnAdministrateurLocalGereLesAssociationsSansModifierLeDepartement(): void
     {
         $policy = new DepartmentPolicy(new PermissionResolver([
             'departments.read' => [PermissionResolver::SCOPE_ALL],
             'departments.manage' => [PermissionResolver::SCOPE_ALL],
         ]));
-        $department = new Department(['base' => false, 'deleted' => null]);
+        $department = new Department(['id' => 2, 'base' => false, 'deleted' => null]);
         $administrator = new User(['id' => 2, 'role_id' => User::ROLE_ADMIN, 'issuperuser' => false]);
 
         self::assertTrue($policy->canIndex($administrator));
-        self::assertTrue($policy->canEdit($administrator, $department));
+        self::assertTrue($policy->canView($administrator, $department));
+        self::assertFalse($policy->canAdd($administrator, $department));
+        self::assertFalse($policy->canEdit($administrator, $department));
+        self::assertTrue($policy->canManageAssociations($administrator, $department));
+        self::assertFalse($policy->canDeactivate($administrator, $department));
+        self::assertFalse($policy->canViewImpacts($administrator, $department));
     }
 
     public function testUnAdministrateurOrdinaireNePeutPasModifierUnDepartementSocle(): void

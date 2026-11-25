@@ -339,6 +339,19 @@ class ApplicationformsControllerTest extends TestCase
             'created' => '2026-11-25 10:00:00',
             'modified' => '2026-11-25 10:00:00',
         ]);
+        $connection->insert('users', [
+            'id' => 4,
+            'username' => 'ancien-responsable',
+            'email' => 'ancien-responsable@example.test',
+            'password' => 'test',
+            'firstname' => 'Ancien',
+            'lastname' => 'Responsable',
+            'issuperuser' => 0,
+            'role_id' => User::ROLE_ADMIN,
+            'deleted' => null,
+            'created' => '2026-11-25 10:00:00',
+            'modified' => '2026-11-25 10:00:00',
+        ]);
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
         $this->enableCsrfToken();
 
@@ -354,9 +367,15 @@ class ApplicationformsControllerTest extends TestCase
             'begin_at' => '2026-11-07',
             'end_at' => '2026-11-08',
             'working_days' => 0,
+            'manager_id' => 4,
         ]);
 
         $this->assertResponseOk();
+        $createdApplicationform = $connection->execute(
+            'SELECT manager_id FROM applicationforms ORDER BY id DESC LIMIT 1',
+        )->fetch('assoc');
+        $this->assertIsArray($createdApplicationform);
+        $this->assertNull($createdApplicationform['manager_id']);
         $this->assertEqualsCanonicalizing([
             'auteur@example.test',
             'responsable@example.test',
@@ -846,10 +865,12 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseContains('"field":"jobtitle","label":"Intitulé du poste","reason":');
     }
 
-    public function testLEditionIgnoreLesValeursNullesEncodeesZeroPourAssistantEtManager(): void
+    public function testLEditionIgnoreLeChampHistoriqueManagerId(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
         $this->enableCsrfToken();
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationforms', ['manager_id' => 2], ['id' => 1]);
 
         $this->post('/api/applicationforms/edit/1.json', [
             'assistant_id' => '0',
@@ -858,6 +879,9 @@ class ApplicationformsControllerTest extends TestCase
         ]);
 
         $this->assertResponseOk();
+        $this->assertSame(2, (int)$connection->execute(
+            'SELECT manager_id FROM applicationforms WHERE id = 1',
+        )->fetchColumn(0));
     }
 
     public function testLaCreationApiRetourneLesErreursExploitablesParLeFormulaire(): void
@@ -1085,8 +1109,24 @@ class ApplicationformsControllerTest extends TestCase
     /** Vérifie que le validateur peut enregistrer son acceptation par l'API. */
     public function testUnValidateurPeutAccepterLEtapeQuiLuiEstAssignee(): void
     {
+        $this->prepareCapturedEmails();
         $this->configureVotableWorkflow();
         $stepId = $this->startVotableWorkflow();
+        $connection = ConnectionManager::get('test');
+        $connection->insert('users', [
+            'id' => 4,
+            'username' => 'ancien-responsable',
+            'email' => 'ancien-responsable@example.test',
+            'password' => 'test',
+            'firstname' => 'Ancien',
+            'lastname' => 'Responsable',
+            'issuperuser' => 0,
+            'role_id' => User::ROLE_ADMIN,
+            'deleted' => null,
+            'created' => '2026-11-25 10:00:00',
+            'modified' => '2026-11-25 10:00:00',
+        ]);
+        $connection->update('applicationforms', ['manager_id' => 4], ['id' => 1]);
 
         $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => 2])]);
         $this->enableCsrfToken();
@@ -1099,6 +1139,7 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertResponseContains('"success":true');
         $this->assertResponseContains('"final":true');
+        $this->assertNotContains('ancien-responsable@example.test', ApplicationformNotificationCaptureTransport::$recipients);
     }
 
     /** Vérifie qu'un Admin peut outrepasser une étape et obtient un commentaire d'audit. */

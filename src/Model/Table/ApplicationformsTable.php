@@ -33,7 +33,6 @@ use Throwable;
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\DepartmentsTable> $Departments
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\UsersTable> $Users
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\UsersTable> $Assistants
- * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\UsersTable> $Managers
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\ContracttypesTable> $Contracttypes
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\HiringreasonsTable> $Hiringreasons
  * @property \Cake\ORM\Association\BelongsTo<\App\Model\Table\BudgetfeaturesTable> $Budgetfeatures
@@ -72,7 +71,6 @@ class ApplicationformsTable extends Table
     public const DUPLICATION_RESET_FIELDS = [
         Applicationform::FIELD_USER_ID,
         Applicationform::FIELD_ASSISTANT_ID,
-        Applicationform::FIELD_MANAGER_ID,
         Applicationform::FIELD_APPLICANTNAME,
         Applicationform::FIELD_APPLICANT_FIRST_NAME,
         Applicationform::FIELD_APPLICANT_LAST_NAME,
@@ -92,7 +90,6 @@ class ApplicationformsTable extends Table
     private const DUPLICATION_SOURCE_FIELDS = [
         Applicationform::FIELD_DEPARTMENT_ID,
         Applicationform::FIELD_ASSISTANT_ID,
-        Applicationform::FIELD_MANAGER_ID,
         Applicationform::FIELD_CGR,
         Applicationform::FIELD_CONTRACTTYPE_ID,
         Applicationform::FIELD_HIRINGREASON_ID,
@@ -141,11 +138,8 @@ class ApplicationformsTable extends Table
      */
     public function beforeMarshal(EventInterface $event, ArrayObject $data, ArrayObject $options): void
     {
-        foreach ([Applicationform::FIELD_ASSISTANT_ID, Applicationform::FIELD_MANAGER_ID] as $field) {
-            if (!$data->offsetExists($field)) {
-                continue;
-            }
-
+        $field = Applicationform::FIELD_ASSISTANT_ID;
+        if ($data->offsetExists($field)) {
             $value = $data[$field];
             if ($value === 0 || (is_string($value) && trim($value) === '0')) {
                 $data[$field] = null;
@@ -342,11 +336,6 @@ class ApplicationformsTable extends Table
             'foreignKey' => Applicationform::FIELD_ASSISTANT_ID,
             'joinType' => 'LEFT',
         ]);
-        $this->belongsTo('Managers', [
-            'className' => 'Users',
-            'foreignKey' => Applicationform::FIELD_MANAGER_ID,
-            'joinType' => 'LEFT',
-        ]);
         $this->belongsTo('Contracttypes', [
             'foreignKey' => Applicationform::FIELD_CONTRACTTYPE_ID,
             'joinType' => 'INNER',
@@ -417,9 +406,8 @@ class ApplicationformsTable extends Table
             ->integer(Applicationform::FIELD_USER_ID)
             ->notEmptyString(Applicationform::FIELD_USER_ID);
 
-        foreach ([Applicationform::FIELD_ASSISTANT_ID, Applicationform::FIELD_MANAGER_ID] as $field) {
-            $validator->nonNegativeInteger($field)->allowEmptyString($field);
-        }
+        $validator->nonNegativeInteger(Applicationform::FIELD_ASSISTANT_ID)
+            ->allowEmptyString(Applicationform::FIELD_ASSISTANT_ID);
 
         $validator
             ->scalar(Applicationform::FIELD_CGR)
@@ -655,14 +643,10 @@ class ApplicationformsTable extends Table
         $rules->add($rules->existsIn([Applicationform::FIELD_USER_ID], 'Users'), [
             'errorField' => Applicationform::FIELD_USER_ID,
         ]);
-        foreach (
-            [
-                Applicationform::FIELD_ASSISTANT_ID => 'Assistants',
-                Applicationform::FIELD_MANAGER_ID => 'Managers',
-            ] as $field => $association
-        ) {
-            $rules->add($rules->existsIn([$field], $association), ['errorField' => $field]);
-        }
+        $rules->add(
+            $rules->existsIn([Applicationform::FIELD_ASSISTANT_ID], 'Assistants'),
+            ['errorField' => Applicationform::FIELD_ASSISTANT_ID],
+        );
         $rules->add(
             fn(Applicationform $applicationform): bool => !$this->assistantAssignmentChanged($applicationform)
                 || $this->assistantMatchesDepartment($applicationform),

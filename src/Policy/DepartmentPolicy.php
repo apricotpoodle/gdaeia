@@ -30,29 +30,36 @@ final class DepartmentPolicy extends AppPolicy
     /** Autorise la création d’un département. */
     public function canAdd(IdentityInterface $identity, EntityInterface $department): bool
     {
-        return $this->canManageDepartments($identity);
+        return $this->isSuperUser($identity);
     }
 
     /** Autorise la modification d’un département actif. */
     public function canEdit(IdentityInterface $identity, EntityInterface $department): bool
     {
-        if ($department->get('base')) {
-            return $this->isSuperUser($identity) && $department->get('deleted') === null;
-        }
-
-        return $this->canManageDepartments($identity, $department) && $department->get('deleted') === null;
+        return $this->isSuperUser($identity) && $department->get('deleted') === null;
     }
 
     /** Autorise la gestion séparée des associations d’un département actif. */
     public function canManageAssociations(IdentityInterface $identity, EntityInterface $department): bool
     {
-        return $this->canManageDepartments($identity, $department) && $department->get('deleted') === null;
+        $user = $this->getValidUser($identity);
+        if ($user === null || $department->get('deleted') !== null) {
+            return false;
+        }
+
+        $departmentId = $department->get('id');
+
+        return $this->permissions->allowsDepartment(
+            $user,
+            'departments.manage',
+            is_int($departmentId) || ctype_digit((string)$departmentId) ? (int)$departmentId : null,
+        );
     }
 
     /** Autorise la consultation des impacts d’un département actif. */
     public function canViewImpacts(IdentityInterface $identity, EntityInterface $department): bool
     {
-        return $this->canManageDepartments($identity, $department) && $department->get('deleted') === null;
+        return $this->isSuperUser($identity) && $department->get('deleted') === null;
     }
 
     /** Autorise la consultation selon la permission et son périmètre. */
@@ -75,25 +82,8 @@ final class DepartmentPolicy extends AppPolicy
     /** Autorise la désactivation d’un département actif non socle. */
     public function canDeactivate(IdentityInterface $identity, EntityInterface $department): bool
     {
-        return $this->canManageDepartments($identity, $department)
+        return $this->isSuperUser($identity)
             && $department->get('deleted') === null
             && !$department->get('base');
-    }
-
-    /** Point d’extension pour élargir ultérieurement le périmètre des opérateurs. */
-    protected function canManageDepartments(IdentityInterface $identity, ?EntityInterface $department = null): bool
-    {
-        $user = $this->getValidUser($identity);
-        if ($user === null) {
-            return false;
-        }
-
-        $departmentId = $department?->get('id');
-
-        return $this->permissions->allowsDepartment(
-            $user,
-            'departments.manage',
-            is_int($departmentId) || ctype_digit((string)$departmentId) ? (int)$departmentId : null,
-        );
     }
 }

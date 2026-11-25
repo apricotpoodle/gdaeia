@@ -8,6 +8,7 @@ use App\Model\Entity\Period;
 use App\Model\Entity\User;
 use App\Model\Table\ApplicationformsTable;
 use App\Service\ApplicationformDuplicationResult;
+use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\EntityInterface;
 use Cake\TestSuite\Fixture\FixtureStrategyInterface;
 use Cake\TestSuite\Fixture\TruncateStrategy;
@@ -346,11 +347,11 @@ class ApplicationformsTableTest extends TestCase
         $this->getTableLocator()->get('Contracttypes')->updateAll(['deleted' => null], ['id' => 1]);
         $this->getTableLocator()->get('Professionalcategories')->updateAll(['deleted' => null], ['id' => 1]);
         $this->getTableLocator()->get('Periods')->updateAll(['deleted' => null], ['id' => 1]);
+        ConnectionManager::get('test')->update('applicationforms', ['manager_id' => 2], ['id' => 1]);
         $source = $this->Applicationforms->get(1);
         $source->patch([
             Applicationform::FIELD_USER_ID => 1,
             Applicationform::FIELD_ASSISTANT_ID => 2,
-            Applicationform::FIELD_MANAGER_ID => 2,
             Applicationform::FIELD_APPLICANTNAME => 'Candidat source',
             Applicationform::FIELD_SALARY_BASE => '1250.00',
             Applicationform::FIELD_HR_DESCRIPTION => 'Note RH',
@@ -368,7 +369,12 @@ class ApplicationformsTableTest extends TestCase
         $this->assertNotNull($result->applicationform);
         $this->assertSame(2, $result->applicationform->get(Applicationform::FIELD_USER_ID));
         $this->assertNull($result->applicationform->get(Applicationform::FIELD_ASSISTANT_ID));
-        $this->assertNull($result->applicationform->get(Applicationform::FIELD_MANAGER_ID));
+        $copiedManager = ConnectionManager::get('test')->execute(
+            'SELECT manager_id FROM applicationforms WHERE id = :id',
+            ['id' => $result->applicationform->get('id')],
+        )->fetch('assoc');
+        $this->assertIsArray($copiedManager);
+        $this->assertNull($copiedManager['manager_id']);
         $this->assertNull($result->applicationform->get(Applicationform::FIELD_APPLICANTNAME));
         $this->assertNull($result->applicationform->get(Applicationform::FIELD_SALARY_BASE));
         $this->assertNull($result->applicationform->get(Applicationform::FIELD_HR_DESCRIPTION));

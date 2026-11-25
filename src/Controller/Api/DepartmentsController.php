@@ -590,7 +590,8 @@ final class DepartmentsController extends AppController
             'grid_rights' => [
                 'actions' => [
                     'view' => $this->Authorization->can($department, 'view'),
-                    'edit' => $this->Authorization->can($department, 'edit'),
+                    'edit' => $this->Authorization->can($department, 'edit')
+                        || $this->Authorization->can($department, 'manageAssociations'),
                     'deactivate' => $this->Authorization->can($department, 'deactivate'),
                 ],
                 'columns' => [],

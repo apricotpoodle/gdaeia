@@ -85,6 +85,7 @@ final class DepartmentsControllerTest extends TestCase
         $payload = (array)json_decode((string)$this->_response->getBody(), true);
 
         $this->assertSame([2], array_column($payload['data'], 'id'));
+        $this->assertTrue($payload['data'][0]['grid_rights']['actions']['edit']);
     }
 
     public function testLarbreInitialContientTouteLaHierarchieEtLesAssociations(): void
@@ -325,6 +326,59 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertResponseOk();
         $payload = (array)json_decode((string)$this->_response->getBody(), true);
         self::assertTrue((bool)$this->getTableLocator()->get('Departments')->get($payload['id'])->get('base'));
+    }
+
+    public function testUnAdministrateurLocalNePeutPasModifierLesServicesParApi(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_ADMIN])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 2]);
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 2,
+            'department_id' => 2,
+        ]));
+
+        $this->post('/api/departments/2.json', ['name' => 'Nom forgé']);
+
+        $this->assertResponseCode(403);
+        $this->assertSame('Service de test', $this->getTableLocator()->get('Departments')->get(2)->get('name'));
+
+        $this->post('/api/departments/add.json', [
+            'code' => 'SERVICE-INTERDIT',
+            'name' => 'Création interdite',
+            'sort' => 'Création interdite',
+        ]);
+
+        $this->assertResponseCode(403);
+        $this->assertSame(2, $this->getTableLocator()->get('Departments')->find()->count());
+    }
+
+    public function testUnAdministrateurLocalNeVoitQueLecranDaffectationsDuService(): void
+    {
+        $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_ADMIN])]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 2]);
+        $this->getTableLocator()->get('UserDepartments')->saveOrFail(
+            $this->getTableLocator()->get('UserDepartments')->newEntity([
+                'user_id' => 2,
+                'department_id' => 2,
+            ]),
+        );
+
+        $this->get('/departments/edit/2');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('Gérer les affectations du service');
+        $this->assertResponseContains('department-cgrs-available-table');
+        $this->assertResponseContains('department-managers-available-table');
+        $this->assertResponseNotContains('>Enregistrer<');
+
+        $this->enableCsrfToken();
+        $this->post('/departments/edit/2', ['name' => 'Modification web interdite']);
+
+        $this->assertResponseCode(403);
+        $this->assertSame('Service de test', $this->getTableLocator()->get('Departments')->get(2)->get('name'));
     }
 
     public function testUnAdministrateurOrdinaireNePeutPasModifierUnDepartementSocle(): void
@@ -796,6 +850,46 @@ final class DepartmentsControllerTest extends TestCase
         $this->assertResponseOk();
         $this->assertSame(1, $this->getTableLocator()->get('DepartmentCgrCodes')->find()
             ->where(['department_id' => 2, 'cgr_code_id' => 1])->count());
+    }
+
+    public function testUnAdministrateurPeutAssocierUnResponsableGerableAuServiceLocal(): void
+    {
+        $this->session(['Auth' => new User([
+            'id' => 2,
+            'issuperuser' => false,
+            'role_id' => User::ROLE_ADMIN,
+        ])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 2]);
+        $userDepartments = $this->getTableLocator()->get('UserDepartments');
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 2,
+            'department_id' => 2,
+        ]));
+        ConnectionManager::get('test')->insert('users', [
+            'id' => 3,
+            'username' => 'responsable-local',
+            'email' => 'responsable-local@example.test',
+            'password' => 'password',
+            'firstname' => 'Responsable',
+            'lastname' => 'Local',
+            'issuperuser' => 0,
+            'role_id' => User::ROLE_DEMANDEUR,
+            'deleted' => null,
+            'created' => '2026-11-04 10:00:00',
+            'modified' => '2026-11-04 10:00:00',
+        ]);
+        $userDepartments->saveOrFail($userDepartments->newEntity([
+            'user_id' => 3,
+            'department_id' => 2,
+        ]));
+
+        $this->post('/api/departments/2/managers/3/add.json');
+
+        $this->assertResponseOk();
+        $this->assertSame(1, $this->getTableLocator()->get('DepartmentManagers')->find()
+            ->where(['department_id' => 2, 'user_id' => 3])->count());
     }
 
     public function testLeFormulaireWebDeModificationUtiliseLeTemplatePartage(): void
