@@ -67,6 +67,7 @@ supprimer aucune ligne du tableau.
 | Q-0030-04 | 0030 | Répondu | Qui reçoit les notifications de validation, les rappels quotidiens, les notifications de DAE acceptée et la synthèse hebdomadaire ? Quelles commandes l'application fournit-elle pour les envois récurrents ? | Tout changement d'état du cycle de validation déclenche une notification en temps réel aux rôles concernés. Pour une DAE bloquée, les rôles pouvant outrepasser le blocage sont également notifiés. La liste quotidienne des demandes en attente est adressée aux rôles concernés par l'étape ; le rappel quotidien est prévu à 07 h 00. À la fin du cycle, une DAE acceptée (« signée ») déclenche une notification à l'assistante qui l'a saisie, à tous les responsables du service et à tout rôle ADMIN qui voit le service ; ces ADMIN sont considérés comme des responsables du service. La synthèse hebdomadaire des DAE entièrement validées est adressée à tout rôle ADMIN qui voit le service des DAE concernées. L'application fournit une commande CLI et une commande Make pour lancer les envois récurrents ; Airflow planifie les traitements CLI au moyen de DAG. Le jour et l'heure de la synthèse hebdomadaire sont configurés dans Airflow, hors du périmètre de l'application. |  |
 | Q-0030-05 | 0030 | Répondu | Quelles résolutions, tailles de fenêtre et facteurs de zoom définissent l'objectif « voir l'ensemble des champs sans ascenseur » ? | Écran de référence : 1680 × 1050. Contrôle dans une fenêtre non maximisée, avec une zone de page de 1440 × 900 et un contrôle complémentaire de 1366 × 768. Zoom navigateur : 100 % pour les deux tailles. |  |
 | Q-0030-06 | 0030 | Répondu | Le champ `manager_id` de l'Applicationform doit-il rester en base, être utilisé par l'application ou être migré ? Comment l'articuler avec les associations multiples de responsables des départements ? | Ne pas modifier la structure de la table ni les valeurs existantes de `applicationforms.manager_id` ; elles sont conservées sans migration et le champ est ignoré par l'application. Les responsables sont déterminés à partir des associations multiples du service. Le nom `current_manager_id` désigne l'ancienne colonne de `departments`, distincte de `applicationforms.manager_id`. |  |
+| Q-0041-01 | 0041 | À clarifier | L'accès à la consultation et à la gestion des permissions par rôle doit-il rester réservé aux super-administrateurs, comme le demande le critère 1 du ticket, ou peut-il être délégué aux opérateurs dont le rôle reçoit `menus.manage` sur `unscoped` ? Arbitrage prévu le 21 novembre 2026. Les scénarios et leurs conséquences sont détaillés ci-dessous. |  |  |
 | Q-VAF-0018-01 | validation-applicationform/0018 | À poser | Dans quels cas un cycle de validation peut-il être annulé par un utilisateur ou un administrateur ? |  |  |
 | Q-VAF-0018-02 | validation-applicationform/0018 | À poser | Une annulation doit-elle conserver l'historique des votes et des commentaires ? |  |  |
 | Q-VAF-0018-03 | validation-applicationform/0018 | À poser | Qui peut réinitialiser un cycle annulé et quelles données doivent être conservées ? |  |  |
@@ -77,6 +78,64 @@ supprimer aucune ligne du tableau.
 | Q-VAF-0020-03 | validation-applicationform/0020 | À poser | Qui peut modifier le paramétrage et quelles validations sont nécessaires ? |  |  |
 | Q-VAF-0021-01 | validation-applicationform/0021 | À poser | Que doit-il se passer lorsque deux utilisateurs du même rôle votent presque simultanément ? |  |  |
 | Q-VAF-0021-02 | validation-applicationform/0021 | À poser | Le second vote doit-il être refusé, remplacé ou conservé comme information d'audit ? |  |  |
+
+## Dossier de préparation — Q-0041-01 : accès aux permissions par rôle
+
+**Décision attendue :** 21 novembre 2026. La question reste **À clarifier**
+jusqu'à ce que l'arbitrage soit consigné dans les colonnes de réponse du
+tableau. Les exemples ci-dessous décrivent des scénarios à examiner ; ils ne
+constituent ni une réponse du client ni une décision déjà prise.
+
+### Règle actuelle
+
+- `unscoped` est une valeur de périmètre portée par une attribution à un rôle.
+  Elle ne donne pas, à elle seule, une permission et ne signifie pas
+  `all`. Elle indique qu'aucun filtre générique `self`, `assigned` ou `all`
+  n'est appliqué ; la Policy doit encore autoriser l'action.
+- Le super-administrateur contourne les attributions via
+  `PermissionResolver`. Pour les autres opérateurs, `PermissionPolicy` autorise
+  à la fois la consultation (`canIndex`) et la gestion (`canManage`) si leur
+  rôle possède `menus.manage` sur `unscoped`.
+- L'attribution est au rôle, pas à un utilisateur individuel : tout opérateur
+  non-super-administrateur ayant ce rôle satisfait donc la même condition.
+  `MenuPolicy` utilise aussi `menus.manage/unscoped` pour administrer les
+  menus.
+- L'ADR 0069 indique que `menus.manage` peut avoir le périmètre `unscoped`,
+  mais que la matrice actuelle ne l'attribue à aucun rôle ordinaire. Le ticket
+  0041 décrit également les rôles ordinaires sans cette attribution. Un test
+  API ajoute volontairement cette attribution au rôle Admin pour montrer
+  qu'un opérateur non-super-administrateur ainsi habilité est accepté ; ce
+  scénario de test ne signifie pas que la matrice réelle l'accorde.
+- Le périmètre organisationnel courant est le département (`assigned`).
+  L'écran et l'API des permissions ne filtrent toutefois ni par département
+  ni par tenant : la liste du catalogue et des attributions est globale.
+
+### Scénarios à comparer
+
+1. **Réserver l'accès aux super-administrateurs.** Un opérateur du rôle Admin
+   (rôle 1) ou d'un autre rôle ordinaire reçoit un refus, même si son rôle
+   possède `menus.manage/unscoped`. Seul un compte marqué super-administrateur
+   accède à l'écran et à l'API. Ce choix correspond au critère 1 du ticket
+   0041 et exclut une délégation ordinaire.
+2. **Autoriser une délégation globale.** Si `menus.manage/unscoped` est ajouté
+   au rôle Admin ou à tout autre rôle, chacun de ses membres non
+   super-administrateurs peut consulter le catalogue complet, les attributions
+   de tous les rôles, les périmètres admissibles et les URLs des menus. Par
+   exemple, un opérateur associé seulement au département A verrait aussi les
+   attributions utilisées dans le département B : aucune séparation par
+   département ou tenant ne s'applique ici. La même Policy protège les routes
+   API d'ajout et de retrait ; malgré une page en lecture seule, cet opérateur
+   pourrait donc appeler directement ces mutations. Il obtiendrait aussi
+   l'accès d'administration des menus protégé par la même permission.
+3. **Déléguer par département ou tenant.** Le `unscoped` actuel ne permet pas
+   de limiter cette administration au département A ou à un tenant donné. Si
+   une délégation locale est souhaitée, il faudra définir séparément le
+   périmètre et la règle Policy/API correspondants avant d'attribuer un droit.
+
+La décision doit donc préciser si la délégation est interdite, globale pour
+les membres des rôles autorisés, ou limitée par un périmètre local à concevoir.
+Elle doit aussi préciser si la lecture et les mutations d'attribution suivent
+la même règle d'accès.
 
 ## Règles de saisie pendant la réunion
 
