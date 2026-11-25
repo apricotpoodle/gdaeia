@@ -12,13 +12,57 @@ const tableSelector = "#applicationforms-table";
 const isArchivePage = window.location.pathname.replace(/\/$/, '') === '/applicationforms/archives';
 const includeArchivedCheckbox = document.querySelector('#include-archived');
 const includeArchivedInitially = new URLSearchParams(window.location.search).get('include_archived') === '1';
+const pendingValidationButton = document.querySelector('#pending-validations');
+let pendingValidationActive = false;
+let pendingValidationCountBadge = null;
 if (includeArchivedCheckbox) includeArchivedCheckbox.checked = includeArchivedInitially;
+if (pendingValidationButton) {
+    pendingValidationCountBadge = document.createElement('span');
+    pendingValidationCountBadge.className = 'badge bg-secondary ms-1';
+    pendingValidationCountBadge.setAttribute('aria-hidden', 'true');
+    pendingValidationButton.append(pendingValidationCountBadge);
+}
 
 // 1. Instanciation de la grille du domaine, avec le filtre d'archive de la page.
 const applicationformsTable = TabulatorFactory.createApplicationformsGrid(tableSelector, {
     archiveMode: isArchivePage ? 'archives' : 'current',
     includeArchived: includeArchivedInitially,
 });
+
+function gridQueryParameters() {
+    return {
+        include_archived: includeArchivedCheckbox?.checked ? '1' : undefined,
+        pending_validation: pendingValidationActive ? '1' : undefined,
+    };
+}
+
+async function refreshPendingValidationCount() {
+    if (!pendingValidationButton || !pendingValidationCountBadge) return;
+
+    try {
+        const response = await fetch('/api/applicationforms/pending-validation-count.json', {
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' },
+        });
+        const payload = await response.json();
+        if (!response.ok || !Number.isInteger(payload.count)) {
+            throw new Error('Le compteur des demandes à valider est indisponible.');
+        }
+
+        pendingValidationCountBadge.textContent = String(payload.count);
+        pendingValidationButton.setAttribute('aria-label', `À valider : ${payload.count}`);
+    } catch {
+        pendingValidationCountBadge.hidden = true;
+    }
+}
+
+pendingValidationButton?.addEventListener('click', () => {
+    pendingValidationActive = !pendingValidationActive;
+    pendingValidationButton.setAttribute('aria-pressed', String(pendingValidationActive));
+    pendingValidationButton.classList.toggle('active', pendingValidationActive);
+    applicationformsTable.setData('/api/applicationforms.json', gridQueryParameters());
+});
+void refreshPendingValidationCount();
 
 async function postArchiveTransition(url, ids = null) {
     const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content');
@@ -44,6 +88,7 @@ async function postArchiveTransition(url, ids = null) {
 
     FlashManager.success(result.message);
     await applicationformsTable.replaceData();
+    await refreshPendingValidationCount();
 }
 
 function selectedApplicationformIds() {
@@ -68,9 +113,7 @@ async function transitionSelected(action) {
 }
 
 includeArchivedCheckbox?.addEventListener('change', () => {
-    applicationformsTable.setData('/api/applicationforms.json', {
-        include_archived: includeArchivedCheckbox.checked ? '1' : undefined,
-    });
+    applicationformsTable.setData('/api/applicationforms.json', gridQueryParameters());
 });
 
 document.querySelector('#archive-selected')?.addEventListener('click', () => transitionSelected('archive'));
@@ -162,6 +205,7 @@ if (globalTabulatorObserver) {
                 });
             }
             await applicationformsTable.replaceData();
+            await refreshPendingValidationCount();
         } catch (error) {
             FlashManager.error(`<strong>Action refusée :</strong> ${error.message}`);
         }
@@ -183,6 +227,7 @@ if (globalTabulatorObserver) {
             if (!response.ok || !payload.success) throw new Error(payload.message || 'Le cycle ne peut pas être remis à zéro.');
             FlashManager.success(payload.message);
             await applicationformsTable.replaceData();
+            await refreshPendingValidationCount();
         } catch (error) {
             FlashManager.error(`<strong>Action refusée :</strong> ${error.message}`);
         }

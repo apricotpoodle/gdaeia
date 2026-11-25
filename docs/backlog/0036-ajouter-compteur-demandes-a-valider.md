@@ -1,6 +1,6 @@
 # 0036 — Ajouter le compteur des demandes à valider
 
-**Statut :** À planifier
+**Statut :** Terminé
 
 **Priorité :** Moyenne — repérage des validations en attente
 
@@ -13,13 +13,13 @@ valider, et permettre de filtrer la grille sur ces demandes.
 
 ## Travail attendu
 
-- [ ] Calculer le compteur côté serveur en réutilisant les Policies, le
+- [x] Calculer le compteur côté serveur en réutilisant les Policies, le
   workflow et les périmètres existants.
-- [ ] Ajouter le filtre de grille avec pagination, tri et filtrage distants
+- [x] Ajouter le filtre de grille avec pagination, tri et filtrage distants
   conservés côté serveur.
-- [ ] Ajouter le bouton ou indicateur via les fabriques et mécanismes
+- [x] Ajouter le bouton ou indicateur via les fabriques et mécanismes
   Tabulator existants.
-- [ ] Couvrir les rôles parallèles, les demandes clôturées, les demandes hors
+- [x] Couvrir les rôles parallèles, les demandes clôturées, les demandes hors
   périmètre et les utilisateurs sans tâche.
 
 ## Critères d'acceptation
@@ -36,6 +36,7 @@ valider, et permettre de filtrer la grille sur ces demandes.
 
 - `make test.unit`
 - `make test.api` pour compteur, Policy et grille distante
+- `make test.integration` pour le finder ORM et les périmètres
 - `make test.style` si des tests sont modifiés
 - `make cs.check` et `make stan` si du PHP est modifié
 

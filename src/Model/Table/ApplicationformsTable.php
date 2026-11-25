@@ -4,9 +4,11 @@ declare(strict_types=1);
 namespace App\Model\Table;
 
 use App\Model\Entity\Applicationform;
+use App\Model\Entity\Applicationvalidationstep;
 use App\Model\Entity\Contracttype;
 use App\Model\Entity\Period;
 use App\Model\Entity\User;
+use App\Model\Entity\ValidationWorkflowRun;
 use App\Service\ApplicationformDuplicationResult;
 use App\Service\SalaryCalculationService;
 use App\Service\Security\PermissionResolver;
@@ -854,6 +856,114 @@ class ApplicationformsTable extends Table
         }
 
         return $query->where($conditions === [] ? ['1 = 0'] : ['OR' => $conditions]);
+    }
+
+    /**
+     * Filtre les DAE sur lesquelles l'utilisateur peut voter maintenant ou par suppléance.
+     *
+     * Le finder s'applique en complément de `visibleTo` afin de conserver le
+     * périmètre de lecture. Une DAE n'apparaît qu'une fois, même si plusieurs
+     * rôles parallèles lui permettent une décision.
+     *
+     * @param \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface> $query Requête des DAE.
+     * @param \App\Model\Entity\User $user Identité courante.
+     * @return \Cake\ORM\Query\SelectQuery<\Cake\Datasource\EntityInterface>
+     */
+    public function findActionableTo(SelectQuery $query, User $user): SelectQuery
+    {
+        $permissions = new PermissionResolver();
+        $canVote = $permissions->allows(
+            $user,
+            'applicationforms.vote',
+            PermissionResolver::SCOPE_UNSCOPED,
+        );
+        if (!$canVote) {
+            return $query->where(['1 = 0']);
+        }
+
+        $canOverride = ($user->isSuperUser() || $user->hasRole(User::ROLE_ADMIN))
+            && $permissions->allows(
+                $user,
+                'applicationforms.override_validation',
+                PermissionResolver::SCOPE_UNSCOPED,
+            );
+
+        $userId = (int)$user->get(User::FIELD_ID);
+        $userDepartments = TableRegistry::getTableLocator()->get('UserDepartments');
+        if (!$user->isSuperUser()) {
+            $visibleDepartmentIds = $userDepartments->find()
+                ->select(['UserDepartments.department_id'])
+                ->where(['UserDepartments.user_id' => $userId]);
+            $query->where(['OR' => [
+                ['Applicationforms.user_id' => $userId],
+                ['Applicationforms.department_id IN' => $visibleDepartmentIds],
+            ]]);
+        }
+
+        $query->where(['Applicationforms.archived IS' => null]);
+        $stepsTable = TableRegistry::getTableLocator()->get('Applicationvalidationsteps');
+        $steps = $stepsTable->find()
+            ->select(['Applicationvalidationsteps.id'])
+            ->innerJoinWith('ValidationWorkflowRuns', static function (SelectQuery $runQuery): SelectQuery {
+                return $runQuery->where([
+                    'ValidationWorkflowRuns.' . ValidationWorkflowRun::FIELD_STATE =>
+                        ValidationWorkflowRun::STATE_PENDING,
+                ]);
+            })
+            ->where([
+                'Applicationvalidationsteps.' . Applicationvalidationstep::FIELD_APPLICATIONFORM_ID
+                    . ' = Applicationforms.' . Applicationform::FIELD_ID,
+            ]);
+
+        $actionableSteps = [];
+        $normalVoteConditions = [];
+        $roleId = (int)$user->get(User::FIELD_ROLE_ID);
+        if ($roleId > 0) {
+            $assignedDepartmentIds = $userDepartments->find()
+                ->select(['UserDepartments.department_id'])
+                ->where(['UserDepartments.user_id' => $userId]);
+            $normalVoteConditions[] = [
+                'Applicationvalidationsteps.' . Applicationvalidationstep::FIELD_ROLE_ID => $roleId,
+                'Applicationforms.' . Applicationform::FIELD_DEPARTMENT_ID . ' IN' => $assignedDepartmentIds,
+            ];
+        }
+
+        $requesterRole = TableRegistry::getTableLocator()->get('Roles')->find()
+            ->select(['Roles.id'])
+            ->where(['Roles.code' => 'dem'])
+            ->first();
+        $requesterRoleId = $requesterRole?->get('id');
+        if (is_numeric($requesterRoleId)) {
+            $normalVoteConditions[] = [
+                'Applicationvalidationsteps.' . Applicationvalidationstep::FIELD_ROLE_ID =>
+                    (int)$requesterRoleId,
+                'Applicationforms.' . Applicationform::FIELD_USER_ID => $userId,
+            ];
+        }
+
+        if ($normalVoteConditions !== []) {
+            $actionableSteps[] = [
+                'Applicationvalidationsteps.' . Applicationvalidationstep::FIELD_STATE => 'en_attente',
+                'OR' => $normalVoteConditions,
+            ];
+        }
+
+        if ($canOverride) {
+            $actionableSteps[] = [
+                'Applicationvalidationsteps.' . Applicationvalidationstep::FIELD_STATE . ' IN' => [
+                    'en_attente',
+                    'a_venir',
+                ],
+            ];
+        }
+
+        if ($actionableSteps === []) {
+            return $query->where(['1 = 0']);
+        }
+
+        $steps->where(['OR' => $actionableSteps]);
+
+        return $query->where(static fn($expression) => $expression->exists($steps));
     }
 
     /**

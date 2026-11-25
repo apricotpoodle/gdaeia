@@ -890,6 +890,22 @@ class ApplicationformsController extends AppController
         }
     }
 
+    /** Retourne à l'identité courante le nombre de DAE accessibles à une décision. */
+    public function pendingValidationCount(): void
+    {
+        $this->request->allowMethod(['get']);
+        $this->Authorization->authorize($this->Applicationforms->newEmptyEntity(), 'index');
+
+        /** @var \App\Model\Entity\User $currentUser */
+        $currentUser = $this->request->getAttribute('identity')->getOriginalData();
+        $count = $this->Applicationforms->find('visibleTo', user: $currentUser)
+            ->find('actionableTo', user: $currentUser)
+            ->count();
+
+        $this->set(compact('count'));
+        $this->viewBuilder()->setOption('serialize', ['count']);
+    }
+
     /**
      * Méthode Index (GET /api/applicationforms.json)
      *
@@ -923,6 +939,9 @@ class ApplicationformsController extends AppController
                 'Comments' => ['Users'], // Charge le fil de discussion et ses auteurs
             ])
             ->leftJoinWith('Applicationformstatuses');
+        if ($this->request->getQuery('pending_validation') === '1') {
+            $query->find('actionableTo', user: $currentUser);
+        }
         $query
             ->enableAutoFields(true)
             ->select([

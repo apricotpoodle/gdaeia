@@ -37,6 +37,17 @@ class ApplicationformsControllerTest extends TestCase
         'app.Validationstatuses',
     ];
 
+    public function testLaListeProposeLeFiltreDesDemandesAVoter(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('id="pending-validations"');
+        $this->assertResponseContains('À valider');
+    }
+
     public function testLaConsultationOrganiseLesDetailsEnQuatreZonesEnLectureSeule(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);

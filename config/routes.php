@@ -156,6 +156,11 @@ return function (RouteBuilder $routes): void {
         $builder->connect('/departments/{id}', ['controller' => 'Departments', 'action' => 'edit', '_ext' => 'json'], ['pass' => ['id'], 'methods' => ['POST']]);
         $builder->connect('/permissions/assign', ['controller' => 'Permissions', 'action' => 'assign', '_ext' => 'json']);
         $builder->connect('/permissions/{id}/revoke', ['controller' => 'Permissions', 'action' => 'revoke', '_ext' => 'json'], ['pass' => ['id']]);
+        $builder->connect('/applicationforms/pending-validation-count', [
+            'controller' => 'Applicationforms',
+            'action' => 'pendingValidationCount',
+            '_ext' => 'json',
+        ], ['methods' => ['GET']]);
         $builder->connect('/applicationforms/{id}/validation/start', ['controller' => 'Applicationforms', 'action' => 'startValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/vote', ['controller' => 'Applicationforms', 'action' => 'voteValidation', '_ext' => 'json'], ['pass' => ['id']]);
         $builder->connect('/applicationforms/{id}/validation/reset', ['controller' => 'Applicationforms', 'action' => 'resetValidation', '_ext' => 'json'], ['pass' => ['id']]);

@@ -6,7 +6,7 @@
  * @var bool $archivePage
  */
 
-$this->Html->script('views/Applicationforms/index.js?v=20261125160000', ['type' => 'module', 'block' => true]);
+$this->Html->script('views/Applicationforms/index.js?v=20261125160001', ['type' => 'module', 'block' => true]);
 ?>
 
 <div class="applicationforms index content h-100 d-flex flex-column">
@@ -18,6 +18,7 @@ $this->Html->script('views/Applicationforms/index.js?v=20261125160000', ['type' 
                 <?= $this->Action->render(\App\View\Action\ApplicationformsActions::restoreSelected()) ?>
             <?php else: ?>
                 <?= $this->Action->render(\App\View\Action\ApplicationformsActions::archives()) ?>
+                <?= $this->Action->render(\App\View\Action\ApplicationformsActions::pendingValidations()) ?>
                 <?= $this->Action->render(\App\View\Action\ApplicationformsActions::archiveSelected()) ?>
                 <?= $this->Action->render(\App\View\Action\ApplicationformsActions::add()) ?>
             <?php endif; ?>

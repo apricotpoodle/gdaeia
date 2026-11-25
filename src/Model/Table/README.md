@@ -25,7 +25,7 @@ département ne peuvent accompagner un basculement de `base`. Les opérations
 ORM : ce contrat ne les intercepte pas. Voir l'[ADR 0075 proposé](../../../docs/adr/0075-protection-references-socles.md).
 
 ## Filtres et Recherches
-* **`ApplicationformsTable`** : Intègre le Behavior `FriendsOfCake/Search` avec un filtre callback configuré en `MATCH() AGAINST() IN BOOLEAN MODE` sur l'index FULLTEXT multi-colonnes (`jobtitle`, `applicantname`, `qualification`, `reasonforreplacement`).
+* **`ApplicationformsTable`** : Intègre le Behavior `FriendsOfCake/Search` avec un filtre callback configuré en `MATCH() AGAINST() IN BOOLEAN MODE` sur l'index FULLTEXT multi-colonnes (`jobtitle`, `applicantname`, `qualification`, `reasonforreplacement`). Son finder `actionableTo()` filtre les DAE sur les étapes de validation accessibles à l'identité courante et complète `visibleTo()` sans élargir le périmètre de lecture.
 * **`UsersTable`** : Le finder `assistantsForDepartment()` sélectionne les comptes Demandeur actifs associés explicitement au département demandé. L'API compose ce finder avec `visibleTo()` pour appliquer le périmètre de l'opérateur.
 * **`WorkflowSettingsTable`** et **`ValidationCommentTemplatesTable`** : Portent respectivement les paramètres globaux du workflow, dont l'obligation de commenter par décision, et le catalogue administrable des commentaires prédéfinis. Le modèle sélectionné préremplit le champ libre ; seul le texte final du vote est conservé dans `validations.obs`.
 * **`DepartmentsTable`** : Fournit le finder `activeChildren()` utilisé par

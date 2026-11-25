@@ -8,6 +8,11 @@ utilisent la même grille distante, les commandes de ligne de `ButtonFactory`
 et les commandes groupées rendues par `ApplicationformsActions`. Les mutations
 passent par les endpoints API et leurs Policies serveur.
 
+La liste courante affiche aussi le compteur « À valider ». Le bouton recharge la
+grille avec `pending_validation=1` ; compteur et filtre utilisent le même
+finder serveur. Le compteur est relu au chargement de la liste et après les
+transitions de workflow ou d'archivage effectuées depuis cette page.
+
 `applicationform-treeselect.js` initialise l'arbre des départements. Il
 actualise les assistantes et les responsables après sélection d'un département.
 Les responsables sont lus depuis leurs associations directes au département ;

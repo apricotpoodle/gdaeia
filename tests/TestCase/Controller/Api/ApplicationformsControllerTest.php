@@ -724,6 +724,150 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertSame([1, 5, 2, 3, 4], array_column($body['data'], 'id'));
     }
 
+    public function testLeCompteurEtLeFiltreNeRetiennentQueLesDemandesVotablesParLIdentite(): void
+    {
+        $this->configureVisibilityWorkflow();
+        $connection = ConnectionManager::get('test');
+        $connection->update('applicationvalidationsteps', ['sequence_number' => 1], [
+            'id' => self::WORKFLOW_TEST_ID + 1,
+        ]);
+        $this->copyApplicationform(2, 1);
+        $this->insertPendingWorkflow(900_010, 2, 900_010, 3, 2, 1);
+        $this->copyApplicationform(3, 2);
+        $this->insertPendingWorkflow(900_011, 3, 900_011, 2, 1, 1);
+        $this->copyApplicationform(4, 1);
+        $this->insertPendingWorkflow(900_012, 4, 900_012, 2, 1, 1, 'acceptee');
+        $this->session(['Auth' => new User(['id' => 2, 'role_id' => 2, 'issuperuser' => false])]);
+
+        $this->get('/api/applicationforms.json?pending_validation=1&user_id=1');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame([1], array_map('intval', array_column($body['data'], 'id')));
+
+        $this->get('/api/applicationforms/pending-validation-count.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(1, $body['count']);
+
+        $applicationform = TableRegistry::getTableLocator()->get('Applicationforms')->get(1);
+        $actor = TableRegistry::getTableLocator()->get('Users')->get(2);
+        (new ApplicationformValidationWorkflow())->vote(
+            $applicationform,
+            $actor,
+            self::WORKFLOW_TEST_ID,
+            true,
+            '',
+            false,
+        );
+
+        $this->get('/api/applicationforms/pending-validation-count.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(0, $body['count']);
+    }
+
+    public function testLeCompteurInclutLesEtapesAccessiblesParSuppleance(): void
+    {
+        $this->configureVisibilityWorkflow();
+        ConnectionManager::get('test')->update('applicationvalidationsteps', ['state' => 'a_venir'], [
+            'applicationform_id' => 1,
+        ]);
+        $this->session(['Auth' => new User(['id' => 1, 'role_id' => 1, 'issuperuser' => false])]);
+
+        $this->get('/api/applicationforms/pending-validation-count.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(1, $body['count']);
+    }
+
+    public function testLaPermissionDeSuppleanceSansPermissionDeVoteNeCompteAucuneDemande(): void
+    {
+        $this->configureVisibilityWorkflow();
+        ConnectionManager::get('test')->update('applicationvalidationsteps', ['state' => 'a_venir'], [
+            'applicationform_id' => 1,
+        ]);
+
+        $this->withoutWorkflowPermission('applicationforms.vote', function (): void {
+            $this->session(['Auth' => new User(['id' => 1, 'role_id' => 1, 'issuperuser' => false])]);
+
+            $this->get('/api/applicationforms/pending-validation-count.json');
+
+            $this->assertResponseOk();
+            $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertSame(0, $body['count']);
+        });
+    }
+
+    public function testUnValidateurSansEtapeVotableObtientUnCompteurNul(): void
+    {
+        $this->configureVisibilityWorkflow();
+        $this->grantPermissionForRole(3, 'applicationforms', 'read', 'assigned');
+        $this->grantPermissionForRole(3, 'applicationforms', 'vote', 'unscoped');
+        ConnectionManager::get('test')->update('applicationvalidationsteps', ['role_id' => 1], [
+            'id' => self::WORKFLOW_TEST_ID + 1,
+        ]);
+        $this->session(['Auth' => new User(['id' => 3, 'role_id' => 3, 'issuperuser' => false])]);
+
+        $this->get('/api/applicationforms/pending-validation-count.json');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame(0, $body['count']);
+
+        $this->get('/api/applicationforms.json?pending_validation=1');
+
+        $this->assertResponseOk();
+        $body = json_decode((string)$this->_response->getBody(), true, 512, JSON_THROW_ON_ERROR);
+        $this->assertSame([], $body['data']);
+    }
+
+    private function copyApplicationform(int $id, int $departmentId): void
+    {
+        $connection = ConnectionManager::get('test');
+        $applicationform = $connection->execute('SELECT * FROM applicationforms WHERE id = 1')->fetch('assoc');
+        $this->assertIsArray($applicationform);
+        $applicationform['id'] = $id;
+        $applicationform['department_id'] = $departmentId;
+        $connection->insert('applicationforms', $applicationform);
+    }
+
+    private function insertPendingWorkflow(
+        int $runId,
+        int $applicationformId,
+        int $stepId,
+        int $roleId,
+        int $sequenceId,
+        int $sequenceNumber,
+        string $runState = 'en_attente',
+    ): void {
+        $connection = ConnectionManager::get('test');
+        $now = '2026-09-18 10:00:00';
+        $connection->insert('validation_workflow_runs', [
+            'id' => $runId,
+            'applicationform_id' => $applicationformId,
+            'started_by_user_id' => 1,
+            'state' => $runState,
+            'started_at' => $now,
+            'finished_at' => $runState === 'en_attente' ? null : $now,
+            'created' => $now,
+            'modified' => $now,
+        ]);
+        $connection->insert('applicationvalidationsteps', [
+            'id' => $stepId,
+            'applicationform_id' => $applicationformId,
+            'validation_workflow_run_id' => $runId,
+            'validationsequence_id' => $sequenceId,
+            'role_id' => $roleId,
+            'sequence_number' => $sequenceNumber,
+            'state' => 'en_attente',
+            'reminder_count' => 0,
+        ]);
+    }
+
     public function testLeStatutEtLeDroitDeLancementSuiventLeCycleCourant(): void
     {
         $connection = ConnectionManager::get('test');

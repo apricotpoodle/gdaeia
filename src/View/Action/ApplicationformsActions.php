@@ -197,6 +197,24 @@ final class ApplicationformsActions
         );
     }
 
+    /** Filtre la grille distante sur les DAE votables par l'identité courante. */
+    public static function pendingValidations(): UiAction
+    {
+        return new UiAction(
+            UiAction::TYPE_BUTTON,
+            __('À valider'),
+            'fa-list-check',
+            '#',
+            'index',
+            'Applicationforms',
+            [
+                'id' => 'pending-validations',
+                'class' => 'btn btn-outline-primary',
+                'aria-pressed' => 'false',
+            ],
+        );
+    }
+
     /** Commande groupée d'archivage, affichée selon la Policy. */
     public static function archiveSelected(): UiAction
     {
