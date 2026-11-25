@@ -8,21 +8,19 @@
 
 ## Objectif
 
-Faire saisir et vérifier les séquences, règles de circuits, rattachements et
-planifications dans l'environnement convenu, puis consigner les résultats de
-recette.
+Faire saisir et vérifier les séquences, règles de circuits et rattachements
+dans Docker local isolé avec des données synthétiques, puis consigner les
+résultats de recette.
 
 ## Travail attendu
 
-- [ ] Confirmer avec l'opérateur l'environnement, le jeu de données et les
-  comptes de recette ; exclure toute configuration de production sans
-  validation opérationnelle distincte.
-- [ ] Saisir les séquences, rôles, règles de circuit court et rattachements
-  explicitement retenus.
-- [ ] Vérifier les commandes et planifications de notifications sans
-  déclencher d'envois non prévus.
-- [ ] Clôturer les tests d'acceptation encore ouverts aux tickets 0027 et
-  0028, puis consigner leurs résultats avant de déclarer la recette aboutie.
+- [ ] Identifier l'environnement Docker local isolé, le jeu de données
+  synthétiques et les comptes de recette avec l'opérateur.
+- [ ] Faire configurer par l'opérateur les séquences, rôles, règles de
+  circuit court et rattachements par service avec les mécanismes existants.
+  L'ordre des rôles reste configurable, sans codage en dur.
+- [ ] Vérifier les commandes CLI et Make de notifications localement avec
+  les destinataires de recette, sans configurer Airflow ni la production.
 - [ ] Exécuter les scénarios transversaux de création, édition, validation,
   reprise, archivage, recherche, impression et droits.
 - [ ] Consigner la configuration, les résultats, anomalies, limites et
@@ -30,16 +28,15 @@ recette.
 
 ## Critères d'acceptation
 
-1. L'environnement et les comptes utilisés sont identifiés et autorisés.
+1. L'environnement Docker local est isolé, les données sont synthétiques
+   et les comptes de recette sont identifiés.
 2. Les règles saisies correspondent aux décisions 0030 et aux critères des
    tickets 0031 à 0038.
 3. Les scénarios de recette couvrent les rôles, périmètres et circuits
    concernés ; les résultats sont reproductibles.
 4. Les anomalies restantes sont reliées à un ticket, avec sévérité et suite.
-5. Les tests d'acceptation ouverts aux tickets 0027 et 0028 sont terminés et
-   leurs résultats sont consignés.
-6. Aucune configuration de production n'est supposée ni appliquée par ce
-   ticket.
+5. La recette s'exécute avec les séquences configurées par service et les
+   commandes locales. Airflow et la production relèvent de l'exploitation.
 
 ## Vérifications
 
@@ -47,7 +44,7 @@ recette.
 - Exécuter `make test.all` avant la recette transversale si l'environnement
   et les données de test sont disponibles.
 - Vérifier explicitement que les suites MySQL utilisent `daetf2_test`.
-- Effectuer et documenter la recette dans l'environnement convenu.
+- Effectuer et documenter la recette dans Docker local isolé.
 
 ## Références
 
@@ -55,3 +52,6 @@ recette.
 - [ADR 0070 — Circuits courts locaux par contrat](../adr/0070-circuits-courts-locaux-par-contrat.md)
 - Tickets [0030](0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md) à
   [0038](0038-respecter-affichage-sans-defilement.md)
+- Acceptations déjà consignées dans les fiches
+  [0027](0027-autoriser-creation-applicationform-demandeur.md) et
+  [0028](0028-ameliorer-ihm-autorisations-champs.md)

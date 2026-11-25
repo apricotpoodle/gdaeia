@@ -1,6 +1,6 @@
 # 0031 — Aligner dates, jours travaillés et rémunération
 
-**Statut :** À planifier
+**Statut :** Bloqué
 
 **Priorité :** Haute — cohérence des demandes
 
@@ -15,6 +15,16 @@ de contrat.
 Le ticket 0018 couvre déjà le calcul hors week-ends, la saisie et les bornes
 serveur. Le nouveau travail porte sur les règles V3 décidées au 0030 et sur
 les écarts vérifiés, pas sur une réécriture de ces comportements existants.
+
+Le ticket 0030 est terminé. Ce ticket reste bloqué jusqu'aux réponses sur le
+caractère obligatoire de la saisie, l'acceptation d'un zéro saisi pour une
+période avec des jours de semaine, l'usage de la valeur automatique avant
+l'envoi et le traitement des jours fériés (Q-0018-02 à Q-0018-04). Les jours
+fériés en semaine sont comptés dans l'attente de cet arbitrage. Le retrait
+de €/heure pour les nouvelles saisies et la conservation des valeurs
+historiques sont cadrés par le plan approuvé; Q-0030-01 reste ouverte sur
+le maintien éventuel de l'unité, les modalités de calcul du salaire de base
+et la source des heures si l'unité s'applique à l'historique.
 
 ## Travail attendu
 
@@ -34,8 +44,10 @@ les écarts vérifiés, pas sur une réécriture de ces comportements existants.
   avant l'enregistrement et envoyer le courriel à l'auteur, aux responsables
   associés au service et à tout rôle ADMIN qui voit ce service,
   uniquement après un enregistrement réussi.
-- [ ] Implémenter ou exclure explicitement le calcul €/heure selon la décision
-  métier, avec une erreur française cohérente si l'unité n'est pas calculable.
+- [ ] Retirer l'unité €/heure des nouvelles saisies Web et API et préserver
+  les valeurs historiques en €/heure, conformément au cadrage du plan.
+- [ ] Rendre le coefficient global de k/mois modifiable par un
+  super-administrateur.
 - [ ] Garder le montant calculé cohérent après toute modification des dates,
   jours travaillés, période ou montant saisi.
 - [ ] Couvrir formulaire Web, validation ORM et mutations/calculs API.
@@ -47,8 +59,10 @@ les écarts vérifiés, pas sur une réécriture de ces comportements existants.
    au 0030, tant dans l'interface que côté serveur.
 2. Une requête API fabriquée ne peut contourner les règles de jours et de
    dates.
-3. Le salaire de base correspond à la formule décidée pour chaque unité,
-   notamment €/heure.
+3. Le salaire de base correspond à la formule prévue pour chaque unité
+   disponible. L'unité €/heure est indisponible pour toute nouvelle saisie
+   et les valeurs historiques sont conservées. Le coefficient de k/mois
+   est global et sa modification est réservée au super-administrateur.
 4. Les erreurs de validation sont présentées en français et suivent le
    contrat API `{success, message, errors}` avec HTTP 422 lorsque pertinent.
 5. Un zéro déclenche l'avertissement avant enregistrement et le courriel après
@@ -70,6 +84,7 @@ Les tests MySQL ciblent exclusivement `daetf2_test` via
 ## Références
 
 - [0018 — Sécuriser la saisie des jours ouvrés](0018-securiser-la-saisie-des-jours-ouvres-dae.md)
+- [Questions métier ouvertes](../meetings/questions-ouvertes.md)
 - `src/Model/Table/ApplicationformsTable.php`
 - `src/Service/SalaryCalculationService.php`
 - [ADR 0053 — Stratégie des tests](../adr/0053-strategie-tests-unitaires-et-integration.md)

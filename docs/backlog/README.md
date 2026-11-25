@@ -28,7 +28,7 @@ manifestes des sous-workflows sont leur source de vérité opérationnelle.
 
 ## Tickets terminés
 
-- [0027 — Autoriser la création d'une Applicationform par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) — parcours HTTP de création réussie et attribution automatique du créateur vérifiés.
+- [0027 — Autoriser la création d'une Applicationform par un demandeur](0027-autoriser-creation-applicationform-demandeur.md) — parcours HTTP de création et attribution automatique du créateur vérifiés le 18 novembre 2026 (`make test.api`, 238 tests et 1 015 assertions).
 - [0024 — Généraliser les associations des départements](0024-generaliser-les-associations-des-departements.md) — priorité haute.
 - [0013 — Mutualiser la présentation des erreurs de validation](0013-mutualiser-la-presentation-des-erreurs-validation.md) — priorité moyenne.
 - [0014 — Détecter et tracer la perte de session](0014-detecter-et-tracer-la-perte-de-session.md) — priorité haute.
@@ -40,14 +40,17 @@ manifestes des sous-workflows sont leur source de vérité opérationnelle.
 - [0019 — Reprendre les quatre zones dans la vue d'une DAE](0019-reprendre-les-quatre-zones-dans-la-vue-dae.md) — vue en lecture seule livrée et couverte par les tests.
 - [0021 — Implémenter les habilitations génériques](0021-implementer-les-habilitations-generiques.md) — vertical d'administration des départements livré.
 - [0029 — Protéger les références socles avec un Behavior commun](0029-proteger-references-socles-behavior-commun.md) — Behavior et parcours Web/API livrés ; l'ADR 0075 reste proposé.
-- [0028 — Améliorer l'IHM des autorisations de champs](0028-ameliorer-ihm-autorisations-champs.md) — tests ORM, API, formulaires Web et migration exécutés.
+- [0028 — Améliorer l'IHM des autorisations de champs](0028-ameliorer-ihm-autorisations-champs.md) — acceptations ORM, API, formulaires Web et migration vérifiées le 18 novembre 2026 (`make test.all`, 621 tests et 2 282 assertions).
 
 ## Séquence de finalisation GDAE V3
 
 Les fiches 0030 à 0039, à la racine de `docs/backlog/`, sont exécutées dans l'ordre du manifeste
 [gdae-v3-completion/manifest.json](gdae-v3-completion/manifest.json). Utiliser
-`bin/cake backlog next gdae-v3-completion` pour obtenir le prochain ticket
-exécutable. Le ticket 0040 est un bonus facultatif hors de cette séquence.
+`bin/cake backlog next gdae-v3-completion` pour identifier la prochaine fiche
+et consulter son statut. Le [ticket 0030](0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md)
+est `Terminé`; les réponses métier encore attendues sont suivies dans les
+tickets concernés. Le 0031 est `Bloqué` par les arbitrages Q-0018-02 à 04.
+Le ticket 0040 est un bonus facultatif hors de cette séquence.
 
 ## Migration vers un gestionnaire de tickets
 

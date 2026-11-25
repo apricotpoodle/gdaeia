@@ -12,10 +12,10 @@ effectué le **19 novembre 2026**. Le ticket 0041 a été ajouté le
 | Périmètre | Total | Terminé | Partiel | Reste à faire |
 |---|---:|---:|---:|---:|
 | Backlog racine historique (`0001`–`0029`) | 29 | 22 | 2 | 5 |
-| Workflow obligatoire `gdae-v3-completion` (`0030`–`0039`) | 10 | 0 | 0 | 10 |
+| Workflow obligatoire `gdae-v3-completion` (`0030`–`0039`) | 10 | 1 | 0 | 9 |
 | Workflow `validation-applicationform` (`0009`–`0021`) | 13 | 13 | 0 | 0 |
 | Workflow `visibilite-manageabilite` (`0001`–`0009`) | 9 | 9 | 0 | 0 |
-| **Total obligatoire** | **61** | **44** | **2** | **15** |
+| **Total obligatoire** | **61** | **45** | **2** | **14** |
 
 Les tickets racine 0002 et 0017 sont partiels. Le code et les tests de
 0017 sont livrés, mais sa configuration métier SEM reste à saisir par
@@ -55,8 +55,8 @@ et met à jour les questions métier avant tout développement dépendant.
 
 | Ticket | Sujet | État |
 |---|---|---|
-| [0030](0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md) | Arbitrer les règles métier et actualiser le périmètre | Prêt |
-| [0031](0031-aligner-dates-jours-travailles-remuneration.md) | Dates, jours travaillés et rémunération | À planifier |
+| [0030](0030-arbitrer-et-actualiser-le-perimetre-gdae-v3.md) | Arbitrer les règles métier et actualiser le périmètre | Terminé |
+| [0031](0031-aligner-dates-jours-travailles-remuneration.md) | Dates, jours travaillés et rémunération | Bloqué |
 | [0032](0032-habiliter-administration-locale-par-service.md) | Administration des références métier par les rôles ADMIN dans leur périmètre | À planifier |
 | [0033](0033-reprendre-une-dae-pendant-son-circuit.md) | Reprise d'une DAE en cours de circuit | À planifier |
 | [0034](0034-finaliser-archivage-et-acces-archives.md) | Archivage et accès aux archives | À planifier |
@@ -69,13 +69,14 @@ et met à jour les questions métier avant tout développement dépendant.
 Le ticket facultatif [0040](0040-parametrer-champs-reinitialises-duplication.md)
 est hors manifeste et ne sera examiné qu'après le 0039.
 
-Les questions Q-0018-02 à Q-0018-04 sur les jours travaillés restent ouvertes
-et font partie des entrées du 0030 ; les règles de visibilité, de période sans
-jour ouvré et de changement de dates (Q-0018-01, 05 et 06) sont décidées.
-Les choix relatifs à €/heure, à la reprise et à l'archivage restent ouverts.
-Les destinataires et déclencheurs des notifications, les dimensions d'écran
-cibles et le maintien en base de `applicationforms.manager_id` sont décidés au
-0030 ; les commandes de notification seront planifiées par Airflow.
+Le [registre des questions](../meetings/questions-ouvertes.md) distingue
+les réponses métier du cadrage approuvé. Q-0018-02 à Q-0018-04 sur les jours
+travaillés, Q-0030-01 à Q-0030-03 sur €/heure, la reprise et la rétention,
+et Q-0030-07 sur les champs PDF additionnels restent ouverts. Le 0030 est
+terminé après leur consignation et la réconciliation documentaire. Le 0031
+est bloqué par Q-0018-02 à Q-0018-04; les tickets 0033, 0034 et 0037 gardent
+leurs bloqueurs Q-0030-02, Q-0030-03 et Q-0030-07. Les acceptations 0027 et
+0028 sont terminées et leur clôture ne fait plus partie de la recette 0039.
 
 ## Tickets historiques réconciliés
 

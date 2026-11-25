@@ -11,10 +11,15 @@
 Adapter la vue de saisie aux dimensions d'écran et au parcours convenus au
 0030, en précisant ce que signifie l'exigence « sans ascenseur ».
 
+La réponse à Q-0030-05 fixe un écran de référence de 1680 × 1050 et une
+fenêtre non maximisée avec une zone de page de 1440 × 900. Un contrôle
+complémentaire utilise une zone de page de 1366 × 768. Le zoom est de 100 %
+aux deux tailles. Le plan approuvé retient Chrome, Edge et Firefox récents.
+
 ## Travail attendu
 
-- [ ] Recueillir les résolutions, facteurs de zoom et navigateurs cibles
-  confirmés au 0030.
+- [ ] Effectuer la recette aux deux tailles de page dans Chrome, Edge et
+  Firefox récents et consigner leurs versions.
 - [ ] Ajuster la disposition des zones et commentaires pour rendre le
   parcours utilisable dans ces conditions, sans masquer de champ ni d'action.
 - [ ] Conserver les règles d'autorisation, les messages de validation et
@@ -45,3 +50,4 @@ Adapter la vue de saisie aux dimensions d'écran et au parcours convenus au
 
 - [ADR 0048 — Découpage de l'IHM Applicationform](../adr/0048-decoupage-ihm-zones-applicationform.md)
 - [ADR 0013 — Architecture frontend JavaScript](../adr/0013-architecture-frontend-js.md)
+- [Questions métier ouvertes](../meetings/questions-ouvertes.md)
