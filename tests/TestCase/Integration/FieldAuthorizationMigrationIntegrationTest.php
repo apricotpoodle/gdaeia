@@ -3,7 +3,6 @@ declare(strict_types=1);
 
 namespace App\Test\TestCase\Integration;
 
-use Cake\Core\Configure;
 use Cake\Database\Connection;
 use Cake\Datasource\ConnectionManager;
 use Cake\TestSuite\TestCase;
@@ -12,6 +11,17 @@ use Migrations\Migrations;
 /** Vérifie la migration historique des cibles d'autorisation. */
 final class FieldAuthorizationMigrationIntegrationTest extends TestCase
 {
+    /** @var list<string> Tables dont les données peuvent changer au rejeu des migrations. */
+    private const MIGRATION_DATA_TABLES = [
+        'authorization_targets',
+        'field_authorizations',
+        'field_definitions',
+        'menus',
+        'permissions',
+        'permission_scopes',
+        'role_permissions',
+    ];
+
     private const MIGRATION_BEFORE_TARGETS = 20261106100000;
 
     private const TARGET_MIGRATION = 20261106110000;
@@ -27,18 +37,8 @@ final class FieldAuthorizationMigrationIntegrationTest extends TestCase
         $migrations = new Migrations();
         $migrations->migrate(['connection' => 'test']);
 
-        $originalFieldAuthorizations = $this->snapshotTable($connection, 'field_authorizations');
-        $originalFieldDefinitions = $this->snapshotTable($connection, 'field_definitions');
+        $originalMigrationData = $this->snapshotMigrationData($connection);
         $originalRoleAutoIncrement = $this->getAutoIncrement($connection, 'roles');
-        $migrationTables = $connection->getSchemaCollection()->listTables();
-        $legacyMigrationTables = Configure::read('Migrations.legacyTables');
-        $migrationTable = $legacyMigrationTables === true
-            || ($legacyMigrationTables !== false && in_array('phinxlog', $migrationTables, true))
-            ? 'phinxlog'
-            : 'cake_migrations';
-        $originalMigrationHistory = $connection->execute(
-            sprintf('SELECT * FROM `%s`', $migrationTable),
-        )->fetchAll('assoc');
         $roleId = null;
 
         try {
@@ -120,21 +120,13 @@ final class FieldAuthorizationMigrationIntegrationTest extends TestCase
                 }
             }
         } finally {
-            try {
-                $migrations->rollback([
-                    'connection' => 'test',
-                    'target' => self::PREVIOUS_MIGRATION,
-                ]);
-            } finally {
-                if ($roleId !== null) {
-                    $connection->delete('field_authorizations', ['role_id' => $roleId]);
-                    $connection->delete('roles', ['id' => $roleId]);
-                }
-                $this->restoreTable($connection, $originalFieldAuthorizations);
-                $this->restoreTable($connection, $originalFieldDefinitions);
-                $this->restoreMigrationHistory($connection, $migrationTable, $originalMigrationHistory);
-                $this->restoreAutoIncrement($connection, 'roles', $originalRoleAutoIncrement);
-            }
+            $this->restoreCurrentMigrationState(
+                $connection,
+                $migrations,
+                $roleId,
+                $originalMigrationData,
+                $originalRoleAutoIncrement,
+            );
         }
     }
 
@@ -145,19 +137,8 @@ final class FieldAuthorizationMigrationIntegrationTest extends TestCase
         $migrations = new Migrations();
         $migrations->migrate(['connection' => 'test']);
 
-        $originalFieldAuthorizations = $this->snapshotTable($connection, 'field_authorizations');
-        $originalTargets = $this->snapshotTable($connection, 'authorization_targets');
+        $originalMigrationData = $this->snapshotMigrationData($connection);
         $originalRoleAutoIncrement = $this->getAutoIncrement($connection, 'roles');
-        $migrationTables = $connection->getSchemaCollection()->listTables();
-        $legacyMigrationTables = Configure::read('Migrations.legacyTables');
-        $migrationTable = $legacyMigrationTables === true
-            || ($legacyMigrationTables !== false && in_array('phinxlog', $migrationTables, true))
-            ? 'phinxlog'
-            : 'cake_migrations';
-        $this->assertContains($migrationTable, $migrationTables);
-        $originalMigrationHistory = $connection->execute(
-            sprintf('SELECT * FROM `%s`', $migrationTable),
-        )->fetchAll('assoc');
         $roleId = null;
 
         try {
@@ -224,35 +205,13 @@ final class FieldAuthorizationMigrationIntegrationTest extends TestCase
                 );
             }
         } finally {
-            try {
-                $this->restoreTable($connection, $originalFieldAuthorizations);
-            } finally {
-                try {
-                    $this->restoreTable($connection, $originalTargets);
-                } finally {
-                    try {
-                        $this->restoreMigrationHistory($connection, $migrationTable, $originalMigrationHistory);
-                        $pending = array_filter(
-                            $migrations->status(['connection' => 'test']),
-                            static fn(array $migration): bool => $migration['status'] === 'down',
-                        );
-                        self::assertSame([], $pending, 'Le schéma doit revenir au niveau courant des migrations.');
-                    } finally {
-                        try {
-                            if ($roleId !== null) {
-                                $connection->delete('roles', ['id' => $roleId]);
-                            }
-                        } finally {
-                            $this->restoreAutoIncrement($connection, 'roles', $originalRoleAutoIncrement);
-                            self::assertSame(
-                                $originalRoleAutoIncrement,
-                                $this->getAutoIncrement($connection, 'roles'),
-                                'La suppression du rôle temporaire doit restaurer AUTO_INCREMENT.',
-                            );
-                        }
-                    }
-                }
-            }
+            $this->restoreCurrentMigrationState(
+                $connection,
+                $migrations,
+                $roleId,
+                $originalMigrationData,
+                $originalRoleAutoIncrement,
+            );
         }
     }
 
@@ -335,14 +294,24 @@ final class FieldAuthorizationMigrationIntegrationTest extends TestCase
         }
     }
 
+    /** Capture les données touchées quand les migrations sont rejouées. */
+    private function snapshotMigrationData(Connection $connection): array
+    {
+        $snapshots = [];
+        foreach (self::MIGRATION_DATA_TABLES as $table) {
+            $snapshots[] = $this->snapshotTable($connection, $table);
+        }
+
+        return $snapshots;
+    }
+
     /**
-     * Capture le DDL, les données et le prochain identifiant d'une table.
+     * Capture les données et le prochain identifiant d'une table.
      *
-     * @return array{table: string, create: string, rows: array, autoIncrement: int|null}
+     * @return array{table: string, rows: array, autoIncrement: int|null}
      */
     private function snapshotTable(Connection $connection, string $table): array
     {
-        $definition = $connection->execute(sprintf('SHOW CREATE TABLE `%s`', $table))->fetch('assoc');
         $status = $connection->execute(
             'SELECT AUTO_INCREMENT FROM information_schema.TABLES
              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table_name',
@@ -351,38 +320,103 @@ final class FieldAuthorizationMigrationIntegrationTest extends TestCase
 
         return [
             'table' => $table,
-            'create' => (string)$definition['Create Table'],
             'rows' => $connection->execute(sprintf('SELECT * FROM `%s`', $table))->fetchAll('assoc'),
             'autoIncrement' => isset($status['AUTO_INCREMENT']) ? (int)$status['AUTO_INCREMENT'] : null,
         ];
     }
 
-    /** Restaure le DDL et les données capturés avant le rollback. */
-    private function restoreTable(Connection $connection, array $snapshot): void
-    {
-        $table = $snapshot['table'];
-        $connection->execute(sprintf('DROP TABLE IF EXISTS `%s`', $table));
-        $connection->execute($snapshot['create']);
-        foreach ($snapshot['rows'] as $row) {
-            $connection->insert($table, $row);
+    /**
+     * Réapplique les migrations récentes et restaure les données sauvegardées.
+     *
+     * @param list<array{table: string, rows: array, autoIncrement: int|null}> $snapshots
+     */
+    private function restoreCurrentMigrationState(
+        Connection $connection,
+        Migrations $migrations,
+        ?int $roleId,
+        array $snapshots,
+        int $originalRoleAutoIncrement,
+    ): void {
+        if ($roleId !== null) {
+            $connection->delete('field_authorizations', ['role_id' => $roleId]);
+            $connection->delete('roles', ['id' => $roleId]);
         }
 
-        if ($snapshot['autoIncrement'] !== null) {
-            $connection->execute(sprintf(
-                'ALTER TABLE `%s` AUTO_INCREMENT = %d',
-                $table,
-                $snapshot['autoIncrement'],
-            ));
+        // Laisse Phinx faire avancer l'historique avec le schéma.
+        $migrations->migrate(['connection' => 'test']);
+
+        $this->restoreTables($connection, $snapshots);
+        $this->restoreAutoIncrement($connection, 'roles', $originalRoleAutoIncrement);
+        self::assertSame(
+            $originalRoleAutoIncrement,
+            $this->getAutoIncrement($connection, 'roles'),
+            'La suppression du rôle temporaire doit restaurer AUTO_INCREMENT.',
+        );
+
+        $pending = array_filter(
+            $migrations->status(['connection' => 'test']),
+            static fn(array $migration): bool => $migration['status'] === 'down',
+        );
+        self::assertSame([], $pending, 'Le schéma doit revenir au niveau courant des migrations.');
+
+        $deliveryTableCount = (int)$connection->execute(
+            'SELECT COUNT(*) FROM information_schema.tables
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :table_name',
+            ['table_name' => 'notification_deliveries'],
+        )->fetchColumn(0);
+        self::assertSame(
+            1,
+            $deliveryTableCount,
+            'La table notification_deliveries doit exister après le nettoyage des tests de migration.',
+        );
+    }
+
+    /** Restaure l'état des tables qui ont été modifiées par les migrations. */
+    private function restoreTables(Connection $connection, array $snapshots): void
+    {
+        $connection->execute('SET FOREIGN_KEY_CHECKS = 0');
+        try {
+            foreach ($snapshots as $snapshot) {
+                $connection->execute(sprintf('DELETE FROM `%s`', $snapshot['table']));
+            }
+
+            foreach ($snapshots as $snapshot) {
+                foreach ($snapshot['rows'] as $row) {
+                    $connection->insert($snapshot['table'], $row);
+                }
+                if ($snapshot['autoIncrement'] !== null) {
+                    $this->restoreAutoIncrement(
+                        $connection,
+                        $snapshot['table'],
+                        $snapshot['autoIncrement'],
+                    );
+                }
+            }
+        } finally {
+            $connection->execute('SET FOREIGN_KEY_CHECKS = 1');
+        }
+
+        foreach ($snapshots as $snapshot) {
+            $rows = $connection->execute(
+                sprintf('SELECT * FROM `%s`', $snapshot['table']),
+            )->fetchAll('assoc');
+            self::assertSame(
+                $this->sortRows($snapshot['rows']),
+                $this->sortRows($rows),
+                sprintf('Les données de %s doivent être restaurées après le test de migration.', $snapshot['table']),
+            );
         }
     }
 
-    /** Restaure les migrations enregistrées avant le test. */
-    private function restoreMigrationHistory(Connection $connection, string $table, array $rows): void
+    /**
+     * @param array<int, array<string, mixed>> $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function sortRows(array $rows): array
     {
-        $connection->execute(sprintf('DELETE FROM `%s`', $table));
-        foreach ($rows as $row) {
-            $connection->insert($table, $row);
-        }
+        usort($rows, static fn(array $left, array $right): int => strcmp(serialize($left), serialize($right)));
+
+        return $rows;
     }
 
     /** Retourne le prochain identifiant automatique d'une table MySQL. */

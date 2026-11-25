@@ -77,7 +77,9 @@ class AppMailerTest extends TestCase
         $this->assertLogContains('Échec SMTP');
         $this->assertLogContains(hash('sha256', 'validateur@example.test'));
         $this->assertLogDoesNotContain('validateur@example.test');
-        $this->assertLogContains('Relais SMTP indisponible pour ' . hash('sha256', 'validateur@example.test'));
+        $this->assertLogContains(
+            'Relais SMTP indisponible pour sha256:' . hash('sha256', 'validateur@example.test'),
+        );
     }
 
     private function assertLogContains(string $expected): void
