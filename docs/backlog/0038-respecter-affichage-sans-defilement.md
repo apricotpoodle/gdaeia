@@ -1,6 +1,6 @@
 # 0038 — Respecter l'affichage sans défilement
 
-**Statut :** À planifier
+**Statut :** En cours
 
 **Priorité :** Moyenne — ergonomie de saisie
 
@@ -16,18 +16,23 @@ fenêtre non maximisée avec une zone de page de 1440 × 900. Un contrôle
 complémentaire utilise une zone de page de 1366 × 768. Le zoom est de 100 %
 aux deux tailles. Le plan approuvé retient Chrome, Edge et Firefox récents.
 
+Pour ce ticket, « sans ascenseur » signifie que le document ne défile pas
+globalement. Les quatre zones de saisie restent affichées ensemble; une zone
+dont le contenu dépasse sa hauteur disponible défile indépendamment et peut
+recevoir le focus clavier. Les actions de formulaire restent visibles. Le
+panneau des commentaires conserve son défilement interne.
+
 ## Travail attendu
 
 - [ ] Effectuer la recette aux deux tailles de page dans Chrome, Edge et
-  Firefox récents et consigner leurs versions.
-- [ ] Ajuster la disposition des zones et commentaires pour rendre le
-  parcours utilisable dans ces conditions, sans masquer de champ ni d'action.
-- [ ] Conserver les règles d'autorisation, les messages de validation et
-  l'accessibilité clavier.
-- [ ] Si la solution amende l'ADR 0048 accepté, créer un nouvel ADR au statut
-  `Proposé` et mettre à jour son index ; ne pas réécrire l'ADR existant.
-- [ ] Ajouter une vérification visuelle reproductible aux dimensions
-  convenues et documenter ses limites.
+  Firefox récents et consigner les versions utilisées.
+- [x] Ajuster la disposition des quatre zones de saisie et garder les actions
+  du formulaire accessibles; les zones longues défilent indépendamment.
+- [x] Conserver les règles d'autorisation et les erreurs de validation; rendre
+  chaque région de saisie accessible au clavier.
+- [x] Vérifier l'ADR 0048 : les cinq zones fonctionnelles et le panneau de
+  commentaires restent conformes; aucun nouvel ADR n'est nécessaire.
+- [x] Documenter une recette visuelle répétable et ses limites ci-dessous.
 
 ## Critères d'acceptation
 
@@ -45,6 +50,55 @@ aux deux tailles. Le plan approuvé retient Chrome, Edge et Firefox récents.
 - `make test.style` si des tests sont modifiés
 - `make cs.check` et `make stan` si du PHP est modifié
 - Recette visuelle aux résolutions et navigateurs convenus
+
+## Recette visuelle reproductible
+
+Utiliser des données synthétiques et un compte de test autorisé. Sur les pages
+de création et de modification :
+
+1. Régler le zoom navigateur à 100 %.
+2. Contrôler une zone de page de 1440 × 900 dans une fenêtre non maximisée sur
+   un écran de référence de 1680 × 1050, puis une zone de page de 1366 × 768.
+3. Vérifier que les quatre zones restent visibles, que leurs titres ne
+   disparaissent pas pendant le défilement interne et que Créer, Enregistrer
+   ou Annuler reste visible.
+4. Parcourir les régions et les champs avec Tabulation. Dans une région longue,
+   utiliser les flèches ou Page suivante/précédente et vérifier que les champs
+   du début et de la fin restent atteignables.
+5. Soumettre un formulaire incomplet et vérifier au clavier l'accès au champ
+   invalide et à son message. Dans la page de modification, ouvrir aussi le
+   panneau Commentaires et vérifier son parcours clavier.
+6. Dans les outils de développement, vérifier l'absence de défilement global :
+
+   ```js
+   const page = document.scrollingElement;
+   page.scrollHeight <= page.clientHeight && page.scrollWidth <= page.clientWidth;
+   ```
+
+7. Répéter les contrôles dans Chrome, Edge et Firefox récents; consigner le
+   navigateur, sa version et la taille réelle de la zone de page.
+
+Cette recette est manuelle et ne compare pas les captures à une image de
+référence. Elle vérifie le document, les régions défilantes, les actions et le
+parcours clavier avec les données utilisées; elle ne remplace pas les essais
+sur les postes métier ni une vérification exhaustive des technologies
+d'assistance.
+
+## Vérifications exécutées le 26 novembre 2026
+
+- `make test.unit` : 244 tests réussis.
+- `make test.api` : 317 tests réussis.
+- `make test.style`, `make cs.check` et `make stan` : réussis.
+- Chrome 158.0.8127.88 : captures headless des pages de création et de
+  modification aux zones de page 1440 × 900 et 1366 × 768. Les instantanés
+  proviennent des fixtures synthétiques des tests HTTP; les quatre zones et
+  les actions restent visibles, avec défilement limité aux zones longues.
+- Firefox 153.7.0esr est installé, mais sa capture headless échoue dans cet
+  environnement (`RenderCompositorSWGL failed mapping default framebuffer`).
+  Edge n'est pas installé.
+- La recette clavier et les essais dans les trois navigateurs restent à
+  exécuter dans une session interactive; le pont de navigateur de cette
+  session est indisponible.
 
 ## Références
 

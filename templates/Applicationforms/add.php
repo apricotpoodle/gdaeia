@@ -26,6 +26,7 @@ $this->Breadcrumbs->add(__('Demandes de recrutement'), ['action' => 'index']);
 $this->Breadcrumbs->add(__('Nouvelle demande'));
 
 // Inclusion des assets CSS et JS requis
+$this->Html->css('applicationforms', ['block' => true]);
 $this->Html->css('/assets/treeselectjs/treeselectjs', ['block' => true]);
 $this->Html->script('/assets/treeselectjs/treeselectjs.umd', ['block' => true]);
 $this->Html->script('views/Applicationforms/applicationform-cgr', ['type' => 'module', 'block' => true]);
@@ -34,9 +35,9 @@ $this->Html->script('views/Applicationforms/applicationform-candidate', ['block'
 $this->Html->script('views/Applicationforms/salary-calculation', ['type' => 'module', 'block' => true]);
 ?>
 
-<div class="container-fluid mt-3">
+<div class="container-fluid applicationform-form-page">
     <!-- Barre d'entête & Actions -->
-    <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+    <div class="applicationform-form-header d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
         <h2>
             <i class="fa-solid fa-file-circle-plus text-primary me-2"></i>
             <?= __('Créer une nouvelle demande de recrutement') ?>
@@ -48,13 +49,13 @@ $this->Html->script('views/Applicationforms/salary-calculation', ['type' => 'mod
     </div>
 
     <!-- Formulaire Principal -->
-    <?= $this->Form->create($applicationform, ['id' => 'applicationform-main-form', 'class' => 'needs-validation']) ?>
+    <?= $this->Form->create($applicationform, ['id' => 'applicationform-main-form', 'class' => 'needs-validation applicationform-form']) ?>
 
-    <div class="row g-4">
+    <div class="row applicationform-form-grid">
 
         <!-- ZONE 1 : ADMINISTRATION -->
         <?php if ($identity->can('viewZoneAdmin', $applicationform)): ?>
-            <div class="col-12 col-lg-6">
+            <section class="applicationform-form-zone" role="region" tabindex="0" aria-label="<?= h(__('Zone 1 : Administration et candidat')) ?>">
                 <?= $this->element('Applicationforms/zone_admin', [
                     'applicationform' => $applicationform,
                     'canLoadCgrConfig' => $canLoadCgrConfig,
@@ -65,24 +66,24 @@ $this->Html->script('views/Applicationforms/salary-calculation', ['type' => 'mod
                     'fieldSchema' => $fieldSchema ?? [],
                     'canEditAdmin' => $identity->can('editZoneAdmin', $applicationform),
                 ]) ?>
-            </div>
+            </section>
         <?php endif; ?>
 
         <!-- ZONE 2 : CARACTÉRISTIQUES DU CONTRAT -->
         <?php if ($identity->can('viewZoneContrat', $applicationform)): ?>
-            <div class="col-12 col-lg-6">
+            <section class="applicationform-form-zone" role="region" tabindex="0" aria-label="<?= h(__('Zone 2 : Caractéristiques du contrat')) ?>">
                 <?= $this->element('Applicationforms/zone_contract', [
                     'applicationform' => $applicationform,
                     'contracttypes' => $contracttypes ?? [],
                     'hiringreasons' => $hiringreasons ?? [],
                     'fieldSchema' => $fieldSchema ?? [],
                 ]) ?>
-            </div>
+            </section>
         <?php endif; ?>
 
         <!-- ZONE 3 : RÉMUNÉRATION & TEMPS DE TRAVAIL -->
         <?php if ($identity->can('viewZoneRemuneration', $applicationform)): ?>
-            <div class="col-12 col-lg-6">
+            <section class="applicationform-form-zone" role="region" tabindex="0" aria-label="<?= h(__('Zone 3 : Temps de travail et rémunération')) ?>">
                 <?= $this->element('Applicationforms/zone_remuneration', [
                     'applicationform' => $applicationform,
                     'professionalcategories' => $professionalcategories ?? [],
@@ -91,12 +92,12 @@ $this->Html->script('views/Applicationforms/salary-calculation', ['type' => 'mod
                     'fieldSchema' => $fieldSchema ?? [],
                     'canEditRemuneration' => $identity->can('editZoneRemuneration', $applicationform),
                 ]) ?>
-            </div>
+            </section>
         <?php endif; ?>
 
         <!-- ZONE 4 : RÉSERVÉS RH / ADMIN -->
         <?php if ($identity->can('viewZoneReserves', $applicationform)): ?>
-            <div class="col-12 col-lg-6">
+            <section class="applicationform-form-zone" role="region" tabindex="0" aria-label="<?= h(__('Zone 4 : Champs réservés Administration et RH')) ?>">
                 <?= $this->element('Applicationforms/zone_reserves', [
                     'applicationform' => $applicationform,
                     'budgetfeatures' => $budgetfeatures ?? [],
@@ -104,13 +105,13 @@ $this->Html->script('views/Applicationforms/salary-calculation', ['type' => 'mod
                     'fieldSchema' => $fieldSchema ?? [],
                     'canEditReserves' => $identity->can('editZoneReserves', $applicationform),
                 ]) ?>
-            </div>
+            </section>
         <?php endif; ?>
 
     </div>
 
     <!-- Actions bas de page -->
-    <div class="mt-4 mb-5 text-end">
+    <div class="applicationform-form-actions text-end">
         <?= $this->Action->render(\App\View\Action\ApplicationformsActions::index(__('Annuler'), 'btn btn-secondary me-2')) ?>
         <?= $this->Form->button(
             '<i class="fa-solid fa-paper-plane me-1"></i> ' . __('Créer la demande'),

@@ -77,6 +77,36 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertStringContainsString('03/07/2026', $body);
     }
 
+    public function testLaCreationRendLesZonesDeSaisieDefilantesEtAccessiblesAuClavier(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/add');
+
+        $this->assertResponseOk();
+        $body = (string)$this->_response->getBody();
+        $this->assertStringContainsString('applicationform-form-grid', $body);
+        $this->assertSame(4, substr_count($body, 'class="applicationform-form-zone"'));
+        $this->assertSame(4, substr_count($body, 'role="region" tabindex="0"'));
+        $this->assertStringContainsString('Créer la demande', $body);
+        $this->assertStringContainsString('applicationforms.css', $body);
+    }
+
+    public function testLEditionRendLesZonesDeSaisieDefilantesEtAccessiblesAuClavier(): void
+    {
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/edit/1');
+
+        $this->assertResponseOk();
+        $body = (string)$this->_response->getBody();
+        $this->assertStringContainsString('applicationform-form-grid', $body);
+        $this->assertSame(4, substr_count($body, 'class="applicationform-form-zone"'));
+        $this->assertSame(4, substr_count($body, 'role="region" tabindex="0"'));
+        $this->assertStringContainsString('Enregistrer les modifications', $body);
+        $this->assertStringContainsString('applicationforms.css', $body);
+    }
+
     public function testLaZoneReserveeNestPasExposeeSansDroitDeConsultation(): void
     {
         $this->grantPermission(User::ROLE_DEMANDEUR, 'applicationforms', 'read', 'self');

@@ -2,6 +2,76 @@
     min-height: 0;
 }
 
+.applicationform-form-page {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    margin-top: 0.75rem;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.applicationform-form-header {
+    flex: 0 0 auto;
+}
+
+.applicationform-form {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.applicationform-form-grid {
+    display: grid;
+    flex: 1 1 auto;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, minmax(0, 1fr));
+    margin: 0;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.applicationform-form-zone {
+    min-height: 0;
+    min-width: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-gutter: stable;
+}
+
+.applicationform-form-zone:focus-visible {
+    border-radius: var(--bs-card-border-radius);
+    outline: 2px solid var(--bs-primary);
+    outline-offset: 2px;
+}
+
+.applicationform-form-zone > .card {
+    height: 100%;
+    min-height: 100%;
+}
+
+.applicationform-form-zone > .card > .card-header {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.applicationform-form-actions {
+    flex: 0 0 auto;
+    padding-top: 0.75rem;
+}
+
+@media (max-width: 991.98px) {
+    .applicationform-form-grid {
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: repeat(4, minmax(12rem, 1fr));
+        overflow-y: auto;
+    }
+}
+
 .applicationform-view #viewTabsContent,
 .applicationform-view #validation-pane {
     min-height: 0;
