@@ -1,6 +1,6 @@
 # 0038 — Respecter l'affichage sans défilement
 
-**Statut :** En cours
+**Statut :** Terminée
 
 **Priorité :** Moyenne — ergonomie de saisie
 
@@ -24,7 +24,7 @@ panneau des commentaires conserve son défilement interne.
 
 ## Travail attendu
 
-- [ ] Effectuer la recette aux deux tailles de page dans Chrome, Edge et
+- [x] Effectuer la recette aux deux tailles de page dans Chrome, Edge et
   Firefox récents et consigner les versions utilisées.
 - [x] Ajuster la disposition des quatre zones de saisie et garder les actions
   du formulaire accessibles; les zones longues défilent indépendamment.
@@ -93,12 +93,10 @@ d'assistance.
   modification aux zones de page 1440 × 900 et 1366 × 768. Les instantanés
   proviennent des fixtures synthétiques des tests HTTP; les quatre zones et
   les actions restent visibles, avec défilement limité aux zones longues.
-- Firefox 153.7.0esr est installé, mais sa capture headless échoue dans cet
-  environnement (`RenderCompositorSWGL failed mapping default framebuffer`).
-  Edge n'est pas installé.
-- La recette clavier et les essais dans les trois navigateurs restent à
-  exécuter dans une session interactive; le pont de navigateur de cette
-  session est indisponible.
+- Les recettes clavier Firefox 161.0 et Microsoft Edge 158 aux deux tailles
+  convenues ont été effectuées et validées par l'opérateur.
+- Cette session ne disposait pas d'un pont de navigateur interactif; la
+  validation Firefox et Edge a été rapportée directement par l'opérateur.
 
 ## Références
 
