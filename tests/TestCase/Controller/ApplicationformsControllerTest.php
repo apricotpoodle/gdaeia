@@ -104,6 +104,20 @@ class ApplicationformsControllerTest extends TestCase
         $this->assertStringStartsWith('%PDF', (string)$this->_response->getBody());
     }
 
+    public function testLePdfResteImprimableSansLesReferencesBudgetairesOptionnelles(): void
+    {
+        ConnectionManager::get('test')->update('applicationforms', [
+            'budgetfeature_id' => null,
+        ], ['id' => 1]);
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => User::ROLE_ADMIN])]);
+
+        $this->get('/applicationforms/viewpdf/1');
+
+        $this->assertResponseOk();
+        $this->assertHeaderContains('Content-Type', 'application/pdf');
+        $this->assertStringStartsWith('%PDF', (string)$this->_response->getBody());
+    }
+
     public function testLePdfRefuseUneDemandeHorsPerimetre(): void
     {
         $this->session(['Auth' => new User(['id' => 2, 'issuperuser' => false, 'role_id' => User::ROLE_DEMANDEUR])]);

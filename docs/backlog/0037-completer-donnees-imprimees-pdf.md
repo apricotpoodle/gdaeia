@@ -1,10 +1,13 @@
 # 0037 — Compléter les données imprimées du PDF
 
-**Statut :** À planifier
+**Statut :** En cours
 
 **Priorité :** Moyenne — lisibilité des décisions
 
 **Dépendance :** [0036 — Ajouter le compteur des demandes à valider](0036-ajouter-compteur-demandes-a-valider.md).
+
+La validation du Contrôle de gestion est prise en charge. Les autres champs
+d'impression restent en attente de la réponse à Q-0030-07.
 
 ## Objectif
 
@@ -14,13 +17,13 @@ métier (Q-0030-07). Les champs additionnels attendent cette réponse.
 
 ## Travail attendu
 
-- [ ] Afficher la validation du Contrôle de gestion avec au moins deux lignes
+- [x] Afficher la validation du Contrôle de gestion avec au moins deux lignes
   visibles, sans tronquer le contenu pertinent.
 - [ ] Ajouter les autres champs d'impression une fois la réponse à
   Q-0030-07 consignée, avec leurs règles de formatage.
-- [ ] Respecter les autorisations de champs et de zones déjà appliquées à la
+- [x] Respecter les autorisations de champs et de zones déjà appliquées à la
   consultation Web.
-- [ ] Vérifier les sauts de page et la lisibilité du PDF généré.
+- [x] Vérifier les sauts de page et la lisibilité du PDF généré.
 
 ## Critères d'acceptation
 
@@ -37,6 +40,12 @@ métier (Q-0030-07). Les champs additionnels attendent cette réponse.
 - `make test.api` pour la génération PDF et les autorisations
 - `make test.style` si des tests sont modifiés
 - `make cs.check` et `make stan` si du PHP est modifié
+
+Vérifié le 26 novembre 2026 : `make test.unit` (244 tests),
+`make test.api` (315 tests), `make test.style`, `make cs.check`,
+`make stan` et `make test.database.check` passent. Le rendu mPDF A4 a été
+inspecté : le champ occupe deux lignes lisibles sans coupure et le document
+de contrôle tient sur une page.
 
 ## Références
 

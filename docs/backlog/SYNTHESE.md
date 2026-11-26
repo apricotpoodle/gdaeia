@@ -62,7 +62,7 @@ et met à jour les questions métier avant tout développement dépendant.
 | [0034](0034-finaliser-archivage-et-acces-archives.md) | Archivage et accès aux archives | Terminé |
 | [0035](0035-completer-notifications-gdae.md) | Notifications quotidiennes et hebdomadaires | À planifier |
 | [0036](0036-ajouter-compteur-demandes-a-valider.md) | Compteur et filtre des DAE à valider | À planifier |
-| [0037](0037-completer-donnees-imprimees-pdf.md) | Données imprimées du PDF | À planifier |
+| [0037](0037-completer-donnees-imprimees-pdf.md) | Données imprimées du PDF | En cours |
 | [0038](0038-respecter-affichage-sans-defilement.md) | Affichage selon les dimensions convenues | À planifier |
 | [0039](0039-configurer-et-recetter-gdae-v3.md) | Configuration et recette transversale | À planifier |
 
@@ -73,7 +73,9 @@ Le [registre des questions](../meetings/questions-ouvertes.md) distingue
 les réponses métier du cadrage approuvé. Q-0018-02 à Q-0018-04 et Q-0030-01
 sont consignées et appliquées par le 0031. Q-0030-02 et Q-0030-03 sur la
 reprise et la rétention, ainsi que Q-0030-07 sur les champs PDF additionnels,
-restent ouverts et bloquent respectivement les tickets 0033, 0034 et 0037.
+restent ouverts et bloquent respectivement les tickets 0033, 0034 et la
+finalisation du ticket 0037. La validation du Contrôle de gestion est déjà
+imprimée ; les autres champs seront ajoutés après la réponse métier.
 Les acceptations 0027 et 0028 sont terminées et leur clôture ne fait plus
 partie de la recette 0039.
 

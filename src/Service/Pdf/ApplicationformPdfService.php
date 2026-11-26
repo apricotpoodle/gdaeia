@@ -6,6 +6,7 @@ namespace App\Service\Pdf;
 use App\Model\Entity\Applicationform;
 use App\Model\Entity\Applicationvalidationstep;
 use App\Model\Entity\Period;
+use App\Service\Metadata\FieldMetadataProviderInterface;
 use App\Service\Metadata\FieldMetadataService;
 use App\Service\Security\FieldAuthorizationService;
 use Authorization\IdentityInterface;
@@ -17,8 +18,29 @@ use Mpdf\Output\Destination;
 /** Produit le PDF sécurisé d'une demande de recrutement. */
 final class ApplicationformPdfService
 {
-    /** @param \App\Service\Metadata\FieldMetadataService|null $metadata Fournisseur de métadonnées injectable. */
-    public function __construct(private readonly ?FieldMetadataService $metadata = null)
+    /** @var array<string, string> Autorisation de zone appliquée à chaque champ imprimé. */
+    private const FIELD_ZONE_PERMISSIONS = [
+        'jobtitle' => 'viewZoneAdmin',
+        'department_id' => 'viewZoneAdmin',
+        'candidate_name' => 'viewZoneAdmin',
+        'cgr' => 'viewZoneAdmin',
+        'begin_at' => 'viewZoneContrat',
+        'end_at' => 'viewZoneContrat',
+        'contracttype_id' => 'viewZoneContrat',
+        'hiringreason_id' => 'viewZoneContrat',
+        'reasonforreplacement' => 'viewZoneContrat',
+        'professionalcategory_id' => 'viewZoneRemuneration',
+        'worktime_id' => 'viewZoneRemuneration',
+        'grossremuneration' => 'viewZoneRemuneration',
+        'period_id' => 'viewZoneRemuneration',
+        'workingtimedistribution' => 'viewZoneRemuneration',
+        'control_management_validation' => 'viewZoneReserves',
+        'budgetfeature_id' => 'viewZoneReserves',
+        'qualification' => 'viewZoneReserves',
+    ];
+
+    /** @param \App\Service\Metadata\FieldMetadataProviderInterface|null $metadata Fournisseur de métadonnées injectable. */
+    public function __construct(private readonly ?FieldMetadataProviderInterface $metadata = null)
     {
     }
 
@@ -70,7 +92,7 @@ final class ApplicationformPdfService
             'jobtitle' => [$metadata->label('Applicationforms', 'jobtitle'), $applicationform->jobtitle],
             'department_id' => [
                 $metadata->label('Applicationforms', 'department_id'),
-                $applicationform->department->name ?? $applicationform->department->code,
+                $applicationform->department->name ?? $applicationform->department->code ?? null,
             ],
             'begin_at' => [
                 $metadata->label('Applicationforms', 'begin_at'),
@@ -86,24 +108,28 @@ final class ApplicationformPdfService
             ],
             'contracttype_id' => [
                 $metadata->label('Applicationforms', 'contracttype_id'),
-                $applicationform->contracttype->name ?? $applicationform->contracttype->code,
+                $applicationform->contracttype->name ?? $applicationform->contracttype->code ?? null,
             ],
             'hiringreason_id' => [
                 $metadata->label('Applicationforms', 'hiringreason_id'),
-                $applicationform->hiringreason->name,
+                $applicationform->hiringreason?->name,
             ],
             'professionalcategory_id' => [
                 $metadata->label('Applicationforms', 'professionalcategory_id'),
-                $applicationform->professionalcategory->name,
+                $applicationform->professionalcategory?->name,
             ],
             'worktime_id' => [
                 $metadata->label('Applicationforms', 'worktime_id'),
-                $applicationform->worktime->name,
+                $applicationform->worktime?->name,
             ],
             'cgr' => [$metadata->label('Applicationforms', 'cgr'), $applicationform->cgr],
+            'control_management_validation' => [
+                __('Validation Contrôle de gestion'),
+                $applicationform->control_management_validation,
+            ],
             'budgetfeature_id' => [
                 $metadata->label('Applicationforms', 'budgetfeature_id'),
-                $applicationform->budgetfeature->name,
+                $applicationform->budgetfeature?->name,
             ],
             'grossremuneration' => [
                 $metadata->label('Applicationforms', 'grossremuneration'),
@@ -111,7 +137,7 @@ final class ApplicationformPdfService
             ],
             'period_id' => [
                 $metadata->label('Applicationforms', 'period_id'),
-                $applicationform->period->get(Period::FIELD_NAME),
+                $applicationform->period?->get(Period::FIELD_NAME),
             ],
             'qualification' => [
                 $metadata->label('Applicationforms', 'qualification'),
@@ -127,14 +153,26 @@ final class ApplicationformPdfService
             ],
         ];
         foreach ($fields as $field => [$label, $value]) {
-            if (!$this->isVisible($schema, $field) || $value === null || $value === '') {
+            if (
+                !$this->isVisible($schema, $field, $identity, $applicationform)
+                || $value === null
+                || $value === ''
+            ) {
                 continue;
             }
-            $rows[] = sprintf(
-                '<tr><th>%s</th><td>%s</td></tr>',
-                $this->escape($label),
-                $this->escape((string)$value),
-            );
+            if ($field === 'control_management_validation') {
+                $rows[] = sprintf(
+                    '<tr><th>%s</th><td><div class="multiline">%s</div></td></tr>',
+                    $this->escape($label),
+                    nl2br($this->escape((string)$value), false),
+                );
+            } else {
+                $rows[] = sprintf(
+                    '<tr><th>%s</th><td>%s</td></tr>',
+                    $this->escape($label),
+                    $this->escape((string)$value),
+                );
+            }
         }
 
         $workflowRows = array_map(
@@ -151,6 +189,7 @@ final class ApplicationformPdfService
             . '.data{width:100%;border-collapse:collapse}'
             . '.data th{width:34%;text-align:left;background:#eef4fb}'
             . '.data th,.data td{border:1px solid #cfd8dc;padding:6px}'
+            . '.multiline{min-height:2.8em;line-height:1.4;white-space:pre-wrap;word-wrap:break-word}'
             . '.workflow{width:100%;border-collapse:collapse}'
             . '.workflow th{background:#1565c0;color:#fff}'
             . '.workflow th,.workflow td{border:1px solid #cfd8dc;padding:5px}'
@@ -168,9 +207,20 @@ final class ApplicationformPdfService
     }
 
     /** @param array<string, string> $schema */
-    private function isVisible(array $schema, string $field): bool
-    {
-        return !isset($schema[$field]) || strtoupper($schema[$field]) !== 'NONE';
+    private function isVisible(
+        array $schema,
+        string $field,
+        IdentityInterface $identity,
+        Applicationform $applicationform,
+    ): bool {
+        $access = $schema[$field] ?? ($schema === [] ? null : ($schema['base'] ?? 'NONE'));
+        if ($access !== null && strtoupper($access) === 'NONE') {
+            return false;
+        }
+
+        $zonePermission = self::FIELD_ZONE_PERMISSIONS[$field] ?? null;
+
+        return $zonePermission === null || $identity->can($zonePermission, $applicationform);
     }
 
     /** Construit une ligne du tableau du cycle de validation. */

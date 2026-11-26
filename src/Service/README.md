@@ -65,10 +65,12 @@ masse.
 ## Production PDF des DAE
 
 `Pdf/ApplicationformPdfService` génère le document PDF d'une DAE avec mPDF.
-Le service reçoit l'identité courante, réutilise la matrice
-`FieldAuthorizations` et ne rend que les champs autorisés. Le cycle de
-validation est lu depuis ses étapes immuables ; ses statuts sont affichés
-avec un libellé et un renforcement par couleur. L'action Web
+Le service reçoit l'identité courante et applique à chaque champ imprimé les
+Policies de visibilité des zones ainsi que les autorisations de champs. La
+validation du Contrôle de gestion conserve ses retours à la ligne et dispose
+d'une hauteur minimale de deux lignes ; une valeur absente reste omise. Le
+cycle de validation est lu depuis ses étapes immuables ; ses statuts sont
+affichés avec un libellé et un renforcement par couleur. L'action Web
 `/applicationforms/viewpdf/{id}` est protégée par `ApplicationformPolicy` et
 retourne le document inline avec un nom `dae-{id}.pdf`.
 
