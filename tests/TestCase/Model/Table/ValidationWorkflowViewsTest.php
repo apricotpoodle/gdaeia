@@ -101,6 +101,7 @@ class ValidationWorkflowViewsTest extends TestCase
 
         $this->assertSame(2, (int)$this->workflowStatus()->validationstatus_id);
         $this->assertSame(0.0, (float)$this->workflowStatus()->valid_percentage);
+        $this->assertTrue((bool)$this->workflowStatus()->en_cours);
         $this->assertSame(1, (int)$this->currentRole()->validator_role_id);
         $this->assertCount(0, $this->visas()->all()->toList());
 
