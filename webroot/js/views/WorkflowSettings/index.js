@@ -1,18 +1,28 @@
 import { FlashManager } from '../../core/FlashManager.js';
 import { TabulatorFactory } from '../../core/Tabulator/TabulatorFactory.js';
+import { TabulatorCellEditHandler } from '../../core/Tabulator/TabulatorCellEditHandler.js';
+import { TabulatorMutationClient } from '../../core/Tabulator/TabulatorMutationClient.js';
 import { globalTabulatorObserver } from '../../core/Tabulator/TabulatorObserver.js';
+import {
+    createSettingColumns,
+    createWorkflowSettingRequest,
+} from './settings-grid.js';
 
 const tableSelector = '#validation-comment-templates-grid';
+const validationSettingsSelector = '#workflow-validation-settings-grid';
+const daeSettingsSelector = '#workflow-applicationforms-settings-grid';
 const table = TabulatorFactory.createWorkflowCommentTemplatesGrid(tableSelector);
 const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content') || '';
 const form = document.querySelector('#validation-comment-template-form');
+const tablesByPanel = { '#workflow-settings-comments-panel': table };
 
 async function readJson(response, fallbackMessage) {
-    const payload = await response.json();
-    if (!response.ok || payload.success === false) {
-        throw new Error(payload.message || fallbackMessage);
+    const payload = await response.json().catch(() => null);
+    if (!response.ok || payload?.success === false) {
+        throw new Error(payload?.message || fallbackMessage);
     }
-    return payload;
+
+    return payload || {};
 }
 
 function resetForm() {
@@ -40,90 +50,128 @@ function editTemplate(template) {
     form.classList.remove('d-none');
 }
 
-async function saveDefaultDueHours() {
-    const input = document.querySelector('#validation-default-due-hours');
-    const defaultDueHours = Number(input.value);
-    if (!Number.isInteger(defaultDueHours) || defaultDueHours < 1) {
-        FlashManager.warning('Le délai global doit être un entier positif.');
-        return;
-    }
-    await readJson(await fetch('/api/workflow-settings/default-due-hours.json', {
-        method: 'POST',
-        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-        body: JSON.stringify({ default_due_hours: defaultDueHours }),
-    }), 'Impossible d’enregistrer le délai global.');
-    FlashManager.success('Délai global enregistré.');
-}
-
-async function loadDefaultDueHours() {
-    const payload = await readJson(await fetch('/api/workflow-settings/default-due-hours.json', {
+async function loadJson(url, fallbackMessage) {
+    return readJson(await fetch(url, {
         headers: { Accept: 'application/json' },
-    }), 'Impossible de charger le délai global.');
-    document.querySelector('#validation-default-due-hours').value = payload.data.default_due_hours;
+    }), fallbackMessage);
 }
 
-async function saveKCoefficient() {
-    const input = document.querySelector('#salary-k-coefficient');
-    const coefficient = Number(input.value.trim().replace(',', '.'));
-    if (!Number.isFinite(coefficient) || coefficient <= 0) {
-        FlashManager.warning('Le coefficient k doit être un nombre strictement positif.');
-        return;
-    }
-    const payload = await readJson(await fetch('/api/workflow-settings/k-coefficient.json', {
-        method: 'POST',
-        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-        body: JSON.stringify({ k_coefficient: coefficient }),
-    }), 'Impossible d’enregistrer le coefficient k.');
-    input.value = String(payload.k_coefficient);
-    FlashManager.success('Coefficient k/mois enregistré.');
-}
-
-async function loadKCoefficient() {
-    const payload = await readJson(await fetch('/api/workflow-settings/k-coefficient.json', {
-        headers: { Accept: 'application/json' },
-    }), 'Impossible de charger le coefficient k.');
-    document.querySelector('#salary-k-coefficient').value = String(payload.k_coefficient);
-}
-
-async function saveBlockedAfterBusinessDays() {
-    const input = document.querySelector('#validation-blocked-after-business-days');
-    const days = Number(input.value);
-    if (!Number.isInteger(days) || days < 1) {
-        FlashManager.warning('Le délai de blocage doit être un entier positif.');
-        return;
-    }
-    await readJson(await fetch('/api/workflow-settings/blocked-after-business-days.json', {
-        method: 'POST',
-        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-        body: JSON.stringify({ blocked_after_business_days: days }),
-    }), 'Impossible d’enregistrer le délai de blocage.');
-    FlashManager.success('Délai de détection enregistré.');
-}
-
-async function loadBlockedAfterBusinessDays() {
-    const payload = await readJson(await fetch('/api/workflow-settings/blocked-after-business-days.json', { headers: { Accept: 'application/json' } }), 'Impossible de charger le délai de blocage.');
-    document.querySelector('#validation-blocked-after-business-days').value = payload.data.blocked_after_business_days;
-}
-
-async function saveCommentRequirements() {
-    const requirements = {
-        accepter: document.querySelector('#validation-comment-required-accept').checked,
-        refuser: document.querySelector('#validation-comment-required-reject').checked,
+function createSettingsGrid(selector, rows) {
+    const responseFieldByKey = {
+        'validation.default_due_hours': 'default_due_hours',
+        'validation.blocked_after_business_days': 'blocked_after_business_days',
+        'salary.k_coefficient': 'k_coefficient',
     };
-    await readJson(await fetch('/api/workflow-settings/comment-requirements.json', {
-        method: 'POST',
-        headers: { Accept: 'application/json', 'Content-Type': 'application/json', 'X-CSRF-Token': csrfToken },
-        body: JSON.stringify(requirements),
-    }), 'Impossible d’enregistrer les obligations de commentaire.');
-    FlashManager.success('Obligations de commentaire enregistrées.');
+    const handler = new TabulatorCellEditHandler({
+        editableFields: ['value'],
+        requestFactory: (cell) => createWorkflowSettingRequest(
+            cell.getRow().getData(),
+            cell.getValue(),
+        ),
+        responseMapper: (payload, cell) => {
+            const setting = cell.getRow().getData();
+            if (setting.key === 'validation.comment_required.accept') {
+                return { value: payload.comment_requirements?.accepter };
+            }
+            if (setting.key === 'validation.comment_required.reject') {
+                return { value: payload.comment_requirements?.refuser };
+            }
+            const responseField = responseFieldByKey[setting.key];
+
+            return responseField ? { value: payload[responseField] } : {};
+        },
+        client: new TabulatorMutationClient(),
+        onSuccess: (_payload, cell) => {
+            FlashManager.success(`Paramètre « ${cell.getRow().getData().label} » enregistré.`);
+        },
+        onError: (error) => FlashManager.error(error.message),
+    });
+
+    return TabulatorFactory.createBaseGrid(selector)
+        .setLocalData(rows)
+        .setColumnDefaults({ headerSort: false, tooltip: true })
+        .setColumns(createSettingColumns())
+        .setCellEditHandler(handler)
+        .addOptions({
+            persistence: false,
+            height: 'auto',
+            layout: 'fitColumns',
+            responsiveLayout: 'collapse',
+            placeholder: "<div class='p-3 text-muted'>Aucun paramètre à afficher.</div>",
+        })
+        .build();
 }
 
-async function loadCommentRequirements() {
-    const payload = await readJson(await fetch('/api/workflow-settings/comment-requirements.json', {
-        headers: { Accept: 'application/json' },
-    }), 'Impossible de charger les obligations de commentaire.');
-    document.querySelector('#validation-comment-required-accept').checked = payload.comment_requirements.accepter;
-    document.querySelector('#validation-comment-required-reject').checked = payload.comment_requirements.refuser;
+async function loadSettingsGrids() {
+    const [duePayload, blockedPayload, requirementsPayload, coefficientPayload] = await Promise.all([
+        loadJson('/api/workflow-settings/default-due-hours.json', 'Impossible de charger le délai global.'),
+        loadJson('/api/workflow-settings/blocked-after-business-days.json', 'Impossible de charger le délai de détection.'),
+        loadJson('/api/workflow-settings/comment-requirements.json', 'Impossible de charger les obligations de commentaire.'),
+        loadJson('/api/workflow-settings/k-coefficient.json', 'Impossible de charger le coefficient k.'),
+    ]);
+    const validationGridElement = document.querySelector(validationSettingsSelector);
+    const canManageCoefficient = document.querySelector(daeSettingsSelector)?.dataset.canManage === 'true';
+    const validationRows = [
+        {
+            key: 'validation.default_due_hours',
+            label: 'Délai global de validation',
+            help: 'Heures par défaut avant l’échéance.',
+            value: duePayload.data.default_due_hours,
+            type: 'number',
+            min: 1,
+            step: 1,
+            canEdit: validationGridElement?.dataset.canEditDefaultDueHours === 'true',
+        },
+        {
+            key: 'validation.blocked_after_business_days',
+            label: 'Détection des cycles bloqués',
+            help: 'Jours ouvrés avant la détection du blocage.',
+            value: blockedPayload.data.blocked_after_business_days,
+            type: 'number',
+            min: 1,
+            step: 1,
+            canEdit: validationGridElement?.dataset.canEditBlockedAfterBusinessDays === 'true',
+        },
+        {
+            key: 'validation.comment_required.accept',
+            label: 'Commentaire obligatoire pour une acceptation',
+            help: 'Lors d’un vote favorable.',
+            value: Boolean(requirementsPayload.comment_requirements.accepter),
+            type: 'boolean',
+            canEdit: validationGridElement?.dataset.canEditCommentAccept === 'true',
+        },
+        {
+            key: 'validation.comment_required.reject',
+            label: 'Commentaire obligatoire pour un refus',
+            help: 'Lors d’un vote défavorable.',
+            value: Boolean(requirementsPayload.comment_requirements.refuser),
+            type: 'boolean',
+            canEdit: validationGridElement?.dataset.canEditCommentReject === 'true',
+        },
+    ];
+    const daeRows = [{
+        key: 'salary.k_coefficient',
+        label: 'Coefficient de conversion k/mois',
+        help: 'Valeur positive pour convertir les milliers mensuels.',
+        value: coefficientPayload.k_coefficient,
+        type: 'number',
+        min: 0.0001,
+        step: 0.0001,
+        canEdit: canManageCoefficient,
+    }];
+
+    return {
+        validation: createSettingsGrid(validationSettingsSelector, validationRows),
+        dae: createSettingsGrid(daeSettingsSelector, daeRows),
+    };
+}
+
+function attachTabRedraw() {
+    document.querySelectorAll('#workflow-settings-tabs [data-bs-toggle="tab"]').forEach((tab) => {
+        tab.addEventListener('shown.bs.tab', () => {
+            tablesByPanel[tab.dataset.bsTarget]?.redraw(true);
+        });
+    });
 }
 
 globalTabulatorObserver.subscribe(`${tableSelector}:action:create`, () => {
@@ -171,20 +219,12 @@ form.addEventListener('submit', async (event) => {
 });
 
 document.querySelector('#save-validation-comment-template')?.addEventListener('click', () => form.requestSubmit());
-document.querySelector('#save-validation-default-due-hours')?.addEventListener('click', () => {
-    saveDefaultDueHours().catch((error) => FlashManager.error(error.message));
-});
-document.querySelector('#save-salary-k-coefficient')?.addEventListener('click', () => {
-    saveKCoefficient().catch((error) => FlashManager.error(error.message));
-});
-document.querySelector('#save-validation-blocked-after-business-days')?.addEventListener('click', () => {
-    saveBlockedAfterBusinessDays().catch((error) => FlashManager.error(error.message));
-});
-document.querySelector('#save-validation-comment-requirements')?.addEventListener('click', () => {
-    saveCommentRequirements().catch((error) => FlashManager.error(error.message));
-});
 document.querySelector('#cancel-validation-comment-template')?.addEventListener('click', resetForm);
-loadDefaultDueHours().catch((error) => FlashManager.error(error.message));
-loadKCoefficient().catch((error) => FlashManager.error(error.message));
-loadBlockedAfterBusinessDays().catch((error) => FlashManager.error(error.message));
-loadCommentRequirements().catch((error) => FlashManager.error(error.message));
+
+loadSettingsGrids()
+    .then((settingsTables) => {
+        tablesByPanel['#workflow-settings-validation-panel'] = settingsTables.validation;
+        tablesByPanel['#workflow-settings-applicationforms-panel'] = settingsTables.dae;
+    })
+    .catch((error) => FlashManager.error(error.message));
+attachTabRedraw();

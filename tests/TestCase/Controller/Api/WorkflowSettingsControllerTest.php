@@ -22,6 +22,7 @@ class WorkflowSettingsControllerTest extends TestCase
         'app.PermissionScopes',
         'app.Role1Permissions',
         'app.FieldDefinitions',
+        'app.FieldAuthorizations',
         'app.WorkflowSettings',
         'app.ValidationCommentTemplates',
     ];
@@ -107,6 +108,42 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->assertSame('0', $settings->find()->where(['name' => 'validation.comment_required.reject'])->firstOrFail()->value);
     }
 
+    public function testUneModificationNeChangePasUneObligationDeCommentaireNonAutorisee(): void
+    {
+        $this->grant('update');
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => false, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $settings = $this->getTableLocator()->get('WorkflowSettings');
+        $rejectRequirement = $settings->find()
+            ->where(['name' => 'validation.comment_required.reject'])->firstOrFail();
+        $rejectRequirement->set('value', '0');
+        $settings->saveOrFail($rejectRequirement);
+        $this->getTableLocator()->get('FieldAuthorizations')->getConnection()->execute(
+            "INSERT INTO field_authorizations (role_id, resource, target_type, target, access_level, created, modified)
+                VALUES (1, 'WorkflowSettings', 'field', 'accepter', 'EDIT', NOW(), NOW())",
+        );
+
+        $this->post('/api/workflow-settings/comment-requirements.json', [
+            'accepter' => true,
+        ]);
+
+        $this->assertResponseOk();
+        $this->assertSame(
+            '0',
+            $settings->find()->where(['name' => 'validation.comment_required.reject'])->firstOrFail()->value,
+        );
+
+        $this->post('/api/workflow-settings/comment-requirements.json', ['refuser' => true]);
+
+        $this->assertResponseCode(403);
+        $this->assertSame(
+            '0',
+            $settings->find()->where(['name' => 'validation.comment_required.reject'])->firstOrFail()->value,
+        );
+    }
+
     public function testUnSuperAdministrateurAccedeALecranDeParametrageGlobal(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
@@ -115,7 +152,14 @@ class WorkflowSettingsControllerTest extends TestCase
 
         $this->assertResponseOk();
         $this->assertResponseContains('validation-comment-templates-grid');
-        $this->assertResponseContains('id="salary-k-coefficient"');
+        $this->assertResponseContains('id="workflow-settings-tabs"');
+        $this->assertResponseContains('id="workflow-settings-validation-tab"');
+        $this->assertResponseContains('id="workflow-settings-comments-tab"');
+        $this->assertResponseContains('id="workflow-settings-applicationforms-tab"');
+        $this->assertResponseContains('role="tablist"');
+        $this->assertResponseContains('workflow-duplication-settings-title');
+        $this->assertResponseContains('id="workflow-validation-settings-grid"');
+        $this->assertResponseContains('id="workflow-applicationforms-settings-grid"');
         $this->assertResponseContains('name="position"');
         $this->assertResponseContains('placeholder="Position"');
         $this->assertResponseContains('class="content workflow-settings-page flex-grow-1 overflow-y-auto" style="min-height: 0;"');
@@ -125,6 +169,26 @@ class WorkflowSettingsControllerTest extends TestCase
             strpos($responseBody, 'validation-comment-template-form'),
             'Le formulaire de création doit précéder la grille pour rester visible dans le layout verrouillé.',
         );
+    }
+
+    public function testLesEditeursRespectentLesAutorisationsIndividuellesDesChamps(): void
+    {
+        $this->grant('read');
+        $this->grant('update');
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => false, 'role_id' => 1])]);
+        $this->getTableLocator()->get('FieldAuthorizations')->getConnection()->execute(
+            "INSERT INTO field_authorizations (role_id, resource, target_type, target, access_level, created, modified)
+                VALUES (1, 'WorkflowSettings', 'field', 'accepter', 'EDIT', NOW(), NOW())",
+        );
+
+        $this->get('/workflow-settings');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('data-can-edit-default-due-hours="false"');
+        $this->assertResponseContains('data-can-edit-blocked-after-business-days="false"');
+        $this->assertResponseContains('data-can-edit-comment-accept="true"');
+        $this->assertResponseContains('data-can-edit-comment-reject="false"');
+        $this->assertResponseContains('data-can-manage="false"');
     }
 
     public function testLesParametresInvalidesRetournentLeContratDErreurApi(): void
@@ -186,18 +250,31 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->session(['Auth' => new User(['id' => 1, 'role_id' => 1])]);
         $this->enableCsrfToken();
         $this->configRequest(['headers' => ['Accept' => 'application/json']]);
-        foreach (
-            ['default-due-hours', 'blocked-after-business-days', 'comment-requirements',
-                'k-coefficient', 'duplicate-reset-fields'] as $action
-        ) {
+        $actions = [
+            'default-due-hours',
+            'blocked-after-business-days',
+            'comment-requirements',
+            'k-coefficient',
+            'duplicate-reset-fields',
+        ];
+        foreach ($actions as $action) {
             $this->get('/api/workflow-settings/' . $action . '.json');
             $this->assertResponseOk();
         }
         $settings = $this->getTableLocator()->get('WorkflowSettings');
         $connection = $settings->getConnection();
         $before = $connection->execute('SELECT * FROM workflow_settings ORDER BY id')->fetchAll('assoc');
-        $this->post('/api/workflow-settings/default-due-hours.json', ['default_due_hours' => 48]);
-        $this->assertResponseCode(403);
+        $mutations = [
+            ['/api/workflow-settings/default-due-hours.json', ['default_due_hours' => 48]],
+            ['/api/workflow-settings/blocked-after-business-days.json', ['blocked_after_business_days' => 5]],
+            ['/api/workflow-settings/comment-requirements.json', ['accepter' => true, 'refuser' => false]],
+            ['/api/workflow-settings/k-coefficient.json', ['k_coefficient' => 18.25]],
+            ['/api/workflow-settings/duplicate-reset-fields.json', ['fields' => ['jobtitle']]],
+        ];
+        foreach ($mutations as [$url, $payload]) {
+            $this->post($url, $payload);
+            $this->assertResponseCode(403);
+        }
         $after = $connection->execute('SELECT * FROM workflow_settings ORDER BY id')->fetchAll('assoc');
         $this->assertSame($before, $after);
     }

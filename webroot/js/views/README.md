@@ -18,3 +18,14 @@ avant de créer la grille distante en lecture seule. Chaque changement de rôle
 réinitialise les filtres et la pagination. La grille affiche le catalogue, les
 périmètres admissibles, les attributions du rôle et les URLs des menus liés.
 Une permission sans attribution affiche « Non attribuée ».
+
+Sur `/workflow-settings`, les onglets « Validation », « Commentaires » et
+« Paramètres des DAE » séparent les réglages simples du catalogue CRUD.
+Les réglages simples sont chargés dans des grilles locales et chaque cellule
+utilise un éditeur numérique, booléen, date ou texte selon son type. La
+validation d’une cellule appelle son endpoint existant via
+`TabulatorCellEditHandler` ; en cas d’erreur, la valeur précédente est
+restaurée et l’erreur est affichée. Les endpoints gardent leurs validations
+et autorisations par champ, dont le droit super-administrateur du coefficient
+k. La section de duplication est réservée dans le troisième onglet pour le
+réglage distinct du ticket 0040.

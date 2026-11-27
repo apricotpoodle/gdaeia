@@ -115,12 +115,29 @@ class WorkflowSettingsController extends AppController
             return $this->jsonSuccess(['comment_requirements' => $requirements]);
         }
 
-        $data = $this->authorizedRequestData('WorkflowSettings');
+        $requestData = $this->request->getData();
+        $data = $this->authorizedRequestData('WorkflowSettings', $requestData);
+        $submittedFields = array_values(array_intersect(array_keys($requestData), array_keys($names)));
+        if ($submittedFields === []) {
+            return $this->jsonError(__('Au moins une obligation de commentaire doit être fournie.'), [], 422);
+        }
+        foreach ($submittedFields as $field) {
+            if (!array_key_exists($field, $data)) {
+                return $this->jsonError(__('Vous n’êtes pas autorisé à modifier ce réglage.'), [], 403);
+            }
+        }
         $requirements = [
-            'accepter' => $this->parseBoolean($data['accepter'] ?? null, $defaults['accepter']),
-            'refuser' => $this->parseBoolean($data['refuser'] ?? null, $defaults['refuser']),
+            'accepter' => array_key_exists('accepter', $data)
+                ? $this->parseBoolean($data['accepter'], $requirements['accepter'])
+                : $requirements['accepter'],
+            'refuser' => array_key_exists('refuser', $data)
+                ? $this->parseBoolean($data['refuser'], $requirements['refuser'])
+                : $requirements['refuser'],
         ];
         foreach ($names as $decision => $name) {
+            if (!array_key_exists($decision, $data)) {
+                continue;
+            }
             $setting = $settings->find()->where(['name' => $name])->first()
                 ?? $settings->newEntity(['name' => $name]);
             $setting->set('value', $requirements[$decision] ? '1' : '0');

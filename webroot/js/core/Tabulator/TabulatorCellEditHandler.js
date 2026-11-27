@@ -33,7 +33,7 @@ export class TabulatorCellEditHandler {
         this.client = client;
         this.onSuccess = onSuccess;
         this.onError = onError;
-        this.pending = new WeakSet();
+        this.pending = new WeakMap();
     }
 
     /**
@@ -43,21 +43,38 @@ export class TabulatorCellEditHandler {
      */
     async handle(cell) {
         if (this.editableFields.size > 0 && !this.editableFields.has(cell.getField())) return;
-        if (this.pending.has(cell)) return;
 
-        this.pending.add(cell);
+        let request;
         try {
-            const payload = await this.client.send(this.requestFactory(cell));
-            const rowData = this.responseMapper(payload, cell);
-            if (rowData && typeof rowData === 'object') {
-                await cell.getRow().update(rowData);
-            }
-            this.onSuccess(payload, cell);
+            request = this.requestFactory(cell);
         } catch (error) {
             cell.restoreOldValue();
             this.onError(error, cell);
+            return;
+        }
+
+        const previous = this.pending.get(cell) ?? Promise.resolve();
+        const operation = previous.catch(() => {}).then(async () => {
+            try {
+                const payload = await this.client.send(request);
+                const rowData = this.responseMapper(payload, cell);
+                if (rowData && typeof rowData === 'object') {
+                    await cell.getRow().update(rowData);
+                }
+                this.onSuccess(payload, cell);
+            } catch (error) {
+                cell.restoreOldValue();
+                this.onError(error, cell);
+            }
+        });
+        this.pending.set(cell, operation);
+
+        try {
+            await operation;
         } finally {
-            this.pending.delete(cell);
+            if (this.pending.get(cell) === operation) {
+                this.pending.delete(cell);
+            }
         }
     }
 }

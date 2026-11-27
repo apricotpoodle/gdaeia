@@ -68,6 +68,47 @@ test('restaure la valeur précédente en cas d’erreur API', async () => {
     assert.deepEqual(editedCell.calls.update, []);
 });
 
+test('sérialise les éditions successives d’une même cellule', async () => {
+    const editedCell = createCell('value', 'première valeur');
+    let currentValue = 'première valeur';
+    editedCell.getValue = () => currentValue;
+    editedCell.setValue = value => { currentValue = value; };
+    const requests = [];
+    const pendingRequests = [];
+    const handler = new TabulatorCellEditHandler({
+        requestFactory: cell => ({ value: cell.getValue() }),
+        client: {
+            send: request => new Promise(resolve => {
+                requests.push(request);
+                pendingRequests.push(resolve);
+            }),
+        },
+        responseMapper: payload => ({ value: payload.value }),
+        onSuccess: () => {},
+    });
+
+    const firstEdit = handler.handle(editedCell);
+    editedCell.setValue('seconde valeur');
+    const secondEdit = handler.handle(editedCell);
+
+    await new Promise(resolve => setImmediate(resolve));
+    pendingRequests[0]({ value: 'première valeur' });
+    await new Promise(resolve => setImmediate(resolve));
+
+    assert.deepEqual(requests, [
+        { value: 'première valeur' },
+        { value: 'seconde valeur' },
+    ]);
+
+    pendingRequests[1]({ value: 'seconde valeur' });
+    await Promise.all([firstEdit, secondEdit]);
+
+    assert.deepEqual(editedCell.calls.update, [
+        { value: 'première valeur' },
+        { value: 'seconde valeur' },
+    ]);
+});
+
 test('ignore un champ qui ne fait pas partie de la stratégie', async () => {
     const editedCell = createCell('resource', 'Users');
     let called = false;
