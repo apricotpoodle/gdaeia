@@ -5,7 +5,8 @@ un audit ciblé effectué le **17 novembre 2026** sur les tickets 0017 à 0021,
 0027 à 0029 et l'étape 6 du ticket 0026, la clôture vérifiée des tickets 0027
 et 0028 le **18 novembre 2026**, et l'audit partiel du point 7 du ticket 0007
 effectué le **19 novembre 2026**. Le ticket 0041 a été ajouté le
-**20 novembre 2026**. Les statuts décrivent le travail restant.
+**20 novembre 2026** et le ticket 0042 le **27 novembre 2026**. Les statuts
+décrivent le travail restant.
 
 ## Vue d'ensemble
 
@@ -22,8 +23,9 @@ Les tickets racine 0002 et 0017 sont partiels. Le code et les tests de
 l'opérateur. Le ticket 0028 est terminé après réussite de la suite complète et
 des vérifications ORM, API, Web, migration, style et analyse statique.
 Le ticket 0040 est un bonus facultatif et n'entre pas dans ces totaux.
-Le ticket actif [0041 — Administrer les permissions par rôle](0041-administrer-permissions-par-role.md)
-est indépendant de ces totaux historiques et des workflows recensés.
+Les tickets actifs [0041 — Administrer les permissions par rôle](0041-administrer-permissions-par-role.md)
+et [0042 — Corriger le filtre des DAE en cours](0042-filtrer-correctement-les-dae-en-cours.md)
+sont indépendants de ces totaux historiques et des workflows recensés.
 
 ## Travail restant sur le backlog racine
 
@@ -44,6 +46,7 @@ est indépendant de ces totaux historiques et des workflows recensés.
 | Ticket | État | Travail restant |
 |---|---|---|
 | [0041 — Administrer les permissions par rôle](0041-administrer-permissions-par-role.md) | Prêt | Vérifier le contrat existant, puis exposer et gérer les attributions par rôle en cinq étapes ordonnées, sans modifier le catalogue ni la matrice initiale. |
+| [0042 — Corriger le filtre des DAE en cours](0042-filtrer-correctement-les-dae-en-cours.md) | À planifier | Corriger le filtre « En cours » de la liste des DAE pour inclure tous les cycles actifs, y compris à 0 %, tout en conservant le bouton « À valider » et les périmètres d'accès. |
 
 ## Séquence obligatoire GDAE V3
 
