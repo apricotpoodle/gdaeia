@@ -8,6 +8,7 @@ use App\Model\Entity\Period;
 use App\Model\Entity\User;
 use App\Model\Table\ApplicationformsTable;
 use App\Service\ApplicationformDuplicationResult;
+use App\Service\ApplicationformDuplicationSettings;
 use Cake\Datasource\ConnectionManager;
 use Cake\Datasource\EntityInterface;
 use Cake\TestSuite\Fixture\FixtureStrategyInterface;
@@ -383,6 +384,87 @@ class ApplicationformsTableTest extends TestCase
         $this->assertNull($result->applicationform->get(Applicationform::FIELD_BUDGETFEATURE_ID));
         $this->assertNull($result->applicationform->get(Applicationform::FIELD_YESNO_ID));
         $this->assertNull($result->applicationform->get(Applicationform::FIELD_QUALIFICATION));
+        $this->assertNotSame($source->get(Applicationform::FIELD_CREATED), $result->applicationform->get(Applicationform::FIELD_CREATED));
+        $this->assertNotSame($source->get(Applicationform::FIELD_MODIFIED), $result->applicationform->get(Applicationform::FIELD_MODIFIED));
+    }
+
+    public function testLaDuplicationReprendLesChampsRetiresDeLaListeDeReinitialisation(): void
+    {
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Contracttypes')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Professionalcategories')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Periods')->updateAll(['deleted' => null], ['id' => 1]);
+        $settings = $this->getTableLocator()->get('WorkflowSettings');
+        $settings->saveOrFail($settings->newEntity([
+            'name' => 'applicationform.duplicate_reset_fields',
+            'value' => 'control_management_validation,final_argument,yesno_id,qualification',
+        ]));
+        $source = $this->Applicationforms->get(1);
+        $source->patch([
+            Applicationform::FIELD_HR_DESCRIPTION => 'Note RH à reprendre',
+            Applicationform::FIELD_CONTROL_MANAGEMENT_VALIDATION => 'Visa à effacer',
+            Applicationform::FIELD_FINAL_ARGUMENT => 'Argumentaire à effacer',
+            Applicationform::FIELD_BUDGETFEATURE_ID => 1,
+            Applicationform::FIELD_YESNO_ID => 1,
+            Applicationform::FIELD_QUALIFICATION => 'Qualification à effacer',
+        ]);
+
+        $result = $this->Applicationforms->duplicateFor($source, new User(['id' => 2]));
+
+        $this->assertTrue($result->isSuccess());
+        $this->assertSame('Note RH à reprendre', $result->applicationform->get(Applicationform::FIELD_HR_DESCRIPTION));
+        $this->assertSame(1, (int)$result->applicationform->get(Applicationform::FIELD_BUDGETFEATURE_ID));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_CONTROL_MANAGEMENT_VALIDATION));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_FINAL_ARGUMENT));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_YESNO_ID));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_QUALIFICATION));
+    }
+
+    public function testUneConfigurationHistoriqueInvalideGardeLaListeSureEtLesChampsProteges(): void
+    {
+        $this->getTableLocator()->get('Departments')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Contracttypes')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Professionalcategories')->updateAll(['deleted' => null], ['id' => 1]);
+        $this->getTableLocator()->get('Periods')->updateAll(['deleted' => null], ['id' => 1]);
+        $settings = $this->getTableLocator()->get('WorkflowSettings');
+        $settings->saveOrFail($settings->newEntity([
+            'name' => 'applicationform.duplicate_reset_fields',
+            'value' => 'user_id',
+        ]));
+        $source = $this->Applicationforms->get(1);
+        $source->patch([
+            Applicationform::FIELD_USER_ID => 1,
+            Applicationform::FIELD_ASSISTANT_ID => 2,
+            Applicationform::FIELD_APPLICANTNAME => 'Candidat source',
+            Applicationform::FIELD_APPLICANT_FIRST_NAME => 'Ada',
+            Applicationform::FIELD_APPLICANT_LAST_NAME => 'Lovelace',
+            Applicationform::FIELD_COLLABORATOR_ID => 2,
+            Applicationform::FIELD_SALARY_BASE => '1250.00',
+            Applicationform::FIELD_HR_DESCRIPTION => 'Note RH',
+            Applicationform::FIELD_CONTROL_MANAGEMENT_VALIDATION => 'Visa contrôle',
+            Applicationform::FIELD_FINAL_ARGUMENT => 'Argumentaire',
+            Applicationform::FIELD_BUDGETFEATURE_ID => 1,
+            Applicationform::FIELD_YESNO_ID => 1,
+            Applicationform::FIELD_QUALIFICATION => 'Qualification source',
+            Applicationform::FIELD_ARCHIVED => true,
+            Applicationform::FIELD_DELETED => '2026-01-01 00:00:00',
+        ]);
+
+        $result = $this->Applicationforms->duplicateFor($source, new User(['id' => 2]));
+
+        $this->assertTrue($result->isSuccess());
+        foreach (ApplicationformDuplicationSettings::CONFIGURABLE_FIELDS as $field) {
+            $this->assertNull($result->applicationform->get($field));
+        }
+        $this->assertSame(2, (int)$result->applicationform->get(Applicationform::FIELD_USER_ID));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_ASSISTANT_ID));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_APPLICANTNAME));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_APPLICANT_FIRST_NAME));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_APPLICANT_LAST_NAME));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_COLLABORATOR_ID));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_SALARY_BASE));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_ARCHIVED));
+        $this->assertNull($result->applicationform->get(Applicationform::FIELD_DELETED));
     }
 
     public function testUnBrouillonPeutEtreEnregistreSansChampsReserves(): void

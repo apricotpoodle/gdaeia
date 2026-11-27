@@ -1,6 +1,6 @@
 # 0040 — Paramétrer les champs réinitialisés à la duplication
 
-**Statut :** Bonus retenu — à démarrer après le ticket 0043
+**Statut :** Terminé
 
 **Priorité :** Basse — bonus retenu
 
@@ -92,6 +92,21 @@ Exécuter via le Makefile racine, avec la base dédiée `daetf2_test` :
 - `make cs.check` ;
 - `make stan` ;
 - `make test.all`.
+
+## Résultats d’implémentation
+
+La valeur de `applicationform.duplicate_reset_fields` reste stockée en CSV
+dans `workflow_settings`. Les six champs configurables sont réinitialisés par
+défaut; une configuration absente ou invalide retombe sur cette liste sûre.
+Les champs protégés restent toujours effacés. L’API dédiée et sa section de
+l’écran sont limitées au super-administrateur; la grille Tabulator enregistre
+la sélection complète après chaque cellule validée et indique si la valeur
+sera effacée ou conservée.
+
+Le 27 novembre 2026, les validations suivantes ont réussi : `test.unit`
+(250 tests), `test.integration` (207 tests), `test.api` (321 tests),
+`test.style`, `cs.check`, `stan`, `test.all` (853 tests) et
+`node tests/js/workflow-settings-grid.test.mjs` (14 tests).
 
 ## Références
 

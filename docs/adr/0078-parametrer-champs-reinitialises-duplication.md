@@ -75,6 +75,13 @@ section de duplication et à ses routes API empêche de contourner la restrictio
 par un appel direct, sans modifier les autorisations des autres réglages de la
 page partagée. Le contrat d'erreur reste cohérent avec l'ADR 0052.
 
+Les réponses métier à Q-0040-01 à Q-0040-06 demandent de vider chacun des six
+champs configurables à la duplication. Elles confirment donc la réinitialisation
+par défaut des six champs proposée dans cette décision.
+
+La relecture de l’ADR a été confirmée le 27 novembre 2026, sans demande de
+modification du périmètre.
+
 ## Conséquences
 
 ### Positives
@@ -90,6 +97,4 @@ page partagée. Le contrat d'erreur reste cohérent avec l'ADR 0052.
 * Le traitement de duplication doit lire et valider un paramètre global.
 * L'administration doit présenter explicitement les six choix et leurs erreurs
   de validation.
-* Les réponses métier à Q-0040 restent nécessaires pour confirmer le choix
-  applicable à chaque champ ; le défaut initial est la réinitialisation des
-  six champs.
+* L'implémentation suit la décision relue avant le début du code.

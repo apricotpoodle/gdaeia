@@ -29,4 +29,20 @@ class WorkflowSettingPolicy extends AdministrationPolicy
 
         return $user instanceof User && $user->isSuperUser();
     }
+
+    /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\WorkflowSetting $setting @return bool */
+    public function canIndexDuplicateResetFields(IdentityInterface $identity, WorkflowSetting $setting): bool
+    {
+        $user = $identity->getOriginalData();
+
+        return $user instanceof User && $user->isSuperUser();
+    }
+
+    /** @param \Authorization\IdentityInterface $identity @param \App\Model\Entity\WorkflowSetting $setting @return bool */
+    public function canManageDuplicateResetFields(IdentityInterface $identity, WorkflowSetting $setting): bool
+    {
+        $user = $identity->getOriginalData();
+
+        return $user instanceof User && $user->isSuperUser();
+    }
 }

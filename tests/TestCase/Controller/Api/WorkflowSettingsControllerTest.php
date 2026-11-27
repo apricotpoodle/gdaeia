@@ -36,6 +36,9 @@ class WorkflowSettingsControllerTest extends TestCase
 
         $this->get('/api/workflow-settings/comment-templates.json');
         $this->assertResponseCode(403);
+
+        $this->get('/api/workflow-settings/duplicate-reset-fields.json');
+        $this->assertResponseCode(403);
     }
 
     public function testUnSuperAdministrateurConfigureLeDelaiEtLesCommentairesDepuisLaNouvelleApi(): void
@@ -158,6 +161,7 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->assertResponseContains('id="workflow-settings-applicationforms-tab"');
         $this->assertResponseContains('role="tablist"');
         $this->assertResponseContains('workflow-duplication-settings-title');
+        $this->assertResponseContains('id="workflow-duplicate-reset-fields-grid"');
         $this->assertResponseContains('id="workflow-validation-settings-grid"');
         $this->assertResponseContains('id="workflow-applicationforms-settings-grid"');
         $this->assertResponseContains('name="position"');
@@ -169,6 +173,19 @@ class WorkflowSettingsControllerTest extends TestCase
             strpos($responseBody, 'validation-comment-template-form'),
             'Le formulaire de création doit précéder la grille pour rester visible dans le layout verrouillé.',
         );
+    }
+
+    public function testUnOperateurAvecLectureDesReglagesNeVoitPasLaSectionDeDuplication(): void
+    {
+        $this->grant('read');
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => false, 'role_id' => 1])]);
+
+        $this->get('/workflow-settings');
+
+        $this->assertResponseOk();
+        $this->assertResponseContains('id="workflow-settings-validation-tab"');
+        $this->assertResponseNotContains('workflow-duplicate-reset-fields-grid');
+        $this->assertResponseNotContains('workflow-duplication-settings-title');
     }
 
     public function testLesEditeursRespectentLesAutorisationsIndividuellesDesChamps(): void
@@ -227,7 +244,7 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->assertResponseContains('"field":"label","label":"Libellé","reason":');
     }
 
-    public function testLaListeDesChampsDeDuplicationEstVersionneeEtNonModifiable(): void
+    public function testUnSuperAdministrateurConfigureLesChampsReinitialisesALaDuplication(): void
     {
         $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => true, 'role_id' => 1])]);
         $this->enableCsrfToken();
@@ -235,13 +252,31 @@ class WorkflowSettingsControllerTest extends TestCase
 
         $this->get('/api/workflow-settings/duplicate-reset-fields.json');
         $this->assertResponseOk();
-        $this->assertResponseContains('"hr_description"');
-        $this->assertResponseContains('"deprecated":true');
+        $this->assertResponseContains('"fields":["hr_description","control_management_validation","final_argument","budgetfeature_id","yesno_id","qualification"]');
+        $this->assertResponseContains('"options"');
+        $this->assertResponseContains('"field":"qualification"');
 
-        $this->post('/api/workflow-settings/duplicate-reset-fields.json', ['fields' => ['jobtitle']]);
-        $this->assertResponseCode(422);
-        $this->assertResponseContains('"success":false');
-        $this->assertResponseContains('liste est désormais versionnée');
+        $this->post('/api/workflow-settings/duplicate-reset-fields.json', [
+            'fields' => ['hr_description', 'qualification'],
+        ]);
+        $this->assertResponseOk();
+        $this->assertResponseContains('"fields":["hr_description","qualification"]');
+        $settings = $this->getTableLocator()->get('WorkflowSettings');
+        $this->assertSame(
+            'hr_description,qualification',
+            $settings->find()->where(['name' => 'applicationform.duplicate_reset_fields'])->firstOrFail()->value,
+        );
+
+        foreach ([[], ['jobtitle'], ['user_id']] as $fields) {
+            $this->post('/api/workflow-settings/duplicate-reset-fields.json', ['fields' => $fields]);
+            $this->assertResponseCode(422);
+            $this->assertResponseContains('"success":false');
+            $this->assertResponseContains('"errors":{"fields"');
+        }
+        $this->assertSame(
+            'hr_description,qualification',
+            $settings->find()->where(['name' => 'applicationform.duplicate_reset_fields'])->firstOrFail()->value,
+        );
     }
 
     public function testLaPermissionDeLectureAutoriseTousLesGetSansAutoriserLaModification(): void
@@ -255,7 +290,6 @@ class WorkflowSettingsControllerTest extends TestCase
             'blocked-after-business-days',
             'comment-requirements',
             'k-coefficient',
-            'duplicate-reset-fields',
         ];
         foreach ($actions as $action) {
             $this->get('/api/workflow-settings/' . $action . '.json');
@@ -269,7 +303,6 @@ class WorkflowSettingsControllerTest extends TestCase
             ['/api/workflow-settings/blocked-after-business-days.json', ['blocked_after_business_days' => 5]],
             ['/api/workflow-settings/comment-requirements.json', ['accepter' => true, 'refuser' => false]],
             ['/api/workflow-settings/k-coefficient.json', ['k_coefficient' => 18.25]],
-            ['/api/workflow-settings/duplicate-reset-fields.json', ['fields' => ['jobtitle']]],
         ];
         foreach ($mutations as [$url, $payload]) {
             $this->post($url, $payload);
@@ -277,6 +310,30 @@ class WorkflowSettingsControllerTest extends TestCase
         }
         $after = $connection->execute('SELECT * FROM workflow_settings ORDER BY id')->fetchAll('assoc');
         $this->assertSame($before, $after);
+    }
+
+    public function testUnePermissionGeneriqueNeDonnePasAccesAuxReglagesDeDuplication(): void
+    {
+        $this->grant('read');
+        $this->grant('update');
+        $this->session(['Auth' => new User(['id' => 1, 'issuperuser' => false, 'role_id' => 1])]);
+        $this->enableCsrfToken();
+        $this->configRequest(['headers' => ['Accept' => 'application/json']]);
+
+        $this->get('/api/workflow-settings/duplicate-reset-fields.json');
+        $this->assertResponseCode(403);
+        $this->post('/api/workflow-settings/duplicate-reset-fields.json', [
+            'fields' => ['hr_description'],
+        ]);
+        $this->assertResponseCode(403);
+        $this->assertSame(
+            0,
+            $this->getTableLocator()->get('WorkflowSettings')->find()
+                ->where(['name' => 'applicationform.duplicate_reset_fields'])->count(),
+        );
+
+        $this->get('/api/workflow-settings/default-due-hours.json');
+        $this->assertResponseOk();
     }
 
     public function testLaPermissionDeModificationNeDonnePasImplicitementLaLecture(): void

@@ -13,6 +13,7 @@ use App\Service\Security\FieldAuthorizationService;
  * @var \Authorization\IdentityInterface|null $identity
  */
 $canManageKCoefficient = $identity?->can('manageKCoefficient', new WorkflowSetting()) ?? false;
+$canManageDuplicateResetFields = $identity?->can('manageDuplicateResetFields', new WorkflowSetting()) ?? false;
 $canManageValidationSettings = $this->Action->isAllowed(WorkflowSettingsActions::saveDefaultDueHours());
 $workflowSettingsFieldSchema = $identity !== null
     ? (new FieldAuthorizationService())->getFieldSchema($identity, 'WorkflowSettings')
@@ -102,12 +103,15 @@ $this->Html->script('views/WorkflowSettings/index.js', ['type' => 'module', 'blo
                     <div id="workflow-applicationforms-settings-grid" data-can-manage="<?= $canManageKCoefficient ? 'true' : 'false' ?>"></div>
                 </div>
             </section>
-            <section class="card mt-3" aria-labelledby="workflow-duplication-settings-title">
-                <div class="card-body">
-                    <h4 class="h5" id="workflow-duplication-settings-title"><?= __('Paramètres de duplication des DAE') ?></h4>
-                    <p class="text-muted mb-0"><?= __('Les choix de champs à réinitialiser lors d’une duplication seront regroupés dans cette section.') ?></p>
-                </div>
-            </section>
+            <?php if ($canManageDuplicateResetFields): ?>
+                <section class="card mt-3" aria-labelledby="workflow-duplication-settings-title">
+                    <div class="card-body">
+                        <h4 class="h5" id="workflow-duplication-settings-title"><?= __('Paramètres de duplication des DAE') ?></h4>
+                        <p class="text-muted"><?= __('Choisissez les valeurs à effacer lors des prochaines duplications. Les champs protégés sont toujours réinitialisés.') ?></p>
+                        <div id="workflow-duplicate-reset-fields-grid" data-can-manage="true"></div>
+                    </div>
+                </section>
+            <?php endif; ?>
         </section>
     </div>
 </div>

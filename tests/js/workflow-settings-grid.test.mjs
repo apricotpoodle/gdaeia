@@ -2,6 +2,9 @@ import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { TabulatorCellEditHandler } from '../../webroot/js/core/Tabulator/TabulatorCellEditHandler.js';
 import {
+    createDuplicateResetFieldsRequest,
+    createDuplicateResetRowUpdate,
+    createDuplicateResetRows,
     createSettingColumns,
     createSettingEditor,
     createWorkflowSettingRequest,
@@ -148,6 +151,57 @@ test('envoie le coefficient vers son endpoint dédié', () => {
 
     assert.equal(request.url, '/api/workflow-settings/k-coefficient.json');
     assert.deepEqual(JSON.parse(request.body), { k_coefficient: 18.25 });
+});
+
+test('construit une ligne booléenne pour chaque option de duplication', () => {
+    const rows = createDuplicateResetRows({
+        fields: ['hr_description'],
+        options: [
+            { field: 'hr_description', label: 'Description RH' },
+            { field: 'qualification', label: 'Qualification' },
+        ],
+    }, true);
+
+    assert.deepEqual(rows.map(({ field, label, help, value, type, canEdit }) => ({
+        field, label, help, value, type, canEdit,
+    })), [
+        {
+            field: 'hr_description',
+            label: 'Description RH',
+            help: 'Cette valeur sera effacée lors de la duplication.',
+            value: true,
+            type: 'boolean',
+            canEdit: true,
+        },
+        {
+            field: 'qualification',
+            label: 'Qualification',
+            help: 'Cette valeur sera conservée lors de la duplication.',
+            value: false,
+            type: 'boolean',
+            canEdit: true,
+        },
+    ]);
+});
+
+test('poste la liste complète des champs à réinitialiser', () => {
+    const request = createDuplicateResetFieldsRequest(['hr_description', 'qualification']);
+
+    assert.equal(request.url, '/api/workflow-settings/duplicate-reset-fields.json');
+    assert.equal(request.method, 'POST');
+    assert.equal(request.headers['Content-Type'], 'application/json');
+    assert.deepEqual(JSON.parse(request.body), { fields: ['hr_description', 'qualification'] });
+});
+
+test('actualise l’aide selon la valeur confirmée par le serveur', () => {
+    assert.deepEqual(createDuplicateResetRowUpdate([], 'hr_description'), {
+        value: false,
+        help: 'Cette valeur sera conservée lors de la duplication.',
+    });
+    assert.deepEqual(createDuplicateResetRowUpdate(['hr_description'], 'hr_description'), {
+        value: true,
+        help: 'Cette valeur sera effacée lors de la duplication.',
+    });
 });
 
 test('refuse l’édition locale d’une ligne interdite', () => {

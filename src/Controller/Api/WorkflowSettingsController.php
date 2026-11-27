@@ -6,8 +6,8 @@ namespace App\Controller\Api;
 use App\Controller\AppController;
 use App\Model\Entity\ValidationCommentTemplate;
 use App\Model\Entity\WorkflowSetting;
-use App\Model\Table\ApplicationformsTable;
 use App\Model\Table\ValidationCommentTemplatesTable;
+use App\Service\ApplicationformDuplicationSettings;
 use App\Service\DataGrid\TabulatorAdapter;
 use Cake\Http\Exception\BadRequestException;
 use Cake\Http\Response;
@@ -178,27 +178,47 @@ class WorkflowSettingsController extends AppController
         return $this->jsonSuccess(['k_coefficient' => (float)$value]);
     }
 
-    /** Lit l'ancienne liste de duplication, désormais versionnée dans le code. */
+    /** Lit ou met à jour les champs métier réinitialisés à la duplication. */
     public function duplicateResetFields(): ?Response
     {
         $this->request->allowMethod(['get', 'post']);
         $settings = $this->fetchTable('WorkflowSettings');
         $this->Authorization->authorize(
             $settings->newEmptyEntity(),
-            $this->request->is('get') ? 'index' : 'manage',
+            $this->request->is('get') ? 'indexDuplicateResetFields' : 'manageDuplicateResetFields',
+        );
+        $setting = $settings->find()
+            ->where(['name' => ApplicationformDuplicationSettings::SETTING_NAME])
+            ->first();
+        $storedValue = $setting?->get(WorkflowSetting::FIELD_VALUE);
+        $fields = ApplicationformDuplicationSettings::resolveResetFields(
+            is_string($storedValue) ? $storedValue : null,
         );
         if ($this->request->is('get')) {
             return $this->jsonSuccess([
-                'fields' => ApplicationformsTable::DUPLICATION_RESET_FIELDS,
-                'deprecated' => true,
+                'fields' => $fields,
+                'options' => ApplicationformDuplicationSettings::fieldOptions(),
             ]);
         }
 
-        return $this->jsonError(
-            __('La liste est désormais versionnée dans le code et ne peut plus être modifiée.'),
-            [],
-            422,
+        $submittedFields = $this->request->getData('fields');
+        $errors = ApplicationformDuplicationSettings::validateResetFields($submittedFields);
+        if ($errors !== []) {
+            return $this->jsonError(__('Impossible d’enregistrer cette sélection.'), $errors, 422);
+        }
+
+        /** @var array<string> $submittedFields */
+        $setting ??= $settings->newEntity(['name' => ApplicationformDuplicationSettings::SETTING_NAME]);
+        $fields = array_values(array_unique($submittedFields));
+        $setting->set(
+            WorkflowSetting::FIELD_VALUE,
+            ApplicationformDuplicationSettings::serializeResetFields($fields),
         );
+        if (!$settings->save($setting)) {
+            return $this->validationErrorResponse($setting, 'WorkflowSettings');
+        }
+
+        return $this->jsonSuccess(['fields' => $fields]);
     }
 
     /** Retourne le catalogue de commentaires sous le contrat distant Tabulator. */

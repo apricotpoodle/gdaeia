@@ -163,3 +163,60 @@ export function createWorkflowSettingRequest(setting, value) {
         body: JSON.stringify({ [endpoint.field]: value }),
     };
 }
+
+/**
+ * Construit les lignes de réglage des champs vidés à la duplication.
+ * @param {{fields: string[], options: Array<{field: string, label: string}>}} payload Réponse GET.
+ * @param {boolean} canEdit Autorisation d’édition côté écran.
+ * @returns {Array<Object>} Lignes Tabulator.
+ */
+export function createDuplicateResetRows(payload, canEdit) {
+    const selectedFields = new Set(payload.fields || []);
+
+    return (payload.options || []).map(({ field, label }) => ({
+        key: field,
+        field,
+        label,
+        value: selectedFields.has(field),
+        help: duplicateResetHelp(selectedFields.has(field)),
+        type: 'boolean',
+        canEdit,
+    }));
+}
+
+/**
+ * Décrit le résultat du choix courant pour une valeur métier.
+ * @param {boolean} reset Indique si la valeur sera réinitialisée.
+ * @returns {string} Aide correspondant au choix.
+ */
+export function duplicateResetHelp(reset) {
+    return reset
+        ? 'Cette valeur sera effacée lors de la duplication.'
+        : 'Cette valeur sera conservée lors de la duplication.';
+}
+
+/**
+ * Construit les valeurs canoniques de la ligne après l’enregistrement.
+ * @param {string[]} fields Champs que l’API confirme réinitialiser.
+ * @param {string} field Champ de la ligne modifiée.
+ * @returns {{value: boolean, help: string}} Valeur et aide mises à jour.
+ */
+export function createDuplicateResetRowUpdate(fields, field) {
+    const reset = fields.includes(field);
+
+    return { value: reset, help: duplicateResetHelp(reset) };
+}
+
+/**
+ * Construit la requête dédiée à la sélection complète des champs à réinitialiser.
+ * @param {string[]} fields Champs configurables choisis.
+ * @returns {{url: string, method: string, headers: Object, body: string}}
+ */
+export function createDuplicateResetFieldsRequest(fields) {
+    return {
+        url: '/api/workflow-settings/duplicate-reset-fields.json',
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ fields }),
+    };
+}

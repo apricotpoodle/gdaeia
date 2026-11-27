@@ -27,5 +27,9 @@ validation d’une cellule appelle son endpoint existant via
 `TabulatorCellEditHandler` ; en cas d’erreur, la valeur précédente est
 restaurée et l’erreur est affichée. Les endpoints gardent leurs validations
 et autorisations par champ, dont le droit super-administrateur du coefficient
-k. La section de duplication est réservée dans le troisième onglet pour le
-réglage distinct du ticket 0040.
+k. Le troisième onglet expose aussi aux seuls super-administrateurs les six
+champs dont la valeur peut être effacée à la duplication. Chaque cellule
+booléenne enregistre immédiatement la liste complète via
+`/api/workflow-settings/duplicate-reset-fields.json`; les champs protégés
+restent réinitialisés côté serveur. L’aide de chaque ligne précise si la
+valeur sera effacée ou conservée.

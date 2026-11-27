@@ -5,12 +5,16 @@ import { TabulatorMutationClient } from '../../core/Tabulator/TabulatorMutationC
 import { globalTabulatorObserver } from '../../core/Tabulator/TabulatorObserver.js';
 import {
     createSettingColumns,
+    createDuplicateResetFieldsRequest,
+    createDuplicateResetRowUpdate,
+    createDuplicateResetRows,
     createWorkflowSettingRequest,
 } from './settings-grid.js';
 
 const tableSelector = '#validation-comment-templates-grid';
 const validationSettingsSelector = '#workflow-validation-settings-grid';
 const daeSettingsSelector = '#workflow-applicationforms-settings-grid';
+const duplicateResetSettingsSelector = '#workflow-duplicate-reset-fields-grid';
 const table = TabulatorFactory.createWorkflowCommentTemplatesGrid(tableSelector);
 const csrfToken = document.querySelector('meta[name="csrfToken"]')?.getAttribute('content') || '';
 const form = document.querySelector('#validation-comment-template-form');
@@ -102,12 +106,63 @@ function createSettingsGrid(selector, rows) {
         .build();
 }
 
+function createDuplicateResetSettingsGrid(payload) {
+    let saving = false;
+    const handler = new TabulatorCellEditHandler({
+        editableFields: ['value'],
+        requestFactory: (cell) => {
+            saving = true;
+            const fields = cell.getTable().getData()
+                .filter((row) => row.value)
+                .map((row) => row.field);
+
+            return createDuplicateResetFieldsRequest(fields);
+        },
+        responseMapper: (response, cell) => createDuplicateResetRowUpdate(
+            response.fields,
+            cell.getRow().getData().field,
+        ),
+        client: new TabulatorMutationClient(),
+        onSuccess: () => {
+            saving = false;
+            FlashManager.success('Paramètres de duplication enregistrés.');
+        },
+        onError: (error) => {
+            saving = false;
+            FlashManager.error(error.message);
+        },
+    });
+    const columns = createSettingColumns();
+    const resetColumn = columns.find((column) => column.field === 'value');
+    resetColumn.title = 'Réinitialiser à la duplication';
+    resetColumn.editable = (cell) => !saving && Boolean(cell.getRow().getData().canEdit);
+
+    return TabulatorFactory.createBaseGrid(duplicateResetSettingsSelector)
+        .setLocalData(createDuplicateResetRows(payload, true))
+        .setColumnDefaults({ headerSort: false, tooltip: true })
+        .setColumns(columns)
+        .setCellEditHandler(handler)
+        .addOptions({
+            persistence: false,
+            height: '100%',
+            layout: 'fitColumns',
+            responsiveLayout: 'collapse',
+            placeholder: "<div class='p-3 text-muted'>Aucun champ à afficher.</div>",
+        })
+        .build();
+}
+
 async function loadSettingsGrids() {
-    const [duePayload, blockedPayload, requirementsPayload, coefficientPayload] = await Promise.all([
+    const duplicateGridElement = document.querySelector(duplicateResetSettingsSelector);
+    const canManageDuplicateSettings = duplicateGridElement?.dataset.canManage === 'true';
+    const [duePayload, blockedPayload, requirementsPayload, coefficientPayload, duplicatePayload] = await Promise.all([
         loadJson('/api/workflow-settings/default-due-hours.json', 'Impossible de charger le délai global.'),
         loadJson('/api/workflow-settings/blocked-after-business-days.json', 'Impossible de charger le délai de détection.'),
         loadJson('/api/workflow-settings/comment-requirements.json', 'Impossible de charger les obligations de commentaire.'),
         loadJson('/api/workflow-settings/k-coefficient.json', 'Impossible de charger le coefficient k.'),
+        canManageDuplicateSettings
+            ? loadJson('/api/workflow-settings/duplicate-reset-fields.json', 'Impossible de charger les choix de duplication.')
+            : Promise.resolve(null),
     ]);
     const validationGridElement = document.querySelector(validationSettingsSelector);
     const canManageCoefficient = document.querySelector(daeSettingsSelector)?.dataset.canManage === 'true';
@@ -163,13 +218,16 @@ async function loadSettingsGrids() {
     return {
         validation: createSettingsGrid(validationSettingsSelector, validationRows),
         dae: createSettingsGrid(daeSettingsSelector, daeRows),
+        duplicate: duplicatePayload ? createDuplicateResetSettingsGrid(duplicatePayload) : null,
     };
 }
 
 function attachTabRedraw() {
     document.querySelectorAll('#workflow-settings-tabs [data-bs-toggle="tab"]').forEach((tab) => {
         tab.addEventListener('shown.bs.tab', () => {
-            tablesByPanel[tab.dataset.bsTarget]?.redraw(true);
+            const panelTables = tablesByPanel[tab.dataset.bsTarget] || [];
+            const grids = Array.isArray(panelTables) ? panelTables : [panelTables];
+            grids.forEach((grid) => grid?.redraw(true));
         });
     });
 }
@@ -224,7 +282,10 @@ document.querySelector('#cancel-validation-comment-template')?.addEventListener(
 loadSettingsGrids()
     .then((settingsTables) => {
         tablesByPanel['#workflow-settings-validation-panel'] = settingsTables.validation;
-        tablesByPanel['#workflow-settings-applicationforms-panel'] = settingsTables.dae;
+        tablesByPanel['#workflow-settings-applicationforms-panel'] = [
+            settingsTables.dae,
+            settingsTables.duplicate,
+        ];
     })
     .catch((error) => FlashManager.error(error.message));
 attachTabRedraw();

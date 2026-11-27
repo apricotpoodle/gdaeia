@@ -10,6 +10,7 @@ use App\Model\Entity\Period;
 use App\Model\Entity\User;
 use App\Model\Entity\ValidationWorkflowRun;
 use App\Service\ApplicationformDuplicationResult;
+use App\Service\ApplicationformDuplicationSettings;
 use App\Service\SalaryCalculationService;
 use App\Service\Security\PermissionResolver;
 use App\Service\ValidationErrorPresenter;
@@ -69,7 +70,20 @@ use Throwable;
  */
 class ApplicationformsTable extends Table
 {
-    /** Champs administratifs toujours effacés lors d'une duplication. */
+    /** Champs protégés toujours effacés lors d'une duplication. */
+    public const DUPLICATION_PROTECTED_RESET_FIELDS = [
+        Applicationform::FIELD_USER_ID,
+        Applicationform::FIELD_ASSISTANT_ID,
+        Applicationform::FIELD_APPLICANTNAME,
+        Applicationform::FIELD_APPLICANT_FIRST_NAME,
+        Applicationform::FIELD_APPLICANT_LAST_NAME,
+        Applicationform::FIELD_COLLABORATOR_ID,
+        Applicationform::FIELD_SALARY_BASE,
+        Applicationform::FIELD_ARCHIVED,
+        Applicationform::FIELD_DELETED,
+    ];
+
+    /** Liste sûre historique, conservée pour les consommateurs existants. */
     public const DUPLICATION_RESET_FIELDS = [
         Applicationform::FIELD_USER_ID,
         Applicationform::FIELD_ASSISTANT_ID,
@@ -979,7 +993,15 @@ class ApplicationformsTable extends Table
      */
     public function duplicateFor(Applicationform $source, User $actor): ApplicationformDuplicationResult
     {
-        $fields = array_values(array_diff(self::DUPLICATION_SOURCE_FIELDS, self::DUPLICATION_RESET_FIELDS));
+        $setting = TableRegistry::getTableLocator()->get('WorkflowSettings')->find()
+            ->where(['name' => ApplicationformDuplicationSettings::SETTING_NAME])
+            ->first();
+        $storedValue = $setting?->get('value');
+        $configurableResetFields = ApplicationformDuplicationSettings::resolveResetFields(
+            is_string($storedValue) ? $storedValue : null,
+        );
+        $resetFields = array_merge(self::DUPLICATION_PROTECTED_RESET_FIELDS, $configurableResetFields);
+        $fields = array_values(array_diff(self::DUPLICATION_SOURCE_FIELDS, $resetFields));
         $data = $source->extract($fields);
         $referenceFailure = $this->duplicateReferenceFailure($data);
         if ($referenceFailure !== null) {
