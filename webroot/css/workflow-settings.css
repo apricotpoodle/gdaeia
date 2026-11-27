@@ -1,0 +1,67 @@
+.workflow-settings-page {
+    min-height: 0;
+}
+
+.workflow-settings-page > .d-flex.justify-content-between.align-items-center {
+    flex: 0 0 auto;
+}
+
+.workflow-settings-page > #workflow-settings-tabs {
+    flex: 0 0 auto;
+}
+
+.workflow-settings-page > #workflow-settings-tab-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#workflow-settings-tab-content > #workflow-settings-validation-panel.active,
+#workflow-settings-tab-content > #workflow-settings-comments-panel.active {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#workflow-settings-validation-panel > .d-flex {
+    flex: 0 0 auto;
+}
+
+#workflow-settings-validation-panel > .card,
+#workflow-settings-comments-panel > .card {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#workflow-settings-validation-panel .card-body,
+#workflow-settings-comments-panel .card-body {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
+}
+
+#workflow-validation-settings-grid,
+#validation-comment-templates-grid {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.workflow-settings-page #workflow-validation-settings-grid .tabulator,
+.workflow-settings-page #validation-comment-templates-grid .tabulator {
+    height: 100% !important;
+    max-height: 100% !important;
+}
+
+.workflow-settings-page #workflow-validation-settings-grid .workflow-setting-checkbox {
+    display: block;
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0 auto;
+    accent-color: var(--bs-primary);
+    cursor: pointer;
+}

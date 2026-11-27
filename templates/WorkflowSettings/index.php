@@ -22,9 +22,10 @@ $canEditWorkflowSetting = static fn(string $field): bool => $canManageValidation
         || ($workflowSettingsFieldSchema[$field] ?? FieldAuthorization::ACCESS_LEVEL_NONE)
             === FieldAuthorization::ACCESS_LEVEL_EDIT);
 $this->assign('title', __('Paramétrage global du workflow'));
+$this->Html->css('workflow-settings', ['block' => true]);
 $this->Html->script('views/WorkflowSettings/index.js', ['type' => 'module', 'block' => 'scriptBottom']);
 ?>
-<div class="content workflow-settings-page flex-grow-1 overflow-y-auto" style="min-height: 0;">
+<div class="content workflow-settings-page d-flex flex-column flex-grow-1 overflow-y-auto">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
             <h3 class="mb-1"><?= __('Paramétrage global du workflow') ?></h3>

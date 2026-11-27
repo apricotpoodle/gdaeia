@@ -94,7 +94,7 @@ function createSettingsGrid(selector, rows) {
         .setCellEditHandler(handler)
         .addOptions({
             persistence: false,
-            height: 'auto',
+            height: '100%',
             layout: 'fitColumns',
             responsiveLayout: 'collapse',
             placeholder: "<div class='p-3 text-muted'>Aucun paramètre à afficher.</div>",

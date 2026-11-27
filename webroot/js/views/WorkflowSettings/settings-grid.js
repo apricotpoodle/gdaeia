@@ -38,12 +38,13 @@ export function createSettingEditor(type, { documentRef = document } = {}) {
         const input = documentRef.createElement('input');
         let completed = false;
         input.type = inputType;
-        input.className = 'form-control form-control-sm';
+        input.className = inputType === 'checkbox'
+            ? 'workflow-setting-checkbox'
+            : 'form-control form-control-sm';
         input.setAttribute('aria-label', cell.getRow().getData().label);
 
         if (inputType === 'checkbox') {
             input.checked = Boolean(cell.getValue());
-            input.classList.add('form-check-input');
             input.addEventListener('change', () => {
                 if (completed) return;
                 completed = true;

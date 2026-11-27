@@ -162,7 +162,7 @@ class WorkflowSettingsControllerTest extends TestCase
         $this->assertResponseContains('id="workflow-applicationforms-settings-grid"');
         $this->assertResponseContains('name="position"');
         $this->assertResponseContains('placeholder="Position"');
-        $this->assertResponseContains('class="content workflow-settings-page flex-grow-1 overflow-y-auto" style="min-height: 0;"');
+        $this->assertResponseContains('class="content workflow-settings-page d-flex flex-column flex-grow-1 overflow-y-auto"');
         $responseBody = (string)$this->_response->getBody();
         $this->assertLessThan(
             strpos($responseBody, 'validation-comment-templates-grid'),

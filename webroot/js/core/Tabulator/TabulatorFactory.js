@@ -651,8 +651,7 @@ export class TabulatorFactory {
         return this._createActionGrid(selector)
             .setAjaxSource('/api/workflow-settings/comment-templates.json')
             .setController('workflow-settings')
-            .setRemotePagination()
-            .setHeight('360px')
+            .setHeight('100%')
             .setColumns([
                 { title: 'Décision', field: 'decision', headerFilter: 'input' },
                 { title: 'Libellé', field: 'label', headerFilter: 'input' },
