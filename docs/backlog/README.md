@@ -52,7 +52,8 @@ et consulter son statut. Le [ticket 0030](0030-arbitrer-et-actualiser-le-perimet
 est `Terminé`; les réponses métier encore attendues sont suivies dans les
 tickets concernés. Le 0031 est `Terminé`; les arbitrages Q-0018-02 à 04 y sont
 consignés et appliqués.
-Le ticket 0040 est un bonus facultatif hors de cette séquence.
+Le ticket 0040 est un bonus retenu, hors du manifeste obligatoire et
+démarrable indépendamment du 0039.
 
 ## Migration vers un gestionnaire de tickets
 

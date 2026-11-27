@@ -22,7 +22,8 @@ Les tickets racine 0002 et 0017 sont partiels. Le code et les tests de
 0017 sont livrés, mais sa configuration métier SEM reste à saisir par
 l'opérateur. Le ticket 0028 est terminé après réussite de la suite complète et
 des vérifications ORM, API, Web, migration, style et analyse statique.
-Le ticket 0040 est un bonus facultatif et n'entre pas dans ces totaux.
+Le ticket 0040 est un bonus retenu, hors manifeste et indépendant du 0039 ; il
+n'entre pas dans ces totaux.
 Les tickets actifs [0041 — Administrer les permissions par rôle](0041-administrer-permissions-par-role.md)
 et [0042 — Corriger le filtre des DAE en cours](0042-filtrer-correctement-les-dae-en-cours.md)
 sont indépendants de ces totaux historiques et des workflows recensés.
@@ -69,8 +70,8 @@ et met à jour les questions métier avant tout développement dépendant.
 | [0038](0038-respecter-affichage-sans-defilement.md) | Affichage selon les dimensions convenues | À planifier |
 | [0039](0039-configurer-et-recetter-gdae-v3.md) | Configuration et recette transversale | À planifier |
 
-Le ticket facultatif [0040](0040-parametrer-champs-reinitialises-duplication.md)
-est hors manifeste et ne sera examiné qu'après le 0039.
+Le bonus retenu [0040](0040-parametrer-champs-reinitialises-duplication.md)
+reste hors manifeste obligatoire et peut démarrer indépendamment du 0039.
 
 Le [registre des questions](../meetings/questions-ouvertes.md) distingue
 les réponses métier du cadrage approuvé. Q-0018-02 à Q-0018-04 et Q-0030-01
