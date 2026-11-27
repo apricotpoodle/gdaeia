@@ -26,6 +26,7 @@ manifestes des sous-workflows sont leur source de vérité opérationnelle.
 - [0023 — Migrer la base de données vers une nouvelle instance](0023-migrer-la-base-de-donnees.md) — priorité moyenne ; documenter une exportation/restauration reproductible et vérifiable.
 - [0041 — Administrer les permissions par rôle](0041-administrer-permissions-par-role.md) — priorité haute ; gestion séquentielle des attributions du catalogue, sans changement de la matrice initiale.
 - [0042 — Corriger le filtre des DAE en cours](0042-filtrer-correctement-les-dae-en-cours.md) — priorité moyenne ; inclure tous les cycles actifs, y compris à 0 %, sans retourner les cycles terminés.
+- [0043 — Repenser l'IHM du paramétrage du workflow](0043-refondre-ihm-parametrage-workflow.md) — priorité haute ; organiser la page en onglets et enregistrer les réglages simples en ligne. Préalable au ticket 0040.
 
 ## Tickets terminés
 
@@ -53,7 +54,8 @@ est `Terminé`; les réponses métier encore attendues sont suivies dans les
 tickets concernés. Le 0031 est `Terminé`; les arbitrages Q-0018-02 à 04 y sont
 consignés et appliqués.
 Le ticket 0040 est un bonus retenu, hors du manifeste obligatoire et
-démarrable indépendamment du 0039.
+indépendant du 0039. Il dépend du ticket 0043 pour intégrer son réglage dans
+la page réorganisée.
 
 ## Migration vers un gestionnaire de tickets
 

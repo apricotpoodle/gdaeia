@@ -1,11 +1,13 @@
 # 0040 — Paramétrer les champs réinitialisés à la duplication
 
-**Statut :** Bonus retenu — prêt à démarrer indépendamment du ticket 0039
+**Statut :** Bonus retenu — à démarrer après le ticket 0043
 
 **Priorité :** Basse — bonus retenu
 
-**Dépendance :** Aucune dépendance au ticket 0039. Ce bonus est indépendant
-de la séquence 0030–0039 et n'appartient pas au manifeste obligatoire.
+**Dépendance :** La refonte de la page `/workflow-settings` du ticket 0043
+doit être terminée avant d’intégrer ce réglage. Aucune dépendance au ticket
+0039 : ce bonus reste indépendant de la séquence 0030–0039 et n'appartient pas
+au manifeste obligatoire.
 
 ## Objectif
 

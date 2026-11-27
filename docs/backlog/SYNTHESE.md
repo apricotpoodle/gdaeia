@@ -5,7 +5,8 @@ un audit ciblé effectué le **17 novembre 2026** sur les tickets 0017 à 0021,
 0027 à 0029 et l'étape 6 du ticket 0026, la clôture vérifiée des tickets 0027
 et 0028 le **18 novembre 2026**, et l'audit partiel du point 7 du ticket 0007
 effectué le **19 novembre 2026**. Le ticket 0041 a été ajouté le
-**20 novembre 2026** et le ticket 0042 le **27 novembre 2026**. Les statuts
+**20 novembre 2026** et le ticket 0042 le **27 novembre 2026**. Le ticket
+0043 a également été ajouté le **27 novembre 2026**. Les statuts
 décrivent le travail restant.
 
 ## Vue d'ensemble
@@ -23,9 +24,11 @@ Les tickets racine 0002 et 0017 sont partiels. Le code et les tests de
 l'opérateur. Le ticket 0028 est terminé après réussite de la suite complète et
 des vérifications ORM, API, Web, migration, style et analyse statique.
 Le ticket 0040 est un bonus retenu, hors manifeste et indépendant du 0039 ; il
-n'entre pas dans ces totaux.
-Les tickets actifs [0041 — Administrer les permissions par rôle](0041-administrer-permissions-par-role.md)
-et [0042 — Corriger le filtre des DAE en cours](0042-filtrer-correctement-les-dae-en-cours.md)
+dépend du ticket 0043 pour l’intégration dans la page réorganisée et n'entre
+pas dans ces totaux.
+Les tickets actifs [0041 — Administrer les permissions par rôle](0041-administrer-permissions-par-role.md),
+[0042 — Corriger le filtre des DAE en cours](0042-filtrer-correctement-les-dae-en-cours.md)
+et [0043 — Repenser l’IHM du paramétrage du workflow](0043-refondre-ihm-parametrage-workflow.md)
 sont indépendants de ces totaux historiques et des workflows recensés.
 
 ## Travail restant sur le backlog racine
@@ -42,12 +45,13 @@ sont indépendants de ces totaux historiques et des workflows recensés.
 | [0023 — Migration de base](0023-migrer-la-base-de-donnees.md) | À planifier | Préparer et recetter la migration vers l'instance MySQL cible. |
 | [0026 — Plan d'architecture et de backlog](0026-executer-le-plan-architecture-et-backlog.md) | En cours | Poursuivre les étapes restantes de gouvernance, couverture, référentiel et migration ; l'étape 6 est réalisée côté implémentation et documentation. |
 
-## Ticket actif hors des totaux historiques
+## Tickets actifs hors des totaux historiques
 
 | Ticket | État | Travail restant |
 |---|---|---|
 | [0041 — Administrer les permissions par rôle](0041-administrer-permissions-par-role.md) | Prêt | Vérifier le contrat existant, puis exposer et gérer les attributions par rôle en cinq étapes ordonnées, sans modifier le catalogue ni la matrice initiale. |
 | [0042 — Corriger le filtre des DAE en cours](0042-filtrer-correctement-les-dae-en-cours.md) | À planifier | Corriger le filtre « En cours » de la liste des DAE pour inclure tous les cycles actifs, y compris à 0 %, tout en conservant le bouton « À valider » et les périmètres d'accès. |
+| [0043 — Repenser l’IHM du paramétrage du workflow](0043-refondre-ihm-parametrage-workflow.md) | À planifier | Réorganiser `/workflow-settings` en onglets et enregistrer les paramètres simples en ligne. Le ticket 0040 dépend de cette refonte. |
 
 ## Séquence obligatoire GDAE V3
 
@@ -71,7 +75,8 @@ et met à jour les questions métier avant tout développement dépendant.
 | [0039](0039-configurer-et-recetter-gdae-v3.md) | Configuration et recette transversale | À planifier |
 
 Le bonus retenu [0040](0040-parametrer-champs-reinitialises-duplication.md)
-reste hors manifeste obligatoire et peut démarrer indépendamment du 0039.
+reste hors manifeste obligatoire et indépendant du 0039. Il sera réalisé après
+le ticket 0043 afin d’intégrer le réglage dans la page réorganisée.
 
 Le [registre des questions](../meetings/questions-ouvertes.md) distingue
 les réponses métier du cadrage approuvé. Q-0018-02 à Q-0018-04 et Q-0030-01

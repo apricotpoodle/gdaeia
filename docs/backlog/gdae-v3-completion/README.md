@@ -14,8 +14,9 @@ Q-0018-04. Les tickets ultérieurs portent leurs bloqueurs propres.
 Le ticket 0039 organise la recette dans Docker local isolé avec des données
 synthétiques et des séquences configurées par l'opérateur pour chaque service.
 La configuration d'Airflow et de la production relève de l'exploitation. Le
-ticket 0040 est un bonus retenu, hors du manifeste obligatoire et démarrable
-indépendamment du 0039.
+ticket 0040 est un bonus retenu, hors du manifeste obligatoire et indépendant
+du 0039. Il sera démarré après le ticket 0043 afin d’intégrer son réglage dans
+la page `/workflow-settings` réorganisée.
 
 ## Vérifications de livraison
 
